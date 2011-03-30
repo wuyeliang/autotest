@@ -44,6 +44,7 @@ class hardware_Components(test.test):
         'part_id_wireless',
         'vendor_id_touchpad',
         'version_rw_firmware',
+        'version_3g_firmware',
     ]
     _pci_cids = [
         'part_id_chipset',
@@ -390,6 +391,22 @@ class hardware_Components(test.test):
             return 'A=%d, B=%d' % (versions[0], versions[1])
         return '%d' % (versions[0])
 
+    def get_version_3g_firmware(self):
+        vendor_cmd = ('modem status | '
+                      'sed -n -e "/Manufacturer/s/.*Manufacturer: //p"')
+        vendor = utils.system_output(vendor_cmd)
+        modem_cmd = ('modem status | sed -n -e "/Modem/s/.*Modem: //p"')
+        modem = utils.system_output(modem_cmd)
+        if vendor == 'Samsung' and modem == 'GT-Y3300X':
+            cmd = ("modem status | grep Version: -A 2 | tail -1 | "
+                   "awk '{print $1}'")
+            version = utils.system_output(cmd)
+        elif vendor == 'Qualcomm Incorporated':
+            cmd = ("modem status | awk '/Version: / {print $2}'")
+            version = utils.system_output(cmd)
+        else:
+            version = 'Unknown'
+        return version
 
     def probe_key_recovery(self, part_id):
         current_key = self._gbb.get_recoverykey()
