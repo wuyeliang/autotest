@@ -29,33 +29,30 @@ class hardware_Components(test.test):
         'data_display_geometry',
         'hash_ec_firmware',
         'hash_ro_firmware',
+        'part_id_3g',
         'part_id_audio_codec',
+        'part_id_bluetooth',
+        'part_id_chipset',
         'part_id_cpu',
         'part_id_display_panel',
         'part_id_dram',
+        'part_id_ec_flash_chip',
         'part_id_embedded_controller',
         'part_id_ethernet',
         'part_id_flash_chip',
-        'part_id_ec_flash_chip',
         'part_id_hwqual',
         'part_id_keyboard',
         'part_id_storage',
         'part_id_tpm',
+        'part_id_usb_hosts',
+        'part_id_vga',
+        'part_id_webcam',
         'part_id_wireless',
         'vendor_id_touchpad',
         'version_rw_firmware',
         'version_3g_firmware',
-    ]
-    _pci_cids = [
-        'part_id_chipset',
-        'part_id_usb_hosts',
-        'part_id_vga',
-    ]
-    _usb_cids = [
-        'part_id_bluetooth',
-        'part_id_webcam',
-        'part_id_3g',
-        'part_id_gps',
+        # gps is currently not supported.
+        # 'part_id_gps',
     ]
     _probable_cids = [
         'key_recovery',
@@ -69,12 +66,88 @@ class hardware_Components(test.test):
     ]
     _to_be_tested_cids_groups = [
         _enumerable_cids,
-        _pci_cids,
-        _usb_cids,
         _probable_cids,
     ]
     _not_present = 'Not Present'
 
+    def _get_all_connection_info(self):
+        """ Probes available connectivity and device information """
+        connection_info = {
+                'wireless': '/sys/class/net/wlan0/device',
+                'ethernet': '/sys/class/net/eth0/device',
+                '3g': '/sys/class/tty/ttyUSB0/device',
+        }
+        return connection_info
+
+    def _get_sysfs_device_info(self, path, primary, optional=[]):
+        """Gets the device information of a sysfs node.
+
+        Args
+          path: the sysfs device path.
+          primary: mandatory list of elements to read.
+          optional: optional list of elements to read.
+
+        Returns
+          [primary_values_dict, optional_values_dict]
+        """
+        primary_values = {}
+        optional_values = {}
+        for element in primary:
+            element_path = os.path.join(path, element)
+            if not os.path.exists(element_path):
+                return [None, None]
+            primary_values[element] = utils.read_one_line(element_path)
+        for element in optional:
+            element_path = os.path.join(path, element)
+            if os.path.exists(element_path):
+                optional_values[element] = utils.read_one_line(element_path)
+        return [primary_values, optional_values]
+
+    def _get_pci_device_info(self, path):
+        """ Returns a PCI 'vendor:device' component information. """
+        # TODO(hungte) PCI has a 'rev' info which may be better added into info.
+        (info, _) = self._get_sysfs_device_info(path, ['vendor', 'device'])
+        return '%s:%s' % (info['vendor'].replace('0x', ''),
+                          info['device'].replace('0x', '')) if info else None
+
+    def _get_usb_device_info(self, path):
+        """ Returns an USB 'idVendor:idProduct manufacturer product' info. """
+
+        # USB in sysfs is hierarchy, and usually uses the 'interface' layer.
+        # If we are in 'interface' layer, the product info is in real parent folder.
+        path = os.path.realpath(path)
+        while path.find('/usb') > 0:
+            if os.path.exists(os.path.join(path, 'idProduct')):
+                break
+            path = os.path.split(path)[0]
+        optional_fields = []
+        # uncomment the line below to allow having descriptive string
+        # optional_fields = ['manufacturer', 'product']
+        (info, optional) = self._get_sysfs_device_info(
+                path, ['idVendor', 'idProduct'], optional_fields)
+        if not info:
+            return None
+        info_string = '%s:%s' % (info['idVendor'].replace('0x', ''),
+                                 info['idProduct'].replace('0x', ''))
+        for field in optional_fields:
+            if field in optional:
+                info_string += ' ' + optional[field]
+        return info_string
+
+    def get_sysfs_device_id(self, path):
+        """Gets a sysfs device identifier. (Currently supporting USB/PCI)
+        Args
+          path: a path to sysfs device (ex, /sys/class/net/wlan0/device)
+
+        Returns
+          An identifier string, or self._not_present if not available.
+        """
+        path = os.path.realpath(path)
+        if not os.path.isdir(path):
+            return self._not_present
+        info = (self._get_pci_device_info(path) or
+                self._get_usb_device_info(path))
+        return info or self._not_present
 
     def get_all_enumerable_components(self):
         results = {}
@@ -84,16 +157,6 @@ class hardware_Components(test.test):
                 components = [ components ]
             results[cid] = components
         return results
-
-
-    def get_all_pci_components(self):
-        cmd = 'lspci -n | cut -f3 -d" "'
-        return utils.system_output(cmd).split()
-
-
-    def get_all_usb_components(self):
-        cmd = 'lsusb | cut -f6 -d" "'
-        return utils.system_output(cmd).split()
 
 
     def check_enumerable_component(self, cid, exact_values, approved_values):
@@ -106,20 +169,6 @@ class hardware_Components(test.test):
                     self._failures[cid].append(value)
                 else:
                     self._failures[cid] = [ value ]
-
-
-    def check_pci_usb_component(self, cid, system_values, approved_values):
-        if '*' in approved_values:
-            self._system[cid] = [ '*' ]
-            return
-
-        for value in approved_values:
-            if value in system_values:
-                self._system[cid] = [ value ]
-                return
-
-        self._failures[cid] = [ 'No match' ]
-
 
     def check_probable_component(self, cid, approved_values):
         if '*' in approved_values:
@@ -164,12 +213,21 @@ class hardware_Components(test.test):
         """
         return firmware_hash.get_bios_ro_hash(exception_type=error.TestError)
 
+    def get_part_id_3g(self):
+        device_path = self._get_all_connection_info()['3g']
+        return self.get_sysfs_device_id(device_path) or self._not_present
 
     def get_part_id_audio_codec(self):
         cmd = 'grep -R Codec: /proc/asound/* | head -n 1 | sed s/.\*Codec://'
         part_id = utils.system_output(cmd).strip()
         return part_id
 
+    def get_part_id_bluetooth(self):
+        return self.get_sysfs_device_id('/sys/class/bluetooth/hci0/device')
+
+    def get_part_id_chipset(self):
+        # Host bridge is always the first PCI device.
+        return self.get_sysfs_device_id('/sys/bus/pci/devices/0000:00:00.0')
 
     def get_part_id_cpu(self):
         cmd = 'grep -m 1 \'model name\' /proc/cpuinfo | sed s/.\*://'
@@ -199,24 +257,6 @@ class hardware_Components(test.test):
         part_id = ", ".join(parts)
         return part_id
 
-
-    def get_part_id_ethernet(self):
-        """
-          Returns a colon delimited string where the first section
-          is the vendor id and the second section is the device id.
-        """
-        # Ethernet is optional so mark it as not present. A human
-        # operator needs to decide if this is acceptable or not.
-        vendor_file = '/sys/class/net/eth0/device/vendor'
-        part_file = '/sys/class/net/eth0/device/device'
-        if os.path.exists(part_file) and os.path.exists(vendor_file):
-            vendor_id = utils.read_one_line(vendor_file).replace('0x', '')
-            part_id = utils.read_one_line(part_file).replace('0x', '')
-            return "%s:%s" % (vendor_id, part_id)
-        else:
-            return self._not_present
-
-
     def get_part_id_dram(self):
         grep_cmd = 'grep i2c_dev /proc/modules'
         i2c_loaded = (utils.system(grep_cmd, ignore_status=True) == 0)
@@ -234,6 +274,9 @@ class hardware_Components(test.test):
         else:
             return self._not_present
 
+    def get_part_id_ethernet(self):
+        device_path = self._get_all_connection_info()['ethernet']
+        return self.get_sysfs_device_id(device_path) or self._not_present
 
     def get_part_id_flash_chip(self):
         # example output:
@@ -308,16 +351,26 @@ class hardware_Components(test.test):
             part_id = tpm_dict[key1] + ':' + tpm_dict[key2]
         return part_id
 
+    def get_part_id_usb_hosts(self):
+        usb_bus_list = glob.glob('/sys/bus/usb/devices/usb*')
+        usb_host_list = [os.path.join(os.path.realpath(path), '..')
+                         for path in usb_bus_list]
+        usb_host_info = [self.get_sysfs_device_id(device)
+                         for device in usb_host_list]
+        usb_host_info.sort(reverse=True)
+        # uncomment and use the line below if you want to list all USB buses
+        # return ' '.join(usb_host_info)
+        return usb_host_info[0] if usb_host_info else ''
+
+    def get_part_id_vga(self):
+        return self.get_sysfs_device_id('/sys/class/graphics/fb0/device')
+
+    def get_part_id_webcam(self):
+        return self.get_sysfs_device_id('/sys/class/video4linux/video0/device')
 
     def get_part_id_wireless(self):
-        """
-          Returns a colon delimited string where the first section
-          is the vendor id and the second section is the device id.
-        """
-        part_id = utils.read_one_line('/sys/class/net/wlan0/device/device')
-        vendor_id = utils.read_one_line('/sys/class/net/wlan0/device/vendor')
-        return "%s:%s" % (vendor_id.replace('0x',''), part_id.replace('0x',''))
-
+        device_path = self._get_all_connection_info()['wireless']
+        return self.get_sysfs_device_id(device_path) or self._not_present
 
     def get_closed_vendor_id_touchpad(self, vendor_name):
         """
@@ -354,12 +407,6 @@ class hardware_Components(test.test):
             cmd_grep = 'grep -i Touchpad /proc/bus/input/devices | sed s/.\*=//'
             part_id = utils.system_output(cmd_grep).strip('"')
             return part_id
-
-
-    def get_vendor_id_webcam(self):
-        cmd = 'cat /sys/class/video4linux/video0/name'
-        part_id = utils.system_output(cmd).strip()
-        return part_id
 
 
     def get_version_rw_firmware(self):
@@ -530,8 +577,6 @@ class hardware_Components(test.test):
     def run_once(self, approved_dbs='approved_components', ignored_cids=[]):
         self.update_ignored_cids(ignored_cids)
         enumerable_system = self.get_all_enumerable_components()
-        pci_system = self.get_all_pci_components()
-        usb_system = self.get_all_usb_components()
 
         only_cardreader_failed = False
         all_failures = 'The following components are not matched.\n'
@@ -545,12 +590,6 @@ class hardware_Components(test.test):
             for cid in self._enumerable_cids:
                 self.check_enumerable_component(
                         cid, enumerable_system[cid], approved[cid])
-
-            for cid in self._pci_cids:
-                self.check_pci_usb_component(cid, pci_system, approved[cid])
-
-            for cid in self._usb_cids:
-                self.check_pci_usb_component(cid, usb_system, approved[cid])
 
             for cid in self._probable_cids:
                 self.check_probable_component(cid, approved[cid])
