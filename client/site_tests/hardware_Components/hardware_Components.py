@@ -263,8 +263,11 @@ class hardware_Components(test.test):
         if not i2c_loaded:
             utils.system('modprobe i2c_dev')
 
-        cmd = ('mosys -l memory spd print geometry | '
-               'grep size_mb | cut -f2 -d"|"')
+        if os.path.exists('/tmp/mosys.log'):
+            cmd = ('cat /tmp/mosys.log | grep size_mb | cut -f2 -d"|"')
+        else:
+            cmd = ('mosys -l memory spd print geometry | '
+                   'grep size_mb | cut -f2 -d"|"')
         part_id = utils.system_output(cmd).strip()
 
         if not i2c_loaded:
