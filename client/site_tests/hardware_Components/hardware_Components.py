@@ -4,6 +4,7 @@
 
 import firmware_hash
 import glob
+import imp
 import logging
 import os
 import pprint
@@ -70,13 +71,79 @@ class hardware_Components(test.test):
     ]
     _not_present = 'Not Present'
 
+    # Type id for connection management (compatible to flimflam)
+    _type_3g = 'cellular'
+    _type_ethernet = 'ethernet'
+    _type_wireless = 'wifi'
+
+    _flimflam_dir = '/usr/local/lib/flimflam/test'
+
+    def import_flimflam_module(self):
+      """ Tries to load flimflam module from current system """
+      if not os.path.exists(self._flimflam_dir):
+        DebugMsg('no flimflam installed in %s' % self._flimflam_dir)
+        return None
+      try:
+        return imp.load_module('flimflam', *imp.find_module(
+                'flimflam', [self._flimflam_dir]))
+      except ImportError:
+        ErrorMsg('Failed to import flimflam.')
+      except:
+        ErrorMsg('Failed to load flimflam.')
+      return None
+
+    def load_flimflam(self):
+      """Gets information provided by flimflam (connection manager)
+
+      Returns
+      (None, None) if failed to load module, otherwise
+      (connection_path, connection_info) where
+       connection_path is a dict in {type: device_path},
+       connection_info is a dict of {type: {attribute: value}}.
+      """
+      flimflam = self.import_flimflam_module()
+      if not flimflam:
+        return (None, None)
+      path = {}
+      info = {}
+      info_attribute_names = {
+        self._type_3g: ['Carrier', 'FirmwareRevision', 'HardwareRevision',
+                        'ModelID', 'Manufacturer'],
+      }
+      devices = flimflam.FlimFlam().GetObjectList('Device')
+      unpack = flimflam.convert_dbus_value
+      for device in devices:
+        # populate the 'path' collection
+        prop = device.GetProperties()
+        prop_type = unpack(prop['Type'])
+        prop_path = unpack(prop['Interface'])
+        if prop_type in path:
+          WarningMsg('Multiple network devices with same type (%s) were found.'
+                     'Target path changed from %s to %s.' %
+                     (prop_type, path[prop_type], prop_path))
+        path[prop_type] = '/sys/class/net/%s/device' % prop_path
+        if prop_type not in info_attribute_names:
+          continue
+        # populate the 'info' collection
+        info[prop_type] = dict((
+            (key, unpack(prop['Cellular.%s' % key]))
+            for key in info_attribute_names[prop_type]
+            if ('Cellular.%s' % key) in prop))
+      return (path, info)
+
     def _get_all_connection_info(self):
         """ Probes available connectivity and device information """
         connection_info = {
-                'wireless': '/sys/class/net/wlan0/device',
-                'ethernet': '/sys/class/net/eth0/device',
-                '3g': '/sys/class/tty/ttyUSB0/device',
+                self._type_wireless: '/sys/class/net/wlan0/device',
+                self._type_ethernet: '/sys/class/net/eth0/device',
+                # 3g(cellular) may also be /sys/class/net/usb0
+                self._type_3g: '/sys/class/tty/ttyUSB0/device',
         }
+        (path, _) = self.load_flimflam()
+        if path is not None:
+          # trust flimflam instead.
+          for k in connection_info:
+            connection_info[k] = (path[k] if k in path else '')
         return connection_info
 
     def _get_sysfs_device_info(self, path, primary, optional=[]):
@@ -114,7 +181,8 @@ class hardware_Components(test.test):
         """ Returns an USB 'idVendor:idProduct manufacturer product' info. """
 
         # USB in sysfs is hierarchy, and usually uses the 'interface' layer.
-        # If we are in 'interface' layer, the product info is in real parent folder.
+        # If we are in 'interface' layer, the product info is in real parent
+        # folder.
         path = os.path.realpath(path)
         while path.find('/usb') > 0:
             if os.path.exists(os.path.join(path, 'idProduct')):
@@ -214,7 +282,7 @@ class hardware_Components(test.test):
         return firmware_hash.get_bios_ro_hash(exception_type=error.TestError)
 
     def get_part_id_3g(self):
-        device_path = self._get_all_connection_info()['3g']
+        device_path = self._get_all_connection_info()[self._type_3g]
         return self.get_sysfs_device_id(device_path) or self._not_present
 
     def get_part_id_audio_codec(self):
@@ -278,7 +346,7 @@ class hardware_Components(test.test):
             return self._not_present
 
     def get_part_id_ethernet(self):
-        device_path = self._get_all_connection_info()['ethernet']
+        device_path = self._get_all_connection_info()[self._type_ethernet]
         return self.get_sysfs_device_id(device_path) or self._not_present
 
     def get_part_id_flash_chip(self):
@@ -372,7 +440,7 @@ class hardware_Components(test.test):
         return self.get_sysfs_device_id('/sys/class/video4linux/video0/device')
 
     def get_part_id_wireless(self):
-        device_path = self._get_all_connection_info()['wireless']
+        device_path = self._get_all_connection_info()[self._type_wireless]
         return self.get_sysfs_device_id(device_path) or self._not_present
 
     def get_closed_vendor_id_touchpad(self, vendor_name):
