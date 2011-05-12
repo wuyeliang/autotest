@@ -24,7 +24,6 @@ class graphics_GLBench(test.test):
   def setup(self):
       self.job.setup_dep(['glbench'])
 
-
   def run_once(self, options=''):
       dep = 'glbench'
       dep_dir = os.path.join(self.autodir, 'deps', dep)
@@ -56,12 +55,29 @@ class graphics_GLBench(test.test):
       options += ' -save'
       out_dir = os.path.join(self.autodir, 'deps/glbench/src/out')
 
-      cmd = "X :1 & sleep 1; DISPLAY=:1 %s %s; kill $!" % (exefile, options)
+      cmd = '%s %s' % (exefile, options)
+
+      # If UI is running, we must stop it and restore later.
+      need_restart_ui = False
+      status_output = utils.system_output('initctl status ui')
+      # If chrome is running, result will be similar to:
+      #   ui start/running, process 11895
+      logging.info('initctl status ui returns: %s', status_output)
+      need_restart_ui = status_output.startswith('ui start')
+
+      # If UI is just stopped or if there's no known X session, we have to start
+      # a new one. For factory test, it provides X (DISPLAY) so we can reuse it.
+      if need_restart_ui or (not os.getenv('DISPLAY')):
+          cmd = 'X :1 & sleep 1; DISPLAY=:1 %s; kill $!' % cmd
+
+      if need_restart_ui:
+          utils.system('initctl stop ui', ignore_status=True)
+
       try:
-          utils.system("stop ui")
           results = utils.system_output(cmd, retain_output=True).splitlines()
       finally:
-          utils.system("start ui")
+          if need_restart_ui:
+              utils.system("start ui")
 
       if results[0].startswith('# board_id: '):
           board_id = results[0].split('board_id:', 1)[1].strip()
