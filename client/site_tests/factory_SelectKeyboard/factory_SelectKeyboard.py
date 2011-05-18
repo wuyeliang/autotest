@@ -34,7 +34,7 @@ kb_map = (
   ('xkb:de::ger',           'de-DE',      'Germany - German'),
   ('xkb:it::ita',           'it-IT',      'Italy - Italian'),
   ('xkb:es::spa',           'es',         'Spain - Spanish'),
-  ('xkb:nl::nld',           'nl',         'Netherlands - Dutch'),
+  ('xkb:us:intl:eng',       'nl',         'Netherlands - Dutch (US Layout)'),
 
   # Uncomment layouts you need from following list.
 
