@@ -20,7 +20,6 @@ from autotest_lib.client.bin import factory
 from autotest_lib.client.bin import factory_ui_lib as ful
 from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.cros import gooftools
 
 # References
 # - Keyboard: http://git.chromium.org/gitweb/?p=chromiumos/platform/assets.git;a=blob;f=input_methods/whitelist.txt;hb=HEAD
@@ -89,7 +88,7 @@ CHROMEOS_LOCALE_DATABASE = {
     'ia': ('Interlingua', ''),
     'id': ('Indonesian', ''),
     'is': ('Icelandic', ''),
-    'it': ('Italian', ''),
+    'it': ('Italian', 'Europe/Rome'),
     'it-CH': ('Italian (Switzerland)', 'Europe/Zurich'),
     'it-IT': ('Italian (Italy)', 'Europe/Rome'),
     'ja': ('Japanese (Japan)', 'Asia/Tokyo'),
@@ -408,7 +407,6 @@ class factory_SelectRegion(test.test):
                '-s "initial_timezone"="%s" '
                % entry[:3])
         utils.system_output(cmd)
-        gooftools.run('gooftool --verify_vpd')
 
     def key_release_callback(self, widget, event):
         if self.writing:
