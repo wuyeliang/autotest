@@ -24,3 +24,7 @@ class factory_WriteGBB(test.test):
                     'You need to run this test from factory UI, and have ' +
                     'successfully completed the HWQual-ID matching test ')
         gooftools.run('gooftool --write_gbb="%s" --verbose' % probed_hwid)
+
+        # After writing GBB, we should be able to verify and activate the locale
+        # stuff (requiring the new GBB bitmaps)
+        gooftools.run('gooftool --verify_vpd')
