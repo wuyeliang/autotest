@@ -52,6 +52,7 @@ class hardware_Components(test.test):
         'vendor_id_touchpad',
         'version_rw_firmware',
         'version_3g_firmware',
+        'target_board',
         # gps is currently not supported.
         # 'part_id_gps',
     ]
@@ -525,6 +526,14 @@ class hardware_Components(test.test):
         else:
             version = 'Unknown'
         return version
+
+    def get_target_board(self):
+        os.chdir(self.bindir)
+        board = utils.system_output('./get_target_board_info.sh')
+        factory.log('Target board info from the release image = %s' % board)
+        if board == '':
+            board = 'Unknown'
+        return board
 
     def probe_key_recovery(self, part_id):
         current_key = self._gbb.get_recoverykey()
