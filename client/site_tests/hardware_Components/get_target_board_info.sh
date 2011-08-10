@@ -6,7 +6,7 @@
 ROOT_SSD=/dev/sda5
 
 MOUNTPOINT=$(mktemp -d)
-mount -o ro  "$ROOT_SSD" "$MOUNTPOINT"
+mount -t ext2 -o ro  "$ROOT_SSD" "$MOUNTPOINT"
 grep CHROMEOS_RELEASE_DESCRIPTION $MOUNTPOINT/etc/lsb-release | \
     awk '{print $NF}'
 umount "$MOUNTPOINT"

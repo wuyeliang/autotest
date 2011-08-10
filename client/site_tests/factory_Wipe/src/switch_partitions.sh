@@ -25,7 +25,7 @@ OTHER_ROOT_PART=$(echo "${OTHER_ROOT_DEV}" | sed -e 's/^.*\([0-9]\)$/\1/')
 echo "Running postinst on $OTHER_ROOT_DEV"
 MOUNTPOINT=$(mktemp -d)
 mkdir -p "$MOUNTPOINT"
-mount -o ro  "$OTHER_ROOT_DEV" "$MOUNTPOINT"
+mount -t ext2 -o ro  "$OTHER_ROOT_DEV" "$MOUNTPOINT"
 "$MOUNTPOINT"/postinst --noupdate_firmware "$OTHER_ROOT_DEV"
 POSTINST_RETURN_CODE=$?
 umount "$MOUNTPOINT"
