@@ -90,6 +90,10 @@ class network_3GDormancyDance(test.test):
                                                                 'Type',
                                                                 'cellular')
 
+    def TimedOut(self):
+        self.to_raise = error.TestFail('Test took too long')
+        self.mainloop.quit()
+
     def run_once(self, name='usb', ops=5000, seed=None):
         self.opsleft = ops
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -112,4 +116,12 @@ class network_3GDormancyDance(test.test):
                                      signal_name='DormancyStatus')
         self.mainloop = gobject.MainLoop()
         glib.idle_add(self.begin)
+
+        # A rough guess on the maximum amount of time to let this run
+        self.to_raise = None
+        timeout_seconds = ops * 5
+        gobject.timeout_add(timeout_seconds * 1000, self.TimedOut)
+
         self.mainloop.run()
+        if self.to_raise:
+            raise self.to_raise
