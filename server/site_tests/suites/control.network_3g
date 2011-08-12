@@ -27,7 +27,9 @@ CLIENT_TESTS = [
     ('network_3GSafetyDance', {}),
     ('network_3GSmokeTest', {}),
     ('network_3GStressEnable', {}),
-    ('network_3GSuspendResume', {}),
+
+# Not running until 19216 is fixed
+#    ('network_3GSuspendResume', {}),
 
 # These tests shouldn't be run on activated devices.
 #    ('network_3GActivate', {}),
