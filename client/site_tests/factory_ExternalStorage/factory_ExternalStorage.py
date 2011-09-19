@@ -43,6 +43,8 @@ _ERR_TOO_MANY_REMOVE_FMT_STR = \
                     (removed_dev, target_dev, removed_dev, target_dev)
 _ERR_DEV_NOT_REMOVE_FMT_STR = \
         lambda t: 'Please remove %s.\n請移除 %s\n' % (t, t)
+_ERR_FIO_TEST_FAILED_FMT_STR = \
+        lambda target_dev: 'IO error while running test on %s.\n' % target_dev
 
 def find_root_dev():
     rootdev = utils.system_output('rootdev -s -d')
@@ -68,33 +70,40 @@ class factory_ExternalStorage(test.test):
     def rescan_storage(self, subtest_tag):
         if self._state == _STATE_WAIT_INSERT:
             new_devices = find_all_storage_dev()
-            diff = new_devices - self._devices
-            if diff:
+            insert_diff = new_devices - self._devices
+            removal_diff = self._devices - new_devices
+            if removal_diff:
+              self._devices = new_devices
+              factory.log('Device removed : %s' % removal_diff)
+            elif insert_diff:
                 self._devices = new_devices
-                factory.log('found new devs : %s' % diff)
-                self._target_device = diff.pop()
+                factory.log('found new devs : %s' % insert_diff)
+                self._target_device = insert_diff.pop()
                 devpath = os.path.join('/dev', self._target_device)
                 self._prompt.set_text(_TESTING_FMT_STR(devpath))
                 self._image = self.testing_image
                 self._pictogram.queue_draw()
                 gtk.main_iteration()
-                test._result = self.job.run_test('hardware_StorageFio',
+                result = self.job.run_test('hardware_StorageFio',
                                                  dev=devpath,
                                                  quicktest=True,
                                                  tag=subtest_tag)
+                if result is not True:
+                  self._error += _ERR_FIO_TEST_FAILED_FMT_STR(
+                          self._target_device)
                 self._prompt.set_text(_REMOVE_FMT_STR(self._media))
                 self._state = _STATE_WAIT_REMOVE
                 self._image = self.removal_image
                 self._pictogram.queue_draw()
         else:
-            diff = self._devices - find_all_storage_dev()
-            if len(diff) > 1:
+            removal_diff = self._devices - find_all_storage_dev()
+            if len(removal_diff) > 1:
                 self._error += _ERR_TOO_MANY_REMOVE_FMT_STR(
-                        self._target_device, diff)
-            if diff and self._target_device not in diff:
+                        self._target_device, removal_diff)
+            if removal_diff and self._target_device not in removal_diff:
                 self._error += _ERR_DEV_NOT_REMOVE_FMT_STR(
                         self._target_device)
-            if diff:
+            if removal_diff:
                 gtk.main_quit()
         return True
 

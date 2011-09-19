@@ -190,7 +190,7 @@ class factory_Audio(test.test):
         factory.log('%s run_once' % self.__class__)
 
         # Change initial volume.
-        if audio_sample_path:
+        if audio_init_volume:
             os.system("amixer -c 0 sset Master %d%%" % audio_init_volume)
 
         # Write recordings in tmpdir.
