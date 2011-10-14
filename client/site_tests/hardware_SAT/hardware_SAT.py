@@ -44,7 +44,7 @@ class hardware_SAT(test.test):
         # directly mapping the memory.
         utils.run('mount -o remount,size=100% /dev/shm')
         cpus = max(utils.count_cpus(), 1)
-        mbytes = max(int(utils.freememtotal() * .95 / 1024), 512)
+        mbytes = max(int(utils.freememtotal() * .95 / 1024), 320)
         # SAT should use as much memory as possible, while still
         # avoiding OOMs and allowing the kernel to run, so that
         # the maximum amoun tof memory can be tested.
