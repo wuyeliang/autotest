@@ -40,6 +40,7 @@
 /opt/Synaptics/bin/syndetect_bin
 /opt/Synaptics/bin/synreflash_bin
 /opt/google/chrome/nacl_helper_bootstrap
+/opt/google/chrome/pepper/libpepflashplayer.so
 /opt/google/o3d/lib/libCgGL.so
 /opt/google/o3d/lib/libCg.so
 /opt/netscape/plugins/libflashplayer.so
