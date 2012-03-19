@@ -113,11 +113,11 @@ _UI_SCREEN_WIDTH = 1280
 _UI_SCREEN_HEIGHT = 800
 
 _LABEL_STATUS_ROW_SIZE = (300, 30)
-_LABEL_EN_SIZE = (170, 35)
-_LABEL_ZH_SIZE = (70, 35)
+_LABEL_EN_SIZE = (170, 30)
+_LABEL_ZH_SIZE = (70, 30)
 _LABEL_EN_FONT = pango.FontDescription('courier new extra-condensed 16')
 _LABEL_ZH_FONT = pango.FontDescription('normal 12')
-_LABEL_T_SIZE = (40, 35)
+_LABEL_T_SIZE = (40, 30)
 _LABEL_T_FONT = pango.FontDescription('arial ultra-condensed 10')
 _LABEL_UNTESTED_FG = gtk.gdk.color_parse('grey40')
 _LABEL_TROUGH_COLOR = gtk.gdk.color_parse('grey20')
