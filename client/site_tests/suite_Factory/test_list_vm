@@ -24,8 +24,4 @@ TEST_LIST = [
                 dargs={'seconds': 2},
                 drop_caches=True),
         ]),
-
-    InformationScreen(
-        autotest_name='factory_Review',
-        label_zh='報告'),
 ]
