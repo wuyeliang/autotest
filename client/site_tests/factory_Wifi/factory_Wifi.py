@@ -64,6 +64,11 @@ class factory_Wifi(test.test):
                             os.path.basename(path))[0])
                 # Remove the current versions of the modules (in reverse, since
                 # there may be dependencies)
+                # The modprobe call below is a quick fix for crosbug.com/p/8568
+                # and should live only in branch cros/factory-1987.B
+                for module_name in module_names:
+                    utils.system('modprobe %s' % module_name,
+                                 ignore_status=True)
                 for module_name in reversed(module_names):
                     utils.system('rmmod %s' % module_name, ignore_status=True)
                 # Insert the custom modules
