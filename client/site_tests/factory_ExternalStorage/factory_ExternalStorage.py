@@ -96,24 +96,6 @@ class factory_ExternalStorage(test.test):
                 return vidpid.strip()
         return self.get_vidpid(device.parent)
 
-    def is_usb_cardreader(self, device):
-        attr_str = self.get_attrs(device, set(_USB_CARD_ATTRS)).lower()
-        for desc in _USB_CARD_DESCS:
-            if desc in attr_str:
-                return True
-        return False
-
-
-    def is_sd(self, device):
-        if device.device_node.find(_UDEV_MMCBLK_PATH) == 0:
-            return True
-        return self.is_usb_cardreader(device)
-
-    def get_device_type(self, device):
-        if self.is_sd(device):
-            return 'SD'
-        return 'USB'
-
     def test_read_write(self, subtest_tag):
         devpath = self._target_device
         self._prompt.set_text(_TESTING_FMT_STR(devpath))
@@ -164,13 +146,10 @@ class factory_ExternalStorage(test.test):
     def udev_event_cb(self, subtest_tag, action, device):
         if action == _UDEV_ACTION_INSERT:
             if self._state == _STATE_WAIT_INSERT:
-                if self._vidpid is None:
-                    if self._media != self.get_device_type(device):
-                        return True
-                else:
-                    if self._vidpid != self.get_vidpid(device):
-                        return True
-                    factory.log('VID:PID == %s' % self._vidpid)
+                if (self._vidpid is not None and
+                    self._vidpid != self.get_vidpid(device)):
+                    return True
+                factory.log('VID:PID == %s' % self.get_vidpid(device))
                 factory.log('%s device inserted : %s' %
                         (self._media, device.device_node))
                 self._target_device = device.device_node
