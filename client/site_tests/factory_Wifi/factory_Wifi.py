@@ -31,7 +31,8 @@ base_config = PluggableConfig({
         (  6, 2437e6, 11,   0, -14, -28, None, None),
         ( 11, 2462e6, 11,   0, -14, -28, None, None),
         ( 36, 5180e6,  7, -10, -40, -28, None, None),
-        ( 64, 5320e6,  7, -10, -40, -32, None, None),
+        # Channel 64 is disabled on factory-1987.
+        #( 64, 5320e6,  7, -10, -40, -32, None, None),
         (157, 5785e6,  7, -10, -40, -40, None, None),
         ]
 })
