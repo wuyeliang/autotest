@@ -25,8 +25,8 @@ from autotest_lib.client.cros.factory import ui as ful
 
 
 _LABEL_STATUS_SIZE = (140, 30)
-_LABEL_START_STR = 'Connect headset.\n' + \
-    'Connect external display\n\nhit SPACE to start test.'
+_LABEL_START_STR_AUDIO = 'Connect headset.\n'
+_LABEL_START_STR = 'Connect external display\n\nhit SPACE to start test.'
 _LABEL_RESPONSE_STR = ful.USER_PASS_FAIL_SELECT_STR + '\n'
 _VERBOSE = False
 
@@ -34,6 +34,7 @@ _SUBTEST_LIST = [
     ('External Display Video',
      {'msg' : 'Do you see video on External Display\n\n' + \
           _LABEL_RESPONSE_STR,
+      'cfg':['xrandr -d :0 --auto'],
       }),
     ]
 _OPTIONAL = ('External Display Audio',
@@ -97,6 +98,7 @@ class factory_ExtDisplay(test.test):
     def key_press_callback(self, widget, event):
         subtest_name, subtest_cfg = self._current_subtest
         if event.keyval == gtk.keysyms.space and not self._started:
+            self.start_subtest()
             self._prompt_label.set_text(subtest_cfg['msg'])
             self._started = True
             self._test_widget.queue_draw()
@@ -185,7 +187,11 @@ class factory_ExtDisplay(test.test):
         self._status_map = dict((n, ful.UNTESTED) for n, c in _SUBTEST_LIST)
 
 
-        prompt_label = ful.make_label(_LABEL_START_STR, fg=ful.WHITE)
+        if has_audio:
+            label_start = _LABEL_START_STR_AUDIO + _LABEL_START_STR
+        else:
+            label_start = _LABEL_START_STR
+        prompt_label = ful.make_label(label_start, fg=ful.WHITE)
         self._prompt_label = prompt_label
 
         vbox = gtk.VBox()
@@ -198,7 +204,6 @@ class factory_ExtDisplay(test.test):
         self._test_widget = vbox
 
         self.goto_next_subtest()
-        self.start_subtest()
 
         ful.run_test_widget(self.job, vbox,
             window_registration_callback=self.register_callbacks)
