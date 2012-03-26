@@ -53,7 +53,7 @@ class factory_RuninReview(test.test):
         color = ui.LABEL_COLORS[ui.PASSED if all_passed else ui.FAILED]
 
         vbox = gtk.VBox()
-        vbox.add(ui.make_label('OK' if all_passed else '不行',
+        vbox.add(ui.make_label('PASS\n可以' if all_passed else 'FAIL\n不行',
                                 font=LABEL_FONT,
                                 fg=color))
         vbox.add(ui.make_label('按空白鍵繼續\nPress SPACE to continue'))
