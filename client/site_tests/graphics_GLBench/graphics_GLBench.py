@@ -73,10 +73,11 @@ class graphics_GLBench(test.test):
     # encountered one can take them from the outdir and copy
     # them (after verification) into the reference image dir.
     exefile = os.path.join(self.autodir, 'deps/glbench/glbench')
+    libdir = os.path.join(self.autodir, 'deps/glbench')
     outdir = self.outputdir
     options += ' -save -outdir=' + outdir
 
-    cmd = '%s %s' % (exefile, options)
+    cmd = 'LD_LIBRARY_PATH=%s %s %s' % (libdir, exefile, options)
 
     # If UI is running, we must stop it and restore later.
     need_restart_ui = False
