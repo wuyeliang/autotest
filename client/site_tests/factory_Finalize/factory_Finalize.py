@@ -19,6 +19,11 @@ from autotest_lib.client.cros.factory import gooftools
 from autotest_lib.client.cros.factory import shopfloor
 from autotest_lib.client.cros.factory import ui
 
+MSG_SHUTDOWN = ("Finalization is complete.\n"
+                "Press Ctrl-Alt-S to shut down.\n"
+                "\n"
+                "最终程序已完成。\n"
+                "按Ctrl-Alt-S关机。\n")
 
 class PreflightChecker(object):
     """Checks if the system is ready for finalization."""
@@ -228,31 +233,62 @@ class factory_Finalize(test.test):
             raise error.TestFail(self._fail_msg)
 
     def worker_thread(self):
+        quit_on_exit = True
+
         try:
             upload_method = self.normalize_upload_method(self.upload_method)
             hwid_cfg = factory.get_shared_data('hwid_cfg')
 
-            command = '--finalize'
-            if self.developer_mode:
-                self.alert('DEVELOPER MODE ENABLED')
-                command = '--developer_finalize'
+            # TODO(jsalz): Remove this hack (for factory-1987 only).
+            if True:
+                quit_on_exit = False
+                args = ['gooftool',
+                        '--verbose',
+                        '--report_tag "%s"' % hwid_cfg,
+                        '--upload_method "%s"' % upload_method,
+                        '--clear_gbb_flags',
+                        '--verify_hwid',
+                        '--verify_vpd',
+                        '--verify_system_time',
+                        '--verify_keys',
+                        '--verify_rootfs',
+                        '--create_report',
+                        '--upload_report']
+                cmd = ' '.join(args)
+                gooftools.run(cmd)
+                def thats_all_folks():
+                    self.container.forall(lambda w: self.container.remove(w))
+                    label = ui.make_label(MSG_SHUTDOWN,
+                                          fg=PreflightChecker.COLOR_PASSED,
+                                          alignment=(0, 0.5))
+                    self.container.pack_start(label, False, False)
+                    self.container.add(label)
+                    self.container.show_all()
+                gobject.idle_add(thats_all_folks)
+            else:
+                command = '--finalize'
+                if self.developer_mode:
+                    self.alert('DEVELOPER MODE ENABLED')
+                    command = '--developer_finalize'
 
-            args = ['gooftool',
-                    command,
-                    '--verbose',
-                    '--wipe_method "%s"' % ('secure' if self.secure_wipe else
-                                            'fast'),
-                    '--report_tag "%s"' % hwid_cfg,
-                    '--upload_method "%s"' % upload_method,
-                    ]
+                args = ['gooftool',
+                        command,
+                        '--verbose',
+                        '--wipe_method "%s"' % (
+                            'secure' if self.secure_wipe else
+                            'fast'),
+                        '--report_tag "%s"' % hwid_cfg,
+                        '--upload_method "%s"' % upload_method,
+                        ]
 
-            cmd = ' '.join(args)
-            gooftools.run(cmd)
+                cmd = ' '.join(args)
+                gooftools.run(cmd)
 
-            # TODO(hungte) use Reboot in test list to replace this?
-            os.system("sync; sync; sync; shutdown -r now")
+                # TODO(hungte) use Reboot in test list to replace this?
+                os.system("sync; sync; sync; shutdown -r now")
         except:
             self._fail_msg = "Failed in finalization: %s" % sys.exc_info()[1]
             logging.exception("Exception when finalizing.")
         finally:
-            gobject.idle_add(gtk.main_quit)
+            if quit_on_exit:
+                gobject.idle_add(gtk.main_quit)

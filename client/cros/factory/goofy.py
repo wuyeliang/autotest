@@ -357,6 +357,7 @@ class Goofy(object):
             Event.Type.AUTO_RUN: self.auto_run,
             Event.Type.RE_RUN_FAILED: self.re_run_failed,
             Event.Type.REVIEW: self.show_review_information,
+            Event.Type.REBOOT_EC: self.reboot_ec,
         }
 
     def __del__(self):
@@ -371,6 +372,16 @@ class Goofy(object):
             self.event_server.shutdown()  # pylint: disable=E1101
             self.event_server_thread.join()
         prespawner.stop()
+
+    def reboot_ec(self):
+        cmd = '/usr/local/sbin/ectool reboot_ec'
+        logging.error(cmd)
+
+        os.system('sync')
+        time.sleep(1)
+        os.system(cmd)
+        time.sleep(5)
+        logging.error('reboot_ec failed')
 
     def start_state_server(self):
         self.state_instance, self.state_server = state.create_server()

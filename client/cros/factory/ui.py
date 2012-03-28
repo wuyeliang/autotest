@@ -103,6 +103,8 @@ MESSAGE_NO_ACTIVE_TESTS = (
         "  Re-test everything.\n\n"
         "Ctrl-Alt-Z (Information):\n"
         "  Review test results and information.\n\n"
+        "Ctrl-Alt-S (Shutdown):\n"
+        "  Shut down the machine and EC (embedded controller).\n\n"
         )
 
 USER_PASS_FAIL_SELECT_STR = (
@@ -133,6 +135,7 @@ GLOBAL_HOT_KEY_EVENTS = {
     'a': Event.Type.AUTO_RUN,
     'f': Event.Type.RE_RUN_FAILED,
     'z': Event.Type.REVIEW,
+    's': Event.Type.REBOOT_EC,
     }
 try:
     # Works only if X is available.

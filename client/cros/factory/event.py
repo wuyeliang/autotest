@@ -47,6 +47,8 @@ class Event(object):
             'RE_RUN_FAILED': 'goofy:re_run_failed',
             # Tells goofy to go to the review screen.
             'REVIEW': 'goofy:review',
+            # Shuts down the EC (factory-1987 only).
+            'REBOOT_EC': 'goofy:reboot_ec',
             })
 
     def __init__(self, type, **kw):  # pylint: disable=W0622
