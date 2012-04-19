@@ -387,7 +387,8 @@ class Goofy(object):
         self.event_handlers = {
             Event.Type.SWITCH_TEST: self.handle_switch_test,
             Event.Type.SHOW_NEXT_ACTIVE_TEST: self.show_next_active_test,
-            Event.Type.RESTART_TESTS: self.restart_tests,
+            Event.Type.RESTART_TESTS:
+                lambda: self.restart_tests(reset_run_count=True),
             Event.Type.AUTO_RUN: self.auto_run,
             Event.Type.RE_RUN_FAILED: self.re_run_failed,
             Event.Type.REVIEW: self.show_review_information,
@@ -558,7 +559,7 @@ class Goofy(object):
                                   error_msg='', shutdown_count=0)
                 # Save pending test list in the state server
                 self.state_instance.set_shared_data(
-                    'tests_after_shutdown',
+                    'tests_after_reboot',
                     [t.path for t in self.tests_to_run])
 
                 self.shutdown(test.operation)
@@ -582,17 +583,27 @@ class Goofy(object):
 
             self.reap_completed_tests()
             if ((not self.invocations) and
-                (not any(state in [TestState.ACTIVE, TestState.UNTESTED]
+                (not any(state.status in [TestState.ACTIVE, TestState.UNTESTED]
                          for node, state
                          in self.state_instance.get_test_states().
                              iteritems()))):
                 # All tests are complete.
+                current_run_count += 1
+                factory.console.info(
+                    '%d %s complete',
+                    current_run_count,
+                    'run' if current_run_count == 1 else 'runs')
                 if ((self.test_list.options.run_count ==
                      factory.Options.RUN_FOREVER) or
-                    (current_run_count + 1 <
-                     self.test_list.options.run_count)):
+                    (current_run_count < self.test_list.options.run_count)):
                     # OK then, re-run!
-                    current_run_count += 1
+                    factory.console.info(
+                        'Restarting tests (%d of %s)',
+                        current_run_count + 1,
+                        '<infinite>' if (self.test_list.options.run_count ==
+                                         factory.Options.RUN_FOREVER)
+                        else self.test_list.options.run_count)
+
                     self.state_instance.set_shared_data('current_run_count',
                                                         current_run_count)
                     self.restart_tests()
@@ -737,7 +748,7 @@ class Goofy(object):
             self.tests_to_run.extend(
                 self.test_list.lookup_path(t) for t in tests_after_reboot)
             self.run_next_test()
-        else:
+        elif self.test_list.options.auto_run_on_start:
             self.run_tests(self.test_list, untested_only=True)
 
         # Process events forever.
@@ -784,11 +795,13 @@ class Goofy(object):
 
         self.run_tests(tests_to_run, untested_only=True)
 
-    def restart_tests(self):
+    def restart_tests(self, reset_run_count=False):
         '''Restarts all tests.'''
         self.abort_active_tests()
         for test in self.test_list.walk():
             test.update_state(status=TestState.UNTESTED)
+        if reset_run_count:
+            self.state_instance.set_shared_data('current_run_count', 0)
         self.run_tests(self.test_list)
 
     def auto_run(self):
