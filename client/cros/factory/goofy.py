@@ -10,6 +10,7 @@
 The main factory flow that runs the factory test and finalizes a device.
 '''
 
+import fnmatch
 import inspect
 import logging
 import os
@@ -159,6 +160,7 @@ class TestInvocation(object):
         self.test = test
         self.thread = threading.Thread(target=self._run)
         self.on_completion = on_completion
+        self.status = None
 
         self._lock = threading.Lock()
         # The following properties are guarded by the lock.
@@ -277,7 +279,38 @@ class TestInvocation(object):
             traceback.print_exc(sys.stderr)
         finally:
             factory.console.info('Test %s: %s' % (test.path, status))
+            self.clean_autotest_logs(output_dir)
             return status, error_msg  # pylint: disable=W0150
+
+    def clean_autotest_logs(self, output_dir):
+        globs = self.goofy.test_list.options.preserve_autotest_results
+        if '*' in globs:
+            # Keep everything
+            return
+
+        deleted_count = 0
+        preserved_count = 0
+        for root, dirs, files in os.walk(output_dir, topdown=False):
+            for f in files:
+                if any(fnmatch.fnmatch(f, g)
+                       for g in globs):
+                    # Keep it
+                    preserved_count = 1
+                else:
+                    try:
+                        os.unlink(os.path.join(root, f))
+                        deleted_count += 1
+                    except:
+                        logging.exception('Unable to remove %s' %
+                                          os.path.join(root, f))
+            try:
+                # Try to remove the directory (in case it's empty now)
+                os.rmdir(root)
+            except:
+                # Not empty; that's OK
+                pass
+        logging.info('Preserved %d files matching %s and removed %d',
+                     preserved_count, globs, deleted_count)
 
     def _run(self):
         with self._lock:
@@ -297,6 +330,7 @@ class TestInvocation(object):
                                visible=False)
         with self._lock:
             self._completed = True
+            self.status = status
         self.goofy.run_queue.put(self.goofy.reap_completed_tests)
         self.goofy.run_queue.put(self.on_completion)
 
@@ -529,11 +563,40 @@ class Goofy(object):
 
                 self.shutdown(test.operation)
 
-            invoc = TestInvocation(self, test, on_completion=self.run_next_test)
+            def completion():
+                if ((invoc.status == TestState.PASSED) or
+                    (not self.test_list.options.halt_on_failure)):
+                    self.run_next_test()
+            invoc = TestInvocation(self, test, on_completion=completion)
             self.invocations[test] = invoc
             if self.visible_test is None and test.has_ui:
                 self.set_visible_test(test)
             invoc.start()
+
+        if self.test_list.options.run_count != 1:
+            try:
+                current_run_count = (
+                    self.state_instance.get_shared_data('current_run_count'))
+            except KeyError:
+                current_run_count = 0
+
+            self.reap_completed_tests()
+            if ((not self.invocations) and
+                (not any(state in [TestState.ACTIVE, TestState.UNTESTED]
+                         for node, state
+                         in self.state_instance.get_test_states().
+                             iteritems()))):
+                # All tests are complete.
+                if ((self.test_list.options.run_count ==
+                     factory.Options.RUN_FOREVER) or
+                    (current_run_count + 1 <
+                     self.test_list.options.run_count)):
+                    # OK then, re-run!
+                    current_run_count += 1
+                    self.state_instance.set_shared_data('current_run_count',
+                                                        current_run_count)
+                    self.restart_tests()
+
 
     def run_tests(self, subtrees, untested_only=False):
         '''

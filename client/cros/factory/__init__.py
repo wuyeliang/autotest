@@ -221,6 +221,18 @@ class Options(object):
     # Perform an implicit auto-run when the user switches to any test?
     auto_run_on_keypress = False
 
+    # Run the test list n times.  (Set to 0 to re-run forever.)
+    run_count = 1
+
+    # Special value for re_run_count meaning "forever".
+    RUN_FOREVER = 0
+
+    # Stop on any failure.
+    halt_on_failure = False
+
+    # Preserve only autotest results matching these globs.
+    preserve_autotest_results = ['*']
+
     def check_valid(self):
         '''Throws a TestListError if there are any invalid options.'''
         # Make sure no errant options, or options with weird types,
