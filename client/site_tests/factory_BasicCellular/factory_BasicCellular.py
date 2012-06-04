@@ -19,6 +19,10 @@ DEVICE_NORMAL_RESPONSE = 'OK'
 _MESSAGE_PROMPT = (
     'Please insert the SIM card then press enter.\n'
     '請插入SIM卡後按回車鍵\n')
+_MESSAGE_EXIT = (
+    'Press enter to continue.\n'
+    '請按回車鍵繼續\n'
+    )
 
 
 class factory_BasicCellular(test.test):
@@ -91,6 +95,16 @@ class factory_BasicCellular(test.test):
         else:
             self._run(imei_re, iccid_re, dev, reset_modem_waiting, prompt)
 
+    def show_information_screen(self, imei, iccid):
+        key_action_mapping = { gtk.keysyms.Return: (gtk.main_quit, []) }
+        parent = self.test_widget.get_parent()
+        parent.remove(self.test_widget)
+        self.test_widget = self.make_decision_widget(
+                'IMEI: %s\n\nICCID: %s\n\n%s' % (imei, iccid, _MESSAGE_EXIT),
+                key_action_mapping=key_action_mapping)
+        parent.add(self.test_widget)
+        parent.show_all()
+
     def _run(self, imei_re, iccid_re, dev, reset_modem_waiting, prompt):
         def read_response():
             '''Reads response from the modem until a timeout.'''
@@ -104,13 +118,16 @@ class factory_BasicCellular(test.test):
             factory.log('modem] %r' % command)
             echo = read_response()
 
-        def check_response(expected_re):
+        def check_response(expected_re, response=None):
             '''Reads response and checks with a regular expression.'''
-            response = read_response()
+            if response is None:
+                response = read_response()
             if not re.match(expected_re, response):
                 raise error.TestError(
                     'Expected %r but got %r' % (expected_re, response))
 
+        imei_value = None
+        iccid_value = None
         try:
             # Kill off modem manager, which might be holding the device open.
             utils.system("stop modemmanager", ignore_status=True)
@@ -135,21 +152,25 @@ class factory_BasicCellular(test.test):
             # Check IMEI.
             if imei_re is not None:
                 send_command('AT+CGSN')
-                check_response(imei_re)
+                imei_value = read_response()
+                check_response(imei_re, imei_value)
                 check_response('')
                 check_response(DEVICE_NORMAL_RESPONSE)
 
             # Check ICCID.
             if iccid_re is not None:
                 send_command('AT+ICCID')
-                check_response(iccid_re)
+                iccid_value = read_response()
+                check_response(iccid_re, iccid_value)
                 check_response('')
                 check_response(DEVICE_NORMAL_RESPONSE)
         finally:
+            factory.log('IMEI: %s' % imei_value)
+            factory.log('ICCID: %s' % iccid_value)
             try:
                 # Restart the modem manager.
                 utils.system("start modemmanager", ignore_status=True)
             except Exception as e:
                 factory.log('Exception - %s' % e)
         if prompt:
-            gtk.main_quit()
+            self.show_information_screen(imei_value, iccid_value)
