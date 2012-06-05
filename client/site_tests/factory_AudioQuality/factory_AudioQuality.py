@@ -118,7 +118,7 @@ class factory_AudioQuality(test.test):
             self._loop_process.kill()
             self._loop_process = None
             factory.log("Stopped audio loop process")
-        self._ah.set_mixer_controls(_INIT_MIXER_SETTINGS)
+        self._ah.set_mixer_controls(self._init_mixer_settings)
 
     def handle_send_file(self, *args):
         conn = args[0]
@@ -166,7 +166,7 @@ class factory_AudioQuality(test.test):
         self.handle_loop()
         self._loop_status_label.set_text(_LABEL_AUDIOLOOP +
                 _LABEL_DMIC_ON)
-        self._ah.set_mixer_controls(self._dmic_capture_mixer_settings)
+        self._ah.set_mixer_controls(self._dmic_switch_mixer_settings)
 
     def handle_loop_speaker_unmute(self, *args):
         self.handle_loop()
@@ -271,6 +271,7 @@ class factory_AudioQuality(test.test):
         self._init_mixer_settings = init_mixer_settings
         self._unmute_speaker_mixer_settings = unmute_speaker_mixer_settings
         self._dmic_switch_mixer_settings = dmic_switch_mixer_settings
+        self._ah.set_mixer_controls(self._init_mixer_settings)
 
         factory.log('Checking %s state....' % self._eth)
         utils.poll_for_condition(self.check_eth_state,
