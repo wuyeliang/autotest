@@ -25,8 +25,7 @@ def i2c_detect(bus, addr):
 
 def i2c_probe(bus, addr):
     response = i2c_detect(bus, addr)
-    return (re.search('^\d\d:\s+(UU|[0-9a-f]{2})', response, re.MULTILINE) is
-            not None)
+    return (re.search(r'^\d\d:\s+(--)', response, re.MULTILINE) is None)
 
 class hardware_I2CProbe(test.test):
     version = 1
