@@ -23,7 +23,7 @@ from autotest_lib.client.cros.audio import audio_helper
 from autotest_lib.client.cros.factory import ui as ful
 
 _DEFAULT_FREQ_HZ = 1000
-_DEFAULT_FREQ_THRESHOLD_HZ = 50
+_DEFAULT_FREQ_THRESHOLD_HZ = 150
 _DEFAULT_DURATION_SEC = 1
 
 _LABEL_START_STR = 'Hit s to start loopback test\n' +\
