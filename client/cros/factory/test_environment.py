@@ -146,12 +146,13 @@ class SystemInfo(object):
             pass
 
         self.factory_image_version = None
+        self.stateful_partition_version = None
         try:
-            lsb_release = open('/etc/lsb-release').read()
-            match = re.search('^GOOGLE_RELEASE=(.+)$', lsb_release,
-                              re.MULTILINE)
-            if match:
-                self.factory_image_version = match.group(1)
+            lsb_data = factory.get_lsb_data()
+            self.factory_image_version = lsb_data.get('GOOGLE_RELEASE')
+            self.stateful_partition_version = lsb_data.get(
+                'STATEFUL_PARTITION_RELEASE',
+                self.factory_image_version)
         except:
             pass
 
