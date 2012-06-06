@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import tempfile
+import threading
 import utils
 
 from autotest_lib.client.bin import test
@@ -64,29 +65,50 @@ class factory_AudioLoop(test.test):
                 self._gio_tag = glib.io_add_watch(self._proc.stderr, glib.IO_IN,
                         self.audiofuntest_cb, priority=glib.PRIORITY_LOW)
             else:
-                self.audio_loopback()
+                self._loop_thread = threading.Thread(target=self.audio_loopback)
+                self._loop_thread.start()
+                self._loop_end = threading.Event()
+                wait_counter = 0
+                while True:
+                    self._loop_end.wait(5)
+                    if self._loop_end.isSet():
+                        break
+                    else:
+                        wait_counter += 1
+                        if wait_counter > 5:
+                            raise error.TestError('Loop test timeout')
+                if hasattr(self, '_to_raise'):
+                    raise self._to_raise
                 gtk.main_quit()
 
         return True
 
     def audio_loopback(self):
-        for input_device in self._input_devices:
-            self._ah = audio_helper.AudioHelper(self,
-                    input_device=input_device,
-                    record_duration=self._duration)
-            # TODO(hychao): split deps and I/O devices to different
-            # utils so we can setup deps only once.
-            self._ah.setup_deps(['sox'])
-            for output_device in self._output_devices:
-                # Record a sample of "silence" to use as a noise profile.
-                with tempfile.NamedTemporaryFile(mode='w+t') as noise_file:
-                    factory.log('Noise file: %s' % noise_file.name)
-                    self._ah.record_sample(noise_file.name)
+        try:
+            for input_device in self._input_devices:
+                self._ah = audio_helper.AudioHelper(self,
+                        input_device=input_device,
+                        record_duration=self._duration)
+                # TODO(hychao): split deps and I/O devices to different
+                # utils so we can setup deps only once.
+                self._ah.setup_deps(['sox'])
+                for output_device in self._output_devices:
+                    # Record a sample of "silence" to use as a noise profile.
+                    with tempfile.NamedTemporaryFile(mode='w+t') as noise_file:
+                        factory.log('Noise file: %s' % noise_file.name)
+                        self._ah.record_sample(noise_file.name)
 
-                    # Playback sine tone and check the recorded audio frequency.
-                    self._ah.loopback_test_channels(noise_file,
-                            lambda ch: self.playback_sine(ch, output_device),
-                            self.check_recorded_audio)
+                        # Playback sine tone and check the recorded audio
+                        # frequency.
+                        self._ah.loopback_test_channels(noise_file,
+                                lambda ch: self.playback_sine(ch,
+                                                              output_device),
+                                self.check_recorded_audio)
+        except Exception as e:
+            self._to_raise = e
+        finally:
+            if hasattr(self, '_loop_end'):
+                self._loop_end.set()
 
     def playback_sine(self, unused_channel, output_device='default'):
         cmd = '%s -n -t alsa %s synth %d sine %d' % (self._ah.sox_path,
