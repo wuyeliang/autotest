@@ -115,26 +115,35 @@ class factory_Wifi(test.test):
                 (channel, freq, fixed_rate, range, level, power_adjustment,
                  min_avg_power, max_avg_power) = channel_info
 
-                utils.system("echo 0 > %s/tx99" % ath9k,
-                             ignore_status=True)
-                # Set up TX99 (continuous transmit) and begin sending.
-                utils.system("iw wlan0 set channel %d" % channel)
-                utils.system("echo %d > %s/fixed_rate" % (fixed_rate, ath9k))
-                utils.system("echo 1 > %s/tx99" % ath9k)
-                try:
-                    power = n4010a.MeasurePower(freq, range=range, level=level)
-                    power.avg_power -= power_adjustment
-                    power.peak_power -= power_adjustment
-                    if not rf_utils.IsInRange(
-                        power.avg_power, min_avg_power, max_avg_power):
-                        failures.append(
-                            'Power for channel %d is %g, out of range (%g,%g)' %
-                            (channel, power.avg_power,
-                             min_avg_power, max_avg_power))
-                except lan_scpi.TimeoutError:
+                TRIES = 5
+                for try_number in xrange(TRIES):
+                    logging.info("Try %d for channel %s", try_number + 1, channel_info)
+                    utils.system("echo 0 > %s/tx99" % ath9k,
+                                 ignore_status=True)
+                    # Set up TX99 (continuous transmit) and begin sending.
+                    utils.system("iw wlan0 set channel %d" % channel)
+                    utils.system("echo %d > %s/fixed_rate" % (fixed_rate, ath9k))
+                    utils.system("echo 1 > %s/tx99" % ath9k)
+                    try:
+                        power = n4010a.MeasurePower(freq, range=range, level=level)
+                        power.avg_power -= power_adjustment
+                        power.peak_power -= power_adjustment
+                        power.tries = try_number + 1
+                        if not rf_utils.IsInRange(
+                            power.avg_power, min_avg_power, max_avg_power):
+                            failures.append(
+                                'Power for channel %d is %g, out of range (%g,%g)' %
+                                (channel, power.avg_power,
+                                 min_avg_power, max_avg_power))
+                        break  # Success: Don't retry
+                    except lan_scpi.TimeoutError:
+                        # Try again
+                        logging.info("Timeout on channel %d", channel)
+                        n4010a.Reopen()
+                        power = None
+                else:
                     failures.append("Timeout on channel %d" % channel)
-                    n4010a.Reopen()
-                    power = None
+
                 power_by_channel[channel] = power
 
             if failures:
@@ -142,7 +151,7 @@ class factory_Wifi(test.test):
         finally:
             event_log.Log(
                 'wifi_power',
-                power_by_channel=dict((k, v.__dict__)
+                power_by_channel=dict((k, v and v.__dict__)
                                       for k, v in power_by_channel.iteritems()))
             logging.info("Power: %s" % [
                     (k, power_by_channel[k])
