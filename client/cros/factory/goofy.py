@@ -35,6 +35,7 @@ from StringIO import StringIO
 import factory_common
 from autotest_lib.client.bin.prespawner import Prespawner
 from autotest_lib.client.cros import factory
+from autotest_lib.client.cros.factory import event_log
 from autotest_lib.client.cros.factory import state
 from autotest_lib.client.cros.factory import TestState
 from autotest_lib.client.cros.factory import updater
@@ -573,6 +574,21 @@ class Goofy(object):
         if not _inited_logging:
             factory.init_logging('goofy', verbose=self.options.verbose)
             _inited_logging = True
+
+        try:
+            boot_sequence = int(open(event_log.BOOT_SEQUENCE_PATH).read()) + 1
+        except:
+            boot_sequence = 0
+
+        logging.info('Boot sequence: %d', boot_sequence)
+
+        try:
+            with open(event_log.BOOT_SEQUENCE_PATH, "w") as f:
+                f.write('%d' % boot_sequence)
+        except:
+            logging.exception('Unable to write boot sequence')
+
+
         self.event_log = EventLog('goofy')
 
         if (not suppress_chroot_warning and

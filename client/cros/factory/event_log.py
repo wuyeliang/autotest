@@ -69,6 +69,8 @@ DEVICE_ID_PATH = os.path.join(EVENT_LOG_DIR, ".device_id")
 # this is the first time we're creating an event log).
 IMAGE_ID_PATH = os.path.join(EVENT_LOG_DIR, ".image_id")
 
+BOOT_SEQUENCE_PATH = os.path.join(EVENT_LOG_DIR, ".boot_sequence")
+
 WLAN0_MAC_PATH = "/sys/class/net/wlan0/address"
 
 PREFIX_RE = re.compile("^[a-zA-Z0-9_\.]+$")
@@ -119,6 +121,13 @@ def GetImageId():
         print >>f, image_id
       logging.info('No image ID available yet: generated %s', image_id)
   return image_id
+
+
+def GetBootSequence():
+  try:
+    return int(open(BOOT_SEQUENCE_PATH).read())
+  except:
+    return -1
 
 
 class EventLog(object):
@@ -234,6 +243,7 @@ class EventLog(object):
                       boot_id=GetBootId(),
                       device_id=GetDeviceId(),
                       image_id=GetImageId(),
+                      boot_sequence=GetBootSequence(),
                       filename=self.filename)
 
   def _LogUnlocked(self, event_name, **kwargs):
