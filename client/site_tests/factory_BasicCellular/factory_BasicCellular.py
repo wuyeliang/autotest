@@ -159,7 +159,7 @@ class factory_BasicCellular(test.test):
 
             # Check ICCID.
             if iccid_re is not None:
-                send_command('AT+ICCID')
+                send_command('AT+ICCID?')
                 iccid_value = read_response()
                 check_response(iccid_re, iccid_value)
                 check_response('')
