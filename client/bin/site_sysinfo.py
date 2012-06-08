@@ -77,7 +77,8 @@ class site_sysinfo(base_sysinfo.base_sysinfo):
         self.test_loggables.add(
             purgeable_logdir(
                 os.path.join(constants.CRYPTOHOME_MOUNT_PT, "log")))
-        self.test_loggables.add(logdir("/var/log"))
+        # Removed on factory-2368 only:
+        # self.test_loggables.add(logdir("/var/log"))
         # We only want to gather and purge crash reports after the client test
         # runs in case a client test is checking that a crash found at boot
         # (such as a kernel crash) is handled.
