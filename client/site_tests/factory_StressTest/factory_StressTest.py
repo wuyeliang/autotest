@@ -41,7 +41,7 @@ _MESSAGE_FAILED_LOADAVG = 'Failed to retrieve system load.'
 
 
 
-SUBTESTS = factory_utils.Enum(['SAT', 'Load', 'Battery', 'Graphics'])
+SUBTESTS = factory_utils.Enum(['SAT', 'Load', 'Graphics'])
 
 
 class ECControl(object):
@@ -95,6 +95,9 @@ class BatteryInfo(object):
     def get_voltage_now(self):
         return int(self.get_value('voltage_now'))
 
+    def get_current_now(self):
+        return int(self.get_value('current_now'))
+
 
 class factory_StressTest(test.test):
     version = 2
@@ -112,18 +115,6 @@ class factory_StressTest(test.test):
                 raise error.TestError('Failed to start load test')
             time.sleep(seconds)
             p.kill()
-
-    def thread_Battery(self, seconds):
-        battery = BatteryInfo()
-        charge_full = battery.get_charge_full()
-        charge_begin = battery.get_charge_now()
-        if (charge_begin < charge_full and
-            battery.get_status() != 'Charging'):
-            raise error.TestError('Battery not charging')
-        time.sleep(seconds)
-        charge_end = battery.get_charge_now()
-        if charge_end < charge_full and charge_end < charge_begin:
-            raise error.TestError('Battery not charged')
 
     def thread_Graphics(self, times):
         count = 0
@@ -196,7 +187,9 @@ class factory_StressTest(test.test):
             temperatures=[ectool.get_temperature(i)
                           for i in xrange(num_temp_sensor)],
             battery={'charge': battery.get_charge_now(),
-                     'voltage': battery.get_voltage_now()})
+                     'voltage': battery.get_voltage_now(),
+                     'current': battery.get_current_now(),
+                     'status': battery.get_status()})
 
         self._event_log.Log('sensor_measurement', **log_args)
         factory.log('Status at %s: %s' % (
@@ -264,12 +257,9 @@ class factory_StressTest(test.test):
                     SUBTESTS.SAT, self.thread_SAT, (runin_seconds,))
                 self._start_subtest(
                     SUBTESTS.Load, self.thread_Load, (runin_seconds,))
-                self._start_subtest(
-                    SUBTESTS.Battery, self.thread_Battery,
-                        (runin_seconds,))
             else:
                 self._complete |= set(
-                    [SUBTESTS.SAT, SUBTESTS.Load, SUBTESTS.Battery])
+                    [SUBTESTS.SAT, SUBTESTS.Load])
             if graphics_test_times > 0:
                 self._start_subtest(SUBTESTS.Graphics,
                                     self.thread_Graphics,
