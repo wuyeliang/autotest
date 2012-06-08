@@ -40,7 +40,7 @@ class factory_USB(test.test):
         bus_ver_path = os.path.join(bus_path, 'version')
         bus_version = int(float(open(bus_ver_path, 'r').read().strip()))
 
-        if bus_version == 2:
+        if (bus_version == 2) or (bus_version == 1):
             self._seen_usb2_paths.add(sys_path)
         elif bus_version == 3:
             self._seen_usb3_paths.add(sys_path)
