@@ -47,7 +47,8 @@ class PreflightTask(task.FactoryTask):
     MSG_POLLING_READY = ("System is READY. Staring FINALIZATION!\n"
                          "系統已準備就緒。 開始最終程序!")
 
-    def __init__(self, test_list, developer_mode, polling_seconds):
+    def __init__(self, test_list, developer_mode, polling_seconds,
+                 write_protect):
         def create_label(message):
             return ui.make_label(message, fg=self.COLOR_DISABLED,
                                  alignment=(0, 0.5))
@@ -55,20 +56,20 @@ class PreflightTask(task.FactoryTask):
         self.developer_mode = developer_mode
         self.polling_seconds = polling_seconds
         self.polling_mode = (self.polling_seconds is not None)
+        self.write_protect = write_protect
         self.test_list = test_list
         self.items = [(self.check_required_tests,
                        create_label("Verify no tests failed\n"
                                     "確認無測試項目失敗"))]
-        if developer_mode:
-            return
+        if not developer_mode:
+            self.items += [(self.check_developer_switch,
+                            create_label("Turn off Developer Switch\n"
+                                         "停用開發者開關(DevSwitch)"))]
 
-        # Items only enforced in non-developer mode.
-        self.items += [(self.check_developer_switch,
-                        create_label("Turn off Developer Switch\n"
-                                     "停用開發者開關(DevSwitch)")),
-                       (self.check_write_protect,
-                        create_label("Enable write protection pin\n"
-                                     "確認硬體寫入保護已開啟"))]
+        if write_protect:
+            self.items += [(self.check_write_protect,
+                            create_label("Enable write protection pin\n"
+                                         "確認硬體寫入保護已開啟"))]
 
     def check_developer_switch(self):
         """ Checks if developer switch button is disabled """
@@ -180,16 +181,18 @@ class PreflightTask(task.FactoryTask):
 
 class FinalizeTask(task.FactoryTask):
 
-    def __init__(self, developer_mode, secure_wipe, upload_method):
+    def __init__(self, developer_mode, secure_wipe, upload_method,
+                 write_protect):
         self.developer_mode = developer_mode
         self.secure_wipe = secure_wipe
         self.upload_method = upload_method
+        self.write_protect = write_protect
 
     def alert(self, message, times=3):
         """Alerts user that a required test is bypassed."""
         for i in range(times, 0, -1):
             factory.log(('WARNING: Factory Finalize: %s. ' +
-                         'THIS DEVICE CANNOT BE QUALIFIED. ' +
+                         'THIS DEVICE CANNOT BE SHIPPED TO END USERS. ' +
                          '(continue in %d seconds)') % (message, i))
             time.sleep(1)
 
@@ -218,6 +221,9 @@ class FinalizeTask(task.FactoryTask):
         if self.developer_mode:
             self.alert('DEVELOPER MODE ENABLED')
             command += ' --dev'
+        if not self.write_protect:
+            self.alert('SOFTWARE WRITE PROTECT DISABLED')
+            command += ' --no_write_protect'
         if not self.secure_wipe:
             command += ' --fast'
         command += ' --upload_method "%s"' % upload_method
@@ -239,13 +245,18 @@ class factory_Finalize(test.test):
                  polling_seconds=None,
                  secure_wipe=False,
                  upload_method='none',
+                 write_protect=None,
                  test_list_path=None):
 
         factory.log('%s run_once' % self.__class__)
 
+        if write_protect is None:
+            write_protect = not developer_mode
         test_list = factory.read_test_list(test_list_path)
-        self.tasks = [PreflightTask(test_list, developer_mode, polling_seconds),
-                      FinalizeTask(developer_mode, secure_wipe, upload_method)]
+        self.tasks = [PreflightTask(test_list, developer_mode, polling_seconds,
+                                    write_protect),
+                      FinalizeTask(developer_mode, secure_wipe, upload_method,
+                                   write_protect)]
 
         task.run_factory_tasks(self.job, self.tasks)
 
