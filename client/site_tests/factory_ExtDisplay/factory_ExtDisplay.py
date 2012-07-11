@@ -228,7 +228,10 @@ class factory_ExtDisplay(test.test):
         if has_audio:
             self.locate_audio_sample(audio_sample_path)
             _SUBTEST_LIST.append(_OPTIONAL)
-        _SUBTEST_LIST.append(_CLEANUP)
+
+        # TODO(cychiang) add this subtest back once we have HDMI hot plug
+        # supported. See crosbug.com/p/9879.
+        #_SUBTEST_LIST.append(_CLEANUP)
 
         self._subtest_queue = [x for x in reversed(_SUBTEST_LIST)]
         self._status_map = dict((n, ful.UNTESTED) for n, c in _SUBTEST_LIST)
