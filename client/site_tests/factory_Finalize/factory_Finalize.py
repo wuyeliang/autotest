@@ -53,16 +53,11 @@ class PreflightTask(task.FactoryTask):
         self.items = [(self.check_required_tests,
                        create_label("Verify no tests failed\n"
                                     "確認無測試項目失敗"))]
-        if developer_mode:
-            return
 
-        # Items only enforced in non-developer mode.
-        self.items += [(self.check_developer_switch,
-                        create_label("Turn off Developer Switch\n"
-                                     "停用開發者開關(DevSwitch)")),
-                       (self.check_write_protect,
-                        create_label("Enable write protection pin\n"
-                                     "確認硬體寫入保護已開啟"))]
+        # For this factory build, we don't need to verify developer switch,
+        # and we don't need to enable write protection either.
+        # Remove check_developer_switch and check_write_protect
+        # Check crosbug.com/p/10691 for related CL and bug.
 
     def check_developer_switch(self):
         """ Checks if developer switch button is disabled """
