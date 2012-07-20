@@ -215,6 +215,8 @@ class FinalizeTask(task.FactoryTask):
         task.schedule(self.do_finalize)
 
     def do_finalize(self):
+        if shopfloor.is_enabled():
+            shopfloor.finalize()
         upload_method = self.normalize_upload_method(self.upload_method)
 
         command = 'gooftool -v 4 -l %s finalize' % factory.CONSOLE_LOG_PATH

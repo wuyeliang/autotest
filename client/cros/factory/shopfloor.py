@@ -35,6 +35,7 @@ KEY_SHOPFLOOR_SESSION = 'shopfloor.session'
 # session is a simple dictionary with following keys:
 SESSION_SERIAL_NUMBER = 'serial_number'
 SESSION_SERVER_URL = 'server_url'
+SESSION_STATION_ID = 'station_id'
 SESSION_ENABLED = 'enabled'
 
 API_GET_HWID = 'GetHWID'
@@ -56,6 +57,7 @@ def _fetch_current_session():
     else:
         session = {SESSION_SERIAL_NUMBER: None,
                    SESSION_SERVER_URL: None,
+                   SESSION_STATION_ID: None,
                    SESSION_ENABLED: False}
         factory.set_shared_data(KEY_SHOPFLOOR_SESSION, session)
     return session
@@ -167,20 +169,35 @@ def get_serial_number():
     return _get_session(SESSION_SERIAL_NUMBER)
 
 
-def check_serial_number(serial_number):
+def set_station_id(station_id):
+    """Sets a station id as pinned in factory shared data."""
+    _set_session(SESSION_STATION_ID, station_id)
+
+
+def get_station_id():
+    """Gets current pinned station id from factory shared data."""
+    return _get_session(SESSION_STATION_ID)
+
+
+def check_serial_number(serial_number, **kwargs):
     """Checks if given serial number is valid."""
-    # Use GetHWID to check serial number.
-    return get_instance().GetHWID(serial_number)
+    return get_instance().SerialIsValid(serial_number,kwargs)
 
 
 def get_hwid():
     """Gets HWID associated with current pinned serial number."""
-    return get_instance().GetHWID(get_serial_number())
+    kwargs = {}
+    if get_station_id() is not None:
+      kwargs['station_id'] = get_station_id()
+    return get_instance().GetHWID(get_serial_number(),kwargs)
 
 
 def get_vpd():
     """Gets VPD associated with current pinned serial number."""
-    return get_instance().GetVPD(get_serial_number())
+    kwargs = {}
+    if get_station_id() is not None:
+      kwargs['station_id'] = get_station_id()
+    return get_instance().GetVPD(get_serial_number(),kwargs)
 
 
 def upload_report(blob, name=None):
@@ -196,4 +213,8 @@ def upload_report(blob, name=None):
 
 def finalize():
     """Notifies shop floor server this DUT has finished testing."""
-    get_instance().Finalize(get_serial_number())
+    kwargs = {}
+    if get_station_id() is not None:
+      kwargs['station_id'] = get_station_id()
+    kwargs['vpd'] = get_vpd()
+    get_instance().Finalize(get_serial_number(),kwargs)
