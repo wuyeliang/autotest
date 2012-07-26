@@ -12,7 +12,7 @@
   "bundled_crx_directory": "/opt/google/chrome/extensions",
   "bundled_crx_baseline": [
       { "crx_file": "apdfllckaahabafndbhieahigkjlhalf.crx",
-        "name": "Google Docs",
+        "name": "Google Drive",
         "effective_host_permissions": [],
         "api_permissions": ["background",
                             "clipboardRead",
@@ -79,9 +79,11 @@
       { "crx_file": "gbkeegbaiigmenfmjfclcdgdpimamgkj.crx",
         "name": "Document viewing",
         "effective_host_permissions": [],
-        "api_permissions": ["fileBrowserHandler",
+        "api_permissions": ["experimental",
+                            "fileBrowserHandler",
                             "fileBrowserHandlerInternal",
-                            "unlimitedStorage"]
+                            "unlimitedStorage"
+                           ]
       },
       { "crx_file": "coobgpohoikkiipiblmjeljniedjpjpf.crx",
         "name": "Google Search",
