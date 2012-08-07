@@ -32,12 +32,13 @@ _STATE_LOCKTEST_WAIT_REMOVE = 4
 
 # udev constants
 _UDEV_ACTION_INSERT = 'add'
+_UDEV_ACTION_CHANGE = 'change'
 _UDEV_ACTION_REMOVE = 'remove'
 _UDEV_MMCBLK_PATH   = '/dev/mmcblk'
-# USB card reader attributes and common text string in descriptors
-_USB_CARD_ATTRS     = ['vendor', 'model', 'product', 'configuration',
+# Card reader attributes and common text string in descriptors
+_CARD_ATTRS     = ['vendor', 'model', 'product', 'configuration',
                        'manufacturer']
-_USB_CARD_DESCS     = ['card', 'reader']
+_CARD_DESCS     = ['card', 'reader', '/xd/sd/m.s.']
 
 _INSERT_FMT_STR = lambda t: (
     '\n'.join(['insert %s drive...' % t,
@@ -94,18 +95,14 @@ class factory_ExternalStorage(test.test):
                 return vidpid.strip()
         return self.get_vidpid(device.parent)
 
-    def is_usb_cardreader(self, device):
-        attr_str = self.get_attrs(device, set(_USB_CARD_ATTRS)).lower()
-        for desc in _USB_CARD_DESCS:
-            if desc in attr_str:
-                return True
-        return False
-
-
     def is_sd(self, device):
         if device.device_node.find(_UDEV_MMCBLK_PATH) == 0:
             return True
-        return self.is_usb_cardreader(device)
+        attr_str = self.get_attrs(device, set(_CARD_ATTRS)).lower()
+        for desc in _CARD_DESCS:
+            if desc in attr_str:
+                return True
+        return False
 
     def get_device_type(self, device):
         if self.is_sd(device):
@@ -164,10 +161,22 @@ class factory_ExternalStorage(test.test):
         self._pictogram.queue_draw()
 
     def udev_event_cb(self, subtest_tag, action, device):
+        if action == _UDEV_ACTION_CHANGE:
+            node = os.path.basename(device.device_node)
+            if any(len(x) > 3 and x[3] == node for x in
+                   [l.strip().split() for l in
+                    open('/proc/partitions').readlines()]):
+                action = _UDEV_ACTION_INSERT
+            else:
+                action = _UDEV_ACTION_REMOVE
+
         if action == _UDEV_ACTION_INSERT:
             if self._state == _STATE_WAIT_INSERT:
                 if self._vidpid is None:
-                    if self._media != self.get_device_type(device):
+                    inserted_device_type = self.get_device_type(device)
+                    if self._media != inserted_device_type:
+                        factory.log('Wrong media type: %s' %
+                                    inserted_device_type)
                         return True
                 else:
                     if self._vidpid != self.get_vidpid(device):
