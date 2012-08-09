@@ -11,6 +11,29 @@ from autotest_lib.client.cros import flimflam_test_path
 import flimflam
 
 
+def switch_service(service, status):
+    '''Probes current status of service and turns it into status.
+    Args:
+      service: Service name, e.g. powerd or powerm.
+      status: True/False. The intended status of that service.
+    Return:
+      True/False: The current status of service before switching.
+      None: Can not decide current status of service.
+    '''
+    status_probe = utils.system_output(
+            'status %s | cut -d" " -f2' % service).strip()
+    if status_probe == 'start/running,':
+        if not status:
+            utils.system('stop %s' % service)
+        return True
+    elif status_probe == 'stop/waiting':
+        if status:
+            utils.system('start %s' % service)
+        return False
+    else:
+        return None
+
+
 class power_Resume(test.test):
     version = 1
     preserve_srcdir = True
@@ -268,6 +291,8 @@ class power_Resume(test.test):
                 logging.error('Could not disconnect: %s.' % status)
                 disconnect_3G_time = -1
 
+        original_powerm_status = switch_service('powerm', True)
+
         self._enable_pm_print_times()
         # Some idle time before initiating suspend-to-ram
         idle_time = random.randint(1, 10)
@@ -351,6 +376,8 @@ class power_Resume(test.test):
         results['num_retry_attempts'] = retry_count
 
         self.write_perf_keyval(results)
+
+        switch_service('powerm', original_powerm_status)
 
 
     def cleanup(self):
