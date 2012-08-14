@@ -325,20 +325,14 @@ class factory_CameraPerformanceAls(test.test):
         return True
 
     def sync_fixture(self, event):
-        # Prevent multiple threads from running at the same time.
-        if hasattr(self, 'detecting_fixture') and self.detecting_fixture:
-            return
-        self.detecting_fixture = True
         self.ui.CallJSFunction("OnDetectFixtureConnection")
         cnt = 0
         while not self.setup_fixture():
             cnt += 1
             if cnt >= self.config['fixture']['n_retry']:
-                self.detecting_fixture = False
                 self.ui.CallJSFunction("OnRemoveFixtureConnection")
                 return
             time.sleep(self.config['fixture']['retry_delay'])
-        self.detecting_fixture = False
         self.ui.CallJSFunction("OnAddFixtureConnection")
 
     def on_u2s_insert(self, dev_path):
