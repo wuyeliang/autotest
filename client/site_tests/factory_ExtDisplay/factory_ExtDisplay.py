@@ -53,7 +53,8 @@ _CLEANUP = ('Disconnect Display',
                  '移除外接螢幕\n\n' + \
                  'Or press TAB to fail\n' + \
                  '若無法通過測試請按TAB',
-                 'cond':'[ $(xrandr -d :0 | grep " connected" | wc -l) == "1" ]'
+             'cond': '[ $(xrandr -d :0 | grep " connected" | wc -l) == "1" ]',
+             'postcfg': [],
             })
 
 class factory_ExtDisplay(test.test):
@@ -226,6 +227,13 @@ class factory_ExtDisplay(test.test):
         self._started = False
         self._timer = None
 
+        _CLEANUP[1]['postcfg'].extend([
+            'xrandr -d :0 --output %s --off' % self._ext_display,
+            'xrandr -d :0 --output %s --auto' % self._ext_display,
+            'xrandr -d :0 --output %s --off' % self._main_display,
+            'xrandr -d :0 --output %s --auto' % self._main_display,
+        ])
+
         if has_audio:
             self.locate_audio_sample(audio_sample_path)
             _SUBTEST_LIST.append(_OPTIONAL)
@@ -234,7 +242,6 @@ class factory_ExtDisplay(test.test):
         self._subtest_queue = [x for x in reversed(_SUBTEST_LIST)]
         self._status_map = dict((n, ful.UNTESTED) for n, c in _SUBTEST_LIST)
         self._label_status = dict()
-
 
         if has_audio:
             label_start = _LABEL_START_STR_AUDIO + _LABEL_START_STR
