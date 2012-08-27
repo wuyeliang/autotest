@@ -42,23 +42,22 @@ class PreflightTask(task.FactoryTask):
     MSG_READY = ("System is READY. Press SPACE to start FINALIZATION!\n"
                  "系統已準備就緒。 請按空白鍵開始最終程序!")
 
-    def __init__(self, test_list, developer_mode):
+    def __init__(self, test_list, write_protection):
         def create_label(message):
             return ui.make_label(message, fg=self.COLOR_DISABLED,
                                  alignment=(0, 0.5))
         self.updating = False
-        self.developer_mode = developer_mode
+        self.write_protection = write_protection
         self.test_list = test_list
         self.items = [(self.check_required_tests,
                        create_label("Verify no tests failed\n"
                                     "確認無測試項目失敗"))]
-        if developer_mode:
+
+        if not write_protection:
             return
 
-        # Items only enforced in non-developer mode.
-        self.items += [(self.check_developer_switch,
-                        create_label("Turn off Developer Switch\n"
-                                     "停用開發者開關(DevSwitch)")),
+        # Items only enforced in write_protection mode.
+        self.items += [
                        (self.check_write_protect,
                         create_label("Enable write protection pin\n"
                                      "確認硬體寫入保護已開啟"))]
@@ -95,9 +94,6 @@ class PreflightTask(task.FactoryTask):
             self.updating = False
             self.label_status.set_label(
                     self.MSG_READY if all(self.results) else self.MSG_PENDING)
-            # In developer mode, provide more visual feedback.
-            if self.developer_mode:
-                time.sleep(.5)
 
         def next_test():
             if not items:
@@ -149,8 +145,8 @@ class PreflightTask(task.FactoryTask):
 
 class FinalizeTask(task.FactoryTask):
 
-    def __init__(self, developer_mode, secure_wipe, upload_method):
-        self.developer_mode = developer_mode
+    def __init__(self, write_protection, secure_wipe, upload_method):
+        self.write_protection = write_protection
         self.secure_wipe = secure_wipe
         self.upload_method = upload_method
 
@@ -184,9 +180,9 @@ class FinalizeTask(task.FactoryTask):
         upload_method = self.normalize_upload_method(self.upload_method)
 
         command = 'gooftool -v 4 -l %s finalize' % factory.CONSOLE_LOG_PATH
-        if self.developer_mode:
-            self.alert('DEVELOPER MODE ENABLED')
-            command += ' --dev'
+        if not self.write_protection:
+            self.alert('WRITE PROTECTION IS DISABLED.')
+            command += ' --no_write_protect'
         if not self.secure_wipe:
             command += ' --fast'
         command += ' --upload_method "%s"' % upload_method
@@ -204,16 +200,22 @@ class factory_Finalize(test.test):
     version = 3
 
     def run_once(self,
-                 developer_mode=False,
+                 developer_mode=None,  # Deprecated parameter.
+                 write_protection=True,
                  secure_wipe=False,
                  upload_method='none',
                  test_list_path=None):
 
         factory.log('%s run_once' % self.__class__)
 
+        if developer_mode is not None:
+            write_protection = not developer_mode
+            factory.log('Warning: "developer_mode" param is deprecated.')
+
         test_list = factory.read_test_list(test_list_path)
-        self.tasks = [PreflightTask(test_list, developer_mode),
-                      FinalizeTask(developer_mode, secure_wipe, upload_method)]
+        self.tasks = [
+                PreflightTask(test_list, write_protection),
+                FinalizeTask(write_protection, secure_wipe, upload_method)]
 
         task.run_factory_tasks(self.job, self.tasks)
 
