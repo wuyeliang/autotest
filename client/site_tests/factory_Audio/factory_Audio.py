@@ -113,7 +113,8 @@ class factory_Audio(test.test):
                 # Record via mic.
                 if os.path.isfile('rec.wav'):
                     os.unlink('rec.wav')
-                cmd = 'arecord -f dat -t wav rec.wav'
+                # Add -D hw:0,0 since default argument does not work properly.
+                cmd = 'arecord -D hw:0,0 -f dat -t wav rec.wav'
             elif event.keyval == ord('p'):
                 # Playback canned audio.
                 # Add -D hw:0,0 since default argument does not work properly.
