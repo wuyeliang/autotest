@@ -104,10 +104,11 @@ class KeyboardTest:
             factory.log('key (0x%x) ignored because not in bindings'
                         % event.keyval)
             return True
-
         self._pressed_keys.add(event.hardware_keycode)
         widget.queue_draw()
-
+        if event.hardware_keycode == 246:
+            self._pressed_keys.add(247)
+            widget.queue_draw()
         # The first keypress starts test countdown.
         if self._deadline is None:
             self._deadline = int(time.time()) + ful.FAIL_TIMEOUT
@@ -121,6 +122,10 @@ class KeyboardTest:
         self._pressed_keys.remove(event.hardware_keycode)
         self.successful_keys.add(event.hardware_keycode)
         widget.queue_draw()
+        if event.hardware_keycode == 246:
+            self._pressed_keys.remove(247)
+            self.successful_keys.add(247)
+            widget.queue_draw()
         if not self.calc_missing_string():
             factory.log('completed successfully')
             gtk.main_quit()
@@ -154,11 +159,11 @@ class factory_Keyboard(test.test):
         os.chdir(self.srcdir)
 
         # Autodetect from VPD.
-        if not layout:
-            layout = self.get_layout_from_vpd()
+        #if not layout:
+        #    layout = self.get_layout_from_vpd()
         # Default to United States.
         if not layout:
-            layout = 'en-US'
+            layout = 'en-HP'
 
         factory.log("Using keyboard layout %s" % layout)
         try:
