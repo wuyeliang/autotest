@@ -54,6 +54,7 @@ class hardware_SAT(test.test):
         cpus = max(utils.count_cpus(), 1)
         mbytes = max(int(utils.freememtotal() * free_memory_fraction / 1024),
                      512)
+        mbytes = min(mbytes, 2000)
         # SAT should use as much memory as possible, while still
         # avoiding OOMs and allowing the kernel to run, so that
         # the maximum amoun tof memory can be tested.
