@@ -231,14 +231,12 @@ class factory_AudioQuality(test.test):
         self.restore_configuration()
         self.ui.CallJSFunction('setMessage', _LABEL_PLAYTONE_LEFT)
         self.playback_switch(False, True)
-        self.unmute_speaker()
         self.play_tone()
 
     def handle_xtalk_right(self, *args):
         self.restore_configuration()
         self.ui.CallJSFunction('setMessage', _LABEL_PLAYTONE_RIGHT)
         self.playback_switch(True, False)
-        self.unmute_speaker()
         self.play_tone()
 
     def listen_forever(self, sock):
