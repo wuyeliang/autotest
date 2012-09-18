@@ -2,8 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import tempfile
-
+import os
 import serial_task
 import region_task
 
@@ -23,16 +22,25 @@ class WriteVpdTask(task.FactoryTask):
     def __init__(self, vpd):
         self.vpd = vpd
 
+    def mask_bind_attributes(self):
+        """Mask sensitive bind attributes for display"""
+        mask_keys = ['ubind_attribute', 'gbind_attribute']
+        disp_dict = {}
+
+        for key in self.vpd:
+            if key in mask_keys:
+                disp_dict[key] = '********'
+            else:
+                disp_dict[key] = self.vpd[key]
+
+        return disp_dict
+
     def write_vpd(self):
         """Writes a VPD structure into system.
 
         @param vpd: A dictionary with 'ro' and 'rw' keys, each associated with a
           key-value VPD data set.
         """
-        def shell(command):
-            factory.log(command)
-            utils.system(command)
-
         def format_vpd_parameter(vpd_dict):
             """Formats a key-value dictionary into VPD syntax."""
             # Writes in sorted ordering so the VPD structure will be more
@@ -41,14 +49,16 @@ class WriteVpdTask(task.FactoryTask):
                              for key in sorted(vpd_dict)))
 
         vpd = self.vpd
+        disp_vpd = self.mask_bind_attributes()
         VPD_LIST = (('RO_VPD', 'ro'), ('RW_VPD', 'rw'))
-        with tempfile.NamedTemporaryFile() as temp_file:
-            name = temp_file.name
-            for (section, vpd_type) in VPD_LIST:
-                if not vpd.get(vpd_type, None):
-                    continue
-                parameter = format_vpd_parameter(vpd[vpd_type])
-                shell('vpd -i %s %s' % (section, parameter))
+        for (section, vpd_type) in VPD_LIST:
+            if not vpd.get(vpd_type, None):
+                continue
+            parameter = format_vpd_parameter(vpd[vpd_type])
+            disp_param = format_vpd_parameter(disp_vpd[vpd_type])
+            ret = os.system('vpd -i %s %s' % (section, parameter))
+            factory.log('vpd -i %s %s' % (section, disp_param))
+            factory.log('vpd returned: %d' % (ret))
         self.stop()
 
     def start(self):
