@@ -16,6 +16,7 @@ import select
 import socket
 import subprocess
 import tempfile
+import time
 import threading
 
 from autotest_lib.client.bin import test
@@ -91,8 +92,16 @@ class factory_AudioQuality(test.test):
                 break
 
         # Respond by the received command with '_OK' postfix.
-        factory.console.info('Respond OK')
         conn.send(line + '_OK')
+        factory.console.info('Respond OK')
+
+        if self._test_complete:
+            factory.console.info('Test completed')
+            time.sleep(3)
+            if self._test_passed:
+                self.ui.Pass()
+            else:
+                self.ui.Fail(_LABEL_FAIL_LOGS)
         return False
 
     def start_loop(self):
@@ -120,24 +129,17 @@ class factory_AudioQuality(test.test):
         '''
         Stops all the running process and restore the mute settings.
         '''
-        if hasattr(self, '_wav_job'):
-            job = self._wav_job
-            if job:
-                utils.nuke_subprocess(job.sp)
-                utils.join_bg_jobs([job], timeout=1)
-                self._wav_job = None
+        if self._wav_job:
+            utils.nuke_subprocess(self._wav_job.sp)
+            utils.join_bg_jobs([self._wav_job], timeout=1)
+            self._wav_job = None
 
-        if hasattr(self, '_tone_job'):
-            job = self._tone_job
-            if job:
-                utils.nuke_subprocess(job.sp)
-                utils.join_bg_jobs([job], timeout=1)
-                self._tone_job = None
+        if self._tone_job:
+            utils.nuke_subprocess(self._tone_job.sp)
+            utils.join_bg_jobs([self._tone_job], timeout=1)
+            self._tone_job = None
 
-        if hasattr(self, '_play_tone_process') and self._play_tone_process:
-            self._play_tone_process.kill()
-            self._play_tone_process = None
-        if hasattr(self, '_loop_process') and self._loop_process:
+        if self._loop_process:
             self._loop_process.kill()
             self._loop_process = None
             factory.log("Stopped audio loop process")
@@ -183,11 +185,8 @@ class factory_AudioQuality(test.test):
         factory.console.info(self._detail_log)
 
         self.on_test_complete()
+        self._test_complete = True
         factory.console.info('%s run_once finished' % self.__class__)
-        if hasattr(self, '_test_passed') and self._test_passed:
-            self.ui.Pass()
-        else:
-            self.ui.Fail(_LABEL_FAIL_LOGS)
 
     def handle_loop_none(self, *args):
         self.restore_configuration()
@@ -337,9 +336,14 @@ class factory_AudioQuality(test.test):
         self._input_dev = input_dev
         self._output_dev = output_dev
         self._eth = None
+        self._test_complete = False
         self._test_passed = False
         self._use_sox_loop = use_sox_loop
         self._use_multitone = use_multitone
+
+        self._wav_job = None
+        self._tone_job = None
+        self._loop_process = None
 
         # Mixer settings for different configurations.
         self._init_mixer_settings = init_mixer_settings
