@@ -25,13 +25,14 @@ class WriteVpdTask(task.FactoryTask):
     def mask_bind_attributes(self):
         """Mask sensitive bind attributes for display"""
         mask_keys = ['ubind_attribute', 'gbind_attribute']
-        disp_dict = {}
+        disp_dict = {'ro':{}, 'rw':{}}
 
-        for key in self.vpd:
-            if key in mask_keys:
-                disp_dict[key] = '********'
-            else:
-                disp_dict[key] = self.vpd[key]
+        for vpd_type in disp_dict:
+            for key in self.vpd[vpd_type]:
+                if key in mask_keys:
+                    disp_dict[vpd_type][key] = '********'
+                else:
+                    disp_dict[vpd_type][key] = self.vpd[vpd_type][key]
 
         return disp_dict
 
