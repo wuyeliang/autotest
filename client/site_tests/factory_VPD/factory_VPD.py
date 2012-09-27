@@ -60,7 +60,7 @@ class WriteVpdTask(task.FactoryTask):
             ret = os.system('vpd -i %s %s' % (section, parameter))
             factory.log('vpd -i %s %s' % (section, disp_param))
             factory.log('vpd returned: %d' % (ret))
-            self.stop()
+        self.stop()
 
     def start(self):
         # Flatten key-values in VPD dictionary.
