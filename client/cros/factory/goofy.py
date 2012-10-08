@@ -528,6 +528,8 @@ class Goofy(object):
 
                 with self.env.lock:
                     self.event_log.Log('shutdown', operation=test.operation)
+                    if hasattr(test, 'cold_reboot'):
+                        subprocess.check_call(test.cold_reboot)
                     shutdown_result = self.env.shutdown(test.operation)
                 if shutdown_result:
                     # That's all, folks!
