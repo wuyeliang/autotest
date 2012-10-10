@@ -741,9 +741,6 @@ class ShutdownStep(AutomatedSubTest):
 class HaltStep(ShutdownStep):
     '''Halts the machine.'''
     def __init__(self, **kw):
-        if 'cold_reboot' in kw:
-            self.cold_reboot = kw['cold_reboot']
-            kw.pop('cold_reboot')
         super(HaltStep, self).__init__(operation=ShutdownStep.HALT, **kw)
 
 
