@@ -13,6 +13,7 @@
 import cairo
 import gobject
 import gtk
+import logging
 import os
 import pty
 import re
@@ -59,9 +60,12 @@ _Y_TF_OFFSET = 117 + _F_RADIUS + 2
 
 class TouchpadTest:
 
-    def __init__(self, tp_image, drawing_area):
+    def __init__(self, tp_image, drawing_area, number_to_click,
+                 left_click_value, right_click_value):
         self._tp_image = tp_image
         self._drawing_area = drawing_area
+        self._left_click_value = left_click_value
+        self._right_click_value = right_click_value
         self._motion_grid = {}
         for x in range(_X_SEGMENTS):
             for y in range(_Y_SEGMENTS):
@@ -69,10 +73,13 @@ class TouchpadTest:
         self._scroll_array = {}
         for y in range(_Y_SEGMENTS):
             self._scroll_array[y] = False
-        self._l_click = False
-        self._r_click = False
+        self._l_click =  0
+        self._r_click =  0
         self._of_z_rad = 0
         self._tf_z_rad = 0
+        self._number_to_click = number_to_click
+        self._last_left = 0
+        self._last_right = 0
 
     def calc_missing_string(self):
         missing = []
@@ -88,12 +95,10 @@ class TouchpadTest:
             missing.append('Missing following scroll segments\n'
                            '未偵測到下列位置的觸控捲動訊號 [%s]' %
                            ', '.join(missing_scroll_segments))
-        if not self._l_click:
-            missing.append('Missing left click\n'
-                           '沒有偵測到左鍵被按下，請檢修')
-        if not self._r_click:
-            missing.append('Missing right click\n'
-                           '沒有偵測到右鍵被按下，請檢修')
+        if self._l_click != self._number_to_click:
+            missing.append('Missing left click\n 左鍵未完成，請檢修')
+        if self._r_click != self._number_to_click:
+            missing.append('Missing right click\n 右鍵未完成，請檢修')
         return '\n'.join(missing)
 
     def device_event(self, x, y, z, fingers, left, right):
@@ -108,16 +113,29 @@ class TouchpadTest:
 
         new_stuff = False
 
-        if left and not self._l_click:
-            self._l_click = True
+        if (fingers == 1 and left and not self._last_left and
+            self._l_click != self._number_to_click):
+            self._l_click = self._l_click + 1
             self._of_z_rad = _F_RADIUS
-            factory.log('ok left click')
+            self._left_click_value.set_text('%d/%d  ' %
+                    (self._l_click, self._number_to_click))
+            self._left_click_value.queue_draw()
+            factory.log('ok left click times: %s/%s' %
+                    (self._l_click, self._number_to_click))
             new_stuff = True
-        elif right and not self._r_click:
-            self._r_click = True
+        elif (fingers == 2 and right and not self._last_right and
+              self._r_click != self._number_to_click):
+            self._r_click = self._r_click + 1
             self._tf_z_rad = _F_RADIUS
-            factory.log('ok right click')
+            self._right_click_value.set_text('%d/%d  ' %
+                    (self._r_click, self._number_to_click))
+            self._right_click_value.queue_draw()
+            factory.log('ok right click times: %s/%s' %
+                    (self._r_click, self._number_to_click))
             new_stuff = True
+
+        self._last_left = left
+        self._last_right = right
 
         if fingers == 1 and not self._motion_grid[index]:
             self._motion_grid[index] = True
@@ -171,21 +189,26 @@ class TouchpadTest:
             context.rectangle(*coords)
             context.fill()
 
-        if not self._l_click:
-            context.set_source_rgba(*ful.RGBA_YELLOW_OVERLAY)
-
-        context.arc(_X_OF_OFFSET, _Y_OF_OFFSET, self._of_z_rad, 0.0, 2.0 * pi)
-        context.fill()
-
-        if self._l_click and not self._r_click:
-            context.set_source_rgba(*ful.RGBA_YELLOW_OVERLAY)
-
-        context.arc(_X_TFL_OFFSET, _Y_TF_OFFSET, self._tf_z_rad, 0.0, 2.0 * pi)
-        context.fill()
-        context.arc(_X_TFR_OFFSET, _Y_TF_OFFSET, self._tf_z_rad, 0.0, 2.0 * pi)
-        context.fill()
-
+        self._draw_click(context)
         return True
+
+    def _draw_click(self, context):
+        def get_end_angle(number, total):
+            return 1.5 * pi + 2.0 * pi * number / total
+
+        context.arc(_X_OF_OFFSET, _Y_OF_OFFSET, self._of_z_rad, 1.5 * pi,
+                    get_end_angle(self._l_click, self._number_to_click))
+        context.line_to(_X_OF_OFFSET, _Y_OF_OFFSET)
+        context.fill()
+
+        context.arc(_X_TFL_OFFSET, _Y_TF_OFFSET, self._tf_z_rad, 1.5 * pi,
+                    get_end_angle(self._r_click, self._number_to_click))
+        context.line_to(_X_TFL_OFFSET, _Y_TF_OFFSET)
+        context.fill()
+        context.arc(_X_TFR_OFFSET, _Y_TF_OFFSET, self._tf_z_rad, 1.5 * pi,
+                    get_end_angle(self._r_click, self._number_to_click))
+        context.line_to(_X_TFR_OFFSET, _Y_TF_OFFSET)
+        context.fill()
 
     def button_press_event(self, widget, event):
         factory.log('button_press_event %d,%d' % (event.x, event.y))
@@ -294,9 +317,9 @@ class EvdevClient:
         self._zmin = device.get_pressure_min()
         self._zmax = device.get_pressure_max()
 
-        factory.log('x:(%d : %d), y:(%d : %d), z:(%d, %d)' %
-                    (self._xmin, self._xmax, self._ymin, self._ymax,
-                     self._zmin, self._zmax))
+        logging.info('x:(%d : %d), y:(%d : %d), z:(%d, %d)' %
+                     (self._xmin, self._xmax, self._ymin, self._ymax,
+                      self._zmin, self._zmax))
 
     def _to_percent(self, val, _min, _max):
         bound = sorted([_min, float(val), _max])[1]
@@ -327,8 +350,8 @@ class EvdevClient:
         y_pct = self._to_percent(y, self._ymin, self._ymax)
         z_pct = self._to_percent(z, self._zmin, self._zmax)
 
-        factory.log('x=%f y=%f z=%f f=%d l=%d r=%d' %
-                    (x_pct, y_pct, z_pct, f, l, r))
+        logging.info('x=%f y=%f z=%f f=%d l=%d r=%d' %
+                      (x_pct, y_pct, z_pct, f, l, r))
 
         self._test.device_event(x_pct, y_pct, z_pct, f, l, r)
         return True
@@ -474,7 +497,7 @@ class factory_Touchpad(test.test):
     version = 1
     preserve_srcdir = True
 
-    def run_once(self):
+    def run_once(self, number_to_click=1):
 
         factory.log('%s run_once' % self.__class__)
 
@@ -483,8 +506,11 @@ class factory_Touchpad(test.test):
         image_size = (tp_image.get_width(), tp_image.get_height())
 
         drawing_area = gtk.DrawingArea()
+        left_click_value = ful.make_label('      ', fg=ful.WHITE)
+        right_click_value = ful.make_label('      ', fg=ful.WHITE)
 
-        test = TouchpadTest(tp_image, drawing_area)
+        test = TouchpadTest(tp_image, drawing_area, number_to_click,
+                            left_click_value, right_click_value)
 
         drawing_area.set_size_request(*image_size)
         drawing_area.connect('expose_event', test.expose_event)
@@ -496,15 +522,8 @@ class factory_Touchpad(test.test):
                                 gdk.BUTTON_RELEASE_MASK |
                                 gdk.POINTER_MOTION_MASK)
 
-        test_widget = gtk.VBox()
-        test_widget.set_spacing(20)
-        test_widget.pack_start(drawing_area, False, False)
-        usage_label = ful.make_label(
-                '1. Move one finger across entire touchpad surface\n'
-                '2. Scroll from top to bottom of pad with two fingers\n'
-                '3. Click touchpad with one finger\n'
-                '4. Click touchpad with two fingers\n')
-        test_widget.pack_start(usage_label, False, False)
+        test_widget = self._setup_packing(drawing_area, left_click_value,
+                                         right_click_value)
 
         raw_dev = glob('/dev/serio_raw*')
         # Check if synaptics closed source kernel driver is used
@@ -531,10 +550,30 @@ class factory_Touchpad(test.test):
                 touchpad = SynClient(test)
 
         ful.run_test_widget(self.job, test_widget,
-            cleanup_callback=touchpad.quit)
+                            cleanup_callback=touchpad.quit)
 
         missing = test.calc_missing_string()
         if missing:
             raise error.TestFail(missing)
 
         factory.log('%s run_once finished' % self.__class__)
+
+    def _setup_packing(self, drawing_area, left_click_value, right_click_value):
+        test_widget = gtk.VBox()
+        test_widget.set_spacing(20)
+        test_widget.pack_start(drawing_area, False, False)
+        usage_label = ful.make_label(
+                '1. Move one finger across entire touchpad surface\n'
+                '2. Scroll from top to bottom of pad with two fingers\n'
+                '3. Click touchpad with one finger\n'
+                '4. Click touchpad with two fingers\n')
+        test_widget.pack_start(usage_label, False, False)
+        hbox = gtk.HBox()
+        left_click_label = ful.make_label('Left click: ', fg=ful.WHITE)
+        hbox.pack_start(left_click_label, False, False)
+        hbox.pack_start(left_click_value, False, False)
+        right_click_label = ful.make_label('Right click: ', fg=ful.WHITE)
+        hbox.pack_start(right_click_label, False, False)
+        hbox.pack_start(right_click_value, False, False)
+        test_widget.pack_start(hbox, False, False)
+        return test_widget
