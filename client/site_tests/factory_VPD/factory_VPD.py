@@ -5,6 +5,7 @@
 import os
 import serial_task
 import region_task
+import registration_codes
 
 from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error, utils
@@ -27,7 +28,7 @@ class WriteVpdTask(task.FactoryTask):
         mask_keys = ['ubind_attribute', 'gbind_attribute']
         disp_dict = {'ro':{}, 'rw':{}}
 
-        for vpd_type in disp_dict:
+        for vpd_type in ('ro', 'rw'):
             for key in self.vpd[vpd_type]:
                 if key in mask_keys:
                     disp_dict[vpd_type][key] = '********'
@@ -67,8 +68,11 @@ class WriteVpdTask(task.FactoryTask):
         vpd = self.vpd
         vpd_list = []
         for vpd_type in ('ro', 'rw'):
-            vpd_list += ['%s: %s = %s' % (vpd_type, key, vpd[vpd_type][key])
-                         for key in sorted(vpd[vpd_type])]
+            for key in sorted(vpd[vpd_type]):
+                vpd_list += ['%s: %s = %s' %
+                             (vpd_type, key, vpd[vpd_type][key])]
+                if key in ['ubind_attribute', 'gbind_attribute']:
+                    registration_codes.CheckRegistrationCode(vpd[vpd_type][key])
 
         self.add_widget(ui.make_label("%s\n%s" % (_MESSAGE_WRITING,
                                                   '\n'.join(vpd_list))))
