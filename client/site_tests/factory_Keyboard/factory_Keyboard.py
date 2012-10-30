@@ -33,6 +33,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import factory_setup_modules
 from cros.factory.test import factory
 from cros.factory.test import ui as ful
+from cros.factory.test import shopfloor
 
 # The keycodes from the GTK keyboard event have a +8 offset
 # from the real one, hence the constant here
@@ -247,14 +248,14 @@ class factory_Keyboard(test.test):
           config_dir: specify directory to read keyboard image and binding
              from. If unspeified, read from default directory.
         '''
-
         factory.log('%s run_once' % self.__class__)
 
         os.chdir(self.srcdir)
 
         # Autodetect from VPD.
         if not layout:
-            layout = self.get_layout_from_vpd()
+            # On factory-3004.B only: get from shopfloor server.
+            layout = shopfloor.get_vpd()['ro']['initial_locale']
         # Default to United States.
         if not layout:
             layout = 'en-US'
