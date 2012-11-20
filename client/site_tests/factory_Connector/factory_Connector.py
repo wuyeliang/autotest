@@ -5,6 +5,7 @@
 
 import datetime
 import gtk
+import logging
 import os
 import pprint
 import re
@@ -12,6 +13,7 @@ import tempfile
 import time
 import StringIO
 import subprocess
+from xmlrpclib import Binary
 
 from autotest_lib.client.cros import factory_setup_modules
 from cros.factory.event_log import EventLog
@@ -20,6 +22,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.audio import audio_helper
 from autotest_lib.client.cros.camera.camera_preview import CameraPreview
 from cros.factory.test import state_machine
+from cros.factory.test import shopfloor
 from cros.factory.test.media_util import MediaMonitor
 from cros.factory.test.media_util import MountedMedia
 from autotest_lib.client.cros.i2c import usb_to_i2c
@@ -69,11 +72,19 @@ _AUDIOFUNTEST_SUCCESS_RATE_RE = re.compile('.*rate\s=\s(.*)$')
 
 
 class factory_Connector(state_machine.FactoryStateMachine):
-    version = 8
+    version = 9
 
     def setup_tests(self):
         # Register more states for test procedure with configuration data
         # loaded from external media device (USB/SD).
+
+        # Load the shopfloor related setting.
+        self.path_name = self.config.get('path_name', 'UnknownPath')
+        self.shopfloor_config = self.config.get('shopfloor', {})
+        self.shopfloor_enabled = self.shopfloor_config.get('enabled', False)
+        self.shopfloor_timeout = self.shopfloor_config.get('timeout')
+        self.shopfloor_ignore_on_fail = (
+            self.shopfloor_config.get('ignore_on_fail'))
 
         # Execute board specific commands
         if 'board_specific' in self.config:
@@ -306,7 +317,8 @@ class factory_Connector(state_machine.FactoryStateMachine):
             with MountedMedia(dev_path, 1) as config_dir:
                 # Load configuration.
                 config_path = os.path.join(config_dir, self.config_file)
-                self.config = self.base_config.Read(config_path)
+                self.config = self.base_config.Read(
+                    config_path, event_log=self._event_log)
                 if 'is_internal' in self.config:
                     self.is_internal = True
                 else:
@@ -329,7 +341,9 @@ class factory_Connector(state_machine.FactoryStateMachine):
     def on_sn_complete(self, serial_number):
         self.serial_number = serial_number
         self._event_log.Log(
-            'connectivity_start', ab_serial_number=self.serial_number)
+            'connectivity_start',
+            ab_serial_number=self.serial_number,
+            path_name=self.path_name)
         self.log_to_file.write('Serial_number : %s\n' % serial_number)
         self.log_to_file.write('Started at : %s\n' % datetime.datetime.now())
         self.update_status('sn', serial_number)
@@ -398,10 +412,40 @@ class factory_Connector(state_machine.FactoryStateMachine):
         # Switch to result tab.
         self.advance_state()
 
+    def upload_to_shopfloor(self, file_path, log_name,
+                            ignore_on_fail=False, timeout=10):
+        '''Attempts to upload arbitrary file to the shopfloor server.
+        '''
+        try:
+            with open(file_path, 'r') as f:
+                chunk = f.read()
+            description = 'aux_logs (%s, %d bytes)' % (log_name, len(chunk))
+            start_time = time.time()
+            shopfloor_client = shopfloor.get_instance(
+                detect=True,
+                timeout=timeout)
+            shopfloor_client.SaveAuxLog(log_name, Binary(chunk))
+            logging.info(
+                'Successfully synced %s in %.03f s',
+                description, time.time() - start_time)
+        except Exception as e:
+            if ignore_on_fail:
+                factory.log('Failed to sync with shopfloor for [%s], ignored' %
+                            log_name)
+            else:
+                raise e
+        return True
+
     def write_to_usb(self, filename, content):
         with MountedMedia(self.dev_path, 1) as mount_dir:
             with open(os.path.join(mount_dir, filename), 'a') as f:
                 f.write(content)
+            full_path = os.path.join(mount_dir, filename)
+            log_name = os.path.join(self.path_name, 'usb', filename)
+            # Upload to shopfloor
+            if self.shopfloor_enabled:
+                self.upload_to_shopfloor(
+                    full_path, log_name, self.shopfloor_timeout)
         factory.log('Log wrote with filename[ %s ].' % filename)
 
     def prepare_for_next_test(self):
