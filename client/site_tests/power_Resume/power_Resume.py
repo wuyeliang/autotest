@@ -335,11 +335,30 @@ class power_Resume(test.test):
 
             firmware_resume_time = total_resume_time - kernel_resume_time
 
+            # Log variables to make calculations easier.
+            for var in ['start_suspend_time',
+                        'end_suspend_time',
+                        'start_resume_time',
+                        'end_resume_time',
+                        'end_cpu_resume_time',
+                        'kernel_device_resume_time',
+                        'total_resume_time',
+                        'suspend_time',
+                        'kernel_resume_time',
+                        'kernel_cpu_resume_time',
+                        'firmware_resume_time']:
+              logging.info('%s = %s', var, locals()[var])
+
             # If the values all came out to be nonnegative, it means success, so
             # exit the retry loop.
             if suspend_time >= 0 and total_resume_time >= 0 and \
                firmware_resume_time >= 0:
                 break
+            else:
+              logging.warn(
+                  'Negative time results: suspend_time=%s, '
+                  'total_resume_time=%s, firmware_resume_time=%s',
+                  suspend_time, total_resume_time, firmware_resume_time)
 
             # Flag an error if the max attempts have been reached without a set
             # of successful result values.
