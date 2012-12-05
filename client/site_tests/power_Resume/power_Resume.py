@@ -291,7 +291,9 @@ class power_Resume(test.test):
         time.sleep(idle_time)
 
         # Safe enough number, can tweek if necessary
-        time_to_sleep = 10
+        # Tweaked to 15 s on factory-3004.B since suspending has been
+        # observed to take as much as 10 s.
+        time_to_sleep = 15
 
         sr_time_for_devs = {}
 
