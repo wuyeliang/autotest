@@ -359,6 +359,10 @@ class power_Resume(test.test):
                   'Negative time results: suspend_time=%s, '
                   'total_resume_time=%s, firmware_resume_time=%s',
                   suspend_time, total_resume_time, firmware_resume_time)
+              logging.warn(
+                  'mosys event log: %s' % (
+                      utils.system_output('mosys eventlog list',
+                                          ignore_status=True)))
 
             # Flag an error if the max attempts have been reached without a set
             # of successful result values.
