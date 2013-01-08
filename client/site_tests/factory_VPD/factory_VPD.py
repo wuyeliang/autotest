@@ -107,6 +107,11 @@ class ShopFloorVpdTask(task.FactoryTask):
         self.stop()
 
 
+def get_vpd_value(partition, key):
+    VPD_GET_CMD = 'vpd -i %s -g %s'
+    return utils.system_output(VPD_GET_CMD % (partition, key))
+
+
 class factory_VPD(test.test):
     version = 5
 
@@ -115,11 +120,17 @@ class factory_VPD(test.test):
 
     def run_once(self, override_vpd=None,
                  store_registration_codes=False,
+                 registration_code_map_if_missing=None,
                  task_list=[SERIAL_TASK_NAME, REGION_TASK_NAME]):
         factory.log('%s run_once' % self.__class__)
         self.tasks = []
         self.vpd = override_vpd or {'ro': {}, 'rw': {}}
         self.registration_code_map = {} if store_registration_codes else None
+        if (registration_code_map_if_missing is not None and
+            not get_vpd_value('RW_VPD', 'gbind_attribute') or
+            not get_vpd_value('RW_VPD', 'ubind_attribute')):
+            factory.log('Registration codes missing, use default ones')
+            self.registration_code_map = registration_code_map_if_missing
 
         if not override_vpd:
             if shopfloor.is_enabled():
