@@ -52,7 +52,7 @@ class platform_ExternalUSBStress(test.test):
             unnamed_device_count = 0
             for item in items:
                 columns = item.split(' ')
-                if len(columns) == 6:
+                if len(columns) == 6 or len(' '.join(columns[6:]).strip()) == 0:
                     logging.info('Unnamed device located, adding generic name.')
                     name = 'Unnamed device %d' % unnamed_device_count
                     unnamed_device_count += 1
@@ -140,7 +140,7 @@ class platform_ExternalUSBStress(test.test):
                 logging.info('Not using servo for suspend because board %s '
                              'is not supported.' % m.group(1))
 
-        host.servo.switch_usbkey('dut')
+        host.servo.enable_usb_hub()
         host.servo.set('usb_mux_sel3', 'dut_sees_usbkey')
 
         # There are some mice that need the data and power connection to both

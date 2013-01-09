@@ -5,7 +5,7 @@
 import json, logging, re, time
 
 from autotest_lib.server import autotest, test
-from autotest_lib.server.cros import stress
+from autotest_lib.server.cros import servo, stress
 from autotest_lib.client.common_lib import error
 
 _WAIT_DELAY = 5
@@ -29,7 +29,7 @@ class platform_ExternalUSBBootStress(test.test):
             unnamed_device_count = 0
             for item in items:
                 columns = item.split(' ')
-                if len(columns) == 6:
+                if len(columns) == 6 or len(' '.join(columns[6:]).strip()) == 0:
                     logging.info('Unnamed device located, adding generic name.')
                     name = 'Unnamed device %d' % unnamed_device_count
                     unnamed_device_count += 1
@@ -59,7 +59,7 @@ class platform_ExternalUSBBootStress(test.test):
             connected = set_hub_power()
 
 
-        host.servo.switch_usbkey('dut')
+        host.servo.enable_usb_hub()
         host.servo.set('usb_mux_sel3', 'dut_sees_usbkey')
 
         # There are some mice that need the data and power connection to both
@@ -97,7 +97,7 @@ class platform_ExternalUSBBootStress(test.test):
                 # accelerate booting through dev mode.
                 host.servo.cold_reset()
                 host.servo.power_short_press()
-                time.sleep(host.servo.BOOT_DELAY)
+                time.sleep(servo.Servo.BOOT_DELAY)
                 host.servo.ctrl_d()
                 stressor.start()
                 host.wait_up(timeout=120)
