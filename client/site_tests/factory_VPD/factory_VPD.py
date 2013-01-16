@@ -138,7 +138,10 @@ class factory_VPD(test.test):
                     ShopFloorVpdTask(self.vpd, self.registration_code_map)]
             else:
                 if self.SERIAL_TASK_NAME in task_list:
-                    self.tasks += [serial_task.SerialNumberTask(self.vpd)]
+                    self.tasks += [serial_task.SerialNumberTask(
+                            self.vpd,
+                            init_value=get_vpd_value('RO_VPD', 'serial_number')
+                    )]
                 if self.REGION_TASK_NAME in task_list:
                     self.tasks += [region_task.SelectRegionTask(self.vpd)]
         self.tasks += [WriteVpdTask(self.vpd, self.registration_code_map)]
