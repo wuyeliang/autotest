@@ -10,7 +10,7 @@ from autotest_lib.client.cros import crash_test
 
 _25_HOURS_AGO = -25 * 60 * 60
 _CRASH_SENDER_CRON_PATH = '/etc/cron.hourly/crash_sender.hourly'
-_DAILY_RATE_LIMIT = 32
+_DAILY_RATE_LIMIT = 100
 _MIN_UNIQUE_TIMES = 4
 _SECONDS_SEND_SPREAD = 3600
 
