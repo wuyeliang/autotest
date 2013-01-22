@@ -127,8 +127,8 @@ class factory_VPD(test.test):
         self.vpd = override_vpd or {'ro': {}, 'rw': {}}
         self.registration_code_map = {} if store_registration_codes else None
         if (registration_code_map_if_missing is not None and
-            not get_vpd_value('RW_VPD', 'gbind_attribute') or
-            not get_vpd_value('RW_VPD', 'ubind_attribute')):
+            (not get_vpd_value('RW_VPD', 'gbind_attribute') or
+             not get_vpd_value('RW_VPD', 'ubind_attribute'))):
             factory.log('Registration codes missing, use default ones')
             self.registration_code_map = registration_code_map_if_missing
 
