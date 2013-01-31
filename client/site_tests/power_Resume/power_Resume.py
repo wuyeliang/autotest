@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import commands, logging, random, re, time
+import commands, logging, os, random, re, time
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import rtc, sys_power, cros_logging
@@ -284,6 +284,13 @@ class power_Resume(test.test):
             else:
                 logging.error('Could not disconnect: %s.' % status)
                 disconnect_3G_time = -1
+
+        # Remove the lid_opened file if it exists, since that will break
+        # future suspends.
+        try:
+          os.unlink('/var/run/power_manager/lid_opened')
+        except IOError:
+          pass
 
         self._enable_pm_print_times()
         # Some idle time before initiating suspend-to-ram

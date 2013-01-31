@@ -16,6 +16,7 @@
 import dbus
 import gobject
 import gtk
+import os
 import time
 
 from autotest_lib.client.bin import test
@@ -139,6 +140,13 @@ class factory_LidSwitch(test.test):
         self.job,
         test_widget,
         window_registration_callback=self.register_callbacks)
+
+    # Remove the lid_opened file if it exists, since that will break
+    # future suspends.
+    try:
+      os.unlink('/var/run/power_manager/lid_opened')
+    except IOError:
+      pass
 
     if self._fail:
       factory.log(self._error_message)
