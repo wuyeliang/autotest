@@ -14,6 +14,7 @@
 #   audio_volume: (optional) volume to play the ok audio. Default 100%.
 
 import dbus
+import errno
 import gobject
 import gtk
 import os
@@ -145,8 +146,9 @@ class factory_LidSwitch(test.test):
     # future suspends.
     try:
       os.unlink('/var/run/power_manager/lid_opened')
-    except IOError:
-      pass
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        raise
 
     if self._fail:
       factory.log(self._error_message)

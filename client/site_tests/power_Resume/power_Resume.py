@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import commands, logging, os, random, re, time
+import commands, errno, logging, os, random, re, time
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import rtc, sys_power, cros_logging
@@ -289,8 +289,9 @@ class power_Resume(test.test):
         # future suspends.
         try:
           os.unlink('/var/run/power_manager/lid_opened')
-        except OSError:
-          pass
+        except OSError as e:
+          if e.errno != errno.ENOENT:
+            raise
 
         self._enable_pm_print_times()
         # Some idle time before initiating suspend-to-ram
