@@ -289,7 +289,7 @@ class power_Resume(test.test):
         # future suspends.
         try:
           os.unlink('/var/run/power_manager/lid_opened')
-        except IOError:
+        except OSError:
           pass
 
         self._enable_pm_print_times()
