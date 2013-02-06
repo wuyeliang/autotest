@@ -46,6 +46,12 @@ _MUTE_RIGHT_MIXER_SETTINGS = [{'name': '"Headphone Playback Switch"',
                                'value': 'on,off'},
                               {'name': '"Speaker Playback Switch"',
                                'value': 'on,off'}]
+_UNMUTE_MIXER_SETTINGS = [{'name': '"Headphone Playback Switch"',
+                           'value': 'on,on'},
+                          {'name': '"Master Playback Switch"',
+                           'value': 'on,on'},
+                          {'name': '"Speaker Playback Switch"',
+                           'value': 'on,on'}]
 
 
 class factory_AudioLoop(test.test):
@@ -71,7 +77,6 @@ class factory_AudioLoop(test.test):
                         self.run_audiofuntest(idev, odev,
                                               self._audiofuntest_duration)
                         time.sleep(0.5)
-
             self.ui.Pass()
         else:
             self.audio_loopback()
@@ -110,6 +115,9 @@ class factory_AudioLoop(test.test):
                          self._last_success_rate is not None):
                      self._result = self._last_success_rate > _PASS_THRESHOLD
                      break
+
+        # Unmute channels
+        self._ah.set_mixer_controls(self._unmute_mixer_settings)
 
         # Show instant message and wait for a while
         if hasattr(self, '_result') and self._result:
@@ -179,6 +187,7 @@ class factory_AudioLoop(test.test):
             mixer_controls=None, device_to_mute=None,
             mute_left_mixer_settings=_MUTE_LEFT_MIXER_SETTINGS,
             mute_right_mixer_settings=_MUTE_RIGHT_MIXER_SETTINGS,
+            unmute_mixer_settings=_UNMUTE_MIXER_SETTINGS,
             mute_device_mixer_settings=None):
         factory.console.info('%s run_once' % self.__class__)
 
@@ -192,6 +201,7 @@ class factory_AudioLoop(test.test):
         self._device_to_mute = device_to_mute
         self._mute_left_mixer_settings = mute_left_mixer_settings
         self._mute_right_mixer_settings = mute_right_mixer_settings
+        self._unmute_mixer_settings = unmute_mixer_settings
         self._mute_device_mixer_settings = mute_device_mixer_settings
 
         # Create a default audio helper to do the setup jobs.
