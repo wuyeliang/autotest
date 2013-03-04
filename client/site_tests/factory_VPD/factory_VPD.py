@@ -131,12 +131,13 @@ class factory_VPD(test.test):
         factory.log('%s run_once' % self.__class__)
         self.tasks = []
         self.vpd = override_vpd or {'ro': {}, 'rw': {}}
-        self.registration_code_map = {} if store_registration_codes else None
-        if (registration_code_map_if_missing is not None and
-            (not get_vpd_value('RW_VPD', 'gbind_attribute') or
-             not get_vpd_value('RW_VPD', 'ubind_attribute'))):
-            factory.log('Registration codes missing, use default ones')
-            self.registration_code_map = registration_code_map_if_missing
+        self.registration_code_map = registration_code_map_if_missing or {}
+        current_group_code = get_vpd_value('RW_VPD', 'gbind_attribute')
+        current_user_code = get_vpd_value('RW_VPD', 'ubind_attribute')
+        if current_group_code:
+            self.registration_code_map['group'] = current_group_code
+        if current_user_code:
+            self.registration_code_map['user'] = current_user_code
 
         if not override_vpd:
             if shopfloor.is_enabled():
@@ -152,7 +153,8 @@ class factory_VPD(test.test):
                     )]
                 if self.REGION_TASK_NAME in task_list:
                     self.tasks += [region_task.SelectRegionTask(self.vpd)]
-        self.tasks += [WriteVpdTask(self.vpd, self.registration_code_map)]
+        self.tasks += [WriteVpdTask(self.vpd, self.registration_code_map if
+                       store_registration_codes else None)]
         task.run_factory_tasks(self.job, self.tasks)
 
         factory.log('%s run_once finished' % repr(self.__class__))
