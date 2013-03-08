@@ -52,8 +52,8 @@ class Suspender(object):
         'ZGB': 4,
 
         # TODO: Reevaluate these when http://crosbug.com/38225 is fixed
-        'MARIO': 6,
-        'ALEX': 6,
+        'MARIO': 9,
+        'ALEX': 8,
 
         # TODO: Reevaluate this when http://crosbug.com/38239 is fixed
         # edit: bumping this even more to make it work for now...
@@ -72,7 +72,7 @@ class Suspender(object):
         'BUTTERFLY': 4,
 
         # Hard disk sync and overall just slow
-        'PARROT': 7,
+        'PARROT': 8,
         'KIEV': 9,
     }
 
