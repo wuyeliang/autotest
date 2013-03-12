@@ -1,0 +1,12 @@
+diff -ur glmark2-2012.03.org/src/canvas-x11-egl.cpp glmark2-2012.03/src/canvas-x11-egl.cpp
+--- glmark2-2012.03.org/src/canvas-x11-egl.cpp	2012-03-22 17:40:29.000000000 +0800
++++ glmark2-2012.03/src/canvas-x11-egl.cpp	2013-03-05 14:47:31.712828607 +0800
+@@ -133,7 +133,7 @@
+         EGL_RED_SIZE, 1,
+         EGL_GREEN_SIZE, 1,
+         EGL_BLUE_SIZE, 1,
+-        EGL_ALPHA_SIZE, 1,
++        //EGL_ALPHA_SIZE, 1,
+         EGL_DEPTH_SIZE, 1,
+ #ifdef USE_GLESv2
+         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,

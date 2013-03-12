@@ -29,6 +29,9 @@ class graphics_GLMark2(test.test):
         dep_dir = os.path.join(self.autodir, 'deps', dep)
         self.job.install_pkg(dep, 'dep', dep_dir)
         glmark2 = os.path.join(dep_dir, 'bin/glmark2')
+        if not os.path.exists(glmark2):
+          glmark2 = os.path.join(dep_dir, 'bin/glmark2-es2')
+
         options = []
         options.append('--size %s' % size)
         if validation_mode:
