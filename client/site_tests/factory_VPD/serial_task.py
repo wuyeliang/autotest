@@ -25,6 +25,24 @@ class SerialNumberTask(task.FactoryTask):
         self.vpd = vpd
         self.init_value = init_value
 
+    @staticmethod
+    def strip_leading_zero(serial):
+      """Remove a leading zero from the serial number if present.
+
+      Printed barcodes used in RMA contain a leading
+      zero that must be stripped off.
+
+      Args:
+        serial: String. Serial number to parse.
+
+      Returns:
+        String. Serial number with extra leading zero removed.
+      """
+      serial = serial.strip()
+      if len(serial) == 18 and serial[0] == '0':
+        serial = serial[1:]
+      return serial
+
     def on_validate(self, serial):
         # Link serial number format:
         #
@@ -48,6 +66,7 @@ class SerialNumberTask(task.FactoryTask):
             month = (month_code_map[month_code] if month_code in month_code_map
                                                 else int(month_code))
             return calendar.monthrange(year, month)[1]
+        serial = self.strip_leading_zero(serial)
         return (len(serial) == 17 and
                 serial[0] in ('2', '3') and
                 (serial[1].isdigit() or serial[1] in ['A', 'B', 'C']) and
@@ -56,7 +75,8 @@ class SerialNumberTask(task.FactoryTask):
                 serial[4:].isdigit())
 
     def on_complete(self, serial_number):
-        self.vpd['ro']['serial_number'] = serial_number.strip()
+        serial_number = self.strip_leading_zero(serial_number)
+        self.vpd['ro']['serial_number'] = serial_number
         self.stop()
 
     def start(self):
