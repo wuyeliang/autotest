@@ -16,6 +16,27 @@ from cros.factory.test import ui
 
 _MESSAGE_FETCH_FROM_SHOP_FLOOR = "Fetching VPD from shop floor server..."
 _MESSAGE_WRITING = "Writing VPD:"
+_VPD_LIST = (('RO_VPD', 'ro'), ('RW_VPD', 'rw'))
+
+
+class FilterVpdTask(task.FactoryTask):
+
+    def __init__(self, test, protected_entries):
+        self.test = test
+        self.protected_entries = protected_entries
+
+    def start(self):
+        task.schedule(self.filter_vpd)
+
+    def filter_vpd(self):
+        if not self.protected_entries:
+            self.stop()
+        for vpd_type, entries in self.protected_entries.iteritems():
+            if not self.test.vpd.get(vpd_type, None):
+                continue
+            for entry in entries:
+                self.test.vpd[vpd_type].pop(entry, None)
+        self.stop()
 
 
 def format_vpd_parameter(vpd_dict):
@@ -43,8 +64,7 @@ class WriteVpdTask(task.FactoryTask):
             utils.system(command)
 
         vpd = self.vpd
-        VPD_LIST = (('RO_VPD', 'ro'), ('RW_VPD', 'rw'))
-        for (section, vpd_type) in VPD_LIST:
+        for (section, vpd_type) in _VPD_LIST:
             if not vpd.get(vpd_type, None):
                 continue
             parameter = format_vpd_parameter(vpd[vpd_type])
@@ -127,11 +147,13 @@ class factory_VPD(test.test):
     def run_once(self, override_vpd=None,
                  store_registration_codes=False,
                  registration_code_map_if_missing=None,
+                 protected_entries=None,
                  task_list=[SERIAL_TASK_NAME, REGION_TASK_NAME]):
         factory.log('%s run_once' % self.__class__)
         self.tasks = []
         self.vpd = override_vpd or {'ro': {}, 'rw': {}}
         self.registration_code_map = registration_code_map_if_missing or {}
+        self.protected_entries = protected_entries or {}
         current_group_code = get_vpd_value('RW_VPD', 'gbind_attribute')
         current_user_code = get_vpd_value('RW_VPD', 'ubind_attribute')
         if current_group_code:
@@ -153,8 +175,9 @@ class factory_VPD(test.test):
                     )]
                 if self.REGION_TASK_NAME in task_list:
                     self.tasks += [region_task.SelectRegionTask(self.vpd)]
-        self.tasks += [WriteVpdTask(self.vpd, self.registration_code_map if
-                       store_registration_codes else None)]
+        self.tasks += [FilterVpdTask(self, self.protected_entries),
+                       WriteVpdTask(self.vpd, self.registration_code_map if
+                                    store_registration_codes else None)]
         task.run_factory_tasks(self.job, self.tasks)
 
         factory.log('%s run_once finished' % repr(self.__class__))
