@@ -31,7 +31,7 @@ _LABEL_STATUS_SIZE = (140, 30)
 _LABEL_START_STR = 'hit SPACE to start each audio test\n' +\
     '按空白键开始各项声音测试\n\n'
 _LABEL_RESPONSE_STR = ful.USER_PASS_FAIL_SELECT_STR + '\n'
-_SAMPLE_LIST = ['Headset Audio Test', 'Built-in Audio Test']
+_SAMPLE_LIST = ['Headset Audio Test']
 _VERBOSE = False
 
 # Add -D hw:0,0 since default argument does not work properly.
