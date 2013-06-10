@@ -312,6 +312,7 @@ class SiteHost(remote.RemoteHost):
 
         @param image_name: The name of the image e.g.
                 lumpy-release/R27-3837.0.0
+
         """
         if not self._host_in_AFE():
             return
@@ -473,21 +474,30 @@ class SiteHost(remote.RemoteHost):
         @raises autoupdater.ChromiumOSError
 
         """
-        if not update_url and self._parser.options.image:
-            requested_build = self._parser.options.image
-            if requested_build.startswith('http://'):
-                update_url = requested_build
+        if update_url:
+            logging.debug('update url is set to %s', update_url)
+        else:
+            logging.debug('update url is not set, resolving...')
+            if self._parser.options.image:
+                requested_build = self._parser.options.image
+                if requested_build.startswith('http://'):
+                    update_url = requested_build
+                    logging.debug('update url is retrieved from requested_build'
+                                  ': %s', update_url)
+                else:
+                    # Try to stage any build that does not start with
+                    # http:// on the devservers defined in
+                    # global_config.ini.
+                    update_url = self._stage_image_for_update(requested_build)
+                    logging.debug('Build staged, and update_url is set to: %s',
+                                  update_url)
+            elif repair:
+                update_url = self._stage_image_for_update()
+                logging.debug('Build staged, and update_url is set to: %s',
+                              update_url)
             else:
-                # Try to stage any build that does not start with http:// on
-                # the devservers defined in global_config.ini.
-                update_url = self._stage_build_and_return_update_url(
-                        requested_build)
-        elif not update_url and not repair:
-            raise autoupdater.ChromiumOSError(
-                'Update failed. No update URL provided.')
-        elif not update_url and repair:
-            update_url = self._stage_build_and_return_update_url(
-                    self.get_repair_image_name())
+                raise autoupdater.ChromiumOSError(
+                    'Update failed. No update URL provided.')
 
         if repair:
             # In case the system is in a bad state, we always reboot the machine
