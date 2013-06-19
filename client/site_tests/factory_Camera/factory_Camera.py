@@ -4,247 +4,221 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-
-# DESCRIPTION :
-#
-# This test searches for a v4l2 video capture device, and starts streaming
-# captured frames on the monitor.
-# The observer then decides if the captured image looks good or defective,
-# pressing enter key to let it pass or tab key to fail.
-#
-# Then the test will start to test the LED indicator located near the webcam.
-# The LED test will be repeated for a fixed number (=5 at time of writing)
-# of rounds, each round it will randomly decide whether to capture from the
-# cam (the LED turns on when capturing). The captured image will NOT be
-# shown on the monitor, so the observer must answer what he really sees.
-# The test passes only if the answer for all rounds are correct.
-
-
-# The current configuration of buildbot will try to compile Python
-# files for the remote test purpose. Since this is done on the host,
-# it can't use any library that is not installed there even if the
-# library might be available on the target. We currently do not have
-# OpenCV on the host so we have to try-catch the import in order to
-# avoid the compilation error.
-#
-# TODO: Fix it either when we have OpenCV on the host or the build
-#       configuration for Python files in the autotest changes.
-
 try:
     import cv
     import cv2
 except ImportError:
-    # We can't raise error because it will fail the interpreter.
     pass
 
-import gtk
-import glib
-import pango
-import numpy
-import time
+import base64
+import logging
 import os
+import signal
+import time
 
-from gtk import gdk
-from random import randrange
+import autotest_lib.client.cros.camera.perf_tester as camperf
+import autotest_lib.client.cros.camera.renderer as renderer
 
+from autotest_lib.client.bin import test
 from autotest_lib.client.cros import factory_setup_modules
 from cros.factory.test import factory
-from cros.factory.test import ui as ful
-from autotest_lib.client.bin import test
-from autotest_lib.client.common_lib import error
+from cros.factory.test.test_ui import UI
 
-# OpenCV will automatically search for a working camera device if we use the
-# index -1.
-DEVICE_INDEX = -1
+_HTML = r'''
+<div id="Title"
+style="
+    text-align: center;
+    font-weight: bold;
+    font-size: 150%
+">
+Camera Test Fixture Calibration
+</div>
+<div id="test_message"
+style="text-align: center; font-weight: normal">
+</div>
+<div id="test_status"
+style="
+    text-align: center;
+    font-weight: bold;
+    font-size: 150%
+">
+</div>
+<div id="camera_image_wrapper"
+style="text-align: center">
+<img id="camera_image"></img>
+</div>
+'''
 
-PREFERRED_FPS = 30
-PREFERRED_INTERVAL = int(round(1000.0 / PREFERRED_FPS))
-FPS_UPDATE_FACTOR = 0.1
+_JS = r'''
+window.onload = RegisterCameraCallback();
 
-GDK_PIXBUF_BIT_PER_SAMPLE = 8
+function RegisterCameraCallback() {
+    setTimeout("test.sendTestEvent('poll', {});", 60);
+}
 
-KEY_GOOD = gdk.keyval_from_name('Return')
-KEY_BAD = gdk.keyval_from_name('Tab')
+function ClearBuffer() {
+    buf = ""
+}
 
-LABEL_FONT = pango.FontDescription('courier new condensed 16')
+function AddBuffer(value) {
+    buf += value
+}
 
-MESSAGE_STR = ('hit TAB to fail and ENTER to pass\n' +
-               '错误请按 TAB，成功请按 ENTER\n')
-MESSAGE_STR2 = ('hit TAB if the LED is off and ENTER if the LED is on\n' +
-                '请检查摄像头 LED 指示灯, 没亮请按 TAB, 灯亮请按 ENTER\n')
+function UpdateView(msg, success) {
+    var cam = document.getElementById("camera_image");
+    cam.src = "data:image/jpeg;base64," + buf;
+    var test_message = document.getElementById("test_message");
+    test_message.innerHTML = msg;
+    var test_status = document.getElementById("test_status");
+    if (success) {
+        test_status.style.color = "green";
+        test_status.innerHTML = "SUCCESS";
+    } else {
+        test_status.style.color = "red";
+        test_status.innerHTML = "FAIL";
+    }
+
+    setTimeout("test.sendTestEvent('poll', {});", 30)
+}
+'''
+
+_PREFERRED_FPS = 15
+_PREFERRED_INTERVAL = int(round(1000.0 / _PREFERRED_FPS))
+_FPS_UPDATE_FACTOR = 0.1
+
+_MESSAGE_STR = ('Fixture calibration under progress.<br>' +
+                'Please adjust the fixture until it reports SUCCESS, ' +
+                'then exit the test manually.')
+
+_TEST_CONFIG = {
+    'register_grid': False,
+    'min_corner_quality_ratio': 0.05,
+    'min_square_size_ratio': 0.022,
+    'min_corner_distance_ratio': 0.010,
+    'max_image_shift': 0.003,
+    'max_image_tilt': 0.25
+    }
 
 
 class factory_Camera(test.test):
     version = 1
+    preserve_srcdir = True
 
-    def key_release_callback(self, widget, event):
-        factory.log('key_release_callback %s(%s)' %
-                    (event.keyval, gdk.keyval_name(event.keyval)))
-        if event.keyval == KEY_GOOD or event.keyval == KEY_BAD:
-            if self.stage == 0:
-                self.capture_stop()
-                if event.keyval == KEY_BAD:
-                    gtk.main_quit()
-                self.img.hide()
-                self.label.set_text(MESSAGE_STR2)
+    _TEST_CHART_FILE = 'test_chart.png'
+    _TEST_SAMPLE_FILE = 'sample.png'
+
+    _PACKET_SIZE = 65000
+
+    def register_events(self, events):
+        for event in events:
+            assert hasattr(self, event)
+            factory.console.info('Register event %s' % event)
+            self.ui.AddEventHandler(event, getattr(self, event))
+
+    def update_view(self, data, msg, success):
+        '''Call javascripts to update the screen.'''
+        self.ui.CallJSFunction("ClearBuffer", "")
+        # Send the data in 64K packets due to the socket packet size limit.
+        data_len = len(data)
+        p = 0
+        while p < data_len:
+            if p + self._PACKET_SIZE > data_len:
+                self.ui.CallJSFunction("AddBuffer", data[p:data_len-1])
+                p = data_len
             else:
-                if self.ledstats & 1:
-                    self.capture_stop()
-                if bool(self.ledstats & 1) != (event.keyval == KEY_GOOD):
-                    self.ledfail = True
-                self.ledstats >>= 1
-            if self.stage == self.led_rounds:
-                self.fail = False
-                gtk.main_quit()
-            self.stage += 1
-            if self.ledstats & 1:
-                self.capture_start()
-            self.label.hide()
-            glib.timeout_add(1000, lambda *x: self.label.show())
-        return True
+                self.ui.CallJSFunction("AddBuffer",
+                                         data[p:p+self._PACKET_SIZE])
+                p += self._PACKET_SIZE
+        self.ui.CallJSFunction("UpdateView", msg, success)
 
-    def capture_core(self):
-        '''Captures an image and displays it
-
-        The FPS is determined by the camera hardware limit, the gtk display
-        overhead and the amount of memory copy operations. This subroutine
-        involves 3 copy operations of image data which usually takes less than
-        10 ms on an average machine.
-        '''
+    def poll(self, event):
+        '''Captures an image and displays it.'''
+        msg = _MESSAGE_STR
         # Read image from camera.
-        ret, cvImg = self.dev.read()
+        ret, img = self.dev.read()
         if not ret:
             raise IOError("Error while capturing. Camera disconnected?")
+        if self.unit_test:
+            img = self.sample.copy()
 
-        # Convert from BGR to RGB in-place.
-        cv2.cvtColor(cvImg, cv.CV_BGR2RGB, cvImg)
+        # Analysize the image and draw overlays.
+        target = cv2.cvtColor(img, cv.CV_BGR2GRAY)
+        success, tar_data = camperf.CheckVisualCorrectness(
+            target, self.ref_data, corner_only=True, **self.config)
 
-        # Convert to gdk pixbuf format.
-        pbuf = gdk.pixbuf_new_from_data(cvImg.data,
-            gdk.COLORSPACE_RGB, False, GDK_PIXBUF_BIT_PER_SAMPLE,
-            cvImg.shape[1], cvImg.shape[0], cvImg.strides[0])
+        if hasattr(tar_data, 'shift'):
+            factory.log("Image shift: %0.3f (%.02f, %0.02f)" %
+                        (tar_data.shift, tar_data.v_shift[0],
+                         tar_data.v_shift[1]))
+        if hasattr(tar_data, 'tilt'):
+            factory.log("Image tilt: %0.2f" % tar_data.tilt)
+        factory.log('FPS = ' + ('%.2f\n' % self.current_fps))
 
-        # Copy to the display buffer.
-        pbuf.copy_area(0, 0, pbuf.get_width(), pbuf.get_height(), self.pixbuf,
-                       0, 0)
+        renderer.DrawVC(img, success, tar_data)
 
-        # Queue for refreshing.
-        self.img.queue_draw()
+        # Encode the image in the JPEG format.
+        # TODO: add an option of resizing or not
+        img = cv2.resize(img, None, fx=self.resize_ratio, fy=self.resize_ratio,
+                         interpolation=cv2.INTER_AREA)
+        cv2.imwrite('temp.jpg', img)
+        with open('temp.jpg', 'r') as fd:
+            img_data = base64.b64encode(fd.read()) + "="
+        #img_data = base64.b64encode(cv.EncodeImage('.jpg', img).tostring()) + \
+        #           "="
 
         # Update FPS if required.
         if self.show_fps:
             current_time = time.clock()
-            self.current_fps = (self.current_fps * (1 - FPS_UPDATE_FACTOR) +
+            self.current_fps = (self.current_fps * (1 - _FPS_UPDATE_FACTOR) +
                                 1.0 / (current_time - self.last_capture_time) *
-                                FPS_UPDATE_FACTOR)
+                                _FPS_UPDATE_FACTOR)
             self.last_capture_time = current_time
+            msg += 'FPS = ' + '%.2f\n' % self.current_fps
 
-            self.label.set_text(MESSAGE_STR2 +
-                                'FPS = ' + '%.2f\n' % self.current_fps)
+        # Update the HTML with javascript.
+        self.update_view(img_data, msg, success)
+        return
 
-        return True
-
-    def register_callbacks(self, w):
-        w.connect('key-release-event', self.key_release_callback)
-        w.add_events(gdk.KEY_RELEASE_MASK)
-
-    def capture_start(self):
-        # Register the image capturing subroutine using glib.
-        # It will be called every PREFERRED_INTERVAL time.
-        self.gio_tag = glib.timeout_add( PREFERRED_INTERVAL,
-            lambda *x:self.capture_core(),
-            priority=glib.PRIORITY_LOW)
-
-    def capture_stop(self):
-        # Unregister the image capturing subroutine.
-        glib.source_remove(self.gio_tag)
-
-    def run_once(self,
-                 led_rounds=1, show_fps=False, single_shot=False):
-        '''Run the camera test
-
-        Parameter
-          led_rounds: 0 to disable the LED test,
-                      1 to check if the LED turns on,
-                      2 or higher to have multiple random turn on/off
-                      (at least one on round and one off round is guranteed)
-        '''
+    def run_once(self, res_width=1280, res_height=720, show_fps=True,
+                 resize_ratio=1.0, device_index=-1, unit_test=False):
         factory.log('%s run_once' % self.__class__)
 
-        self.fail = True
-        self.ledfail = False
-        self.led_rounds = led_rounds
-        self.ledstats = 0
-        if led_rounds == 1:
-            # Always on if only one round.
-            self.ledstats = 1
-        elif led_rounds > 1:
-            # Ensure one on round and one off round.
-            self.ledstats = randrange(2 ** led_rounds - 2) + 1
+        # Set default signal handlers.
+        signal_handler = lambda signum, frame: sys.exit(0)
+        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
+
+        # Set logging level. Otherwise, send preview data to AddBuffer() will
+        # log the whole image preview data to factory log under the default log
+        # level of autotest.
+        logging.getLogger().setLevel(logging.INFO)
+
         self.show_fps = show_fps
-        self.stage = 0
+        self.unit_test = unit_test
+        self.resize_ratio = resize_ratio
 
-        self.label = label = gtk.Label(MESSAGE_STR)
-        label.modify_font(LABEL_FONT)
-        label.modify_fg(gtk.STATE_NORMAL, gdk.color_parse('light green'))
+        # Prepare test data.
+        os.chdir(self.srcdir)
+        self.ref_data = camperf.PrepareTest(self._TEST_CHART_FILE)
+        self.config = _TEST_CONFIG
+        if self.unit_test:
+            self.sample = cv2.imread(self._TEST_SAMPLE_FILE)
 
-        test_widget = gtk.VBox()
-        test_widget.modify_bg(gtk.STATE_NORMAL, gdk.color_parse('black'))
-        test_widget.add(label)
-        self.test_widget = test_widget
-
-        self.img = None
-
-        # Initialize the camera with OpenCV.  Since it's not too smart
-        # about finding the device, try to find the device for it.  If
-        # multiple devices are present, this grabs the last one.
-        uvc_viddir = '/sys/bus/usb/drivers/uvcvideo'
-        for uvc_direntry in os.listdir(uvc_viddir):
-            if uvc_direntry[0].isdigit():
-                uvc_subdir = os.path.join(uvc_viddir, uvc_direntry,
-                                          'video4linux')
-                if not os.path.isdir(uvc_subdir):
-                    continue
-                for uvc_devname in os.listdir(uvc_subdir):
-                    if uvc_devname.startswith('video'):
-                      DEVICE_INDEX = int(uvc_devname[5:])
-        self.dev = dev = cv2.VideoCapture(DEVICE_INDEX)
+        self.dev = dev = cv2.VideoCapture(device_index)
         if not dev.isOpened():
-            raise IOError('Device #%s ' % DEVICE_INDEX +
-                             'does not support video capture interface')
+            raise IOError('Device #%s ' % device_index +
+                          'does not support video capture interface')
+        dev.set(cv.CV_CAP_PROP_FRAME_WIDTH, res_width)
+        dev.set(cv.CV_CAP_PROP_FRAME_HEIGHT, res_height)
 
-        if single_shot:
-            # Read image from camera.
-            ret, cvImg = self.dev.read()
-            if not ret:
-                raise IOError("Error while capturing. Camera disconnected?")
-        else:
-            width, height = (dev.get(cv.CV_CAP_PROP_FRAME_WIDTH),
-                    dev.get(cv.CV_CAP_PROP_FRAME_HEIGHT))
+        if self.show_fps:
+            self.last_capture_time = time.clock()
+            self.current_fps = _PREFERRED_FPS
 
-            # Initialize the canvas.
-            self.pixbuf = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8,
-                width, height)
-            self.img = gtk.image_new_from_pixbuf(self.pixbuf)
-            self.test_widget.add(self.img)
-            self.img.show()
-
-            if self.show_fps:
-                self.last_capture_time = time.clock()
-                self.current_fps = PREFERRED_FPS
-
-            self.capture_start()
-
-            ful.run_test_widget(self.job, test_widget,
-                window_registration_callback=self.register_callbacks)
-
-            if self.fail:
-                raise error.TestFail('Camera test failed by user '  \
-                                     'indication\n品管人员怀疑摄影' \
-                                     '镜头故障，请检修')
-            if self.ledfail:
-                raise error.TestFail('Camera LED test failed\n'  \
-                                     '摄影镜头 LED 测试不通过，' \
-                                     '请检修')
+        self.ui = UI()
+        self.ui.SetHTML(_HTML)
+        self.ui.RunJS(_JS)
+        self.register_events(['poll'])
+        self.ui.Run()
 
         factory.log('%s run_once finished' % self.__class__)
