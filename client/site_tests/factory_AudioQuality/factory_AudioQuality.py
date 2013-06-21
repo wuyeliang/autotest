@@ -212,7 +212,7 @@ class factory_AudioQuality(test.test):
             column_number = max([len(line)/12 + 1 for line in lines[1:]])
             for line in lines[1:-1]:
                 x = []
-                for i in range(colume_number):
+                for i in range(column_number):
                     x.append(float(line[min(i*12, len(line)):min(i*12 + 12,
                              len(line))].strip() or 'nan'))
                 table.append(x)
