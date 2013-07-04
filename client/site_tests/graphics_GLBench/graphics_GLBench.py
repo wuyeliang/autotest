@@ -104,6 +104,11 @@ class graphics_GLBench(test.test):
     self.job.setup_dep(['glbench'])
 
   def run_once(self, options=''):
+    # TODO(djkurtz): glbench disabled on arm for R28 due to crosbug.com/p/18857
+    if utils.get_arch().startswith('arm'):
+      raise error.TestFail('glbench disabled on arm for R28 due to '
+                           'crosbug.com/p/18857')
+
     dep = 'glbench'
     dep_dir = os.path.join(self.autodir, 'deps', dep)
     self.job.install_pkg(dep, 'dep', dep_dir)
