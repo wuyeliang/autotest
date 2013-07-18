@@ -19,6 +19,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import factory_setup_modules
 from cros.factory.test import factory
 from cros.factory.test.test_ui import UI
+from cros.factory.test.factory import FactoryTestFailure
 from autotest_lib.client.cros.audio import audio_helper
 
 
@@ -218,5 +219,8 @@ class factory_AudioLoop(test.test):
         # Otherwise, it binds start_run_test with 's' key pressed.
         self.ui.CallJSFunction('init', autostart, require_dongle)
         factory.console.info('Run UI')
-        self.ui.Run()
+        try:
+            self.ui.Run()
+        except FactoryTestFailure as e:
+            raise error.TestError(e.message)
 
