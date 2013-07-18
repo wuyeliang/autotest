@@ -104,10 +104,13 @@ class factory_Camera(test.test):
     version = 1
     preserve_srcdir = True
 
-    _TEST_CHART_FILE = 'test_chart.png'
-    _TEST_SAMPLE_FILE = 'sample.png'
-
     _PACKET_SIZE = 65000
+
+    def get_test_chart_file(self):
+        return 'test_chart_%s.png' % self.test_chart_version
+
+    def get_test_sample_file(self):
+        return 'sample_%s.png' % self.test_chart_version
 
     def register_events(self, events):
         for event in events:
@@ -180,6 +183,7 @@ class factory_Camera(test.test):
         return
 
     def run_once(self, res_width=1280, res_height=720, show_fps=True,
+                 test_chart_version = 'A',
                  resize_ratio=1.0, device_index=-1, unit_test=False):
         factory.log('%s run_once' % self.__class__)
 
@@ -194,15 +198,16 @@ class factory_Camera(test.test):
         logging.getLogger().setLevel(logging.INFO)
 
         self.show_fps = show_fps
+        self.test_chart_version = test_chart_version
         self.unit_test = unit_test
         self.resize_ratio = resize_ratio
 
         # Prepare test data.
         os.chdir(self.srcdir)
-        self.ref_data = camperf.PrepareTest(self._TEST_CHART_FILE)
+        self.ref_data = camperf.PrepareTest(self.get_test_chart_file())
         self.config = _TEST_CONFIG
         if self.unit_test:
-            self.sample = cv2.imread(self._TEST_SAMPLE_FILE)
+            self.sample = cv2.imread(self.get_test_sample_file())
 
         self.dev = dev = cv2.VideoCapture(device_index)
         if not dev.isOpened():
