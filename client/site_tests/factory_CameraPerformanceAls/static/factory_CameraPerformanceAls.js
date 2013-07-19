@@ -12,8 +12,6 @@ var statIdle = '<span class="color_idle goofy-label-en">IDLE</span>' +
     '<span class="color_idle goofy-label-zh">閒置中</span>';
 
 var useFixture = true;
-var useUSBDisk = true;
-var useShopfloor = false;
 var disableEnterKey = false;
 
 window.onkeydown = function(event) {
@@ -24,8 +22,7 @@ window.onkeydown = function(event) {
     }
 }
 
-function InitLayout(talkToFixture, talkToShopfloor,
-                    inputSerialNumber, ignoreEnterKey) {
+function InitLayout(talkToFixture, inputSerialNumber, ignoreEnterKey) {
     if (inputSerialNumber) {
         var snInputBox = document.getElementById("serial_number");
         snInputBox.disabled = false;
@@ -43,20 +40,6 @@ function InitLayout(talkToFixture, talkToShopfloor,
         document.getElementById("fixture_status").hidden = true;
     }
 
-    if (talkToShopfloor) {
-        useShopfloor = true;
-        useUSBDisk = false;
-        document.getElementById("prompt_usb").hidden = true;
-        document.getElementById("usb_status_panel").hidden = true;
-        document.getElementById("prompt_ethernet").hidden = false;
-    } else {
-        useShopfloor = false;
-        useUSBDisk = true;
-        document.getElementById("prompt_usb").hidden = false;
-        document.getElementById("usb_status_panel").hidden = false;
-        document.getElementById("prompt_ethernet").hidden = true;
-    }
-
     disableEnterKey = ignoreEnterKey;
 }
 
@@ -64,15 +47,13 @@ function UpdateTestBottonStatus() {
     var testButton = document.getElementById("btn_run_test");
     var isSnReady = (document.getElementById("test_sn").hidden ||
                      document.getElementById("serial_number").value !== "");
-    var isUSBReady = (!useUSBDisk ||
-               document.getElementById('usb_status').innerHTML == USBLoaded)
     var isFixtureReady = (!useFixture ||
         document.getElementById('fixture_status').innerHTML == fxtAvailable);
 
     testButton.disabled =
         !(isSnReady &&
         document.getElementById('serial_number').validity.valid &&
-        isUSBReady &&
+        document.getElementById('usb_status').innerHTML == USBLoaded &&
         isFixtureReady);
 }
 
@@ -87,16 +68,6 @@ function OnSnInputBoxClick() {
     var snInputBox = document.getElementById("serial_number");
     snInputBox.value="";
     UpdateTestBottonStatus();
-}
-
-function OnShopfloorInit(pattern) {
-    document.getElementById("prompt_ethernet").hidden = true;
-    document.getElementById("container").hidden = false;
-    ConfigureSNInputbox(pattern);
-    if (useFixture)
-        test.sendTestEvent('sync_fixture', {});
-    else
-        UpdateTestBottonStatus();
 }
 
 function OnUSBInsertion() {
