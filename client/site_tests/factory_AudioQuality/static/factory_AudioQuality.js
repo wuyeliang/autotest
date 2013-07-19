@@ -7,7 +7,7 @@ window.onkeydown = function(event) {
 */
 
 window.onload = function(event) {
-  test.sendTestEvent("init_audio_server",{});
+  test.sendTestEvent("detect_network",{});
 }
 
 var active = 'loop_0';
@@ -36,7 +36,7 @@ function toggleFAUtility() {
   if (display_fa_utility) {
     document.getElementById('fa-utility').style.display = 'none';
     display_fa_utility = false;
-    test.sendTestEvent("init_audio_server",{});
+    test.sendTestEvent("reset_test_phase",{});
   } else {
     document.getElementById('fa-utility').style.display = 'block';
     display_fa_utility = true;
@@ -50,12 +50,14 @@ function countdown() {
   count = count - 1;
   if (count <= 0) {
      clearInterval(count_timer);
-     test.sendTestEvent("init_audio_server",{});
+     test.sendTestEvent("detect_network",{});
   }
 }
 
 function start_countdown(msg, num) {
   count = num;
   count_msg = msg;
-  count_timer = setInterval(countdown, 1000);
+  if (!display_fa_utility) {
+    count_timer = setInterval(countdown, 1000);
+  }
 }
