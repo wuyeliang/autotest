@@ -26,7 +26,11 @@ from autotest_lib.client.common_lib import error, utils
 from autotest_lib.client.cros import factory_setup_modules
 from autotest_lib.client.cros.audio import audio_helper
 from cros.factory.event_log import Log
-from cros.factory.goofy.goofy import CACHES_DIR
+try:
+    # Workaround to avoid not finding jsonrpclib in buildbot.
+    from cros.factory.goofy.goofy import CACHES_DIR
+except:
+    pass
 from cros.factory.test import factory
 from cros.factory.test import test_ui
 from cros.factory.test.event import Event
@@ -240,6 +244,7 @@ class factory_AudioQuality(test.test):
         md5_file = open(file_path, "rb")
         rawstring = md5_file.read()
         self.send_response(rawstring.strip(), args)
+        md5_file.close()
         return
 
     def handle_config_file(self, *args):
@@ -250,6 +255,7 @@ class factory_AudioQuality(test.test):
                 binascii.b2a_hex(rawstring))
 
         self.send_response(rawdata, args)
+        config_file.close()
         return
 
     def handle_send_file(self, *args):
