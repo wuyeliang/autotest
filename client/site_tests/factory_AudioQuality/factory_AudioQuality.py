@@ -17,31 +17,31 @@ import re
 import select
 import socket
 import subprocess
-import tempfile
 import threading
 import time
 
 from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error, utils
-from autotest_lib.client.cros import factory_setup_modules
+from autotest_lib.client.cros import factory_setup_modules #pylint:disable=W0611
 from autotest_lib.client.cros.audio import audio_helper
-from cros.factory.event_log import Log
 try:
     # Workaround to avoid not finding jsonrpclib in buildbot.
     from cros.factory.goofy.goofy import CACHES_DIR
 except:
     pass
+from cros.factory.event_log import Log
 from cros.factory.test import factory
 from cros.factory.test import test_ui
-from cros.factory.test.event import Event
-from cros.factory.test import ui as ful
 from cros.factory.test import shopfloor
 from cros.factory.utils import net_utils
+from cros.factory.test import utils as factory_utils
+from cros.factory.test.factory import FactoryTestFailure
 
 SHOPFLOOR_TIMEOUT_SECS = 10 # Timeout for shopfloor connection.
 SHOPFLOOR_RETRY_INTERVAL_SECS = 10 # Seconds to wait between retries.
 INSERT_ETHERNET_DONGLE_TIMEOUT_SECS = 30 # Timeout for inserting dongle.
 IP_SETUP_TIMEOUT_SECS = 10 # Timeout for setting IP address.
+CHECK_FIXTURE_COMPLETE_SECS = 1 # Seconds to check fixture test.
 
 # Host test machine crossover connected to DUT, fix local ip and port for
 # communication in between.
@@ -49,33 +49,39 @@ _HOST = ''
 _PORT = 8888
 _LOCAL_IP = '192.168.1.2'
 
+# Setting
+_INIT_COUNTDOWN = 3
+_REMOVE_ETHERNET_TIMEOUT_SECS = 30 # Timeout for inserting dongle.
+_FIXTURE_PARAMETERS = ['audio/audio_md5', 'audio/audio.zip']
+
 # Label strings.
+_LABEL_SPACE_TO_START = test_ui.MakeLabel('Press \'Space\' to start test',
+        u'按空白键开始测试')
 _LABEL_CONNECTED = test_ui.MakeLabel('Connected', u'已连线')
 _LABEL_WAITING = test_ui.MakeLabel('Waiting for command', u'等待指令中')
 _LABEL_AUDIOLOOP = test_ui.MakeLabel('Audio looping', u'音源回放中')
 _LABEL_SPEAKER_MUTE_OFF = test_ui.MakeLabel('Speaker on', u'喇叭开启')
 _LABEL_DMIC_ON = test_ui.MakeLabel('Dmic on', u'LCD mic开启')
 _LABEL_PLAYTONE_LEFT = test_ui.MakeLabel('Playing tone to left channel',
-                        u'播音至左声道')
+        u'播音至左声道')
 _LABEL_PLAYTONE_RIGHT = test_ui.MakeLabel('Playing tone to right channel',
-                         u'播音至右声道')
+        u'播音至右声道')
 _LABEL_WAITING_ETHERNET = test_ui.MakeLabel(
-    'Waiting for Ethernet connectivity to ShopFloor, countdown',
-    u'等待网路介面卡连接到 ShopFloor，倒数')
+        'Waiting for Ethernet connectivity to ShopFloor',
+        u'等待网路介面卡连接到 ShopFloor')
 _LABEL_WAITING_IP = test_ui.MakeLabel('Waiting for IP address',
-    u'等待 IP 设定')
+        u'等待 IP 设定')
 _LABEL_CONNECT_SHOPFLOOR = test_ui.MakeLabel('Connecting to ShopFloor...',
-    u'连接到 ShopFloor 中...')
+        u'连接到 ShopFloor 中...')
 _LABEL_DOWNLOADING_PARAMETERS = test_ui.MakeLabel(
-    'Downloading parameters', u'下载测试规格中')
+        'Downloading parameters', u'下载测试规格中')
 _LABEL_REMOVE_ETHERNET = test_ui.MakeLabel(
-    'Remove Ethernet connectivity, coutdown', u'移除网路介面卡，倒数')
+        'Remove Ethernet connectivity', u'移除网路介面卡')
 _LABEL_WAITING_FIXTURE_ETHERNET = test_ui.MakeLabel(
-    'Waiting for Ethernet connectivity to audio fixture, countdown',
-    u'等待网路介面卡连接到 audio 置具，倒数')
+        'Waiting for Ethernet connectivity to audio fixture',
+        u'等待网路介面卡连接到 audio 置具')
 _LABEL_READY = test_ui.MakeLabel('Ready for connection', u'準备完成,等待链接')
-_LABEL_PHASE_LIST = [_LABEL_WAITING_ETHERNET, _LABEL_REMOVE_ETHERNET,
-    _LABEL_WAITING_FIXTURE_ETHERNET]
+_LABEL_UPLOAD_AUXLOG = test_ui.MakeLabel('Upload log', u'上传记录档')
 
 # Regular expression to match external commands.
 _LOOP_0_RE = re.compile("(?i)loop_0")
@@ -110,25 +116,28 @@ _MUTE_RIGHT_MIXER_SETTINGS = [{'name': '"Master Playback Switch"',
 # Logs
 _LABEL_FAIL_LOGS = 'Test fail, find more detail in log.'
 
-# Setting
-_INIT_COUNTDOWN = 3
-_FIXTURE_PARAMETERS = ['audio_md5', 'audio.zip']
-
 class factory_AudioQuality(test.test):
-    version = 2
+    """This test case is to analysis audio quality including THD and R&B of
+    digital microphone and speaker.
+
+    There are two loops:
+    1. from digital mic to headphone.
+    2. from external mic to speaker.
+    """
+    version = 3
     preserve_srcdir = True
 
     def handle_connection(self, conn, *args):
-        """
-        Asynchronous handler for socket connection.
+        """Asynchronous handler for socket connection.
+
         Command Protocol:
           Command1[\x05]Data1[\x05]Data2[\x04][\x03]
         One line may contains many commands. and the last character must
         be Ascii code \x03.
 
-        use Ascii code \x05 to seperate command and data
-        use Ascii code \x04 to present the end of command
-        use Ascii code \x03 to present the end of list of command
+        Use Ascii code \x05 to seperate command and data.
+        Use Ascii code \x04 to present the end of command.
+        Use Ascii code \x03 to present the end of list of command.
 
         When DUT received command, DUT should reply Active status immediately.
         Format is
@@ -147,21 +156,25 @@ class factory_AudioQuality(test.test):
         Result_String and Error_Code could be any plaintext.
         If Result_String and Error_Code are empty, you can omit these.
         For Example: Command[\x05]Active_End[\x05]Pass[\x04][\x03]
+
+        @param conn: socket connection
         """
+        next_commands = ''
         while True:
-            commands = ''
+            commands = next_commands
             while True:
                 buf = conn.recv(1024)
                 commands += buf
-                if not buf or buf[-1] == '\x03':
+                if not buf or '\x03' in commands:
                     break
 
+            commands, next_commands = commands.split('\x03', 1)
             if commands:
                 logging.info("Received command %s", repr(commands))
             else:
                 break
 
-            command_list = commands[0:-2].split('\x04')
+            command_list = commands[0:-1].split('\x04')
             for command in command_list:
                 if not command:
                     continue
@@ -169,42 +182,26 @@ class factory_AudioQuality(test.test):
                 instruction = attr_list[0]
                 conn.send(instruction + '\x05' + 'Active' + '\x04\x03')
 
+                match_command = False
                 for key in self._handlers.iterkeys():
                     if key.match(instruction):
-                        logging.info('match command %s', instruction)
+                        match_command = True
+                        factory.console.info('match command %s', instruction)
                         self._handlers[key](conn, attr_list)
                         break
-
-                # Respond by the received command with '_OK' postfix.
-                logging.info('Respond OK')
+                if not match_command:
+                    factory.console.error("Command %s cannot find", instruction)
+                    conn.send(instruction + '\x05' + 'Active_End' + '\x05' +
+                        'Fail' + '\x04\x03')
 
             if self._test_complete:
-                logging.info('Test completed')
-                time.sleep(3)
-                if self._test_passed:
-                    self.ui.Pass()
-                else:
-                    self.ui.Fail(_LABEL_FAIL_LOGS)
-        logging.info("Connection disconnect")
+                factory.console.info('Test completed')
+                break
+        factory.console.info("Connection disconnect")
         return False
 
-    def start_loop(self):
-        """
-        Starts the internal audio loopback.
-        """
-        if self._use_sox_loop:
-            cmdargs = [self._ah.sox_path, '-t', 'alsa', self._input_dev, '-t',
-                    'alsa', self._output_dev]
-            self._loop_process = subprocess.Popen(cmdargs)
-        else:
-            cmdargs = [self._ah.audioloop_path, '-i', self._input_dev, '-o',
-                    self._output_dev, '-c', str(self._loop_buffer_count)]
-            self._loop_process = subprocess.Popen(cmdargs)
-
     def restore_configuration(self):
-        """
-        Stops all the running process and restore the mute settings.
-        """
+        """Stops all the running process and restore the mute settings."""
         if self._multitone_job:
             utils.nuke_subprocess(self._multitone_job.sp)
             utils.join_bg_jobs([self._multitone_job], timeout=1)
@@ -227,7 +224,16 @@ class factory_AudioQuality(test.test):
         self._ah.set_mixer_controls(self._init_mixer_settings)
 
     def send_response(self, response, args):
-        # because there will not have args from test_command
+        """Sends response to DUT for each command.
+
+        @param response: response string
+        @param args: This parameter is omitted when we test from FA-utility.
+                     Otherwise, this parameter is passing from
+                     handle_connection
+                     args[0] is socket connection
+                     args[1] is attr_list of handle_connection
+        """
+        # because there will not have args from mock_command
         if not args or not args[0] or not args[1][0]:
             return
         conn = args[0]
@@ -238,33 +244,61 @@ class factory_AudioQuality(test.test):
         else:
             conn.send(command + '\x05' + 'Active_End' + '\x05' +
                 'Pass' + '\x04\x03')
+        logging.info('Respond %s OK', command)
 
     def handle_version(self, *args):
+        """Returns the md5 checksum of configuration file."""
         file_path = os.path.join(self._caches_dir, self._parameters[0])
-        md5_file = open(file_path, "rb")
-        rawstring = md5_file.read()
-        self.send_response(rawstring.strip(), args)
-        md5_file.close()
+        try:
+            with open(file_path, "rb") as md5_file:
+                rawstring = md5_file.read()
+                self.send_response(rawstring.strip(), args)
+        except IOError:
+          factory.console.error('No such file or directory: %s', file_path)
         return
 
     def handle_config_file(self, *args):
+        """Return the content of configuration file."""
         file_path = os.path.join(self._caches_dir, self._parameters[1])
-        config_file = open(file_path, "rb")
-        rawstring = config_file.read()
-        rawdata = self._parameters[1] + ';' + str(len(rawstring)) + ';' + (
-                binascii.b2a_hex(rawstring))
+        try:
+            with open(file_path, "rb") as config_file:
+                rawstring = config_file.read()
+                """
+                The format of file content is
+                'file_name;file_size;file_content'.
+                The file size is real file size instead of the size
+                after b2a_hex.
+                Using b2a_hex is to avoid the file content including special
+                character such as '\x03', '\x04', and '\x05'.
+                """
+                rawdata = (self._parameters[1] + ';' +
+                           str(len(rawstring)) + ';' +
+                           binascii.b2a_hex(rawstring))
 
-        self.send_response(rawdata, args)
-        config_file.close()
+                self.send_response(rawdata, args)
+        except IOError:
+          factory.console.error('No such file or directory: %s', file_path)
         return
 
     def handle_send_file(self, *args):
+        """This function is used to save test results from DUT.
+
+        Also uploads the parsed data to log.
+        """
         conn = args[0]
 
         attr_list = args[1]
         file_name = attr_list[1]
         size = int(attr_list[2])
         received_data = attr_list[3].replace('\x00', ' ')
+
+        write_path = os.path.join(factory.get_log_root(), 'aux',
+                'audio', file_name)
+        factory_utils.TryMakeDirs(os.path.dirname(write_path))
+        factory.console.info('save file: %s', write_path)
+        with open(write_path, 'wb') as f:
+          f.write(received_data)
+        self._auxlogs.append(write_path)
 
         logging.info("Received file %s with size %d" , file_name, size)
 
@@ -345,18 +379,19 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_result_pass(self, *args):
+        """Mark pass of this test case."""
         self._test_passed = True
         self.send_response(None, args)
 
     def handle_result_fail(self, *args):
+        """Mark fail of this test case."""
         self._test_passed = False
         self.send_response(None, args)
 
     def handle_test_complete(self, *args):
-        """
-        Handles test completion.
-        Runs post test script before ends this test
+        """Handles test completion.
 
+        Runs post test script before ends this test
         """
         self.on_test_complete()
         self._test_complete = True
@@ -364,17 +399,26 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_loop_none(self, *args):
+        """Restore amixer configuration to default."""
         self.restore_configuration()
         self.ui.CallJSFunction('setMessage', _LABEL_WAITING)
         self.send_response(None, args)
 
     def handle_loop(self, *args):
+        """Starts the internal audio loopback."""
         self.restore_configuration()
         self.ui.CallJSFunction('setMessage', _LABEL_AUDIOLOOP)
-        self.start_loop()
+        if self._use_sox_loop:
+            cmdargs = [self._ah.sox_path, '-t', 'alsa', self._input_dev, '-t',
+                    'alsa', self._output_dev]
+            self._loop_process = subprocess.Popen(cmdargs)
+        else:
+            cmdargs = [self._ah.audioloop_path, '-i', self._input_dev, '-o',
+                    self._output_dev, '-c', str(self._loop_buffer_count)]
+            self._loop_process = subprocess.Popen(cmdargs)
 
     def handle_multitone(self, *args):
-        """Plays the multi-tone wav file"""
+        """Plays the multi-tone wav file."""
         self.restore_configuration()
         wav_path = os.path.join(self.srcdir, '10SEC.wav')
         cmdargs = ['aplay', wav_path]
@@ -382,7 +426,7 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_sweep(self, *args):
-        """Plays the sweep wav file"""
+        """Plays the sweep wav file."""
         self.restore_configuration()
         wav_path = os.path.join(self.srcdir, 'sweep.wav')
         cmdargs = ['aplay', wav_path]
@@ -390,6 +434,7 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_loop_jack(self, *args):
+        """External mic loop to headphone."""
         if self._use_multitone:
             self.handle_multitone()
         else:
@@ -398,6 +443,7 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_loop_from_dmic(self, *args):
+        """Digital mic loop to headphone."""
         self.handle_loop()
         self.ui.CallJSFunction('setMessage', _LABEL_AUDIOLOOP +
                 _LABEL_DMIC_ON)
@@ -405,16 +451,18 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_loop_speaker_unmute(self, *args):
+        """External mic loop to speaker."""
         if self._use_multitone:
             self.handle_multitone()
         else:
             self.handle_loop()
         self.ui.CallJSFunction('setMessage', _LABEL_AUDIOLOOP +
                 _LABEL_SPEAKER_MUTE_OFF)
-        self.unmute_speaker()
+        self._ah.set_mixer_controls(self._unmute_speaker_mixer_settings)
         self.send_response(None, args)
 
     def handle_xtalk_left(self, *args):
+        """Cross talk left."""
         self.restore_configuration()
         self.ui.CallJSFunction('setMessage', _LABEL_PLAYTONE_LEFT)
         self._ah.set_mixer_controls(self._mute_left_mixer_settings)
@@ -423,6 +471,7 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def handle_xtalk_right(self, *args):
+        """Cross talk right."""
         self.restore_configuration()
         self.ui.CallJSFunction('setMessage', _LABEL_PLAYTONE_RIGHT)
         self._ah.set_mixer_controls(self._mute_right_mixer_settings)
@@ -431,6 +480,10 @@ class factory_AudioQuality(test.test):
         self.send_response(None, args)
 
     def listen_forever(self, sock):
+        """Thread function to handle socket.
+
+        @param sock: socket object.
+        """
         fd = sock.fileno()
         while True:
             _rl, _, _ = select.select([fd], [], [])
@@ -438,53 +491,19 @@ class factory_AudioQuality(test.test):
                 conn, addr = sock.accept()
                 self.handle_connection(conn)
 
-    def init_audio_server(self):
-        """
-        Initialize server and start listening for external commands.
-        """
-        if self._init_socket:
-            self.ui.CallJSFunction('setMessage', _LABEL_READY)
-            return
-        sock = socket.socket()
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((_HOST, _PORT))
-        sock.listen(1)
-        logging.info("Listening at port %d", _PORT)
-
-        self._listen_thread = threading.Thread(target=self.listen_forever,
-                args=(sock,))
-        self._listen_thread.start()
-
-        self.ui.CallJSFunction('setMessage', _LABEL_READY)
-        self._test_phase += 1
-        self._init_socket = 1
-
-    def unmute_speaker(self):
-        self._ah.set_mixer_controls(self._unmute_speaker_mixer_settings)
-
     def on_test_complete(self):
-        """
-        Restores the original state before exiting the test.
-        """
+        """Restores the original state before exiting the test."""
         utils.system('iptables -D INPUT -p tcp --dport %s -j ACCEPT' % _PORT)
         utils.system('ifconfig %s down' % self._eth)
         utils.system('ifconfig %s up' % self._eth)
         self.restore_configuration()
         self._ah.cleanup_deps(['sox', 'audioloop'])
 
-    def check_eth_state(self):
-        path = '/sys/class/net/%s/carrier' % self._eth
-        output = None
-        try:
-            if os.path.exists(path):
-                output = open(path).read()
-        finally:
-            if output:
-                return output == '1\n'
-            else:
-                return False
+    def mock_command(self, event):
+        """Receive test command from FA-utility.
 
-    def test_command(self, event):
+        @param event: event from UI.
+        """
         logging.info('Get event %s', event)
         cmd = event.data.get('cmd', '')
         for key in self._handlers.iterkeys():
@@ -492,64 +511,101 @@ class factory_AudioQuality(test.test):
                 self._handlers[key]()
                 break
 
-    def reset_test_phase(self, event):
-        self._test_phase = 0 if self._use_shopfloor else 2
-        self.detect_network(None)
+    def remove_network(self):
+        """Detect and wait ethernet remove."""
+        while True:
+            try:
+                self.ui.CallJSFunction('setMessage', _LABEL_REMOVE_ETHERNET)
+                logging.info('Removing Ethernet device...')
+                net_utils.PollForCondition(condition=(
+                    lambda: False if net_utils.FindUsableEthDevice() else True),
+                    timeout=_REMOVE_ETHERNET_TIMEOUT_SECS,
+                    condition_name='Remove Ethernet device')
+                break
+            except:  # pylint: disable=W0702
+                exception_string = factory_utils.FormatExceptionOnly()
+                factory.console.error('Remove Ethernet Exception: %s',
+                                      exception_string)
 
-    def detect_network(self, event):
-        self._eth = net_utils.FindUsableEthDevice()
-        if self._test_phase == 0 or self._test_phase == 2:
-            if self._eth:
-                self.ui.CallJSFunction('setMessage', _LABEL_WAITING_IP)
-                logging.info('Got %s for connection', self._eth)
-                if self._test_phase == 0: #connect shopfloor
-                    try:
-                        net_utils.SendDhcpRequest()
-                    except:
-                        logging.info('DHCP Timeout')
-                        self.ui.CallJSFunction('start_countdown',
-                                _LABEL_PHASE_LIST[self._test_phase],
-                                self._countdown)
-                    else:
-                        self.init_audio_parameter()
-                elif self._test_phase == 2: #connect fixture
-                    net_utils.SetEthernetIp(_LOCAL_IP, force=True)
-                    self.init_audio_server()
+    def prepare_network(self, force_ip, msg):
+        """Blocks forever until network is prepared.
+
+        @param force_ip: If true, set _LOCAL_IP. Otherwise, use DHCP
+        @param msg: The message will be shown in UI
+        """
+        def ObtainIp():
+            """ Setup IP address """
+            if force_ip is False:
+                net_utils.SendDhcpRequest()
             else:
-                self.ui.CallJSFunction('start_countdown',
-                        _LABEL_PHASE_LIST[self._test_phase], self._countdown)
-        elif self._test_phase == 1:
-            if not self._eth:
-                self._test_phase += 1
-            self.ui.CallJSFunction('start_countdown',
-                    _LABEL_PHASE_LIST[self._test_phase], self._countdown)
+                net_utils.SetEthernetIp(_LOCAL_IP, force=True)
+            return True if net_utils.GetEthernetIp() else False
+
+        while True:
+            self.ui.CallJSFunction('setMessage', msg)
+            factory.console.info('Detecting Ethernet device...')
+            try:
+                net_utils.PollForCondition(condition=(
+                        lambda: True if net_utils.FindUsableEthDevice()
+                        else False),
+                        timeout=INSERT_ETHERNET_DONGLE_TIMEOUT_SECS,
+                        condition_name='Detect Ethernet device')
+
+                # Only setup the IP if required so.
+                current_ip = net_utils.GetEthernetIp(
+                        net_utils.FindUsableEthDevice())
+                if not current_ip or force_ip:
+                    self.ui.CallJSFunction('setMessage', _LABEL_WAITING_IP)
+                    factory.console.info('Setting up IP address...')
+                    net_utils.PollForCondition(condition=ObtainIp,
+                            timeout=IP_SETUP_TIMEOUT_SECS,
+                            condition_name='Setup IP address')
+                    break
+                else:
+                    break
+            except:  # pylint: disable=W0702
+                exception_string = factory_utils.FormatExceptionOnly()
+                factory.console.error('Unable to setup network: %s',
+                                      exception_string)
+        factory.console.info('Network prepared. IP: %r',
+                net_utils.GetEthernetIp())
+        self._eth = net_utils.FindUsableEthDevice()
 
     def get_shopfloor_connection(
             self, timeout_secs=SHOPFLOOR_TIMEOUT_SECS,
             retry_interval_secs=SHOPFLOOR_RETRY_INTERVAL_SECS):
-        """
-        Returns a shopfloor client object.
+        """Returns a shopfloor client object.
 
         Try forever until a connection of shopfloor is established.
 
-        Args:
-          timeout_secs: Timeout for shopfloor connection.
-          retry_interval_secs: Seconds to wait between retries.
+        @param timeout_secs: Timeout for shopfloor connection.
+        @param retry_interval_secs: Seconds to wait between retries.
         """
-        logging.info('Connecting to shopfloor...')
+        factory.console.info('Connecting to shopfloor...')
         while True:
             try:
                 shopfloor_client = shopfloor.get_instance(
                     detect=True, timeout=timeout_secs)
                 break
             except:  # pylint: disable=W0702
-                logging.info('Unable to sync with shopfloor server')
+                exception_string = factory_utils.FormatExceptionOnly()
+                logging.info('Unable to sync with shopfloor server: %s',
+                             exception_string)
             time.sleep(retry_interval_secs)
         return shopfloor_client
 
     def init_audio_parameter(self):
-        """Downloads parameters from shopfloor and saved to state/caches."""
-        logging.info('Start downloading parameters...')
+        """Downloads parameters from shopfloor and saved to state/caches.
+
+        The parameters include a ZIP file and a md5 checksum file.
+        ZIP file is including all the files which are needed by Audio
+        analysis software.
+        md5 checksum file is used to check ZIP file version.
+        If the version is mismatch, analysis software can download
+        latest parameter and apply it.
+        """
+        self.prepare_network(False, _LABEL_WAITING_ETHERNET)
+        factory.console.info('Start downloading parameters...')
         self.ui.CallJSFunction('setMessage', _LABEL_CONNECT_SHOPFLOOR)
         shopfloor_client = self.get_shopfloor_connection()
         logging.info('Syncing time with shopfloor...')
@@ -562,21 +618,69 @@ class factory_AudioQuality(test.test):
             logging.info('Listing %s', glob_expression)
             download_list.extend(
                     shopfloor_client.ListParameters(glob_expression))
-        logging.info('Download list prepared:\n%s',
+        factory.console.info('Download list prepared:\n%s',
                 '\n'.join(download_list))
         assert len(download_list) > 0, 'No parameters found on shopfloor'
-        # Download the list and saved to caches in state directory.
+        """Download the list and saved to caches in state directory."""
         for filepath in download_list:
             utils.system('mkdir -p ' + os.path.join(
                     self._caches_dir, os.path.dirname(filepath)))
             binary_obj = shopfloor_client.GetParameter(filepath)
             with open(os.path.join(self._caches_dir, filepath), 'wb') as fd:
                 fd.write(binary_obj.data)
+        self.remove_network()
 
-        self._test_phase += 1
-        logging.info('Removing Ethernet device...')
-        self.ui.CallJSFunction('start_countdown',
-                _LABEL_PHASE_LIST[self._test_phase], self._countdown)
+    def run_audio_server(self):
+        """Initializes server and starts listening for external commands."""
+        self.prepare_network(True, _LABEL_WAITING_FIXTURE_ETHERNET)
+        sock = socket.socket()
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((_HOST, _PORT))
+        sock.listen(1)
+        logging.info("Listening at port %d", _PORT)
+
+        self._listen_thread = threading.Thread(target=self.listen_forever,
+                args=(sock,))
+        self._listen_thread.start()
+        self.ui.CallJSFunction('setMessage', _LABEL_READY)
+
+        while True:
+            if self._test_complete:
+                break
+            time.sleep(CHECK_FIXTURE_COMPLETE_SECS)
+        self.remove_network()
+
+    def upload_auxlog(self):
+        """Uploads files which are sent from DUT by send_file command to
+        shopfloor.
+        """
+        self.prepare_network(False, _LABEL_WAITING_ETHERNET)
+        factory.console.info('Start uploading logs...')
+        self.ui.CallJSFunction('setMessage', _LABEL_UPLOAD_AUXLOG)
+        shopfloor.UploadAuxLogs(self._auxlogs)
+
+    def start_run(self, event):
+        """Runs the testing flow after user press 'space'.
+
+        @param event: event from UI.
+        """
+        if self._use_shopfloor:
+            self.init_audio_parameter()
+
+        self.run_audio_server()
+
+        if self._use_shopfloor:
+            self.upload_auxlog()
+
+        if self._test_passed:
+            self.ui.Pass()
+        else:
+            if self._use_shopfloor:
+                factory.console.info(
+                        'Test failed. Force to flush event logs...')
+                goofy = factory.get_state_instance()
+                goofy.FlushEventLogs()
+            self.ui.Fail(_LABEL_FAIL_LOGS)
 
     def run_once(self, input_dev='hw:0,0', output_dev='hw:0,0', eth='eth0',
             dmic_switch_mixer_settings=_DMIC_SWITCH_MIXER_SETTINGS,
@@ -585,8 +689,7 @@ class factory_AudioQuality(test.test):
             mute_right_mixer_settings=_MUTE_RIGHT_MIXER_SETTINGS,
             mute_left_mixer_settings=_MUTE_LEFT_MIXER_SETTINGS,
             use_sox_loop=False, use_multitone=False, loop_buffer_count=10,
-            countdown=_INIT_COUNTDOWN, parameters=_FIXTURE_PARAMETERS,
-            use_shopfloor=True):
+            parameters=_FIXTURE_PARAMETERS, use_shopfloor=True):
         logging.info('%s run_once', self.__class__)
 
         self._ah = audio_helper.AudioHelper(self)
@@ -604,19 +707,10 @@ class factory_AudioQuality(test.test):
         self._sweep_job = None
         self._tone_job = None
         self._loop_process = None
-        self._countdown = countdown
         self._parameters = parameters
-        self._caches_dir = os.path.join(CACHES_DIR, 'parameters', 'audio')
+        self._caches_dir = os.path.join(CACHES_DIR, 'parameters')
         self._use_shopfloor = use_shopfloor
-        """
-        _test_phase
-        0: wait ethernet to shopfloor server
-        1: wait removing ethernet
-        2: wait ethernet to audio fixture
-        3: ready for test
-        """
-        self._test_phase = 0 if self._use_shopfloor else 2
-        self._init_socket = 0
+        self._auxlogs = []
 
         # Mixer settings for different configurations.
         self._init_mixer_settings = init_mixer_settings
@@ -644,10 +738,11 @@ class factory_AudioQuality(test.test):
         self._handlers[_VERSION_RE] = self.handle_version
         self._handlers[_CONFIG_FILE_RE] = self.handle_config_file
 
-        self.ui.AddEventHandler('detect_network', self.detect_network)
-        self.ui.AddEventHandler('reset_test_phase',
-                                self.reset_test_phase)
-        self.ui.AddEventHandler('test_command', self.test_command)
+        self.ui.CallJSFunction('setMessage', _LABEL_SPACE_TO_START)
+        self.ui.AddEventHandler('start_run', self.start_run)
+        self.ui.AddEventHandler('mock_command', self.mock_command)
         utils.system('iptables -A INPUT -p tcp --dport %s -j ACCEPT' % _PORT)
-
-        self.ui.Run()
+        try:
+            self.ui.Run()
+        except FactoryTestFailure as e:
+            raise error.TestError(e.message)
