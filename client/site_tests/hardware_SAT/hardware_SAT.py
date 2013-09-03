@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import logging, os, re, struct, sys
+import logging, os, re, struct, sys, time
 
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
@@ -80,6 +80,10 @@ class hardware_SAT(test.test):
         '''
         assert free_memory_fraction > 0
         assert free_memory_fraction < 1
+
+        # HACK: this is to wait other parallel tests memory usage to settle
+        # to a stable value, so stressapptest will not claim too much memory.
+        time.sleep(10)
 
         # Allow shmem access to all of memory. This is used for 32 bit
         # access to > 1.4G. Virtual address space limitation prevents
