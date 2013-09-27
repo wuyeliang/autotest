@@ -70,10 +70,11 @@ class factory_AudioLoop(test.test):
                         if self.in_blacklist_combinations(channel, idev):
                             continue
 
-                        self._ah.set_mixer_controls(settings)
+                        self._ah.set_mixer_controls(settings, self._card)
                         if self._mute_device_mixer_settings:
                             self._ah.set_mixer_controls(
-                                    self._mute_device_mixer_settings)
+                                    self._mute_device_mixer_settings,
+                                    self._card)
                         self.run_audiofuntest(idev, odev,
                                               self._audiofuntest_duration)
                         time.sleep(0.5)
@@ -118,7 +119,7 @@ class factory_AudioLoop(test.test):
                      break
 
         # Unmute channels
-        self._ah.set_mixer_controls(self._unmute_mixer_settings)
+        self._ah.set_mixer_controls(self._unmute_mixer_settings, self._card)
 
         # Show instant message and wait for a while
         if self._test_result:
@@ -167,6 +168,20 @@ class factory_AudioLoop(test.test):
             self._test_result = True
             factory.console.info('Got frequency %d' % freq)
 
+    def get_card_index(self, devs):
+        '''
+        Gets the card index from given device names. If more then
+        one card is covered, return the first found one.
+        Args:
+            devs - List of alsa device names
+        '''
+        dev_name_pattern = re.compile(".*?hw:([0-9]+),([0-9]+)")
+        for dev in devs:
+            match = dev_name_pattern.match(dev)
+            if match:
+                return match.group(1)
+        return '0'
+
     def run_once(self, audiofuntest=True, audiofuntest_duration=10,
             blacklist_combinations=[],
             duration=_DEFAULT_DURATION_SEC,
@@ -198,8 +213,10 @@ class factory_AudioLoop(test.test):
 
         # Create a default audio helper to do the setup jobs.
         self._ah = audio_helper.AudioHelper(self)
+        # Guess the card index from given I/O device names.
+        self._card = self.get_card_index(output_devices + input_devices)
         if mixer_controls is not None:
-            self._ah.set_mixer_controls(mixer_controls)
+            self._ah.set_mixer_controls(mixer_controls, self._card)
 
         # Setup dependencies
         self._ah.setup_deps(['sox', 'test_tones'])
