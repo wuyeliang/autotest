@@ -9,6 +9,7 @@ from autotest_lib.client.cros import backchannel, cros_ui, cros_ui_test, httpd
 from autotest_lib.client.cros import power_rapl, power_status, power_utils
 from autotest_lib.client.cros import service_stopper
 from autotest_lib.client.cros.audio import audio_helper
+from autotest_lib.client.cros import flimflam_test_path
 import flimflam
 
 params_dict = {
