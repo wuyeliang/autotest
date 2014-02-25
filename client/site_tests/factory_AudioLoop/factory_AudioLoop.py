@@ -160,6 +160,11 @@ class factory_AudioLoop(test.test):
             self.ui.Pass()
 
     def check_recorded_audio(self, sox_output):
+        try:
+            self._ah.check_recorded(sox_output)
+        except Exception, e:
+            self.ui.Fail('Check RMS error: %s' % e)
+            return
         freq = self._ah.get_rough_freq(sox_output)
         if abs(freq - self._freq) > _DEFAULT_FREQ_THRESHOLD_HZ:
             self._test_result = False
