@@ -79,12 +79,8 @@ class graphics_GLMark2(test.test):
             from cros.factory.test import ui
             ui.start_reposition_thread('^glmark')
 
-        # TODO(ihf): Switch this test to use perf.PerfControl like
-        #            graphics_GLBench once it is stable. crbug.com/344766.
-        if not utils.wait_for_idle_cpu(60.0, 0.1):
-            raise error.TestFail('Could not get idle CPU.')
-        if not utils.wait_for_cool_machine():
-            raise error.TestFail('Could not get cold machine.')
+        if not utils.wait_for_cool_idle_perf_machine():
+            raise error.TestFail('Could not get cool/idle machine for test.')
 
         result = utils.run(cmd)
         logging.info(result)
