@@ -8,12 +8,11 @@ PURPOSE = "Verify the cryptohome is mounted only after login."
 CRITERIA = """
 This test will fail if cryptohome is mounted when not logged in, or vice versa.
 """
-SUITE = "bvt, smoke"
+SUITE = "experimental, smoke"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
-EXPERIMENTAL = "True"
 
 DOC = """
 This test checks that a cryptohome was mounted only after logging in.

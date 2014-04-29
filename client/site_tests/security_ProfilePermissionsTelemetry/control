@@ -12,11 +12,10 @@ PURPOSE = "Protect the security boundary enforced by filesystem permissions"
 CRITERIA = """
 Fail if there are any files or directories writable by group/other in ~.
 """
-SUITE = "bvt"
+SUITE = "experimental"
 TEST_CLASS = "security"
 TEST_CATEGORY = "Functional"
 TEST_TYPE = "client"
-EXPERIMENTAL = "True"
 # TODO(achuith, dennisjeffrey): Remove security_ProfilePermissions when this
 # test is promoted to smoke/bvt non-experimental.
 

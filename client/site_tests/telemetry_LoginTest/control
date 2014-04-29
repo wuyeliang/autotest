@@ -9,13 +9,12 @@ CRITERIA = """
 This test will fail if telemetry login is broken, or if
 chrome.autotestPrivate.loginStatus doesn't work.
 """
-SUITE = "bvt"
+SUITE = "experimental"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
 RETRIES = 5
-EXPERIMENTAL = "True"
 
 DOC = """
 This is a test that checks that login completed successfully through telemetry,

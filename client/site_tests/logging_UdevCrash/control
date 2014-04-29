@@ -5,12 +5,11 @@
 AUTHOR = "Chromium OS Team"
 NAME = "logging_UdevCrash"
 PURPOSE = "Verify udev triggered crash works as expected."
-SUITE = "bvt"
+SUITE = "experimental"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "logging"
 TEST_TYPE = "client"
-EXPERIMENTAL = "True"
 
 DOC = """
 Fake trackpad failure to trigger crash report with udev type, and

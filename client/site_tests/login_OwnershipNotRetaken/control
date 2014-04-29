@@ -4,13 +4,11 @@
 
 AUTHOR = "cmasone, mnissler"
 NAME = "login_OwnershipNotRetaken"
-SUITE = "bvt, smoke"
+SUITE = "experimental, smoke"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
-
-EXPERIMENTAL = "True"
 
 DOC = """
 This test checks that, after taking ownership successfully, subsequent logins

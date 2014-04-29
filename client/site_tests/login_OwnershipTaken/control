@@ -4,13 +4,11 @@
 
 AUTHOR = "cmasone, mnissler"
 NAME = "login_OwnershipTaken"
-SUITE = "bvt, smoke"
+SUITE = "experimental, smoke"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
-
-EXPERIMENTAL = "True"
 
 DOC = """
 Login and ensure that ownership of the device is taken.
