@@ -8,7 +8,6 @@ AUTHOR = "jcliang, chromeos-chameleon"
 NAME = "display_Resolution.suspend_resume"
 PURPOSE = "Remotely controlled display resolution test."
 CRITERIA = "This test will fail if the captured display checksum mismatches."
-EXPERIMENTAL = True
 TIME = "MEDIUM"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "display"

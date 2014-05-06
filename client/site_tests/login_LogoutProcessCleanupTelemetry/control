@@ -10,7 +10,6 @@ TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
-EXPERIMENTAL = "True"
 # TODO(achuith, dennisjeffrey): Replace login_LogoutProcessCleanup with
 # this once this test is promoted to non-experimental.
 

@@ -9,7 +9,6 @@ TIME = "FAST"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
-EXPERIMENTAL = "True"
 
 # TODO(achuith, dennisjeffrey): Replace login_ChromeProfileSanitary with this
 # test after this is promoted to non-experimental.

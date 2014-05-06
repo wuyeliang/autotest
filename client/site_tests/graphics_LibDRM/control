@@ -14,7 +14,6 @@ TEST_CLASS = "graphics"
 TEST_TYPE = "client"
 
 SUITE = "graphics"
-EXPERIMENTAL = "True"
 
 DOC = """
 Runs libdrm test apps.
