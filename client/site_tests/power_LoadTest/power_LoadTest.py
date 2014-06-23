@@ -28,7 +28,7 @@ params_dict = {
 class power_LoadTest(test.test):
     """test class"""
     version = 2
-    _creds = 'powerloadtest@gmail.com:power_LoadTest1'
+    _creds = 'powerloadtest@gmail.com:power_LoadTest2'
 
 
     def start_authserver(self):
