@@ -22,7 +22,7 @@ class platform_DebugDaemonGetPerfData(test.test):
     version = 1
 
     # A list of durations over which to gather perf data using quipper.
-    _profile_duration_seconds = [ 0, 2, 5, 10 ]
+    _profile_duration_seconds = [ 1, 2, 5, 10 ]
 
     # Commands to repeatedly run in the background when collecting perf data
     _system_profile_commands = {
