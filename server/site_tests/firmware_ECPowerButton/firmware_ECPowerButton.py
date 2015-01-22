@@ -47,13 +47,11 @@ class firmware_ECPowerButton(FirmwareTest):
         Press power button for a very short period and checks for power
         button keycode.
         """
-        # Delay 3 seconds to allow "showkey" to start on client machine.
+        # Delay 3 seconds to allow firmware_FAFTClient to start on client machine.
         # Press power button for only 10ms. Should be debounced.
         Timer(3, self.servo.power_key, [0.001]).start()
-        lines = self.faft_client.system.run_shell_command_get_output("showkey")
-        for line in lines:
-            if re.search("keycode 116", line) is not None:
-                return False
+        self._autotest_client.run_test("firmware_FAFTClient",
+                expected_sequence=[116])
         return True
 
     def shutdown_and_wake(self,
