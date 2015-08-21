@@ -89,11 +89,12 @@ class Values(object):
     # Delay of EC software sync updating EC
     software_sync_update = 2
 
-    # Duration of holding cold_reset to reset device
-    hold_cold_reset = 0.1
+    # Duration of holding power button to power off DUT normally
+    hold_pwr_button_poweroff = 2
 
-    # Duration of holding power button to shutdown DUT normally
-    hold_pwr_button = 2
+    # Duration of holding power button to power on DUT normally
+    # (also known as SHORT_DELAY in hdctools)
+    hold_pwr_button_poweron = 0.2
 
     # devserver startup time
     devserver = 10
