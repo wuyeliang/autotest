@@ -89,6 +89,9 @@ class Values(object):
     # Delay of EC software sync updating EC
     software_sync_update = 2
 
+    # Duration of holding cold_reset to reset device
+    hold_cold_reset = 0.1
+
     # Duration of holding power button to power off DUT normally
     hold_pwr_button_poweroff = 2
 
