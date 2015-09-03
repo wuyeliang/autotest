@@ -26,6 +26,7 @@ from autotest_lib.client.common_lib.cros.graphite import autotest_stats
 from autotest_lib.client.common_lib.cros.network import ping_runner
 from autotest_lib.client.cros import constants as client_constants
 from autotest_lib.server import site_utils as server_site_utils
+from autotest_lib.server.cros import dnsname_mangler
 from autotest_lib.server.cros.servo import servo
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.server.hosts import ssh_host
@@ -37,6 +38,7 @@ from autotest_lib.site_utils.rpm_control_system import rpm_client
 SERVO_HOST_ATTR = 'servo_host'
 SERVO_PORT_ATTR = 'servo_port'
 
+_CONFIG = global_config.global_config
 
 class ServoHostException(error.AutoservError):
     """This is the base class for exceptions raised by ServoHost."""
@@ -418,11 +420,11 @@ class ServoHost(ssh_host.SSHHost):
                          'the host.', self.hostname)
             return
 
-        board = global_config.global_config.get_config_value(
+        board = _CONFIG.get_config_value(
                 'CROS', 'servo_board')
         afe = frontend_wrappers.RetryingAFE(timeout_min=5, delay_sec=10)
         target_version = afe.run('get_stable_version', board=board)
-        build_pattern = global_config.global_config.get_config_value(
+        build_pattern = _CONFIG.get_config_value(
                 'CROS', 'stable_build_pattern')
         target_build = build_pattern % (board, target_version)
         target_build_number = server_site_utils.ParseBuildName(
@@ -669,9 +671,19 @@ def create_servo_host(dut, servo_args, try_lab_servo=False):
     @returns: A ServoHost object or None. See comments above.
 
     """
-    if not utils.is_moblab():
-        lab_servo_hostname = make_servo_hostname(dut)
-        is_in_lab = utils.host_is_in_lab_zone(lab_servo_hostname)
+    required_by_test = servo_args is not None
+    if not utils.is_in_container():
+        is_moblab = utils.is_moblab()
+    else:
+        is_moblab = _CONFIG.get_config_value(
+                'SSP', 'is_moblab', type=bool, default=False)
+    if not is_moblab:
+        dut_is_hostname = not dnsname_mangler.is_ip_address(dut)
+        if dut_is_hostname:
+            lab_servo_hostname = make_servo_hostname(dut)
+            is_in_lab = utils.host_is_in_lab_zone(lab_servo_hostname)
+        else:
+            is_in_lab = False
     else:
         # Servos on Moblab are not in the actual lab.
         is_in_lab = False
@@ -682,9 +694,13 @@ def create_servo_host(dut, servo_args, try_lab_servo=False):
             servo_args[SERVO_HOST_ATTR] = hosts[0].attributes[SERVO_HOST_ATTR]
             servo_args[SERVO_PORT_ATTR] = hosts[0].attributes.get(
                     SERVO_PORT_ATTR, 9999)
+            if (utils.is_in_container() and
+                servo_args[SERVO_HOST_ATTR] in ['localhost', '127.0.0.1']):
+                servo_args[SERVO_HOST_ATTR] = _CONFIG.get_config_value(
+                        'SSP', 'host_container_ip', type=str, default=None)
 
     if not is_in_lab:
-        if servo_args is None:
+        if not required_by_test:
             return None
         return ServoHost(required_by_test=True, is_in_lab=False, **servo_args)
     elif servo_args is not None or try_lab_servo:
@@ -703,6 +719,6 @@ def create_servo_host(dut, servo_args, try_lab_servo=False):
         host_is_up = ping_runner.PingRunner().ping(ping_config).received > 0
         if host_is_up:
             return ServoHost(servo_host=lab_servo_hostname, is_in_lab=is_in_lab,
-                             required_by_test=(servo_args is not None))
+                             required_by_test=required_by_test)
     else:
         return None
