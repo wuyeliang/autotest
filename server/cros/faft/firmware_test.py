@@ -10,6 +10,7 @@ import re
 import time
 import uuid
 
+from threading import Timer
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.server import test
@@ -93,6 +94,15 @@ class FirmwareTest(FAFTBase):
 
     CHROMEOS_MAGIC = "CHROMEOS"
     CORRUPTED_MAGIC = "CORRUPTD"
+
+    # Delay for waiting client to return before EC suspend
+    EC_SUSPEND_DELAY = 5
+
+    # Delay between EC suspend and wake
+    WAKE_DELAY = 10
+
+    # Delay between closing and opening lid
+    LID_DELAY = 1
 
     _SERVOD_LOG = '/var/log/servod.log'
 
@@ -725,6 +735,69 @@ class FirmwareTest(FAFTBase):
         if (self.usbpd_uart_file and self.faft_config.chrome_ec and
             self.check_ec_capability(['usbpd_uart'], suppress_warning=True)):
             self.servo.set('usbpd_uart_capture', 'off')
+
+    def _get_power_state(self, power_state):
+        """
+        Return the current power state of the AP
+        """
+        return self.ec.send_command_get_output("powerinfo", [power_state])
+
+    def wait_power_state(self, power_state, retries):
+        """
+        Wait for certain power state.
+
+        @param power_state: power state you are expecting
+        @param retries: retries.  This is necessary if AP is powering down
+        and transitioning through different states.
+        """
+        logging.info('Checking power state "%s" maximum %d times.',
+                     power_state, retries)
+        while retries > 0:
+            logging.info("try count: %d" % retries)
+            try:
+                retries = retries - 1
+                ret = self._get_power_state(power_state)
+                return True
+            except error.TestFail:
+                pass
+        return False
+
+    def delayed(seconds):
+        logging.info("delaying %d seconds" % seconds)
+        def decorator(f):
+            def wrapper(*args, **kargs):
+                t = Timer(seconds, f, args, kargs)
+                t.start()
+            return wrapper
+        return decorator
+
+    @delayed(WAKE_DELAY)
+    def wake_by_power_button(self):
+        """Delay by WAKE_DELAY seconds and then wake DUT with power button."""
+        self.servo.power_normal_press()
+
+    @delayed(WAKE_DELAY)
+    def wake_by_lid_switch(self):
+        """Delay by WAKE_DELAY seconds and then wake DUT with lid switch."""
+        self.servo.set('lid_open', 'no')
+        time.sleep(self.LID_DELAY)
+        self.servo.set('lid_open', 'yes')
+
+    def suspend_as_reboot(self, wake_func):
+        """
+        Suspend DUT and also kill FAFT client so that this acts like a reboot.
+
+        Args:
+          wake_func: A function that is called to wake DUT. Note that this
+            function must delay itself so that we don't wake DUT before
+            suspend_as_reboot returns.
+        """
+        cmd = '(sleep %d; powerd_dbus_suspend) &' % self.EC_SUSPEND_DELAY
+        self.faft_client.system.run_shell_command(cmd)
+        self.faft_client.disconnect()
+        time.sleep(self.EC_SUSPEND_DELAY)
+        logging.info("wake function disabled")
+        wake_func()
 
     def _fetch_servo_log(self):
         """Fetch the servo log."""
