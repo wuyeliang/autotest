@@ -91,6 +91,11 @@ class kernel_ExternalUsbPeripheralsDetectionTest(test.test):
                              ignore_status=True).exit_status == 0
 
 
+    def cleanup(self):
+        """Disconnects servo hub"""
+        self.set_hub_power(False)
+        self.host.servo.set('usb_mux_sel3', 'servo_sees_usbkey')
+
 
     def run_once(self, host, usb_checks=None,
                  vendor_id_dict_control_file=None):
@@ -121,7 +126,6 @@ class kernel_ExternalUsbPeripheralsDetectionTest(test.test):
             raise error.TestError('No connected devices were detected. Make '
                                   'sure the devices are connected to USB_KEY '
                                   'and DUT_HUB1_USB on the servo board.')
-        logging.debug('Connected devices list: %s', diff_list)
 
         # Test 1: check USB peripherals info in detail
         failed = self.check_usb_peripherals_details()
@@ -132,22 +136,26 @@ class kernel_ExternalUsbPeripheralsDetectionTest(test.test):
         vendor_ids = {}
         # Gets a dict idVendor: dir_path
         vendor_ids = self.get_vendor_id_dict_from_dut(diff_list)
-        for vid in vendor_id_dict_control_file.keys():
-            if vid not in vendor_ids.keys():
+        for vids in vendor_id_dict_control_file.keys():
+            vid_list = set(vids.split('|')).intersection(set(vendor_ids))
+
+            #if vid not in vendor_ids.keys():
+            if len(vid_list) == 0:
                 raise error.TestFail('%s is not detected at %s dir'
-                                     % (vendor_id_dict_control_file[vid],
+                                     % (vendor_id_dict_control_file[vids],
                                      _USB_DIR))
             else:
             # Test 3: check driver symlink and dir for each USB device
+                vid = list(vid_list)[0]
                 tmp_list = [device_dir for device_dir in
                             self.host.run('ls -1 %s' % vendor_ids[vid],
                             ignore_status=True).stdout.split('\n')
                             if re.match(r'\d-\d.*:\d\.\d', device_dir)]
                 if not tmp_list:
                     raise error.TestFail('No driver created/loaded for %s'
-                                         % vendor_id_dict_control_file[vid])
+                                         % vendor_id_dict_control_file[vids])
                 logging.info('---- Drivers for %s ----',
-                             vendor_id_dict_control_file[vid])
+                             vendor_id_dict_control_file[vids])
                 flag = False
                 for device_dir in tmp_list:
                     driver_path = os.path.join(vendor_ids[vid],
