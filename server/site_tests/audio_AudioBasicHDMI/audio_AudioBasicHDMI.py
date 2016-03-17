@@ -13,7 +13,6 @@ from autotest_lib.client.cros.audio import audio_test_data
 from autotest_lib.client.cros.chameleon import audio_test_utils
 from autotest_lib.client.cros.chameleon import chameleon_audio_helper
 from autotest_lib.client.cros.chameleon import chameleon_audio_ids
-from autotest_lib.client.cros.chameleon import chameleon_port_finder
 from autotest_lib.server.cros.audio import audio_test
 
 
@@ -43,18 +42,26 @@ class audio_AudioBasicHDMI(audio_test.AudioTest):
 
 
     def run_once(self, host):
-        edid_path = os.path.join(self.bindir,
-                                 'test_data/edids/HDMI_DELL_U2410.txt')
         golden_file = audio_test_data.SWEEP_TEST_FILE
 
         # Dump audio diagnostics data for debugging.
         chameleon_board = host.chameleon
         factory = self.create_remote_facade_factory(host)
 
+        # For DUTs with permanently connected audio jack cable
+        # connecting HDMI won't switch automatically the node. Adding
+        # audio_jack_plugged flag to select HDMI node after binding.
+        audio_facade = factory.create_audio_facade()
+        output_nodes, _ = audio_facade.get_selected_node_types()
+        audio_jack_plugged = False
+        if output_nodes == ['HEADPHONE']:
+            audio_jack_plugged = True
+            logging.debug('Found audio jack plugged!')
+
         self._system_facade = factory.create_system_facade()
         self.set_high_performance_mode()
 
-        chameleon_board.reset()
+        chameleon_board.setup_and_reset(self.outputdir)
 
         widget_factory = chameleon_audio_helper.AudioWidgetFactory(
                 factory, host)
@@ -65,53 +72,40 @@ class audio_AudioBasicHDMI(audio_test.AudioTest):
             chameleon_audio_ids.ChameleonIds.HDMI)
         binder = widget_factory.create_binder(source, recorder)
 
-        display_facade = factory.create_display_facade()
-        finder = chameleon_port_finder.ChameleonVideoInputFinder(
-                chameleon_board, display_facade)
-        hdmi_port = finder.find_port('HDMI')
-        if not hdmi_port:
-            raise error.TestFail(
-                    'Can not find HDMI port, perhaps HDMI is not connected?')
-        with hdmi_port.use_edid_file(edid_path):
+        with chameleon_audio_helper.bind_widgets(binder):
+            audio_test_utils.dump_cros_audio_logs(
+                    host, audio_facade, self.resultsdir, 'after_binding')
 
-            # TODO(cychiang) remove this when issue crbug.com/450101 is fixed.
-            audio_test_utils.correction_plug_unplug_for_audio(host, hdmi_port)
+            # HDMI node needs to be selected, when audio jack is plugged
+            if audio_jack_plugged:
+                audio_facade.set_chrome_active_node_type('HDMI', None)
 
-            with chameleon_audio_helper.bind_widgets(binder):
-                audio_facade = factory.create_audio_facade()
+            audio_test_utils.check_audio_nodes(audio_facade,
+                                               (['HDMI'], None))
 
-                audio_test_utils.dump_cros_audio_logs(
-                        host, audio_facade, self.resultsdir, 'after_binding')
+            # Transfer the data to Cros device first because it takes
+            # several seconds.
+            source.set_playback_data(golden_file)
 
-                output_nodes, _ = audio_facade.get_selected_node_types()
-                if output_nodes != ['HDMI']:
-                    raise error.TestFail(
-                            '%s rather than HDMI is selected on Cros device' %
-                                    output_nodes)
+            logging.info('Start recording from Chameleon.')
+            recorder.start_recording()
 
-                # Transfer the data to Cros device first because it takes
-                # several seconds.
-                source.set_playback_data(golden_file)
+            time.sleep(self.DELAY_BEFORE_PLAYBACK)
 
-                logging.info('Start recording from Chameleon.')
-                recorder.start_recording()
+            logging.info('Start playing %s on Cros device',
+                         golden_file.path)
+            source.start_playback(blocking=True)
 
-                time.sleep(self.DELAY_BEFORE_PLAYBACK)
+            logging.info('Stopped playing %s on Cros device',
+                         golden_file.path)
+            time.sleep(self.DELAY_AFTER_PLAYBACK)
 
-                logging.info('Start playing %s on Cros device',
-                             golden_file.path)
-                source.start_playback(blocking=True)
+            audio_test_utils.dump_cros_audio_logs(
+                    host, audio_facade, self.resultsdir, 'after_recording')
 
-                logging.info('Stopped playing %s on Cros device',
-                             golden_file.path)
-                time.sleep(self.DELAY_AFTER_PLAYBACK)
-
-                audio_test_utils.dump_cros_audio_logs(
-                        host, audio_facade, self.resultsdir, 'after_recording')
-
-                recorder.stop_recording()
-                logging.info('Stopped recording from Chameleon.')
-                recorder.read_recorded_binary()
+            recorder.stop_recording()
+            logging.info('Stopped recording from Chameleon.')
+            recorder.read_recorded_binary()
 
             recorded_file = os.path.join(self.resultsdir, "recorded.raw")
             logging.info('Saving recorded data to %s', recorded_file)
