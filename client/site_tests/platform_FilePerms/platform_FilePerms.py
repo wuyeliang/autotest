@@ -55,6 +55,18 @@ class platform_FilePerms(test.test):
         '/opt/google/containers/android/rootfs/root/vendor': {
             'type': 'squashfs',
             'options': standard_ro_options},
+        '/opt/google/containers/android-sdcard/mountpoints/container-root': {
+            'type': 'squashfs',
+            'options': ['ro', 'noexec']},
+        '/opt/google/containers/arc-downloads-filesystem/mountpoints/container-root': {
+            'type': 'squashfs',
+            'options': ['ro', 'noexec']},
+        '/opt/google/containers/arc-obb-mounter/mountpoints/container-root': {
+            'type': 'squashfs',
+            'options': ['ro', 'noexec']},
+        '/opt/google/containers/arc-removable-media/mountpoints/container-root': {
+            'type': 'squashfs',
+            'options': ['ro', 'noexec']},
         '/proc': { 'type': 'proc', 'options': standard_rw_options},
         '/run': { # Special case, we want to track mode too.
             'type': 'tmpfs',
