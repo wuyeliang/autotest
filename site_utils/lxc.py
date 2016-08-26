@@ -841,7 +841,8 @@ class ContainerBucket(object):
     @timer.decorate
     @cleanup_if_fail()
     def setup_test(self, name, job_id, server_package_url, result_path,
-                   control=None, skip_cleanup=False, job_folder=None):
+                   control=None, skip_cleanup=False, job_folder=None,
+                   dut_name=None):
         """Setup test container for the test job to run.
 
         The setup includes:
@@ -863,7 +864,8 @@ class ContainerBucket(object):
         @param skip_cleanup: Set to True to skip cleanup, used to troubleshoot
                              container failures.
         @param job_folder: Folder name of the job, e.g., 123-debug_user.
-
+        @param dut_name: Name of the dut to run test, used as the hostname of
+                         the container. Default is None.
         @return: A Container object for the test container.
 
         @raise ContainerError: If container does not exist, or not running.
