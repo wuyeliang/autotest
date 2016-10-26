@@ -588,8 +588,11 @@ class ServoHost(ssh_host.SSHHost):
             self.run('update_engine_client --follow', ignore_status=True)
 
 
-    def verify(self):
-        """Update the servo host and verify it's in a good state."""
+    def verify(self, silent=False):
+        """Update the servo host and verify it's in a good state.
+
+        @param silent   If true, suppress logging in `status.log`.
+        """
         # TODO(jrbarnette) Old versions of beaglebone_servo include
         # the powerd package.  If you touch the .oobe_completed file
         # (as we do to work around an update_engine problem), then
@@ -600,16 +603,19 @@ class ServoHost(ssh_host.SSHHost):
         # isn't running.
         self.run('stop powerd', ignore_status=True)
         try:
-            self._repair_strategy.verify(self)
+            self._repair_strategy.verify(self, silent)
         except:
             self.disconnect_servo()
             raise
 
 
-    def repair(self):
-        """Attempt to repair servo host."""
+    def repair(self, silent=False):
+        """Attempt to repair servo host.
+
+        @param silent   If true, suppress logging in `status.log`.
+        """
         try:
-            self._repair_strategy.repair(self)
+            self._repair_strategy.repair(self, silent)
         except:
             self.disconnect_servo()
             raise
@@ -784,7 +790,15 @@ def create_servo_host(dut, servo_args, try_lab_servo=False,
 
     In cases where `servo_args` was not `None`, repair failure
     exceptions are passed back to the caller; otherwise, exceptions
-    are logged and then discarded.
+    are logged and then discarded.  Note that this only happens in cases
+    where we're called from a test (not special task) control file that
+    has an explicit dependency on servo.  In that case, we require that
+    repair not write to `status.log`, so as to avoid polluting test
+    results.
+
+    TODO(jrbarnette):  The special handling for servo in test control
+    files is a thorn in my flesh; I dearly hope to see it cut out before
+    my retirement.
 
     Parameters for a servo host consist of a host name, port number, and
     DUT board, and are determined from one of these sources, in order of
@@ -813,23 +827,23 @@ def create_servo_host(dut, servo_args, try_lab_servo=False,
     @returns: A ServoHost object or None. See comments above.
 
     """
-    require_repair = servo_args is not None
+    servo_dependency = servo_args is not None
     is_in_lab = False
-    if dut is not None and (try_lab_servo or require_repair):
+    if dut is not None and (try_lab_servo or servo_dependency):
         servo_args_override, is_in_lab = _get_standard_servo_args(dut)
         if servo_args_override is not None:
             servo_args = servo_args_override
     if servo_args is None:
         return None
-    if (not require_repair and not try_servo_repair and
+    if (not servo_dependency and not try_servo_repair and
             not servo_host_is_up(servo_args[SERVO_HOST_ATTR])):
         return None
     newhost = ServoHost(is_in_lab=is_in_lab, **servo_args)
     # Note that the logic of repair() includes everything done
     # by verify().  It's sufficient to call one or the other;
     # we don't need both.
-    if require_repair:
-        newhost.repair()
+    if servo_dependency:
+        newhost.repair(silent=True)
     else:
         try:
             if try_servo_repair:
