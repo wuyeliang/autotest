@@ -14,6 +14,7 @@ public class MoblabSetupClient implements EntryPoint {
   private BotoKeyView botoKeyView;
   private LaunchControlKeyView launchControlKeyView;
   private DutManagementView dutManagementView;
+  private SuiteRunnerView suiteRunnerView;
 
   public CustomTabPanel mainTabPanel = new CustomTabPanel();
 
@@ -30,11 +31,13 @@ public class MoblabSetupClient implements EntryPoint {
     botoKeyView = new BotoKeyView();
     launchControlKeyView = new LaunchControlKeyView();
     dutManagementView = new DutManagementView();
+    suiteRunnerView = new SuiteRunnerView();
     mainTabPanel.addTabView(configWizardView);
     mainTabPanel.addTabView(configSettingsView);
     mainTabPanel.addTabView(botoKeyView);
     mainTabPanel.addTabView(launchControlKeyView);
     mainTabPanel.addTabView(dutManagementView);
+    mainTabPanel.addTabView(suiteRunnerView);
 
     final RootPanel rootPanel = RootPanel.get("tabs");
     rootPanel.add(mainTabPanel);
