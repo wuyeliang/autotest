@@ -36,6 +36,22 @@ class _ConfigVerifier(hosts.Verifier):
     CONFIG_FILE = '/var/lib/servod/config'
     ATTR = ''
 
+
+    @staticmethod
+    def _get_config_val_cmd(config_file, attr):
+        """Get the command to get `attr` for `host` from `config_file`.
+
+        @param config_file  Path to the config file to be tested.
+        @param attr         Attribute to get from config file.
+
+        @return The command to get attr val as set in the config file,
+                or `None` if the file was absent.
+        """
+        return ('[ -f %s ] && '
+                '. %s && echo $%s' % (config_file, config_file, attr))
+
+
+
     @staticmethod
     def _get_config_val(host, config_file, attr):
         """
@@ -48,10 +64,10 @@ class _ConfigVerifier(hosts.Verifier):
         @return The attr val as set in the config file, or `None` if
                 the file was absent.
         """
-        getboard = ('CONFIG=%s ; [ -f $CONFIG ] && '
-                    '. $CONFIG && echo $%s' % (config_file, attr))
+        getboard = _ConfigVerifier._get_config_val_cmd(config_file, attr)
         attr_val = host.run(getboard, ignore_status=True).stdout
         return attr_val.strip('\n') if attr_val else None
+
 
     @staticmethod
     def _validate_attr(host, val, expected_val, attr, config_file):

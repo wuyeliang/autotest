@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
+#pylint: disable=missing-docstring
+
 import errno
 import logging
 import os
 import select
-import shutil
 import socket
 import StringIO
 import subprocess
@@ -676,6 +677,39 @@ class test_nested_sh_quote_word(test_sh_quote_word):
         produced_command = subprocess.check_output(nested_command, shell=True)
         echoed_value = subprocess.check_output(produced_command, shell=True)
         self.assertEqual(echoed_value, text + '\n')
+
+
+class test_get_sudo_sh_command(unittest.TestCase):
+    """Tests base_utils.get_sudo_sh_command() function."""
+    def test_normal(self):
+        self.assertEqual('sudo -n sh -c "ls"',
+                         base_utils.get_sudo_sh_command('ls'))
+
+
+    def test_variable(self):
+        self.assertEqual('sudo -n sh -c "echo \\$PATH"',
+                         base_utils.get_sudo_sh_command('echo $PATH'))
+
+
+    def test_embedded_variable(self):
+        """This is actually an anti-test.
+
+        The correct escape should have a single backward slash.
+        TODO(ntang - crbug.com/665926): adds an enhanced version of sh_escape.
+        """
+        self.assertEqual('sudo -n sh -c "FOO=\\"foo\\" ; echo \\$FOO"',
+                         base_utils.get_sudo_sh_command('FOO="foo" ; echo $FOO'))
+
+
+    def test_regression(self):
+        """Test with a real command used by the system. Makes sure there is no
+        regression when we change the code.
+        """
+        self.assertEqual(
+                ('sudo -n sh -c "[ -f /var/lib/servod/config_9999 ] && . '
+                 '/var/lib/servod/config_9999 && echo \\$BOARD"'),
+                base_utils.get_sudo_sh_command('[ -f /var/lib/servod/config_9999 ]'
+                        ' && . /var/lib/servod/config_9999 && echo $BOARD'))
 
 
 class test_run(unittest.TestCase):

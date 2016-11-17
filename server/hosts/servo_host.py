@@ -56,6 +56,11 @@ AUTOTEST_BASE = _CONFIG.get_config_value(
 
 _SERVO_HOST_REBOOT_TEST_NAME = 'servohost_Reboot'
 
+
+def _get_sudo_sh_command(command):
+    return utils.get_sudo_sh_command(command)
+
+
 class ServoHost(ssh_host.SSHHost):
     """Host class for a host that controls a servo, e.g. beaglebone."""
 
@@ -297,7 +302,7 @@ class ServoHost(ssh_host.SSHHost):
                     'verbose': verbose, 'args': args}
         if self.is_localhost():
             if self._sudo_required:
-                run_args['command'] = 'sudo -n %s' % command
+                run_args['command'] = _get_sudo_sh_command(command)
             try:
                 return utils.run(**run_args)
             except error.CmdError as e:
