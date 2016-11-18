@@ -1492,20 +1492,6 @@ def get_relative_path(path, reference):
     return os.path.join(*path_list)
 
 
-def get_sudo_sh_command(command):
-    """Gets the sudo version of the command.
-    If the command already starts with sudo, then nop. Otherwise, start a sudo
-    shell to run it.
-
-    @param command: The non-sudo version of the command.
-
-    @return A sudo version of the command string.
-    """
-    if command and not command.startswith('sudo '):
-        return 'sudo -n sh -c "%s"' % sh_escape(command)
-    return command
-
-
 def sh_escape(command):
     """
     Escape special characters from a command so that it can be passed
