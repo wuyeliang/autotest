@@ -358,7 +358,7 @@ class cheets_CTS(tradefed_test.TradefedTest):
                 test_class=target_class, test_method=target_method)
         else:
             test_command = self._tradefed_run_command()
-            test_name = '<all CTS tests>'
+            test_name = 'all_CTS'
 
         # Unconditionally run CTS package until we see some tests executed.
         while steps < self._max_retry and total_tests == 0:
