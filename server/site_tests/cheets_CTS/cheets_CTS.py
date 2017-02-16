@@ -21,10 +21,6 @@ import subprocess
 from autotest_lib.client.common_lib import error
 from autotest_lib.server import utils
 from autotest_lib.server.cros import tradefed_test
-try:
-    from chromite.lib import metrics
-except:
-    metrics = None
 
 # Notice if there are only a few failures each RETRY step currently (08/01/2016)
 # takes a bit more than 6 minutes (mostly for reboot, login, starting ARC).
@@ -87,6 +83,7 @@ class cheets_CTS(tradefed_test.TradefedTest):
                                                 'expectations')
         # Load packages with no tests.
         self.notest_packages = self._get_expected_failures('notest_packages')
+        self._media = None
 
     def _clean_repository(self):
         """Ensures all old logs, results and plans are deleted.
@@ -126,19 +123,19 @@ class cheets_CTS(tradefed_test.TradefedTest):
                           stderr_tee=utils.TEE_TO_LOGS)
             except:
                 logging.warning('Could not obtain sh version.')
-            self._run(
-                'sh',
-                args=('-e', copy_media, 'all'),
-                timeout=7200,  # Wait at most 2h for download of media files.
-                verbose=True,
-                ignore_status=False,
-                stdout_tee=utils.TEE_TO_LOGS,
-                stderr_tee=utils.TEE_TO_LOGS)
-
-    def _push_media(self):
-        """Downloads, caches and pushed media files to DUT."""
-        media = self._install_bundle(_CTS_URI['media'])
-        self._copy_media(media)
+            try:
+                self._run(
+                    'sh',
+                    args=('-e', copy_media, 'all'),
+                    timeout=7200,  # Wait at most 2h for media files.
+                    verbose=True,
+                    ignore_status=False,
+                    stdout_tee=utils.TEE_TO_LOGS,
+                    stderr_tee=utils.TEE_TO_LOGS)
+                self.summary += '[copy_media success]'
+            except:
+                logging.error('Exception during copy_media. Timeout?')
+                self.summary += '[copy_media error]'
 
     def _verify_media(self, media):
         """Verify that the local media directory matches the DUT.
@@ -155,20 +152,29 @@ class cheets_CTS(tradefed_test.TradefedTest):
                    'find ./bbb_short ./bbb_full -type f -print0 | '
                    'xargs -0 md5sum | grep -v "\.DS_Store" | sort -k 2)'
                    % media)
-        output = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
+        output = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
         if output:
-            logging.error('Some media files differ on DUT /sdcard/test vs. local.')
+            logging.error('Some media files differ on DUT /sdcard/test vs. '
+                          'local.')
             logging.error(output)
+            self.summary += '[media corrupt]'
             return False
         logging.info('Media files identical on DUT /sdcard/test vs. local.')
+        self.summary += '[media verified]'
         return True
 
     def _push_media(self):
-        """Downloads, caches and pushed media files to DUT."""
-        media = self._install_bundle(_CTS_URI['media'])
-        self._copy_media(media)
-        if not self._verify_media(media):
-            raise error.TestFail('Error: saw corruption pushing media files.')
+        """Downloads, caches and pushed media files to DUT.
+        This function is inherently lazy."""
+        logging.info(self.summary)
+        if not self._media:
+            # Install media bundle on the drone/server.
+            self._media = self._install_bundle(_CTS_URI['media'])
+        # Don't install media on DUT if it is intact from a previous test run.
+        if not self._verify_media(self._media):
+            self._copy_media(self._media)
+            self._verify_media(self._media)
 
     def _tradefed_run_command(self,
                               package=None,
@@ -395,12 +401,9 @@ class cheets_CTS(tradefed_test.TradefedTest):
         while steps < self._max_retry and total_tests == 0:
             with self._login_chrome():
                 self._ready_arc()
-
                 # Only push media for tests that need it. b/29371037
                 if needs_push_media:
                     self._push_media()
-                    # copy_media.sh is not lazy, but we try to be.
-                    needs_push_media = False
 
                 # Start each valid iteration with a clean repository. This
                 # allows us to track session_id blindly.
@@ -451,6 +454,10 @@ class cheets_CTS(tradefed_test.TradefedTest):
                 with self._login_chrome():
                     steps += 1
                     self._ready_arc()
+                    # There may be a small chance that media got corrupted.
+                    if needs_push_media:
+                        self._push_media()
+
                     logging.info('Continuing session %d:', session_id)
                     # 'Continue' reports as passed all passing results in the
                     # current session (including all tests passing before
@@ -503,6 +510,10 @@ class cheets_CTS(tradefed_test.TradefedTest):
                 with self._login_chrome():
                     steps += 1
                     self._ready_arc()
+                    # There may be a small chance that media got corrupted.
+                    if needs_push_media:
+                        self._push_media()
+
                     logging.info('Retrying failures of %s with session_id %d:',
                             test_name, session_id)
                     previously_failed = failed
