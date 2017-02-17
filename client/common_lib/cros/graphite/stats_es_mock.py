@@ -31,3 +31,20 @@ class mock_class_base(object):
             return mock_class_base()
 
         return any_call
+
+    def __enter__(self, *args, **kwargs):
+        """Method to support Context class."""
+        return self
+
+
+    def __exit__(self, *args, **kwargs):
+        """Method to support Context class."""
+
+
+    def __getitem__(self, key):
+        """Method to override __getitem__."""
+        return self
+
+
+    def __setitem__(self, key, value):
+        """Method to override __setitem__."""
