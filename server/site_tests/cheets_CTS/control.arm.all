@@ -22,6 +22,6 @@ def run_CTS(machine):
         bundle='arm',
         needs_push_media=True,
         max_retry = 9,
-        timeout=3600 * 24 * 3)
+        timeout=3600 * 24 * 1.5)
 
 parallel_simple(run_CTS, machines)
