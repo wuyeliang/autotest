@@ -12,19 +12,13 @@
 # Many short variable names don't follow the naming convention.
 # pylint: disable=invalid-name
 
-import contextlib
 import logging
 import os
 import shutil
-import subprocess
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server import utils
 from autotest_lib.server.cros import tradefed_test
-try:
-    from chromite.lib import metrics
-except:
-    metrics = None
 
 # Notice if there are only a few failures each RETRY step currently (08/01/2016)
 # takes a bit more than 6 minutes (mostly for reboot, login, starting ARC).
@@ -44,19 +38,6 @@ _CTS_URI = {
     'x86' : _DL_CTS + 'android-cts-6.0_r15-linux_x86-x86.zip',
     'media' : _DL_CTS + 'android-cts-media-1.2.zip'
 }
-
-
-@contextlib.contextmanager
-def pushd(d):
-    """Defines pushd.
-    @param d: the directory to change to.
-    """
-    current = os.getcwd()
-    os.chdir(d)
-    try:
-        yield
-    finally:
-        os.chdir(current)
 
 
 class cheets_CTS(tradefed_test.TradefedTest):
@@ -108,76 +89,6 @@ class cheets_CTS(tradefed_test.TradefedTest):
                 'repository', 'plans')
         src_plan_file = os.path.join(self.bindir, 'plans', '%s.xml' % plan)
         shutil.copy(src_plan_file, plans_dir)
-
-    def _copy_media(self, media):
-        """Calls copy_media to push media files to DUT via adb."""
-        base = os.path.splitext(os.path.basename(_CTS_URI['media']))[0]
-        cts_media = os.path.join(media, base)
-        copy_media = os.path.join(cts_media, 'copy_media.sh')
-        with pushd(cts_media):
-            try:
-                self._run('file', args=('/bin/sh',), verbose=True,
-                          ignore_status=True, timeout=60,
-                          stdout_tee=utils.TEE_TO_LOGS,
-                          stderr_tee=utils.TEE_TO_LOGS)
-                self._run('sh', args=('--version',), verbose=True,
-                          ignore_status=True, timeout=60,
-                          stdout_tee=utils.TEE_TO_LOGS,
-                          stderr_tee=utils.TEE_TO_LOGS)
-            except:
-                logging.warning('Could not obtain sh version.')
-            self._run(
-                'sh',
-                args=('-e', copy_media, 'all'),
-                timeout=7200,  # Wait at most 2h for download of media files.
-                verbose=True,
-                ignore_status=False,
-                stdout_tee=utils.TEE_TO_LOGS,
-                stderr_tee=utils.TEE_TO_LOGS)
-
-    def _verify_media(self, media):
-        """Verify that the local media directory matches the DUT.
-        Used for debugging b/32978387 where we may see file corruption."""
-        # TODO(ihf): Remove function once b/32978387 is resolved.
-        # Find all files in the bbb_short and bbb_full directories, md5sum these
-        # files and sort by filename. The result for local and DUT hierarchies
-        # is piped through the diff command.
-        cmd = ('diff '
-               '<(adb shell "cd /sdcard/test; '
-                   'find ./bbb_short ./bbb_full -type f -print0 | '
-                   'xargs -0 md5sum | grep -v "\.DS_Store" | sort -k 2")'
-               '<(cd %s; '
-                   'find ./bbb_short ./bbb_full -type f -print0 | '
-                   'xargs -0 md5sum | grep -v "\.DS_Store" | sort -k 2)'
-                   % media)
-        output = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
-        if output:
-            logging.error('Some media files differ on DUT /sdcard/test vs. local.')
-            logging.error(output)
-            return False
-        logging.info('Media files identical on DUT /sdcard/test vs. local.')
-        return True
-
-    def _push_media(self):
-        """Downloads, caches and pushed media files to DUT."""
-        media = self._install_bundle(_CTS_URI['media'])
-        self._copy_media(media)
-        if not self._verify_media(media):
-            raise error.TestFail('Error: saw corruption pushing media files.')
-
-    def _push_media(self):
-        """Downloads, caches and pushed media files to DUT."""
-        media = self._install_bundle(_CTS_URI['media'])
-        # TODO(ihf): this really should measure throughput in Bytes/s.
-        m = 'chromeos/autotest/infra_benchmark/cheets/push_media/duration'
-        fields = {'success': False,
-                  'dut_host_name': self._host.hostname}
-        if metrics:
-            with metrics.SecondsTimer(m, fields=fields) as c:
-                self._copy_media(media)
-                c['success'] = True
-        else:
-            self._copy_media(media)
 
     def _tradefed_run_command(self,
                               package=None,
@@ -410,7 +321,7 @@ class cheets_CTS(tradefed_test.TradefedTest):
 
                 # Only push media for tests that need it. b/29371037
                 if needs_push_media:
-                    self._push_media()
+                    self._push_media(_CTS_URI)
                     # copy_media.sh is not lazy, but we try to be.
                     needs_push_media = False
 
