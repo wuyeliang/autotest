@@ -2,7 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import logging, os, re
+import contextlib
+import functools
+import logging
+import os
+import re
 
 from autotest_lib.client.common_lib.cros import arc_util
 from autotest_lib.client.cros import constants
@@ -10,6 +14,10 @@ from autotest_lib.client.bin import utils
 from telemetry.core import cros_interface, exceptions, util
 from telemetry.internal.browser import browser_finder, browser_options
 from telemetry.internal.browser import extension_to_load
+
+# This must be imported after telemetry because it manipulates sys.path on
+# import. See third_party/catapult/telemetry/telemetry/__init__.py.
+import websocket
 
 Error = exceptions.Error
 
@@ -27,6 +35,28 @@ def NormalizeEmail(username):
     if len(parts) == 1:
         parts.append('gmail.com')
     return '@'.join(parts)
+
+
+@contextlib.contextmanager
+def _ForciblyOverrideWebsocketTimeout(timeout):
+    """Forcibly sets the websocket timeout.
+
+    Telemetry sets 10 seconds as the timeout of websocket operations but does
+    not provide ways to customize it. This context manager function forcibly
+    override the timeout by monkey-patching WebSocket.settimeout().
+
+    This is a temporary workaround for crbug.com/704024 in M-58. It must never
+    be used on master branch.
+    """
+    saved_settimeout = websocket.WebSocket.settimeout
+    @functools.wraps(saved_settimeout)
+    def patched_settimeout(self, unused_timeout):
+        saved_settimeout(self, timeout)
+    websocket.WebSocket.settimeout = patched_settimeout
+    try:
+        yield
+    finally:
+        websocket.WebSocket.settimeout = saved_settimeout
 
 
 class Chrome(object):
@@ -152,7 +182,11 @@ class Chrome(object):
         for i in range(num_tries):
             try:
                 browser_to_create = browser_finder.FindBrowser(finder_options)
-                self._browser = browser_to_create.Create(finder_options)
+                # Forcibly sets the websocket timeout.
+                # This is a temporary workaround for crbug.com/704024 in M-58.
+                # It must never be used in other branches.
+                with _ForciblyOverrideWebsocketTimeout(30):
+                    self._browser = browser_to_create.Create(finder_options)
                 if utils.is_arc_available():
                     if disable_arc_opt_in:
                         if arc_util.should_start_arc(arc_mode):
