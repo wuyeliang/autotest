@@ -9,11 +9,21 @@ import time
 
 import common
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib import global_config
 from autotest_lib.client.common_lib import hosts
 from autotest_lib.server import afe_utils
 from autotest_lib.server import crashcollect
 from autotest_lib.server.hosts import repair
 from autotest_lib.server.hosts import cros_firmware
+
+
+# Setting to suppress dev mode check; primarily used for moblab where all
+# DUT's are in dev mode.
+_DEV_MODE_ALWAYS_ALLOWED = global_config.global_config.get_config_value(
+            'CROS',
+            'dev_mode_allowed',
+            type=bool,
+            default=False)
 
 
 class ACPowerVerifier(hosts.Verifier):
@@ -230,6 +240,10 @@ class DevModeVerifier(hosts.Verifier):
     """Verify that the host is not in dev mode."""
 
     def verify(self, host):
+        # Moblab DUT's are allowed to be in dev mode
+        if _DEV_MODE_ALWAYS_ALLOWED:
+            return
+
         result = host.run('crossystem devsw_boot', ignore_status=True).stdout
         if result != '0':
             raise hosts.AutoservVerifyError('The host is in dev mode')
