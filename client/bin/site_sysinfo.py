@@ -12,7 +12,7 @@ from autotest_lib.client.cros import constants
 
 get_value = global_config.global_config.get_config_value
 collect_corefiles = get_value('CLIENT', 'collect_corefiles',
-                              type=bool, default=True)
+                              type=bool, default=False)
 
 
 logfile = base_sysinfo.logfile
