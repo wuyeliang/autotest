@@ -547,8 +547,20 @@ def take_screenshot_crop(fullpath, box=None, crtc_id=None):
 _MODETEST_CONNECTOR_PATTERN = re.compile(
     r'^(\d+)\s+\d+\s+(connected|disconnected)\s+(\S+)\s+\d+x\d+\s+\d+\s+\d+')
 
+# Group names match the drmModeModeInfo struct
 _MODETEST_MODE_PATTERN = re.compile(
-    r'\s+.+\d+\s+(\d+)\s+\d+\s+\d+\s+\d+\s+(\d+)\s+\d+\s+\d+\s+\d+\s+flags:.+type:'
+    r'\s+(?P<name>.+)'
+    r'\s+(?P<vrefresh>\d+)'
+    r'\s+(?P<hdisplay>\d+)'
+    r'\s+(?P<hsync_start>\d+)'
+    r'\s+(?P<hsync_end>\d+)'
+    r'\s+(?P<htotal>\d+)'
+    r'\s+(?P<vdisplay>\d+)'
+    r'\s+(?P<vsync_start>\d+)'
+    r'\s+(?P<vsync_end>\d+)'
+    r'\s+(?P<vtotal>\d+)'
+    r'\s+(?P<clock>\d+)'
+    r'\s+flags:.+type:'
     r' preferred')
 
 _MODETEST_CRTCS_START_PATTERN = re.compile(r'^id\s+fb\s+pos\s+size')
@@ -649,7 +661,8 @@ def get_modetest_connectors():
             # See if we find corresponding line with modes, sizes etc.
             mode_match = re.match(_MODETEST_MODE_PATTERN, line)
             if mode_match is not None:
-                size = (int(mode_match.group(1)), int(mode_match.group(2)))
+                size = (int(mode_match.group('hdisplay')),
+                        int(mode_match.group('vdisplay')))
                 # Update display size of last connector in list.
                 c = connectors.pop()
                 connectors.append(
