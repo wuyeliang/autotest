@@ -4,15 +4,15 @@
 #
 
 AUTHOR = "ARC Team"
-ATTRIBUTES = "suite:smoke"
-NAME = "cheets_StartAndroid.smoke"
-TIME = "MEDIUM"
-TEST_CATEGORY = "Functional"
+ATTRIBUTES = "suite:bvt-perbuild"
+NAME = "cheets_CTSHelper.stress.2"
+TIME = "LONG"
+TEST_CATEGORY = "Stress"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
 
 DOC = """
-This test verifies in the VM a single login to the browser and start of ARC.
+This sharded test verifies reliable and repeated login and start of ARC.
 """
 
-job.run_test('cheets_StartAndroid', count=1, tag='sanity')
+job.run_test('cheets_CTSHelper', count=10, tag='stress')

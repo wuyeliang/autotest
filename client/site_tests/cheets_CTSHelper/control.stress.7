@@ -4,16 +4,15 @@
 #
 
 AUTHOR = "ARC Team"
-NAME = "cheets_StartAndroid"
-TIME = "SHORT"
-TEST_CATEGORY = "Functional"
+ATTRIBUTES = "suite:bvt-perbuild"
+NAME = "cheets_CTSHelper.stress.7"
+TIME = "LONG"
+TEST_CATEGORY = "Stress"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
-JOB_RETRIES = 2
 
 DOC = """
-This is a helper utility to log-in Chrome for CTS.
-See also cheets_CTS for more details.
+This sharded test verifies reliable and repeated login and start of ARC.
 """
 
-job.run_test('cheets_StartAndroid')
+job.run_test('cheets_CTSHelper', count=10, tag='stress')
