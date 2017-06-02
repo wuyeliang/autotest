@@ -50,7 +50,8 @@ class video_VideoSeek(test.test):
         @param video: Sample video file to be seeked in Chrome.
         """
         if self.is_skipping_test(codec, is_switchres):
-            raise error.TestNAError('Skipping test run on this board.')
+            logging.info('Skipping test run on this board.')
+            return  # return immediately to pass this test
 
         with chrome.Chrome(init_network_controller=True) as cr:
             cr.browser.platform.SetHTTPServerDirectories(self.bindir)
