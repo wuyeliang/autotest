@@ -666,12 +666,15 @@ def get_offload_dir_func(gs_uri, multiprocessing, delete_age, pubsub_topic=None)
 
                 # Rewind the log files for stdout and stderr and log
                 # their contents.
-                stdout_file.seek(0)
-                stderr_file.seek(0)
-                stderr_content = stderr_file.read()
+                if stdout_file:
+                    stdout_file.seek(0)
+                if stderr_file:
+                    stderr_file.seek(0)
+                    stderr_content = stderr_file.read()
                 logging.warning('Error occurred when offloading %s:', dir_entry)
-                logging.warning('Stdout:\n%s \nStderr:\n%s', stdout_file.read(),
-                                stderr_content)
+                if stdout_file and stderr_file:
+                    logging.warning('Stdout:\n%s \nStderr:\n%s',
+                                    stdout_file.read(), stderr_content)
 
                 # Some result files may have wrong file permission. Try
                 # to correct such error so later try can success.
