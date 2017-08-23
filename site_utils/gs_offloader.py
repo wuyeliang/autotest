@@ -666,6 +666,7 @@ def get_offload_dir_func(gs_uri, multiprocessing, delete_age, pubsub_topic=None)
 
                 # Rewind the log files for stdout and stderr and log
                 # their contents.
+                stderr_content = None
                 if stdout_file:
                     stdout_file.seek(0)
                 if stderr_file:
@@ -683,7 +684,7 @@ def get_offload_dir_func(gs_uri, multiprocessing, delete_age, pubsub_topic=None)
                 # this code is pushed to lab and run for a while to
                 # clean up these files, following code and function
                 # correct_results_folder_permission can be deleted.
-                if 'CommandException: Error opening file' in stderr_content:
+                if stderr_content and 'CommandException: Error opening file' in stderr_content:
                     correct_results_folder_permission(dir_entry)
 
             if stdout_file:
