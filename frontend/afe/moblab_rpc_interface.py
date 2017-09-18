@@ -54,6 +54,7 @@ _ETC_LSB_RELEASE = '/etc/lsb-release'
 
 # Full path to the correct gsutil command to run.
 class GsUtil:
+    """Helper class to find correct gsutil command."""
     _GSUTIL_CMD = None
 
     @classmethod
@@ -66,6 +67,7 @@ class GsUtil:
 
 
 class BucketPerformanceTestException(Exception):
+  """Exception thrown when the command to test the bucket performance fails."""
   pass
 
 @rpc_utils.moblab_only
@@ -813,7 +815,8 @@ def run_suite(board, build, suite, ro_firmware=None, rw_firmware=None,
     afe = frontend.AFE(user='moblab')
     afe.run('create_suite_job', board=board, builds=builds, name=suite,
     pool=pool, run_prod_code=False, test_source_build=build,
-    wait_for_results=False, suite_args=list_suite_args, test_args=test_args)
+    wait_for_results=False, suite_args=list_suite_args, test_args=test_args,
+    job_retry=True)
 
 
 def _enable_notification_using_credentials_in_bucket():
