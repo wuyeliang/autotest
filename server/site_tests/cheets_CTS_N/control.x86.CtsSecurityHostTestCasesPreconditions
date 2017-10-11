@@ -32,6 +32,7 @@ def run_CTS(machine):
         warn_on_test_retry=False,
         precondition_commands=[
            'echo 3 > /proc/sys/kernel/perf_event_paranoid'
-        ])
+        ],
+	retry_manual_tests=True)
 
 parallel_simple(run_CTS, machines)

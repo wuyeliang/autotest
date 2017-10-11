@@ -7,13 +7,13 @@
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_N.x86.CtsCameraTestCases'
 ATTRIBUTES = 'suite:cts_N'
-DEPENDENCIES = 'arc, cts_abi_x86'
+DEPENDENCIES = 'arc, cts_abi_x86, lighting'
 JOB_RETRIES = 2
 TEST_TYPE = 'server'
 TIME = 'LENGTHY'
 
 DOC = ('Run module CtsCameraTestCases of the '
-       'Android 7.1_r8 Compatibility Test Suite (CTS), build 4226626,'
+       'Android 7.1_r10 Compatibility Test Suite (CTS), build 4372030,'
        'using x86 ABI in the ARC++ container.')
 
 def run_CTS(machine):

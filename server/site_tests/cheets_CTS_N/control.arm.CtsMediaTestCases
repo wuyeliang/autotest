@@ -7,13 +7,13 @@
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_N.arm.CtsMediaTestCases'
 ATTRIBUTES = 'suite:cts_N'
-DEPENDENCIES = 'arc'
+DEPENDENCIES = 'arc, noloopback'
 JOB_RETRIES = 2
 TEST_TYPE = 'server'
 TIME = 'LENGTHY'
 
 DOC = ('Run module CtsMediaTestCases of the '
-       'Android 7.1_r8 Compatibility Test Suite (CTS), build 4226626,'
+       'Android 7.1_r10 Compatibility Test Suite (CTS), build 4372030,'
        'using arm ABI in the ARC++ container.')
 
 def run_CTS(machine):
