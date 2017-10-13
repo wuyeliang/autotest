@@ -15,6 +15,9 @@ AUTOTEST_INSTALL_DIR = CONFIG.get_config_value('SCHEDULER',
                                                'drone_installation_directory')
 DEFAULT_CONTAINER_PATH = CONFIG.get_config_value('AUTOSERV', 'container_path')
 
+SSP_REQUIRED = CONFIG.get_config_value('SCHEDULER', 'exit_on_failed_ssp_setup',
+                                       default=False)
+
 class DroneUnreachable(Exception):
     """The drone is non-sshable."""
     pass
@@ -182,6 +185,8 @@ class SiteDrone(object):
                 # Local drone raises AutotestHostRunError, while remote drone
                 # raises AutoservRunError.
                 self._support_ssp = False
+                if SSP_REQUIRED:
+                  raise
         return self._support_ssp
 
 
