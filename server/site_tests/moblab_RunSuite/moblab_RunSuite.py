@@ -66,7 +66,7 @@ class moblab_RunSuite(moblab_test.MoblabTest):
             # Cache directory can contain large binaries like CTS/CTS zip files
             # no need to offload those in the results.
             # Cache directory is owned by root
-            self.run('rm -fR /mnt/moblab/results/shared/cache',
+            host.run('rm -fR /mnt/moblab/results/shared/cache',
                       timeout=600)
 
 
