@@ -65,8 +65,9 @@ class moblab_RunSuite(moblab_test.MoblabTest):
             logging.debug('Suite Run Output:\n%s', result.stdout)
             # Cache directory can contain large binaries like CTS/CTS zip files
             # no need to offload those in the results.
-            host.run_as_moblab('rm -fR /mnt/moblab/results/shared/cache',
-                               timeout=600)
+            # Cache directory is owned by root
+            self.run('rm -fR /mnt/moblab/results/shared/cache',
+                      timeout=600)
 
 
 def _is_run_suite_error_critical(return_code):
