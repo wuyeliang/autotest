@@ -279,9 +279,6 @@ class cheets_CTS_N(tradefed_test.TradefedTest):
             self._timeout += 3600
         # Retries depend on channel.
         self._timeoutfactor = None
-        self._max_retry = self._get_max_retry(max_retry, self._host)
-        logging.info('Maximum number of retry steps %d.', self._max_retry)
-        session_id = 0
 
         if not retry_manual_tests:
             self._waivers.update(self._manual_tests)
