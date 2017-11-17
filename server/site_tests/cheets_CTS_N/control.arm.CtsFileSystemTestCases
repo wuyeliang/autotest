@@ -16,8 +16,14 @@ DOC = ('Run module CtsFileSystemTestCases of the '
        'Android 7.1_r10 Compatibility Test Suite (CTS), build 4372030,'
        'using arm ABI in the ARC++ container.')
 
+from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
+
 def run_CTS(machine):
     host = hosts.create_host(machine)
+    board = host.get_board().replace(ds_constants.BOARD_PREFIX, '')
+    precondition_commands = []
+    if board in ['sand', 'bob']:
+        precondition_commands.append('echo 0 > /sys/block/mmcblk0/queue/iosched/slice_idle')
     job.run_test(
         'cheets_CTS_N',
         host=host,
@@ -26,6 +32,7 @@ def run_CTS(machine):
         needs_push_media=False,
         tag='CtsFileSystemTestCases',
         target_module='CtsFileSystemTestCases',
+	precondition_commands=precondition_commands,
         bundle='arm',
         warn_on_test_retry=False,
         timeout=9000)
