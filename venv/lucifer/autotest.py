@@ -120,6 +120,18 @@ def _system_site_packages():
     return ast.literal_eval(output)
 
 
+def _system_site_packages():
+    """Get list of system site-package directories.
+
+    This is needed for Moblab because dependencies are installed
+    system-wide instead of using build_externals.py.
+    """
+    output = subprocess.check_output([
+        _SYSTEM_PYTHON, '-c',
+        'import site; print repr(site.getsitepackages())'])
+    return ast.literal_eval(output)
+
+
 class _CommonRemovingFinder(object):
     """Python import finder that neuters Autotest's common.py
 
