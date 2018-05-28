@@ -19,6 +19,7 @@ def run_GTS(machine):
         'cheets_GTS',
         hosts=host_list,
         iterations=1,
+        max_retry=0,
         tag='tradefed-run-collect-tests-only',
         test_name='cheets_GTS.tradefed-run-collect-tests-only',
         run_template=['run', 'commandAndExit', 'collect-tests-only',
