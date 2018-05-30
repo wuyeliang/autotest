@@ -6,7 +6,9 @@ AUTHOR = "jamescook@chromium.org, mustash-team@google.com"
 NAME = "desktopui_MashLogin"
 PURPOSE = "Verify chrome --enable-features=Mash starts and logs in."
 CRITERIA = "Fails if chrome --enable-features=Mash does not start."
-ATTRIBUTES = "suite:chrome-informational, suite:bvt-perbuild"
+# Disable in R68 because there's a known chrome crash in exo. We're not
+# shipping mustash in R68, so just disable the test.
+#ATTRIBUTES = "suite:chrome-informational, suite:bvt-perbuild"
 # TODO(jamescook): Add retries if this goes into bvt-cq.
 JOB_RETRIES = 0
 TIME = "SHORT"
