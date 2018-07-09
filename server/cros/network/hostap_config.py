@@ -481,14 +481,14 @@ class HostapConfig(object):
         return self._max_stas
 
     def __init__(self, mode=MODE_11B, channel=None, frequency=None,
-                 n_capabilities=[], hide_ssid=None, beacon_interval=None,
+                 n_capabilities=None, hide_ssid=None, beacon_interval=None,
                  dtim_period=None, frag_threshold=None, ssid=None, bssid=None,
                  force_wmm=None, security_config=None,
                  pmf_support=PMF_SUPPORT_DISABLED,
                  obss_interval=None,
                  vht_channel_width=None,
                  vht_center_channel=None,
-                 ac_capabilities=[],
+                 ac_capabilities=None,
                  beacon_footer='',
                  spectrum_mgmt_required=None,
                  scenario_name=None,
@@ -547,6 +547,10 @@ class HostapConfig(object):
             raise error.TestError('Specify either frequency or channel '
                                   'but not both.')
 
+        if n_capabilities is None:
+            n_capabilities = []
+        if ac_capabilities is None:
+            ac_capabilities = []
         self._wmm_enabled = False
         unknown_caps = [cap for cap in n_capabilities
                         if cap not in self.ALL_N_CAPABILITIES]
