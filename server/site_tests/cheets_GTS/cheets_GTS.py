@@ -18,8 +18,7 @@ import os
 from autotest_lib.server import utils
 from autotest_lib.server.cros import tradefed_test
 
-_PARTNER_GTS_LOCATION = 'gs://chromeos-partner-gts/gts-5.1_r4-4697968.zip'
-
+_PARTNER_GTS_LOCATION = 'gs://chromeos-partner-gts/gts-6.0_r1-4868992.zip'
 
 class cheets_GTS(tradefed_test.TradefedTest):
     """Sets up tradefed to run GTS tests."""
