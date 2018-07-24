@@ -6,7 +6,10 @@ AUTHOR = "kylechar@chromium.org, mustash-team@google.com"
 NAME = "desktopui_MusLogin"
 PURPOSE = "Verify chrome --mus (for mushrome) starts and logs in."
 CRITERIA = "Fails if chrome --mus does not start."
-ATTRIBUTES = "suite:chrome-informational, suite:bvt-perbuild"
+# Disabled on M65 since we have decided not to ship mus mode and the
+# code has been removed on trunk. This test still runs on some
+# long-term-support builders and flakily crashes, so skip it.
+#ATTRIBUTES = "suite:chrome-informational, suite:bvt-perbuild"
 # TODO(kylechar): add JOB_RETRIES = 2 when adding to bvt-cq
 JOB_RETRIES = 0
 TIME = "SHORT"
