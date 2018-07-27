@@ -348,25 +348,29 @@ class Servo(object):
         # button press (at least on Alex).  To guarantee that this
         # won't happen, we need to allow the EC one second to
         # collect itself.
-        self._server.power_long_press()
+        # long_press is defined as 8.5s in servod
+        self.set_nocheck('power_key', 'long_press')
 
 
     def power_normal_press(self):
         """Simulate a normal power button press."""
-        self._server.power_normal_press()
+        # press is defined as 1.2s in servod
+        self.set_nocheck('power_key', 'press')
 
 
     def power_short_press(self):
         """Simulate a short power button press."""
-        self._server.power_short_press()
+        # tab is defined as 0.2s in servod
+        self.set_nocheck('power_key', 'tab')
 
 
-    def power_key(self, press_secs=''):
+    def power_key(self, press_secs='tab'):
         """Simulate a power button press.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.power_key(press_secs)
+        self.set_nocheck('power_key', press_secs)
 
 
     def lid_open(self):
@@ -418,90 +422,91 @@ class Servo(object):
             time_left = time_left - self.SHORT_DELAY
         raise error.TestFail("Failed setting volume_down to no")
 
-    def ctrl_d(self, press_secs=''):
+    def ctrl_d(self, press_secs='tab'):
         """Simulate Ctrl-d simultaneous button presses.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.ctrl_d(press_secs)
+        self.set_nocheck('ctrl_d', press_secs)
 
 
-    def ctrl_u(self):
+    def ctrl_u(self, press_secs='tab'):
         """Simulate Ctrl-u simultaneous button presses.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.ctrl_u()
+        self.set_nocheck('ctrl_u', press_secs)
 
 
-    def ctrl_enter(self, press_secs=''):
+    def ctrl_enter(self, press_secs='tab'):
         """Simulate Ctrl-enter simultaneous button presses.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.ctrl_enter(press_secs)
+        self.set_nocheck('ctrl_enter', press_secs)
 
 
-    def d_key(self, press_secs=''):
+    def ctrl_key(self, press_secs='tab'):
         """Simulate Enter key button press.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.d_key(press_secs)
+        self.set_nocheck('ctrl_key', press_secs)
 
 
-    def ctrl_key(self, press_secs=''):
+    def enter_key(self, press_secs='tab'):
         """Simulate Enter key button press.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.ctrl_key(press_secs)
+        self.set_nocheck('enter_key', press_secs)
 
 
-    def enter_key(self, press_secs=''):
-        """Simulate Enter key button press.
-
-        @param press_secs : Str. Time to press key.
-        """
-        self._server.enter_key(press_secs)
-
-
-    def refresh_key(self, press_secs=''):
+    def refresh_key(self, press_secs='tab'):
         """Simulate Refresh key (F3) button press.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.refresh_key(press_secs)
+        self.set_nocheck('refresh_key', press_secs)
 
 
-    def ctrl_refresh_key(self, press_secs=''):
+    def ctrl_refresh_key(self, press_secs='tab'):
         """Simulate Ctrl and Refresh (F3) simultaneous press.
 
         This key combination is an alternative of Space key.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.ctrl_refresh_key(press_secs)
+        self.set_nocheck('ctrl_refresh_key', press_secs)
 
 
-    def imaginary_key(self, press_secs=''):
+    def imaginary_key(self, press_secs='tab'):
         """Simulate imaginary key button press.
 
         Maps to a key that doesn't physically exist.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.imaginary_key(press_secs)
+        self.set_nocheck('imaginary_key', press_secs)
 
 
-    def sysrq_x(self, press_secs=''):
+    def sysrq_x(self, press_secs='tab'):
         """Simulate Alt VolumeUp X simulataneous press.
 
         This key combination is the kernel system request (sysrq) X.
 
-        @param press_secs : Str. Time to press key.
+        @param press_secs: int, float, str; time to press key in seconds or
+                           known shorthand: 'tab' 'press' 'long_press'
         """
-        self._server.sysrq_x(press_secs)
+        self.set_nocheck('sysrq_x', press_secs)
 
 
     def toggle_recovery_switch(self):
