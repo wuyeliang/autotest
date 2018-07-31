@@ -234,7 +234,8 @@ class logging_UserCrash(user_crash_test.UserCrashTest):
         contents = utils.read_file(result['log'])
         if contents != 'hello world\n':
             raise error.TestFail('Crash log contents unexpected: %s' % contents)
-        if not ('log=' + result['log']) in utils.read_file(result['meta']):
+        if ('log=' + os.path.basename(result['log']) not in
+                utils.read_file(result['meta'])):
             raise error.TestFail('Meta file does not reference log')
 
 
