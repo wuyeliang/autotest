@@ -132,7 +132,7 @@ class CrashTest(test.test):
 
     def _kill_running_sender(self):
         """Kill the the crash_sender process if running."""
-        utils.system('pkill -9 -e crash_sender', ignore_status=True)
+        utils.system('pkill -9 -e --exact crash_sender', ignore_status=True)
 
 
     def _set_sending_mock(self, mock_enabled, send_success=True):
