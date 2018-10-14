@@ -6,7 +6,8 @@ AUTHOR = "jamescook@chromium.org, mustash-team@google.com"
 NAME = "desktopui_MashLogin"
 PURPOSE = "Verify chrome --enable-features=Mash starts and logs in."
 CRITERIA = "Fails if chrome --enable-features=Mash does not start."
-ATTRIBUTES = "suite:chrome-informational, suite:bvt-perbuild"
+# Disabled in R70 due to flake. Mash isn't shipping in R70 anyway.
+#ATTRIBUTES = "suite:chrome-informational, suite:bvt-perbuild"
 # TODO(jamescook): Add retries if this goes into bvt-cq.
 JOB_RETRIES = 0
 TIME = "SHORT"
