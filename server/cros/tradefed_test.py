@@ -55,7 +55,7 @@ class TradefedTest(test.test):
 
     # Default max_retry based on board and channel.
     _BOARD_RETRY = {}
-    _CHANNEL_RETRY = {'dev': 5}
+    _CHANNEL_RETRY = {'dev': 9}
 
     _SHARD_CMD = None
     _board_arch = None
