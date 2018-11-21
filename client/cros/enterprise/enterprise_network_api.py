@@ -125,13 +125,13 @@ class ChromeEnterpriseNetworkContext(object):
 
         @param ssid: The ssid that the connection request is initiated for.
 
-        @raises error.TestFail: If the WiFi network is not in WiFi range of the
-                DUT or if the DUT cannot manually connect to the SSID.
+        @raises error.TestFail: If the WiFi network is out of range or the
+            DUT cannot manually connect to the network.
 
         """
         if not self.is_network_in_range(ssid):
-            raise error.TestFail("The SSID: %r is not in WiFi range of the DUT"%
-                ssid)
+            raise error.TestFail(
+                    "The SSID: %r is not in WiFi range of the DUT" % ssid)
 
         network_to_connect = self._get_network_info(ssid)
         logging.info("Triggering a manual connect to network SSID: %r, GUID %r",
@@ -164,8 +164,8 @@ class ChromeEnterpriseNetworkContext(object):
 
         """
         if not self.is_network_in_range(ssid):
-            raise error.TestFail("The SSID: %r is not in WiFi range of the DUT"%
-                ssid)
+            raise error.TestFail(
+                    "The SSID: %r is not in WiFi range of the DUT" % ssid)
 
         network_to_disconnect = self._get_network_info(ssid)
         logging.info("Triggering a disconnect from network SSID: %r, GUID %r",
