@@ -361,25 +361,38 @@ class ServodTelemetryLogger(PowerTelemetryLogger):
         summary = self._pm.GetSummary()
         raw_data = self._pm.GetRawData()
 
-        sample_duration = {'Onboard INA': self._ina_rate, 'EC': self._vbat_rate}
         loggers = list()
 
+        # Domains in summary/raw_data that carry no power-data.
+        metadata_domains = ['Sample_msecs', 'time', 'timeline']
+
         for source in summary:
+            tl = raw_data[source]['timeline']
+            samples = len(tl)
             data = {
                 k[:-3] if k.endswith('_mw') else k: v
                 for k, v in raw_data[source].iteritems()
-                if k not in ['Sample_msecs', 'time', 'timeline']
+                if k not in metadata_domains
             }
             ave = {
                 k[:-3] if k.endswith('_mw') else k: v['mean']
                 for k, v in summary[source].iteritems()
-                if k not in ['Sample_msecs', 'time', 'timeline']
+                if k not in metadata_domains
             }
+            if samples > 1:
+                # Having more than one sample allows the code to properly set a
+                # sample duration.
+                sample_duration = (tl[-1] - tl[0]) / (samples - 1)
+            else:
+                # In thise case, it seems that there is only one sample as the
+                # difference between start and end is 0. Use the entire duration
+                # of the test as the sample start/end
+                sample_duration = end_ts - start_ts
 
             logger = {
                 # All data domains should have same sample count.
                 'sample_count': summary[source]['time']['count'],
-                'sample_duration': sample_duration[source],
+                'sample_duration': sample_duration,
                 'data': data,
                 'average': ave,
                 # TODO(mqg): hard code the units for now because we are only
