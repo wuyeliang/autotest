@@ -71,6 +71,9 @@ class network_WlanDriver(test.test):
                     '4.14': 'wireless/ath/ath10k/ath10k_pci.ko',
                     '4.19': 'wireless/ath/ath10k/ath10k_pci.ko',
             },
+            'Qualcomm Atheros QCA6174 SDIO': {
+                    '4.19': 'wireless/ath/ath10k/ath10k_sdio.ko',
+            },
             'Qualcomm WCN3990': {
                     '4.14': 'wireless/ath/ath10k/ath10k_snoc.ko',
                     '4.19': 'wireless/ath/ath10k/ath10k_snoc.ko',
