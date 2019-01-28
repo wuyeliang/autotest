@@ -145,8 +145,6 @@ class bluetooth_Sanity_DefaultState(bluetooth_test.BluetoothTest):
 
         if not current_settings & bluetooth_socket.MGMT_SETTING_POWERED:
             raise error.TestFail('Bluetooth adapter is not powered')
-        if not current_settings & bluetooth_socket.MGMT_SETTING_PAIRABLE:
-            raise error.TestFail('Bluetooth adapter is not pairable')
 
         # If the kernel does not supports the BR/EDR whitelist, the adapter
         # should be generically connectable;
@@ -164,7 +162,9 @@ class bluetooth_Sanity_DefaultState(bluetooth_test.BluetoothTest):
         if not bluez_properties['Powered']:
             raise error.TestFail('Bluetooth daemon Powered property does not '
                                  'match kernel while powered on')
-        if not bluez_properties['Pairable']:
+        if not self.compare_property(bluez_properties['Pairable'],
+                                     bluetooth_socket.MGMT_SETTING_PAIRABLE,
+                                     current_settings):
             raise error.TestFail('Bluetooth daemon Pairable property does not '
                                  'match kernel while powered on')
         if not self.compare_property(bluez_properties['Discoverable'],

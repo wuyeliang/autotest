@@ -18,8 +18,6 @@ This is a useful sanity check to ensure that the device state is what we
 expect, and that the device state returns to the initial state after a power
 cycle.
 
-This is also a security check that our devices are not discoverable unless we
-specifically set them to be.
 """
 
 def run(machine):
