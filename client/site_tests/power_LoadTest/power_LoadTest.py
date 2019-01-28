@@ -241,6 +241,9 @@ class power_LoadTest(arc.ArcTest):
             self._ah_charge_start = self._power_status.battery.charge_now
             self._wh_energy_start = self._power_status.battery.energy
 
+        self.task_monitor_file = open(os.path.join(self.resultsdir,
+                                      'task-monitor.json'), 'wt')
+
 
     def run_once(self):
         """Test main loop."""
@@ -353,6 +356,12 @@ class power_LoadTest(arc.ArcTest):
                     _extension_key_values_handler(handler, forms,
                                                   loop_counter,
                                                   test_instance)))
+            self._testServer.add_url(url='/task-monitor')
+            self._testServer.add_url_handler(
+                url='/task-monitor',
+                handler_func=lambda handler, forms:
+                    self._extension_task_monitor_handler(handler, forms)
+            )
 
             # setup a handler to simulate waking up the base of a detachable
             # on user interaction. On scrolling, wake for 1s, on page
@@ -396,6 +405,7 @@ class power_LoadTest(arc.ArcTest):
         psr.refresh()
         self._tmp_keyvals['minutes_battery_life_tested'] = (t1 - t0) / 60
         self._tmp_keyvals.update(psr.get_keyvals())
+
 
     def postprocess_iteration(self):
         """Postprocess: write keyvals / log and send data to power dashboard."""
@@ -558,6 +568,9 @@ class power_LoadTest(arc.ArcTest):
             self._services.restore_services()
         self._detachable_handler.restore()
 
+        if self.task_monitor_file:
+            self.task_monitor_file.close()
+
         # cleanup backchannel interface
         # Prevent wifi congestion in test lab by forcing machines to forget the
         # wifi AP we connected to at the start of the test.
@@ -619,6 +632,7 @@ class power_LoadTest(arc.ArcTest):
             logging.debug("Didn't get status back from power extension")
 
         return low_battery
+
 
     def _set_backlight_level(self, loop=None):
         self._backlight.set_default()
@@ -743,6 +757,7 @@ class power_LoadTest(arc.ArcTest):
         keyname = _loop_keyname(loop, 'percent_kbd_backlight')
         self._tmp_keyvals[keyname] = self._keyboard_backlight.get_percent()
 
+
     def _log_loop_checkpoint(self, loop, start, end):
         loop_str = _loop_prefix(loop)
         self._checkpoint_logger.checkpoint(loop_str, start, end)
@@ -783,6 +798,23 @@ class power_LoadTest(arc.ArcTest):
             loop_section = '_' + loop_str + '_' + section
             self._checkpoint_logger.checkpoint(loop_section, s_start, s_end)
 
+
+    def _extension_task_monitor_handler(self, handler, form):
+        """
+        We use the httpd library to allow us to log chrome processes usage.
+        """
+        if form:
+            logging.debug("[task-monitor] got %d samples", len(form))
+            for idx in sorted(form.keys()):
+                json = form[idx].value
+                self.task_monitor_file.write(json)
+                self.task_monitor_file.write(",\n")
+                # we don't want to add url information to our keyvals.
+                # httpd adds them automatically so we remove them again
+                del handler.server._form_entries[idx]
+        handler.send_response(200)
+
+
 def alphanum_key(s):
     """ Turn a string into a list of string and numeric chunks. This enables a
         sort function to use this list as a key to sort alphanumeric strings
@@ -796,6 +828,7 @@ def alphanum_key(s):
         except ValueError:
             pass
     return chunks
+
 
 def _extension_log_handler(handler, form, loop_number):
     """
@@ -816,6 +849,7 @@ def _extension_log_handler(handler, form, loop_number):
             # we don't want to add url information to our keyvals.
             # httpd adds them automatically so we remove them again
             del handler.server._form_entries[field]
+
 
 def _extension_page_time_info_handler(handler, form, loop_number,
                                       test_instance):
@@ -897,6 +931,7 @@ def _extension_page_time_info_handler(handler, form, loop_number,
 
     logging.debug("%s\n", message)
 
+
 def _extension_key_values_handler(handler, form, loop_number,
                                       test_instance):
     if not form:
@@ -917,8 +952,10 @@ def _extension_key_values_handler(handler, form, loop_number,
         # httpd adds them automatically so we remove them again
         del handler.server._form_entries[field]
 
+
 def _loop_prefix(loop):
     return "loop%02d" % loop
+
 
 def _loop_keyname(loop, keyname):
     if loop != None:

@@ -16,6 +16,8 @@ function setupTest() {
   //adding these listeners to track request failure codes
   chrome.webRequest.onCompleted.addListener(capture_completed_status,
                                             {urls: ["<all_urls>"]});
+  task_monitor.bind();
+
   chrome.windows.getAll(null, function(windows) {
     preexisting_windows = windows;
     for (var i = 0; i < tasks.length; i++) {
@@ -290,6 +292,7 @@ function send_post_data(post, url) {
 
 function send_summary() {
   send_raw_page_time_info();
+  task_monitor.unbind();
   send_key_values();
   send_status();
   send_log_entries();
