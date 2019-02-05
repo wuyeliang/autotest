@@ -4,6 +4,7 @@
 
 import logging
 import os
+import time
 
 from autotest_lib.server import test
 from autotest_lib.client.common_lib import error, utils
@@ -84,7 +85,10 @@ class FingerprintTest(test.test):
                                  % ectool_output)
         return ret
 
-    def initialize(self, host, test_dir, use_dev_signed_fw=False):
+    def initialize(self, host, test_dir, use_dev_signed_fw=False,
+                   enable_hardware_write_protect=True,
+                   enable_software_write_protect=True,
+                   force_firmware_flashing=False, init_entropy=True):
         """Performs initialization."""
         self.host = host
         self.servo = host.servo
@@ -131,15 +135,24 @@ class FingerprintTest(test.test):
         self._initialize_test_firmware_image_attrs(
             self._dut_firmware_test_images_dir)
 
-        self._initialize_running_fw_version(use_dev_signed_fw)
-        self._initialize_fw_entropy()
+        self._initialize_running_fw_version(use_dev_signed_fw,
+                                            force_firmware_flashing)
+        if init_entropy:
+            self._initialize_fw_entropy()
+
+        self._initialize_hw_and_sw_write_protect(enable_hardware_write_protect,
+                                                 enable_software_write_protect)
 
     def cleanup(self):
         """Restores original state."""
         # Once the tests complete we need to make sure we're running the
         # original firmware (not dev version) and potentially reset rollback.
-        self._initialize_running_fw_version(False)
+        self._initialize_running_fw_version(use_dev_signed_fw=False,
+                                            force_firmware_flashing=False)
         self._initialize_fw_entropy()
+        self._initialize_hw_and_sw_write_protect(
+            enable_hardware_write_protect=True,
+            enable_software_write_protect=True)
         if hasattr(self, '_biod_running') and self._biod_running:
             logging.info('Restarting biod')
             self.host.upstart_restart(self._BIOD_UPSTART_JOB_NAME)
@@ -203,11 +216,12 @@ class FingerprintTest(test.test):
                                      val % self.get_fp_board())
             setattr(self, key, full_path)
 
-    def _initialize_running_fw_version(self, use_dev_signed_fw):
+    def _initialize_running_fw_version(self, use_dev_signed_fw,
+                                       force_firmware_flashing):
         """
         Ensures that the running firmware version matches build version
         and factory rollback settings; flashes to correct version if either
-        fails to match.
+        fails to match is requested to force flashing.
 
         RO firmware: original version released at factory
         RW firmware: firmware from current build
@@ -223,7 +237,8 @@ class FingerprintTest(test.test):
         fw_versions_match = self.running_fw_version_matches_given_version(
             build_rw_firmware_version, golden_ro_firmware_version)
 
-        if not fw_versions_match or not self.is_rollback_set_to_initial_val():
+        if not fw_versions_match or not self.is_rollback_set_to_initial_val() \
+            or force_firmware_flashing:
             fw_file = self._build_fw_file
             if use_dev_signed_fw:
                 fw_file = self.TEST_IMAGE_DEV
@@ -238,6 +253,22 @@ class FingerprintTest(test.test):
         result = self.run_cmd(self._INIT_ENTROPY_CMD)
         if result.exit_status != 0:
             raise error.TestFail('Unable to initialize entropy')
+
+    def _initialize_hw_and_sw_write_protect(self, enable_hardware_write_protect,
+                                            enable_software_write_protect):
+        """Enables/disables hardware/software write protect."""
+        # sw: 0, hw: 0 => initial_hw(0) -> sw(0) -> hw(0)
+        # sw: 0, hw: 1 => initial_hw(0) -> sw(0) -> hw(1)
+        # sw: 1, hw: 0 => initial_hw(1) -> sw(1) -> hw(0)
+        # sw: 1, hw: 1 => initial_hw(1) -> sw(1) -> hw(1)
+        hardware_write_protect_initial_enabled = True
+        if not enable_software_write_protect:
+            hardware_write_protect_initial_enabled = False
+
+        self.set_hardware_write_protect(hardware_write_protect_initial_enabled)
+
+        self.set_software_write_protect(enable_software_write_protect)
+        self.set_hardware_write_protect(enable_hardware_write_protect)
 
     def get_fp_board(self):
         """Returns name of fingerprint EC."""
@@ -335,16 +366,22 @@ class FingerprintTest(test.test):
         Returns True if the running RO and RW firmware versions match the
         provided versions.
         """
-        running_rw_firmware_version = self.get_running_rw_firmware_version()
-        running_ro_firmware_version = self.get_running_ro_firmware_version()
+        try:
+            running_rw_firmware_version = self.get_running_rw_firmware_version()
+            running_ro_firmware_version = self.get_running_ro_firmware_version()
 
-        logging.info('RW firmware, running: %s, expected: %s',
-                     running_rw_firmware_version, rw_version)
-        logging.info('RO firmware, running: %s, expected: %s',
-                     running_ro_firmware_version, ro_version)
+            logging.info('RW firmware, running: %s, expected: %s',
+                         running_rw_firmware_version, rw_version)
+            logging.info('RO firmware, running: %s, expected: %s',
+                         running_ro_firmware_version, ro_version)
 
-        return (running_rw_firmware_version == rw_version and
-                running_ro_firmware_version == ro_version)
+            return (running_rw_firmware_version == rw_version and
+                    running_ro_firmware_version == ro_version)
+        except:
+            # We may not always be able to read the firmware version.
+            # For example, if the firmware is erased due to RDP1, running any
+            # commands (such as getting the version) won't work.
+            return False
 
     def is_rollback_set_to_initial_val(self):
         """
@@ -400,6 +437,29 @@ class FingerprintTest(test.test):
         """Enables or disables hardware write protect."""
         self.servo.set('fw_wp_state', 'force_on' if enable else 'force_off')
 
+    def set_software_write_protect(self, enable):
+        """Enables or disables software write protect."""
+        arg  = 'enable' if enable else 'disable'
+        self._run_ectool_cmd('flashprotect ' + arg)
+        # TODO(b/116396469): The flashprotect command returns an error even on
+        # success.
+        # if result.exit_status != 0:
+        #    raise error.TestFail('Failed to modify software write protect')
+
+        # TODO(b/116396469): "flashprotect enable" command is slow, so wait for
+        # it to complete before attempting to reboot.
+        time.sleep(2)
+        self._reboot_ec()
+
+    def _reboot_ec(self):
+        """Reboots the fingerprint MCU (FPMCU)."""
+        self._run_ectool_cmd('reboot_ec')
+        # TODO(b/116396469): The reboot_ec command returns an error even on
+        # success.
+        # if result.exit_status != 0:
+        #    raise error.TestFail('Failed to reboot ec')
+        time.sleep(2)
+
     def get_files_from_dut(self, src, dst):
         """Copes files from DUT to server."""
         logging.info('Copying files from (%s) to (%s).', src, dst)
@@ -441,6 +501,11 @@ class FingerprintTest(test.test):
         # and it's easier to read when everything ordered in the same output
         test_cmd = ' '.join([os.path.join(self._dut_working_dir, test_name)] +
                             list(args) + ['2>&1'])
+        # Change the working dir so we can write files from within the test
+        # (otherwise defaults to $HOME (/root), which is not usually writable)
+        # Note that dut_working_dir is automatically cleaned up so tests don't
+        # need to worry about files from previous invocations or other tests.
+        test_cmd = '(cd ' + self._dut_working_dir + ' && ' + test_cmd + ')'
         logging.info('Test command: %s', test_cmd)
         result = self.run_cmd(test_cmd)
         if result.exit_status != 0:
