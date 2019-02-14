@@ -362,7 +362,63 @@ RPC_CATEGORIES = [
     },
     {
         "category_name": "updater",
-        "test_cases": []
+        "test_cases": [
+            {
+                "method_names": [
+                    "get_fwid",
+                    "modify_fwid",
+                    "get_installed_fwid",
+                ],
+                "passing_args": [
+                    NO_ARGS,
+                    ("bios", "ro"),
+                    ("bios", "a"),
+                ],
+                "failing_args": [
+                    ("", ),
+                    ("foo", ),
+                    ("bios", ""),
+                    ("bios", "foo"),
+                ],
+                "expected_return_type": str,
+                "allow_error_msg": "is already modified",
+            },
+            {
+                "method_names": [
+                    "get_fwid",
+                    "modify_fwid",
+                    "get_installed_fwid",
+                ],
+                "passing_args": [
+                    ("bios", ()),
+                    ("bios", ("ro",)),
+                    ("bios", ("ro", "a")),
+                ],
+                "failing_args": [
+                    ("", ("ro",)),
+                    ("bios", ("foo",)),
+                    ("bios", ("foo", "bar")),
+                ],
+                "expected_return_type": dict,
+                "allow_error_msg": "is already modified",
+            },
+            {
+                "method_name": "copy_bios",
+                "passing_args": [
+                    ('/tmp/fake-bios.bin', )
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ('/tmp/fake-bios.bin', "foo")
+                ],
+                "expected_return_type": str
+            },
+            {
+                "method_name": "reset_shellball",
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG]
+            }
+        ]
     },
     {
         "category_name": "rootfs",

@@ -386,6 +386,10 @@ class RPCFunctions(object):
         """Reload the firmware image that may be changed."""
         self._bios_handler.new_image()
 
+    def _bios_get_fwid(self, sections='a'):
+        """Get FWIDs for the given sections"""
+        return self._bios_handler.get_fwid(sections)
+
     def _bios_get_gbb_flags(self):
         """Get the GBB flags.
 
@@ -524,6 +528,10 @@ class RPCFunctions(object):
         """
         return self._os_if.run_shell_command_get_output(
                 'mosys ec info | sed "s/.*| //"')[0]
+
+    def _ec_get_fwid(self, sections='rw'):
+        """Get FWIDs for the given sections of EC firmware"""
+        return self._ec_handler.get_fwid(sections)
 
     def _ec_get_active_hash(self):
         """Get hash of active EC RW firmware."""
@@ -728,12 +736,18 @@ class RPCFunctions(object):
         """Start update-engine daemon."""
         return self._updater.start_daemon()
 
-    def _updater_get_fwid(self):
-        """Retrieve shellball's RW fwid.
+    def _updater_get_fwid(self, target='bios', sections='a'):
+        """Retrieve shellball's RW and/or RO fwid."""
+        return self._updater.get_fwid(target, sections)
 
-        @return: Shellball's RW fwid.
-        """
-        return self._updater.retrieve_fwid()[1]
+    def _updater_modify_fwid(self, target='bios', sections='a'):
+        """Modify the AP fwid in the image, but don't flash it."""
+        return self._updater.modify_fwid(target, sections)
+
+    def _updater_get_installed_fwid(self, target='bios', sections=None,
+                                    filename=None):
+        """Retrieve installed (possibly emulated) RW and/or RO fwids."""
+        return self._updater.get_installed_fwid(target, sections, filename)
 
     def _updater_modify_ecid_and_flash_to_bios(self):
         """Modify ecid, put it to AP firmware, and flash it to the system."""
@@ -741,7 +755,7 @@ class RPCFunctions(object):
 
     def _updater_get_ec_hash(self):
         """Return the hex string of the EC hash."""
-        blob = self._updater.retrieve_ec_hash()
+        blob = self._updater.get_ec_hash()
         # Format it to a hex string
         return ''.join('%02x' % ord(c) for c in blob)
 
@@ -765,6 +779,21 @@ class RPCFunctions(object):
         @param append: use for the shellball name.
         """
         return self._updater.repack_shellball(append)
+
+    def _updater_reset_shellball(self):
+        """Revert to the stock shellball"""
+        self._updater.reset_shellball()
+
+    def _updater_run_firmwareupdate(self, mode, append=None, options=()):
+        """Run updater with the given options
+
+        @param mode: mode for the updater
+        @param append: extra string appended to shellball filename to run
+        @param options: options for chromeos-firmwareupdate
+        @return: returncode of the updater
+        @rtype: int
+        """
+        return self._updater.run_firmwareupdate(mode, append, options)
 
     def _updater_run_autoupdate(self, append):
         """Run chromeos-firmwareupdate with autoupdate mode."""
@@ -842,6 +871,10 @@ class RPCFunctions(object):
     def _updater_get_ec_relative_path(self):
         """Gets the relative path of the ec image in the shellball."""
         return self._updater.get_ec_relative_path()
+
+    def _updater_copy_bios(self, filename):
+        """Make a copy of the shellball bios.bin"""
+        return self._updater.copy_bios(filename)
 
     def _rootfs_verify_rootfs(self, section):
         """Verifies the integrity of the root FS.

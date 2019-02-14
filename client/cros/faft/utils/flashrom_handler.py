@@ -141,7 +141,8 @@ class FlashromHandler(object):
         self.pub_key_file = pub_key_file
         self.dev_key_path = dev_key_path
 
-        if target == 'bios':
+        self.target = target
+        if self.target == 'bios':
             self.fum = saft_flashrom_util.flashrom_util(
                     self.os_if, target_is_ec=False)
             self.fv_sections = {
@@ -152,10 +153,11 @@ class FlashromHandler(object):
                     'ec_a': FvSection(None, 'ECMAINA'),
                     'ec_b': FvSection(None, 'ECMAINB'),
             }
-        elif target == 'ec':
+        elif self.target == 'ec':
             self.fum = saft_flashrom_util.flashrom_util(
                     self.os_if, target_is_ec=True)
             self.fv_sections = {
+                    'ro': FvSection(None, None, 'RO_FRID'),
                     'rw': FvSection(None, 'EC_RW', 'RW_FWID'),
                     'rw_b': FvSection(None, 'EC_RW_B'),
             }
@@ -172,14 +174,40 @@ class FlashromHandler(object):
             self._available = self.fum.check_target()
         return self._available
 
-    def init(self, image_file=None):
+    def init(self, image_file=None, allow_fallback=False):
         """Initialize the object, by reading the image.
 
         This is separate from new_image, to isolate the implementation detail of
         self.image being non-empty.
+
+        @param image_file: the path of the image file to read.
+                If None or empty string, read the flash device instead.
+        @param allow_fallback: if True, fall back to reading the flash device
+                if the image file doesn't exist.
+        @type image_file: str
+        @type allow_fallback: bool
+
+        @raise FlashromHandlerError: if no target flash device was usable.
         """
+        # Raise an exception early if there's no usable flash.
+        if not self.is_available():
+            # Can't tell for sure whether it's broken or simply nonexistent.
+            raise FlashromHandlerError(
+                    "No usable %s flash was detected." % self.target)
+
+        if image_file and allow_fallback and not os.path.isfile(image_file):
+            self.os_if.log(
+                    "Using %s flash contents instead of missing image: %s"
+                    % (self.target.upper(), image_file))
+            image_file = None
+
         self.new_image(image_file)
         self.initialized = True
+
+    def deinit(self):
+        """Clear the in-memory image data, and mark self uninitialized."""
+        self.image = ''
+        self.initialized = False
 
     def new_image(self, image_file=None):
         """Parse the full flashrom image and store sections into files.
@@ -482,7 +510,9 @@ class FlashromHandler(object):
     def get_section_hash(self, section):
         """Retrieve the hash of the body of a firmware section"""
         ecrw = chip_utils.ecrw()
-        with tempfile.NamedTemporaryFile(prefix=ecrw.chip_name) as f:
+
+        # add a dot to avoid set_from_file breaking if tmpname has an underscore
+        with tempfile.NamedTemporaryFile(prefix=ecrw.chip_name + '.') as f:
             self.dump_section_body(section, f.name)
             ecrw.set_from_file(f.name)
             result = ecrw.compute_hash_bytes()
@@ -563,6 +593,32 @@ class FlashromHandler(object):
         subsection_name = self.fv_sections[section].get_fwid_name()
         blob = self.fum.get_section(self.image, subsection_name)
         return blob
+
+    def get_fwid(self, sections):
+        """Retrieve multiple sections' fwids from the image.
+
+        If 'sections' argument is a string, the result is a single fwid string.
+        Otherwise, it's a dict of {section: fwid} for the requested sections.
+
+        @param sections: section(s) to return
+        @return: fwid(s) of the section(s)
+
+        @type sections: str | tuple | list
+        @rtype: str | dict
+        """
+        single = False
+        if isinstance(sections, str):
+            single = True
+            sections = [sections]
+
+        fwids = {}
+        for section in sections:
+            fwid = self.get_section_fwid(section)
+            fwids[section] = fwid.rstrip('\0')
+            if single:
+                return fwids[section]
+
+        return fwids
 
     def set_section_body(self, section, blob, write_through=False):
         """Put the supplied blob to the body of the firmware section"""
