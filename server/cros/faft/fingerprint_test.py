@@ -43,7 +43,8 @@ class FingerprintTest(test.test):
     _DUT_TMP_PATH_BASE = '/tmp/fp_test'
 
     _GOLDEN_RO_FIRMWARE_VERSION_MAP = {
-        'nocturne_fp': 'nocturne_fp_v2.2.64-58cf5974e'
+        'nocturne_fp': 'nocturne_fp_v2.2.64-58cf5974e',
+        'nami_fp': 'nami_fp_v2.2.144-7a08e07eb',
     }
 
     _BIOD_UPSTART_JOB_NAME = 'biod'
