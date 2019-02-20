@@ -6,7 +6,6 @@ import collections
 import json
 import logging
 import os
-import urlparse
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import dev_server
@@ -99,38 +98,6 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
         self._host = None
         self._autotest_devserver = None
 
-    def _get_least_loaded_devserver(self, test_conf):
-        """Find a devserver to use.
-
-        We first try to pick a devserver with the least load. In case all
-        devservers' load are higher than threshold, fall back to
-        the old behavior by picking a devserver based on the payload URI,
-        with which ImageServer.resolve will return a random devserver based on
-        the hash of the URI. The picked devserver needs to respect the
-        location of the host if 'prefer_local_devserver' is set to True or
-        'restricted_subnets' is  set.
-
-        @param test_conf: a dictionary of test settings.
-        """
-        hostname = self._host.hostname if self._host else None
-        least_loaded_devserver = dev_server.get_least_loaded_devserver(
-            hostname=hostname)
-        if least_loaded_devserver:
-            logging.debug('Choosing the least loaded devserver: %s',
-                          least_loaded_devserver)
-            autotest_devserver = dev_server.ImageServer(least_loaded_devserver)
-        else:
-            logging.warning('No devserver meets the maximum load requirement. '
-                            'Picking a random devserver to use.')
-            autotest_devserver = dev_server.ImageServer.resolve(
-                test_conf['target_payload_uri'], self._host.hostname)
-        devserver_hostname = urlparse.urlparse(
-            autotest_devserver.url()).hostname
-
-        logging.info('Devserver chosen for this run: %s', devserver_hostname)
-        return autotest_devserver
-
-
     def _stage_payloads_onto_devserver(self, test_conf):
         """Stages payloads that will be used by the test onto the devserver.
 
@@ -152,39 +119,6 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
 
         return self.StagedURLs(staged_src_uri, staged_src_stateful,
                                staged_target_uri, staged_target_stateful)
-
-
-    def _stage_payloads(self, payload_uri, archive_uri, payload_type='full'):
-        """Stages a payload and its associated stateful on devserver."""
-        if payload_uri:
-            staged_uri = self._stage_payload_by_uri(payload_uri)
-
-            # Figure out where to get the matching stateful payload.
-            if archive_uri:
-                stateful_uri = self._get_stateful_uri(archive_uri)
-            else:
-                stateful_uri = self._payload_to_stateful_uri(payload_uri)
-            staged_stateful = self._stage_payload_by_uri(stateful_uri)
-
-            logging.info('Staged %s payload from %s at %s.', payload_type,
-                         payload_uri, staged_uri)
-            logging.info('Staged stateful from %s at %s.', stateful_uri,
-                         staged_stateful)
-            return staged_uri, staged_stateful
-
-
-    @staticmethod
-    def _get_stateful_uri(build_uri):
-        """Returns a complete GS URI of a stateful update given a build path."""
-        return '/'.join([build_uri.rstrip('/'), 'stateful.tgz'])
-
-
-    def _payload_to_stateful_uri(self, payload_uri):
-        """Given a payload GS URI, returns the corresponding stateful URI."""
-        build_uri = payload_uri.rpartition('/')[0]
-        if build_uri.endswith('payloads'):
-            build_uri = build_uri.rpartition('/')[0]
-        return self._get_stateful_uri(build_uri)
 
 
     def _get_hostlog_file(self, filename, pid):

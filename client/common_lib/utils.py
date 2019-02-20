@@ -2263,6 +2263,41 @@ def parse_chrome_version(version_string):
     return ver, milestone
 
 
+def parse_gs_uri_version(uri):
+    """Pull out major.minor.sub from image URI
+
+    @param uri: A GS URI for a bucket containing ChromeOS build artifacts
+    @return: The build version as a string in the form 'major.minor.sub'
+
+    """
+    return re.sub('.*(R[0-9]+|LATEST)-', '', uri).strip('/')
+
+
+def compare_gs_uri_build_versions(x, y):
+    """Compares two bucket URIs by their version string
+
+    @param x: A GS URI for a bucket containing ChromeOS build artifacts
+    @param y: Another GS URI for a bucket containing ChromeOS build artifacts
+    @return: 1 if x > y, -1 if x < y, and 0 if x == y
+
+    """
+    # Converts a gs uri 'gs://.../R75-<major>.<minor>.<sub>' to
+    # [major, minor, sub]
+    split_version = lambda v: map(lambda s: int(s),
+                                  parse_gs_uri_version(v).split('.'))
+
+    x_version = split_version(x)
+    y_version = split_version(y)
+
+    for a, b in zip(x_version, y_version):
+        if a > b:
+            return 1
+        elif b > a:
+            return -1
+
+    return 0
+
+
 def is_localhost(server):
     """Check if server is equivalent to localhost.
 
