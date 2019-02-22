@@ -60,7 +60,8 @@ class FingerprintTest(test.test):
         '6f38c866182bd9bf7a4462c06ac04fa6a0074351': _KEY_TYPE_MP,
 
         # nami
-        '754aea623d69975a22998f7b97315dd53115d723': _KEY_TYPE_PRE_MP
+        '754aea623d69975a22998f7b97315dd53115d723': _KEY_TYPE_PRE_MP,
+        '35486c0090ca390408f1fbbf2a182966084fe2f8': _KEY_TYPE_MP
     }
 
     # RO versions that are flashed in the factory
@@ -88,6 +89,14 @@ class FingerprintTest(test.test):
                 _FIRMWARE_VERSION_RO_VERSION: 'nocturne_fp_v2.2.64-58cf5974e',
                 _FIRMWARE_VERSION_RW_VERSION: 'nocturne_fp_v2.2.110-b936c0a3c',
                 _FIRMWARE_VERSION_KEY_ID: '6f38c866182bd9bf7a4462c06ac04fa6a0074351',
+            }
+        },
+        _FP_BOARD_NAME_NAMI: {
+            'nami_fp_v2.2.144-7a08e07eb.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: '375d7fcbb3f1fd8837b0572b4ef7fa848189d3ac53ced5dcb1abe3ddca9f11c4',
+                _FIRMWARE_VERSION_RO_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
+                _FIRMWARE_VERSION_RW_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
+                _FIRMWARE_VERSION_KEY_ID: '35486c0090ca390408f1fbbf2a182966084fe2f8',
             }
         },
     }
