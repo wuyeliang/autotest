@@ -111,8 +111,7 @@ get_ro_firmware_version() {
 }
 
 _get_rollback_info() {
-  # TODO(crbug.com/924283): rollbackinfo command always returns exit code 1.
-  run_ectool_cmd_ignoring_error "rollbackinfo"
+  run_ectool_cmd "rollbackinfo"
 }
 
 get_rollback_block_id() {

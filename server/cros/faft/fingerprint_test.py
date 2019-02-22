@@ -488,9 +488,8 @@ class FingerprintTest(test.test):
         """Returns requested type of rollback info."""
         result = self._run_ectool_cmd('rollbackinfo')
         parsed = self._parse_colon_delimited_output(result.stdout)
-        # TODO(crbug.com/924283): rollbackinfo always returns an error
-        # if result.exit_status != 0:
-        #    raise error.TestFail('Failed to get rollback info')
+        if result.exit_status != 0:
+            raise error.TestFail('Failed to get rollback info')
         info = parsed.get(info_type)
         if info is None:
             raise error.TestFail('Failed to get rollback info: %s' % info_type)
