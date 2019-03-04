@@ -248,10 +248,11 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                    auto_login=True,
                    auto_logout=True,
                    init_network_controller=False,
-                   arc_mode=False,
+                   arc_mode=None,
                    setup_arc=True,
                    use_clouddpc_test=None,
                    disable_default_apps=True,
+                   real_gaia=False,
                    extension_paths=[],
                    extra_chrome_flags=[]):
         """Set up DMS, log in, and verify policy values.
@@ -288,7 +289,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
 
         # Need a real account, for now. Note: Even though the account is 'real'
         # you can still use a fake DM server.
-        if arc_mode and self.username == USERNAME:
+        if (arc_mode and self.username == USERNAME) or real_gaia:
             self.username = 'tester50@managedchrome.com'
             self.password = 'Test0000'
 
@@ -306,6 +307,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                             extension_paths=extension_paths,
                             arc_mode=arc_mode,
                             disable_default_apps=disable_default_apps,
+                            real_gaia=real_gaia,
                             extra_chrome_flags=extra_chrome_flags)
 
         # Skip policy check upon request or if we enroll but don't log in.
@@ -896,7 +898,8 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
     def _create_chrome(self,
                        enroll=False,
                        auto_login=True,
-                       arc_mode=False,
+                       arc_mode=None,
+                       real_gaia=False,
                        init_network_controller=False,
                        disable_default_apps=True,
                        extension_paths=[],
@@ -951,7 +954,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                         auto_login=auto_login)
 
         elif auto_login:
-            if arc_mode:
+            if arc_mode or real_gaia:
                 self.cr = chrome.Chrome(extension_paths=extension_paths,
                                         username=self.username,
                                         password=self.password,
