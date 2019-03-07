@@ -13,6 +13,10 @@ class InValidPropertyError(Exception):
     """Raised if a suite's property is not valid."""
 
 
+class SwarmingCallError(Exception):
+    """Raised if a swarming call fails."""
+
+
 class NoAvailableDUTsError(Exception):
     """Raised if there's no available DUTs for provision suite."""
     def __init__(self, board, pool, available_num, required_num):
