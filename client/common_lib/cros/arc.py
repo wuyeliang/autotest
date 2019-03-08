@@ -919,12 +919,28 @@ class ArcTest(test.test):
         # ipv6
         _android_shell('ip6tables -I OUTPUT -j REJECT')
         _android_shell('ip6tables -I OUTPUT -d ip6-localhost -j ACCEPT')
+        # Allow connect to Google public DNS IPv6. Some apps, e.g.
+        # AnTuTuBenchmark_6.1.4, may look up for DNS to get the IP address,
+        # or it will hang there with long timeout.
+        # DNS IPv6 addresses are taken from:
+        # https://developers.google.com/speed/public-dns/docs/using
+        # TODO(http://b/128456938): remove hardcoded IP addresses
+        _android_shell('ip6tables -I OUTPUT -d 2001:4860:4860::8888 -j ACCEPT')
+        _android_shell('ip6tables -I OUTPUT -d 2001:4860:4860::8844 -j ACCEPT')
         # ipv4
         _android_shell('iptables -I OUTPUT -j REJECT')
         _android_shell('iptables -I OUTPUT -p tcp -s 100.115.92.2 '
                        '--sport 5555 '
                        '-j ACCEPT')
         _android_shell('iptables -I OUTPUT -d localhost -j ACCEPT')
+        # Allow connect to Google public DNS IPv4. Some apps, e.g.
+        # AnTuTuBenchmark_6.1.4, may look up for DNS to get the IP address,
+        # or it will hang there with long timeout.
+        # DNS IPv4 addresses are taken from:
+        # https://developers.google.com/speed/public-dns/docs/using
+        # TODO(http://b/128456938): remove hardcoded IP addresses
+        _android_shell('iptables -I OUTPUT -d 8.8.8.8 -j ACCEPT')
+        _android_shell('iptables -I OUTPUT -d 8.8.4.4 -j ACCEPT')
 
     def unblock_outbound(self):
         """ Unblocks the connection from the container to outer network.
@@ -935,12 +951,16 @@ class ArcTest(test.test):
         """
         logging.info('Unblocking outbound connection')
         # ipv4
+        _android_shell('iptables -D OUTPUT -d 8.8.4.4 -j ACCEPT')
+        _android_shell('iptables -D OUTPUT -d 8.8.8.8 -j ACCEPT')
         _android_shell('iptables -D OUTPUT -d localhost -j ACCEPT')
         _android_shell('iptables -D OUTPUT -p tcp -s 100.115.92.2 '
                        '--sport 5555 '
                        '-j ACCEPT')
         _android_shell('iptables -D OUTPUT -j REJECT')
         # ipv6
+        _android_shell('ip6tables -D OUTPUT -d 2001:4860:4860::8844 -j ACCEPT')
+        _android_shell('ip6tables -D OUTPUT -d 2001:4860:4860::8888 -j ACCEPT')
         _android_shell('ip6tables -D OUTPUT -d ip6-localhost -j ACCEPT')
         _android_shell('ip6tables -D OUTPUT -j REJECT')
 
