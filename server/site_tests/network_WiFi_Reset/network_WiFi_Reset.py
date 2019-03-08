@@ -190,9 +190,8 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
         """Performs cleanup at exit. May reboot the DUT, to keep the system
         functioning for the next test.
         """
+        super(network_WiFi_Reset, self).cleanup()
 
         if hasattr(self, 'reset_driver') and self.reset_driver.need_reboot():
             logging.info("Test left DUT in bad state; rebooting")
             self.context.client.reboot(timeout=60)
-
-        super(network_WiFi_Reset, self).cleanup()
