@@ -40,6 +40,7 @@ NAME_INTEL_7265 = 'Intel 7265'
 NAME_INTEL_9000 = 'Intel 9000'
 NAME_INTEL_9260 = 'Intel 9260'
 NAME_INTEL_22260 = 'Intel 22260'
+NAME_INTEL_22560 = 'Intel 22560'
 NAME_BROADCOM_BCM4354_SDIO = 'Broadcom BCM4354 SDIO'
 NAME_BROADCOM_BCM4356_PCIE = 'Broadcom BCM4356 PCIE'
 NAME_BROADCOM_BCM4371_PCIE = 'Broadcom BCM4371 PCIE'
@@ -48,9 +49,10 @@ NAME_UNKNOWN = 'Unknown WiFi Device'
 DEVICE_INFO_ROOT = '/sys/class/net'
 
 DeviceInfo = collections.namedtuple('DeviceInfo', ['vendor', 'device',
+                                                   'subsystem',
                                                    'compatible'])
 # Provide default values for parameters.
-DeviceInfo.__new__.__defaults__ = (None, None, None)
+DeviceInfo.__new__.__defaults__ = (None, None, None, None)
 
 DEVICE_NAME_LOOKUP = {
     DeviceInfo('0x02df', '0x9129'): NAME_MARVELL_88W8797_SDIO,
@@ -68,10 +70,17 @@ DEVICE_NAME_LOOKUP = {
     DeviceInfo('0x8086', '0x08b2'): NAME_INTEL_7260,
     DeviceInfo('0x8086', '0x095a'): NAME_INTEL_7265,
     DeviceInfo('0x8086', '0x095b'): NAME_INTEL_7265,
+    # Note that Intel 9000 is also Intel 9560 aka Jefferson Peak 2
     DeviceInfo('0x8086', '0x9df0'): NAME_INTEL_9000,
     DeviceInfo('0x8086', '0x31dc'): NAME_INTEL_9000,
     DeviceInfo('0x8086', '0x2526'): NAME_INTEL_9260,
     DeviceInfo('0x8086', '0x2723'): NAME_INTEL_22260,
+    # For integrated wifi chips, use device_id and subsystem_id together
+    # as an identifier.
+    # 0x02f0 is for Quasar on CML, 0x0074 is for HrP2
+    DeviceInfo('0x8086', '0x02f0', subsystem='0x0074'): NAME_INTEL_22560,
+    # With the same Quasar, subsystem_id 0x0034 is JfP2
+    DeviceInfo('0x8086', '0x02f0', subsystem='0x0034'): NAME_INTEL_9000,
     DeviceInfo('0x02d0', '0x4354'): NAME_BROADCOM_BCM4354_SDIO,
     DeviceInfo('0x14e4', '0x43ec'): NAME_BROADCOM_BCM4356_PCIE,
     DeviceInfo('0x14e4', '0x440d'): NAME_BROADCOM_BCM4371_PCIE,
@@ -215,44 +224,59 @@ class Interface:
 
         return os.path.basename(path_readlink_result.stdout.strip())
 
-    @property
-    def device_description(self):
-        """@return DeviceDescription object for a WiFi interface, or None."""
-        read_file = (lambda path: self._run('cat "%s"' % path).stdout.rstrip()
-                     if self.host.path_exists(path) else None)
-        if not self.is_wifi_device():
-            logging.error('Device description not supported on non-wifi '
-                          'interface: %s.', self._name)
-            return None
-
+    def _get_wifi_device_name(self):
+        """Helper for device_description()."""
         device_path = self.device_path
         if not device_path:
-            logging.error('No device path found')
             return None
+
+        read_file = (lambda path: self._run('cat "%s"' % path).stdout.rstrip()
+                     if self.host.path_exists(path) else None)
 
         # Try to identify using either vendor/product ID, or using device tree
         # "OF_COMPATIBLE_x".
         vendor_id = read_file(os.path.join(device_path, 'vendor'))
         product_id = read_file(os.path.join(device_path, 'device'))
+        subsystem_id = read_file(os.path.join(device_path, 'subsystem_device'))
         uevent = read_file(os.path.join(device_path, 'uevent'))
 
-        # Vendor/product ID.
-        infos = [DeviceInfo(vendor_id, product_id)]
-
-        # Compatible value(s).
+        # Device tree "compatible".
         for line in uevent.splitlines():
             key, _, value = line.partition('=')
             if re.match('^OF_COMPATIBLE_[0-9]+$', key):
-                infos += [DeviceInfo(compatible=value)]
+                info = DeviceInfo(compatible=value)
+                if info in DEVICE_NAME_LOOKUP:
+                    return DEVICE_NAME_LOOKUP[info]
 
-        for info in infos:
+        # {Vendor, Product, Subsystem} ID.
+        if subsystem_id is not None:
+            info = DeviceInfo(vendor_id, product_id, subsystem=subsystem_id)
             if info in DEVICE_NAME_LOOKUP:
-                device_name = DEVICE_NAME_LOOKUP[info]
-                logging.debug('Device is %s',  device_name)
-                break
-        else:
-            logging.error('Device is unknown. Info: %r', infos)
+                return DEVICE_NAME_LOOKUP[info]
+
+
+        # {Vendor, Product} ID.
+        info = DeviceInfo(vendor_id, product_id)
+        if info in DEVICE_NAME_LOOKUP:
+            return DEVICE_NAME_LOOKUP[info]
+
+        return None
+
+    @property
+    def device_description(self):
+        """@return DeviceDescription object for a WiFi interface, or None."""
+        if not self.is_wifi_device():
+            logging.error('Device description not supported on non-wifi '
+                          'interface: %s.', self._name)
+            return None
+
+        device_name = self._get_wifi_device_name()
+        if not device_name:
             device_name = NAME_UNKNOWN
+            logging.error('Device is unknown.')
+        else:
+            logging.debug('Device is %s',  device_name)
+
         module_name = self.module_name
         kernel_release = self._run('uname -r').stdout.strip()
         net_drivers_path = '/lib/modules/%s/kernel/drivers/net' % kernel_release
