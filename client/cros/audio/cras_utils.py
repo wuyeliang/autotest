@@ -13,6 +13,7 @@ _CRAS_TEST_CLIENT = '/usr/bin/cras_test_client'
 
 
 class CrasUtilsError(Exception):
+    """Error in CrasUtils."""
     pass
 
 
@@ -43,21 +44,24 @@ def capture(*args, **kargs):
 
 
 def playback_cmd(playback_file, block_size=None, duration=None,
-                 channels=2, rate=48000):
+                 pin_device=None, channels=2, rate=48000):
     """Gets a command to playback a file with given settings.
 
     @param playback_file: the name of the file to play. '-' indicates to
                           playback raw audio from the stdin.
+    @param pin_device: the device id to playback on.
     @param block_size: the number of frames per callback(dictates latency).
-    @param duration: seconds to playback
+    @param duration: seconds to playback.
     @param channels: number of channels.
-    @param rate: the sampling rate
+    @param rate: the sampling rate.
 
     @returns: The command args put in a list of strings.
 
     """
     args = [_CRAS_TEST_CLIENT]
     args += ['--playback_file', playback_file]
+    if pin_device is not None:
+        args += ['--pin_device', str(pin_device)]
     if block_size is not None:
         args += ['--block_size', str(block_size)]
     if duration is not None:
@@ -589,6 +593,38 @@ def get_node_id_from_node_type(node_type, is_input):
         raise CrasUtilsError(
                 'Can not find unique node id from node type %s' % node_type)
     return find_ids[0]
+
+
+def get_device_id_of(node_id):
+    """Gets the device id of the node id.
+
+    The conversion logic is replicated from the CRAS's type definition at
+    third_party/adhd/cras/src/common/cras_types.h.
+
+    @param node_id: A string for node id.
+
+    @returns: A string for device id.
+
+    @raise: CrasUtilsError: if device id is invalid.
+    """
+    device_id = str(long(node_id) >> 32)
+    if device_id == "0":
+        raise CrasUtilsError('Got invalid device_id: 0')
+    return device_id
+
+
+def get_device_id_from_node_type(node_type, is_input):
+    """Gets device id from node type.
+
+    @param types: A node type defined in CRAS_NODE_TYPES.
+    @param is_input: True if the node is input. False otherwise.
+
+    @returns: A string for device id.
+
+    """
+    node_id = get_node_id_from_node_type(node_type, is_input)
+    return get_device_id_of(node_id)
+
 
 def get_active_node_volume():
     """Returns volume from active node.
