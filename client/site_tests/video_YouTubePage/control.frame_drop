@@ -21,7 +21,7 @@ This test verifies YouTube videos can play smoothly.
 """
 
 _TEST_NAME = 'frame_drop'
-_TEST_PAGE = 'https://youtube.com/watch?v=zuzaxlddWbk&html5=1'
+_TEST_PAGE = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=103s&html5=1'
 job.run_test('video_YouTubePage', subtest_name=_TEST_NAME,
              test_page=_TEST_PAGE,
              subdir_tag=_TEST_NAME)
