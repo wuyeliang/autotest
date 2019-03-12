@@ -749,7 +749,7 @@ class FirmwareTest(FAFTBase):
             self.servo.get('cr50_version')
             self.servo.set('cr50_uart_capture', 'on')
             self.cr50_uart_file = os.path.join(self.resultsdir, 'cr50_uart.txt')
-            self.cr50 = chrome_cr50.ChromeCr50(self.servo)
+            self.cr50 = chrome_cr50.ChromeCr50(self.servo, self.faft_config)
         except error.TestFail as e:
             if 'No control named' in str(e):
                 logging.warn('cr50 console not supported.')

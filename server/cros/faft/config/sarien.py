@@ -27,3 +27,4 @@ class Values(object):
     # There is no key sequence to force memory retraining.
     # TODO(b/129864818): Check if there is an alternate way to do this.
     rec_force_mrc = False
+    ap_up_after_cr50_reboot = False

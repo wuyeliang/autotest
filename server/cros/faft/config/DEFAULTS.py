@@ -100,3 +100,7 @@ class Values(object):
 
     # True if the GSC can wake the EC with it's reset GPIO.
     gsc_can_wake_ec_with_reset = True
+
+    # True if AP is normally expected to be powered on after the Cr50 reboots
+    # (when AC power is connected).
+    ap_up_after_cr50_reboot = True

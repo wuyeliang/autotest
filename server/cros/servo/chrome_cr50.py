@@ -85,8 +85,15 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     GET_CAP_TRIES = 3
 
 
-    def __init__(self, servo):
+    def __init__(self, servo, faft_config):
+        """Initializes a ChromeCr50 object.
+
+        Args:
+          servo: A Servo object.
+          faft_config: A Config object.
+        """
         super(ChromeCr50, self).__init__(servo, 'cr50_uart')
+        self.faft_config = faft_config
 
 
     def wake_cr50(self):
@@ -429,6 +436,12 @@ class ChromeCr50(chrome_ec.ChromeConsole):
             self.ccd_enable()
         else:
             self._uart_wait_for_reboot(cmd, timeout)
+
+        # On most devices, a Cr50 reset will cause an AP reset. Force this to
+        # happen on devices where the AP is left down.
+        if not self.faft_config.ap_up_after_cr50_reboot:
+            logging.info('Resetting DUT after Cr50 reset')
+            self._servo.get_power_state_controller().reset()
 
 
     def rollback(self, eraseflashinfo=True, chip_bid=None, chip_flags=None):
