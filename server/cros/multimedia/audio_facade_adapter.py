@@ -41,7 +41,8 @@ class AudioFacadeRemoteAdapter(object):
         return self._proxy.audio
 
 
-    def playback(self, client_path, data_format, blocking=False):
+    def playback(self, client_path, data_format, blocking=False,
+                 node_type=None):
         """Playback an audio file on DUT.
 
         @param client_path: The path to the file on DUT.
@@ -53,12 +54,13 @@ class AudioFacadeRemoteAdapter(object):
                             channel: number of channels.
                             rate: sampling rate.
         @param blocking: Blocks this call until playback finishes.
-
-        @returns: True
+        @param node_type: A Cras node type defined in cras_utils.CRAS_NODE_TYPES
+                          that we like to pin at. None to have the playback on
+                          active selected device.
 
         """
         self._audio_proxy.playback(
-                client_path, data_format, blocking)
+                client_path, data_format, blocking, node_type)
 
 
     def stop_playback(self):

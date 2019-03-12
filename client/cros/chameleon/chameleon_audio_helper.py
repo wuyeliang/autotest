@@ -7,13 +7,11 @@
 import logging
 from contextlib import contextmanager
 
-from autotest_lib.client.cros.audio import audio_helper
 from autotest_lib.client.cros.chameleon import audio_widget
 from autotest_lib.client.cros.chameleon import audio_widget_arc
 from autotest_lib.client.cros.chameleon import audio_widget_link
 from autotest_lib.server.cros.bluetooth import bluetooth_device
 from autotest_lib.client.cros.chameleon import chameleon_audio_ids as ids
-from autotest_lib.client.cros.chameleon import chameleon_info
 
 class AudioPort(object):
     """

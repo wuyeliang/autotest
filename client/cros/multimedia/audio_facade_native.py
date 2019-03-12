@@ -191,7 +191,7 @@ class AudioFacadeNative(object):
             self._arc_resource.cleanup()
 
 
-    def playback(self, file_path, data_format, blocking=False):
+    def playback(self, file_path, data_format, blocking=False, node_type=None):
         """Playback a file.
 
         @param file_path: The path to the file.
@@ -203,6 +203,9 @@ class AudioFacadeNative(object):
                             channel: number of channels.
                             rate: sampling rate.
         @param blocking: Blocks this call until playback finishes.
+        @param node_type: A Cras node type defined in cras_utils.CRAS_NODE_TYPES
+                          that we like to pin at. None to have the playback on
+                          active selected device.
 
         @returns: True.
 
@@ -216,8 +219,13 @@ class AudioFacadeNative(object):
             raise AudioFacadeNativeError(
                     'data format %r is not supported' % data_format)
 
+        device_id = None
+        if node_type:
+            device_id = int(cras_utils.get_device_id_from_node_type(
+                    node_type, False))
+
         self._player = Player()
-        self._player.start(file_path, blocking)
+        self._player.start(file_path, blocking, device_id)
 
         return True
 
@@ -552,17 +560,18 @@ class Player(object):
         self._playback_subprocess = None
 
 
-    def start(self, file_path, blocking):
-        """Starts recording.
+    def start(self, file_path, blocking, pin_device):
+        """Starts playing.
 
-        Starts recording subprocess. It can be stopped by calling stop().
+        Starts playing subprocess. It can be stopped by calling stop().
 
         @param file_path: The path to the file.
         @param blocking: Blocks this call until playback finishes.
+        @param pin_device: A integer of device id to play on.
 
         """
         self._playback_subprocess = cras_utils.playback(
-                blocking, playback_file=file_path)
+                blocking, playback_file=file_path, pin_device=pin_device)
 
 
     def stop(self):
