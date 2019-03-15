@@ -18,12 +18,16 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
   preserve_srcdir = True
   _services = None
 
+  glbench_directory = '/usr/local/glbench/'
   # Good images.
-  reference_images_file = 'deps/glbench/glbench_reference_images.txt'
+  reference_images_file = os.path.join(glbench_directory,
+                                       'files/glbench_reference_images.txt')
   # Images that are bad but for which the bug has not been fixed yet.
-  knownbad_images_file = 'deps/glbench/glbench_knownbad_images.txt'
+  knownbad_images_file = os.path.join(glbench_directory,
+                                      'files/glbench_knownbad_images.txt')
   # Images that are bad and for which a fix has been submitted.
-  fixedbad_images_file = 'deps/glbench/glbench_fixedbad_images.txt'
+  fixedbad_images_file = os.path.join(glbench_directory,
+                                      'files/glbench_fixedbad_images.txt')
 
   # These tests do not draw anything, they can only be used to check
   # performance.
@@ -49,10 +53,6 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
       'us': False,
       '1280x768_fps': True
   }
-
-  def setup(self):
-    """Testcase setup."""
-    self.job.setup_dep(['glbench'])
 
   def initialize(self):
     super(graphics_GLBench, self).initialize()
@@ -93,17 +93,12 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
     @param hasty: Run the test more quickly by running fewer iterations,
         lower resolution, and without waiting for the dut to cool down.
     """
-    dep = 'glbench'
-    dep_dir = os.path.join(self.autodir, 'deps', dep)
-    self.job.install_pkg(dep, 'dep', dep_dir)
-
     options += self.blacklist
-
     # Run the test, saving is optional and helps with debugging
     # and reference image management. If unknown images are
     # encountered one can take them from the outdir and copy
     # them (after verification) into the reference image dir.
-    exefile = os.path.join(self.autodir, 'deps/glbench/glbench')
+    exefile = os.path.join(self.glbench_directory, 'bin/glbench')
     outdir = self.outputdir
     options += ' -save -outdir=' + outdir
     # Using the -hasty option we run only a subset of tests without waiting
