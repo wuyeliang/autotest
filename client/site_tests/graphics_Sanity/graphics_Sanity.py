@@ -13,7 +13,7 @@ from autotest_lib.client.cros.graphics import graphics_utils
 
 # to run this test manually on a test target
 # ssh root@machine
-# cd /usr/local/autotest/deps/glbench
+# cd /usr/local/glbench/bin
 # stop ui
 # ./windowmanagertest --screenshot1_sec 2 --screenshot2_sec 1 --cooldown_sec 1 \
 #    --screenshot1_cmd "screenshot screenshot1_generated.png" \
@@ -29,12 +29,6 @@ class graphics_Sanity(graphics_utils.GraphicsTest):
 
     # None-init vars used by cleanup() here, in case setup() fails
     _services = None
-
-    def setup(self):
-        self.job.setup_dep(['glbench'])
-        dep = 'glbench'
-        dep_dir = os.path.join(self.autodir, 'deps', dep)
-        self.job.install_pkg(dep, 'dep', dep_dir)
 
     def cleanup(self):
         super(graphics_Sanity, self).cleanup()
@@ -114,7 +108,7 @@ class graphics_Sanity(graphics_utils.GraphicsTest):
         screenshot2_resized = os.path.join(self.resultsdir,
                                            'screenshot2_generated_resized.png')
 
-        exefile = os.path.join(self.autodir, 'deps/glbench/windowmanagertest')
+        exefile = os.path.join('/usr/local/', 'glbench', 'bin', 'windowmanagertest');
 
         # Delay before screenshot: 1 second has caused failures.
         options = ' --screenshot1_sec 2'
