@@ -60,7 +60,7 @@ thermal.sh,root,root,No,No,No,No,No
 daisydog,watchdog,watchdog,Yes,Yes,Yes,Yes,No
 permission_brok,devbroker,root,No,No,Yes,Yes,No
 netfilter-queue,nfqueue,nfqueue,No,No,Yes,No,Yes
-anomaly_collect,root,root,No,No,No,No,No
+anomaly_detecto,root,root,No,No,No,No,No
 attestationd,attestation,attestation,No,No,Yes,Yes,Yes
 periodic_schedu,root,root,No,No,No,No,No
 esif_ufd,root,root,No,No,No,No,No
