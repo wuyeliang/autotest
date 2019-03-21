@@ -108,7 +108,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                            min_suspend=self.MIN_SUSPEND,
                            min_resume=self.MIN_RESUME,
                            check_connection=False,
-                           iterations=suspend_count,
+                           suspend_iterations=suspend_count,
                            suspend_state=self.MEM)
         # Reenable CCD
         self.cr50.ccd_enable()

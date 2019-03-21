@@ -15,7 +15,7 @@ class power_SuspendStress(test.test):
 
     def initialize(self, duration, idle=False, init_delay=0, min_suspend=0,
                    min_resume=5, max_resume_window=3, check_connection=True,
-                   iterations=None, suspend_state=''):
+                   suspend_iterations=None, suspend_state=''):
         """
         Entry point.
 
@@ -32,8 +32,8 @@ class power_SuspendStress(test.test):
                 max_resume_window seconds.
         @param check_connection: If true, we check that the network interface
                 used for testing is up after resume. Otherwsie we reboot.
-        @param iterations: number of times to attempt suspend.  If !=None has
-                precedence over duration.
+        @param suspend_iterations: number of times to attempt suspend.  If
+                !=None has precedence over duration.
         @param suspend_state: Force to suspend to a specific
                 state ("mem" or "freeze"). If the string is empty, suspend
                 state is left to the default pref on the system.
@@ -46,14 +46,14 @@ class power_SuspendStress(test.test):
         self._min_resume = min_resume
         self._max_resume_window = max_resume_window
         self._check_connection = check_connection
-        self._iterations = iterations
+        self._suspend_iterations = suspend_iterations
         self._suspend_state = suspend_state
         self._method = sys_power.idle_suspend if idle else sys_power.do_suspend
 
     def _done(self):
-        if self._iterations != None:
-            self._iterations -= 1
-            return self._iterations < 0
+        if self._suspend_iterations != None:
+            self._suspend_iterations -= 1
+            return self._suspend_iterations < 0
         return time.time() >= self._endtime
 
     def _get_default_network_interface(self):
