@@ -44,9 +44,12 @@ class BluetoothTesterXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         'peripheral': LE_PROFILE
     }
 
+    # Class of device/service. This can be generated using
+    # http://bluetooth-pentest.narod.ru/software/bluetooth_class_of_device-service_generator.html
+
     PROFILE_CLASS = {
-        'computer': 0x000104,
-        'peripheral': None
+        'computer': 0x000104, # Desktop computer.
+        'peripheral': 0x000504 # Keyboard.
     }
 
     PROFILE_NAMES = {
