@@ -75,8 +75,6 @@ class Modem3gpp(modem.Modem):
 
         self._scanned_networks = {}
         self._cached_pco_value = ''
-        self._cached_unregistered_subscription_state = (
-                mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN)
         self._cached_registered_subscription_state = (
                 mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_PROVISIONED)
 
@@ -224,7 +222,6 @@ class Modem3gpp(modem.Modem):
 
 
     def AssignSubscriptionState(self,
-                                unregistered_subscription_state,
                                 registered_subscription_state):
         """
         Caches the given subscription states and updates the actual
@@ -236,8 +233,6 @@ class Modem3gpp(modem.Modem):
                 returned when the modem is registered on a network.
 
         """
-        self._cached_unregistered_subscription_state = (
-                unregistered_subscription_state)
         self._cached_registered_subscription_state = (
                 registered_subscription_state)
         self.UpdateSubscriptionState()
@@ -260,7 +255,7 @@ class Modem3gpp(modem.Modem):
             new_subscription_state = self._cached_registered_subscription_state
         else:
             new_subscription_state = (
-                    self._cached_unregistered_subscription_state)
+                    mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN)
 
         self.SetUInt32(mm1_constants.I_MODEM_3GPP,
                        'SubscriptionState',

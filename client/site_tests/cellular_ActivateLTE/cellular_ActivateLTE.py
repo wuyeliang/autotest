@@ -47,7 +47,6 @@ class ActivationTest(object):
         # Put the modem in the unknown subscription state so that the mdn value is
         # used to remove the iccid entry
         self.test.pseudomm.iface_testing.SetSubscriptionState(
-                mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN,
                 mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN)
         time.sleep(5)
         self.test.CheckServiceActivationState('activated')
@@ -151,7 +150,6 @@ class ActivationDueToMdnTest(ActivationTest):
         # Put the modem in the unknown subscription state so that the mdn value is
         # used to determine the service activation status.
         self.test.pseudomm.iface_testing.SetSubscriptionState(
-                mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN,
                 mm1_constants.MM_MODEM_3GPP_SUBSCRIPTION_STATE_UNKNOWN)
         time.sleep(SHORT_TIMEOUT)
         self.test.CheckServiceActivationState('activated')
