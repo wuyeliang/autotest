@@ -1773,12 +1773,7 @@ def _run_suite(options):
             job_created_on, float(options.timeout_mins))
     job_url = reporting_utils.link_job(job_id,
                                        instance_server=instance_server)
-    logging.info('%s Created suite job: %s',
-                 job_timer.format_time(job_timer.job_created_time),
-                 job_url)
-    logging.info(annotations.StepLink(
-        text='Link to suite',
-        url=job_url))
+    _log_create_task(job_timer, job_url, job_id)
 
     if options.create_and_return:
         msg = '--create_and_return was specified, terminating now.'
@@ -2057,6 +2052,16 @@ class _ExceptionHandler(object):
         sys.exit(run_suite_common.RETURN_CODES.INFRA_FAILURE)
 
 
+def _log_create_task(job_timer, job_url, job_id):
+    """Logging for task creation."""
+    logging.info('%s Created suite job: %s',
+                 job_timer.format_time(job_timer.job_created_time),
+                 job_url)
+    logging.info(annotations.StepLink(text='Link to suite', url=job_url))
+    # For task id parsing of chromite HWTestStage.
+    logging.info('Created task id: %s', job_id)
+
+
 def _check_if_use_skylab(options):
     """Detect whether to run suite in skylab."""
     if not _ENABLE_RUN_SUITE_TRAMPOLINE:
@@ -2117,14 +2122,10 @@ def _run_with_skylab(options):
         res = cros_build_lib.RunCommand(cmd, capture_output=True)
         # TODO (xixuan): The parsing will change with crbug.com/935244.
         job_url = res.output.split()[-1]
+        job_id = job_url.split('id=')[-1]
         job_timer = diagnosis_utils.JobTimer(
                 job_created_on, float(options.timeout_mins))
-        logging.info('%s Created suite job: %s',
-                     job_timer.format_time(job_timer.job_created_time),
-                     job_url)
-        logging.info(annotations.StepLink(
-                text='Link to suite',
-                url=job_url))
+        _log_create_task(job_timer, job_url, job_id)
         return run_suite_common.SuiteResult(run_suite_common.RETURN_CODES.OK)
 
     # TODO(xixuan): Implement waiting suite in skylab.
