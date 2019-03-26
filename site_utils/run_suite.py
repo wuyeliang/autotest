@@ -54,6 +54,7 @@ import warnings
 
 import common
 from chromite.lib import buildbot_annotations as annotations
+from chromite.lib import cros_build_lib
 from chromite.lib import gs
 from chromite.lib import osutils
 
@@ -77,6 +78,7 @@ from autotest_lib.frontend.afe import rpc_client_lib
 from autotest_lib.frontend.afe.json_rpc import proxy
 from autotest_lib.server import site_utils
 from autotest_lib.server import utils
+from autotest_lib.server.cros import provision
 from autotest_lib.server.cros.dynamic_suite import constants
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.server.cros.dynamic_suite import reporting_utils
@@ -103,6 +105,7 @@ _URL_PATTERN = CONFIG.get_config_value('CROS', 'log_url_pattern', type=str)
 _ENABLE_RUN_SUITE_TRAMPOLINE = CONFIG.get_config_value(
         'CROS', 'enable_run_suite_trampoline', type=bool, default=False)
 
+_SKYLAB_TOOL = '/opt/infra-tools/skylab'
 _MIGRATION_CONFIG_FILE = 'migration_config.ini'
 _MIGRATION_CONFIG_BUCKET = 'suite-scheduler.google.com.a.appspot.com'
 _TRAMPOLINE_CONFIG = 'gs://%s/%s' % (_MIGRATION_CONFIG_BUCKET,
@@ -2084,7 +2087,47 @@ def _check_if_use_skylab(options):
 
 def _run_with_skylab(options):
     """Run suite inside skylab."""
-    # TODO(xixuan): Implement running suite in skylab.
+    builds = suite_common.make_builds_from_options(options)
+    if options.create_and_return:
+        skylab_tool = os.environ.get('SKYLAB_TOOL') or _SKYLAB_TOOL
+        cmd = [skylab_tool, 'create-suite',
+               '-board', options.board,
+               '-image', builds[provision.CROS_VERSION_PREFIX],
+               '-pool', options.pool,
+               '-timeout-mins', str(options.timeout_mins),
+               '-priority', priorities.Priority.get_string(options.priority),
+               '-max-retries', str(options.max_retries)]
+        if options.model is not None:
+            cmd.extend(['-model', options.model])
+
+        tags = ['skylab:run_suite_trampoline']
+        for t in tags:
+            cmd.extend(['-tag', t])
+
+        unsupported_skylab_keyvals = ['datastore_parent_key']
+        if options.job_keyvals is not None:
+            for k, v in options.job_keyvals.iteritems():
+                if k in unsupported_skylab_keyvals:
+                    continue
+
+                cmd.extend(['-keyval', '%s:%s' % (k, v)])
+
+        cmd.extend([options.name])
+        job_created_on = time.time()
+        res = cros_build_lib.RunCommand(cmd, capture_output=True)
+        # TODO (xixuan): The parsing will change with crbug.com/935244.
+        job_url = res.output.split()[-1]
+        job_timer = diagnosis_utils.JobTimer(
+                job_created_on, float(options.timeout_mins))
+        logging.info('%s Created suite job: %s',
+                     job_timer.format_time(job_timer.job_created_time),
+                     job_url)
+        logging.info(annotations.StepLink(
+                text='Link to suite',
+                url=job_url))
+        return run_suite_common.SuiteResult(run_suite_common.RETURN_CODES.OK)
+
+    # TODO(xixuan): Implement waiting suite in skylab.
     return _RETURN_RESULTS['ok']
 
 
