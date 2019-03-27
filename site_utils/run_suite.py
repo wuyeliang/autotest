@@ -45,6 +45,7 @@ from datetime import datetime
 from datetime import timedelta
 import functools
 import getpass
+import json
 import logging
 import os
 import re
@@ -106,6 +107,7 @@ _ENABLE_RUN_SUITE_TRAMPOLINE = CONFIG.get_config_value(
         'CROS', 'enable_run_suite_trampoline', type=bool, default=False)
 
 _SKYLAB_TOOL = '/opt/infra-tools/skylab'
+_SKYLAB_SERVICE_ACCOUNT = '/creds/service_accounts/skylab_swarming.json'
 _MIGRATION_CONFIG_FILE = 'migration_config.ini'
 _MIGRATION_CONFIG_BUCKET = 'suite-scheduler.google.com.a.appspot.com'
 _TRAMPOLINE_CONFIG = 'gs://%s/%s' % (_MIGRATION_CONFIG_BUCKET,
@@ -2064,6 +2066,11 @@ def _log_create_task(job_timer, job_url, job_id):
 
 def _check_if_use_skylab(options):
     """Detect whether to run suite in skylab."""
+    # An autotest job id is a number of at least 9 digits, e.g. 296843118.
+    # A skylab task id is of 16 chars, e.g. 43cabbb4e118ea10.
+    if len(str(options.mock_job_id)) >= 16:
+        return True
+
     if not _ENABLE_RUN_SUITE_TRAMPOLINE:
         logging.info('trampoline to skylab is not enabled.')
         return False
@@ -2090,18 +2097,69 @@ def _check_if_use_skylab(options):
     return False
 
 
+def _get_skylab_suite_result(child_tasks):
+    """Parse skylab task result to get final result for the suite.
+
+    @param child_tasks: A list of json dict of task result object, whose format
+        is: {
+                'name': ...,
+                'state': ...,
+                'failure': ...
+            }.
+    """
+    _final_suite_states = run_suite_common.get_final_skylab_suite_states()
+    for ct in child_tasks:
+        logging.info('Parsing test %r', ct)
+        state = run_suite_common.get_final_skylab_task_state(ct)
+
+        if (state not in run_suite_common.IGNORED_TEST_STATE and
+            state in _final_suite_states):
+            return _final_suite_states[state][1]
+
+    return run_suite_common.RETURN_CODES.OK
+
+
+def _log_skylab_for_buildbot(stdout):
+    """Output skylab logs to buildbot.
+
+    @param stdout: A string.
+    """
+    logging.info('\n %s Output below this line is for buildbot consumption:',
+                 diagnosis_utils.JobTimer.format_time(datetime.now()))
+    logging.info(stdout)
+
+
 def _run_with_skylab(options):
     """Run suite inside skylab."""
     builds = suite_common.make_builds_from_options(options)
-    if options.create_and_return:
-        skylab_tool = os.environ.get('SKYLAB_TOOL') or _SKYLAB_TOOL
+    skylab_tool = os.environ.get('SKYLAB_TOOL') or _SKYLAB_TOOL
+    if options.mock_job_id:
+        taskID = options.mock_job_id
+        cmd = [skylab_tool, 'wait-suite',
+               '-timeout-mins', str(options.timeout_mins),
+               '-service-account-json', _SKYLAB_SERVICE_ACCOUNT,
+               taskID]
+        try:
+            res = cros_build_lib.RunCommand(cmd, capture_output=True)
+        except cros_build_lib.RunCommandError as e:
+            logging.error(str(e))
+            return run_suite_common.SuiteResult(
+                    run_suite_common.RETURN_CODES.INFRA_FAILURE)
+
+        child_tasks = json.loads(res.output)[taskID]['child-results']
+        task_stdout = json.loads(res.output)[taskID]['stdout']
+        return_code = _get_skylab_suite_result(child_tasks)
+        _log_skylab_for_buildbot(task_stdout)
+        return run_suite_common.SuiteResult(return_code)
+    else:
         cmd = [skylab_tool, 'create-suite',
                '-board', options.board,
                '-image', builds[provision.CROS_VERSION_PREFIX],
                '-pool', options.pool,
                '-timeout-mins', str(options.timeout_mins),
                '-priority', priorities.Priority.get_string(options.priority),
-               '-max-retries', str(options.max_retries)]
+               '-max-retries', str(options.max_retries),
+               '-service-account-json', _SKYLAB_SERVICE_ACCOUNT]
         if options.model is not None:
             cmd.extend(['-model', options.model])
 
@@ -2121,15 +2179,13 @@ def _run_with_skylab(options):
         job_created_on = time.time()
         res = cros_build_lib.RunCommand(cmd, capture_output=True)
         # TODO (xixuan): The parsing will change with crbug.com/935244.
+        logging.info(res.output)
         job_url = res.output.split()[-1]
         job_id = job_url.split('id=')[-1]
         job_timer = diagnosis_utils.JobTimer(
                 job_created_on, float(options.timeout_mins))
         _log_create_task(job_timer, job_url, job_id)
         return run_suite_common.SuiteResult(run_suite_common.RETURN_CODES.OK)
-
-    # TODO(xixuan): Implement waiting suite in skylab.
-    return _RETURN_RESULTS['ok']
 
 
 def _run_with_autotest(options):

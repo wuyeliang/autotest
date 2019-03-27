@@ -26,6 +26,28 @@ RETURN_CODES = enum.Enum(
         'INVALID_OPTIONS',
 )
 
+# TODO (xixuan):  This is duplicated from suite_tracking.py in skylab.
+# Make skylab caller also use this func.
+TASK_COMPLETED = 'COMPLETED'
+TASK_COMPLETED_SUCCESS = 'COMPLETED (SUCCESS)'
+TASK_COMPLETED_FAILURE = 'COMPLETED (FAILURE)'
+TASK_EXPIRED = 'EXPIRED'
+TASK_CANCELED = 'CANCELED'
+TASK_TIMEDOUT = 'TIMED_OUT'
+TASK_RUNNING = 'RUNNING'
+TASK_PENDING = 'PENDING'
+TASK_BOT_DIED = 'BOT_DIED'
+TASK_NO_RESOURCE = 'NO_RESOURCE'
+TASK_KILLED = 'KILLED'
+
+# Test status in _IGNORED_TEST_STATE won't be reported as test failure.
+# Or test may be reported as failure as
+# it's probably caused by the DUT is not well-provisioned.
+# TODO: Stop ignoring TASK_NO_RESOURCE if we drop TEST_NA feature.
+# Blocking issues:
+#     - Not all DUT labels are in skylab yet (crbug.com/871978)
+IGNORED_TEST_STATE = [TASK_NO_RESOURCE]
+
 
 class SuiteResult(collections.namedtuple('SuiteResult',
                                          ['return_code', 'output_dict'])):
@@ -49,3 +71,65 @@ def dump_json(obj):
     """Write obj JSON to stdout."""
     output_json = json.dumps(obj, sort_keys=True)
     sys.stdout.write('#JSON_START#%s#JSON_END#' % output_json.strip())
+
+
+# TODO (xixuan): This is duplicated from suite_tracking.py in skylab.
+# Make skylab caller also use this func.
+def get_final_skylab_task_state(task_result):
+    """Get the final state of a swarming task.
+
+    @param task_result: A json dict of SwarmingRpcsTaskResult object.
+    """
+    state = task_result['state']
+    if state == TASK_COMPLETED:
+        state = (TASK_COMPLETED_FAILURE if task_result['failure'] else
+                 TASK_COMPLETED_SUCCESS)
+
+    return state
+
+
+def get_final_skylab_suite_states():
+    return {
+            TASK_COMPLETED_FAILURE:
+            (
+                    TASK_COMPLETED_FAILURE,
+                    RETURN_CODES.ERROR,
+            ),
+            # Task No_Resource means no available bots to accept the task.
+            # Deputy should check whether it's infra failure.
+            TASK_NO_RESOURCE:
+            (
+                    TASK_NO_RESOURCE,
+                    RETURN_CODES.INFRA_FAILURE,
+            ),
+            # Task expired means a task is not triggered, could be caused by
+            #   1. No healthy DUTs/bots to run it.
+            #   2. Expiration seconds are too low.
+            #   3. Suite run is too slow to finish.
+            # Deputy should check whether it's infra failure.
+            TASK_EXPIRED:
+            (
+                    TASK_EXPIRED,
+                    RETURN_CODES.INFRA_FAILURE,
+            ),
+            # Task canceled means a task is canceled intentionally. Deputy
+            # should check whether it's infra failure.
+            TASK_CANCELED:
+            (
+                    TASK_CANCELED,
+                    RETURN_CODES.INFRA_FAILURE,
+            ),
+            TASK_TIMEDOUT:
+            (
+                    TASK_TIMEDOUT,
+                    RETURN_CODES.SUITE_TIMEOUT,
+            ),
+            # Task pending means a task is still waiting for picking up, but
+            # the suite already hits deadline. So report it as suite TIMEOUT.
+            # It could also be an INFRA_FAILURE due to DUTs/bots shortage.
+            TASK_PENDING:
+            (
+                    TASK_TIMEDOUT,
+                    RETURN_CODES.SUITE_TIMEOUT,
+            ),
+    }
