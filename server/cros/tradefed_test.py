@@ -297,11 +297,13 @@ class TradefedTest(test.test):
         # immediately return success.
         host_port = self._get_adb_target(host)
         result = self._run_adb_cmd(
-            host, args=('connect', host_port), verbose=True, ignore_status=True)
+            host, args=('connect', host_port), verbose=True, ignore_status=True,
+            timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
         if result.exit_status != 0:
             return False
 
-        result = self._run_adb_cmd(host, args=('devices',))
+        result = self._run_adb_cmd(host, args=('devices',),
+            timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
         if not re.search(r'{}\s+(device|unauthorized)'.format(
                 re.escape(host_port)), result.stdout):
             logging.info('No result found in with pattern: %s',
@@ -313,7 +315,8 @@ class TradefedTest(test.test):
         # a race between detecting the connected device and actually being
         # able to run a commmand with authenticated adb.
         result = self._run_adb_cmd(
-            host, args=('shell', 'exit'), ignore_status=True)
+            host, args=('shell', 'exit'), ignore_status=True,
+            timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
         return result.exit_status == 0
 
     def _android_shell(self, host, command):
@@ -359,7 +362,6 @@ class TradefedTest(test.test):
         # adbd may take some time to come up. Repeatedly try to connect to adb.
         utils.poll_for_condition(
             lambda: self._try_adb_connect(host),
-            exception=error.TestFail('Error: Failed to set up adb connection'),
             timeout=constants.ADB_READY_TIMEOUT_SECONDS,
             sleep_interval=constants.ADB_POLLING_INTERVAL_SECONDS)
 
@@ -410,16 +412,24 @@ class TradefedTest(test.test):
         pubkey_path = key_path + '.pub'
         self._run_adb_cmd(verbose=True, args=('keygen', pipes.quote(key_path)))
         os.environ['ADB_VENDOR_KEYS'] = key_path
-        # Kill existing adb server to ensure that the env var is picked up.
-        self._run_adb_cmd(verbose=True, args=('kill-server',))
 
-        # TODO(pwang): connect_adb takes 10+ seconds on a single DUT.
-        #              Parallelize it if it becomes a bottleneck.
-        for host in self._hosts:
-            self._connect_adb(host, pubkey_path)
-            self._disable_adb_install_dialog(host)
-            self._wait_for_arc_boot(host)
-        self._verify_arc_hosts()
+        for _ in range(2):
+            try:
+                # Kill existing adb server to ensure that the env var is picked
+                # up, and reset any previous bad state.
+                self._run_adb_cmd(verbose=True, args=('kill-server',))
+
+                # TODO(pwang): connect_adb takes 10+ seconds on a single DUT.
+                #              Parallelize it if it becomes a bottleneck.
+                for host in self._hosts:
+                    self._connect_adb(host, pubkey_path)
+                    self._disable_adb_install_dialog(host)
+                    self._wait_for_arc_boot(host)
+                self._verify_arc_hosts()
+                return
+            except (utils.TimeoutError, error.CmdTimeoutError):
+                logging.error('Failed to set up adb connection. Retrying...')
+        raise error.TestFail('Error: Failed to set up adb connection')
 
     def _safe_makedirs(self, path):
         """Creates a directory at |path| and its ancestors.
