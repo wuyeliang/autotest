@@ -17,6 +17,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import retry
 from autotest_lib.client.cros import constants
 from autotest_lib.server import autotest
+from autotest_lib.server.cros.multimedia import assistant_facade_adapter
 from autotest_lib.server.cros.multimedia import audio_facade_adapter
 from autotest_lib.server.cros.multimedia import bluetooth_hid_facade_adapter
 from autotest_lib.server.cros.multimedia import browser_facade_adapter
@@ -333,6 +334,10 @@ class RemoteFacadeFactory(object):
         """Returns the proxy ready status"""
         return self._proxy.ready()
 
+    def create_assistant_facade(self):
+        """Creates an assistant facade object."""
+        return assistant_facade_adapter.AssistantFacadeRemoteAdapter(
+                self._client, self._proxy)
 
     def create_audio_facade(self):
         """Creates an audio facade object."""
