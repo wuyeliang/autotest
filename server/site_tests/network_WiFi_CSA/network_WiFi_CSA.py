@@ -9,9 +9,11 @@ from autotest_lib.server import site_linux_system
 from autotest_lib.server.cros.network import wifi_cell_test_base
 
 
-class network_WiFi_Regulatory(wifi_cell_test_base.WiFiCellTestBase):
+class network_WiFi_CSA(wifi_cell_test_base.WiFiCellTestBase):
     """Test that the client vacates the channel after notification
-    from the AP that it should switch channels."""
+    from the AP that it should switch channels. Note that not all clients
+    support CSA (Channel Switch Announcement), but they generally should at
+    least try to disconnect from the AP."""
     version = 1
 
 
