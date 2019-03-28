@@ -831,6 +831,18 @@ class IwRunner(object):
         return m.group(1)
 
 
+    def is_regulatory_self_managed(self):
+        """
+        Determine if any WiFi device on the system manages its own regulatory
+        info (NL80211_ATTR_WIPHY_SELF_MANAGED_REG).
+
+        @returns True if self-managed, False otherwise.
+        """
+        output = self._run('%s reg get' % self._command_iw).stdout
+        m = re.search('^phy#.*\(self-managed\)', output, re.MULTILINE)
+        return not m is None
+
+
     def wait_for_scan_result(self, interface, bsses=(), ssids=(),
                              timeout_seconds=30, wait_for_all=False):
         """Returns a list of IWBSS objects for given list of bsses or ssids.
