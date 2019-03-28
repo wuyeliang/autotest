@@ -113,19 +113,20 @@ def prepare_wakeup(seconds):
     # Make sure it is larger than or equal to 2.
     assert seconds >= 2
     wakeup_count = read_wakeup_count()
-    alarm = int(rtc.get_seconds() + seconds)
-    logging.debug('Suspend for %d seconds, wakealarm = %d', seconds, alarm)
-    rtc.set_wake_alarm(alarm)
-    return (alarm, wakeup_count)
+    estimated_alarm = int(rtc.get_seconds() + seconds)
+    logging.debug('Suspend for %d seconds, estimated wakealarm = %d',
+                  seconds, estimated_alarm)
+    return (estimated_alarm, wakeup_count)
 
 
-def check_wakeup(alarm):
+def check_wakeup(estimated_alarm):
     """Verify that the device did not wakeup early.
 
-    @param alarm: The time at which the device was expected to wake up.
+    @param estimated_alarm: The lower bound time at which the device was
+                            expected to wake up.
     """
     now = rtc.get_seconds()
-    if now < alarm:
+    if now < estimated_alarm:
         logging.error('Woke up early at %d', now)
         raise SpuriousWakeupError('Woke from suspend early')
 
@@ -156,14 +157,15 @@ def do_suspend(suspend_seconds, delay_seconds=0):
             except IOError:
                 pass
 
-    alarm, wakeup_count = prepare_wakeup(suspend_seconds)
+    estimated_alarm, wakeup_count = prepare_wakeup(suspend_seconds)
     upstart.ensure_running('powerd')
     command = ('/usr/bin/powerd_dbus_suspend --delay=%d --timeout=30 '
-               '--wakeup_count=%d') % (delay_seconds, wakeup_count)
+               '--wakeup_count=%d --wakeup_timeout=%d' %
+               (delay_seconds, wakeup_count, suspend_seconds))
     logging.info("Running '%s'", command)
     os.system(command)
-    check_wakeup(alarm)
-    return alarm
+    check_wakeup(estimated_alarm)
+    return estimated_alarm
 
 
 def suspend_bg_for_dark_resume(delay_seconds=0):
@@ -197,6 +199,7 @@ def kernel_suspend(seconds, state='mem'):
     @param state: power state to suspend to.  DEFAULT mem.
     """
     alarm, wakeup_count = prepare_wakeup(seconds)
+    rtc.set_wake_alarm(alarm)
     logging.debug('Saving wakeup count: %d', wakeup_count)
     write_wakeup_count(wakeup_count)
     try:
@@ -229,6 +232,7 @@ def idle_suspend(seconds):
     @param seconds: The number of seconds before wakeup.
     """
     alarm, _ = prepare_wakeup(seconds)
+    rtc.set_wake_alarm(alarm)
     while rtc.get_seconds() < alarm:
         time.sleep(0.2)
 
@@ -251,14 +255,15 @@ def memory_suspend(seconds, size=0):
     completed or failed. Returns the wake alarm time from the RTC as epoch.
 
     @param seconds: The number of seconds to suspend the device.
-    @param size: Amount of memory to allocate, in bytes. 
-                 Set to 0 to let memory_suspend_test determine amount of memory.   
+    @param size: Amount of memory to allocate, in bytes.
+                 Set to 0 to let memory_suspend_test determine amount of memory.
     """
     # since we cannot have utils.system_output in here, we need a workaround
     output = '/tmp/memory_suspend_output'
-    alarm, wakeup_count = prepare_wakeup(seconds)
+    estimated_alarm, wakeup_count = prepare_wakeup(seconds)
     status = os.system('/usr/bin/memory_suspend_test --wakeup_count=%d '
-                       '--size=%d > %s' % (wakeup_count, size, output))
+                       '--size=%d > %s --wakeup_timeout=%d' %
+                       (wakeup_count, size, output, seconds))
     status = os.WEXITSTATUS(status)
     if status == 2:
         logging.error('memory_suspend_test found the following errors:')
@@ -269,8 +274,8 @@ def memory_suspend(seconds, size=0):
         raise SuspendFailure('Failure in powerd_suspend during memory test')
     elif status:
         raise SuspendFailure('Unknown failure in memory_suspend_test (crash?)')
-    check_wakeup(alarm)
-    return alarm
+    check_wakeup(estimated_alarm)
+    return estimated_alarm
 
 
 def read_wakeup_count():
