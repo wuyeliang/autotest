@@ -5,6 +5,7 @@
 import difflib
 import logging
 import os
+import pprint
 import re
 import time
 
@@ -44,6 +45,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         [0x1, 'sps', 'i2cs'],
         [0x2, 'i2cs', 'sps'],
         [0x40, 'plt_rst', 'sys_rst'],
+        [0x20000, 'closed_source_set1', 'open_source_set'],
     ]
 
     def initialize(self, host, cmdline_args, full_args):
@@ -172,8 +174,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         else:
             self.exclude.append('mp')
             self.include.append('prepvt')
-        logging.info('%s brdprop 0x%x: %s', self.servo.get('ec_board'),
-                     brdprop, ', '.join(self.include))
+        logging.info('brdprop 0x%x: %s', brdprop, ', '.join(self.include))
 
 
     def run_once(self, host):
@@ -192,7 +193,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
             err.append('MISSING OUTPUT: ' + ', '.join(self.missing))
         if len(self.extra):
             err.append('EXTRA OUTPUT: ' + ', '.join(self.extra))
-        logging.info(self.past_matches)
+        logging.debug("Past matches:\n%s", pprint.pformat(self.past_matches))
 
         if len(err):
             raise error.TestFail('\t'.join(err))
