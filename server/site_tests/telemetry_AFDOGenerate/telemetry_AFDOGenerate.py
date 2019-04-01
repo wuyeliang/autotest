@@ -48,7 +48,7 @@ TELEMETRY_AFDO_BENCHMARKS = (
        '--story-filter="bouncing\\*\\|canvas\\*\\|microsoft\\*"')),
     ('octane',),
     ('kraken',),
-    ('speedometer',),
+    ('speedometer2',),
     )
 
 # Temporarily disable this benchmark because it is failing a
