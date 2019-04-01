@@ -335,14 +335,6 @@ def get_sdcard_pid():
     return utils.read_one_line(_SDCARD_PID_PATH)
 
 
-def _get_mount_passthrough_pid_internal(job_name):
-    """Returns the PID of the mount-passthrough daemon job."""
-    job_pid = get_job_pid(job_name)
-    # |job_pid| is the minijail process, the fuse process should be
-    # the only direct child of the minijail process
-    return utils.system_output('pgrep -P %s' % job_pid)
-
-
 def get_mount_passthrough_pid_list():
     """Returns PIDs of ARC mount-passthrough daemon jobs."""
     JOB_NAMES = [ 'arc-myfiles', 'arc-myfiles-default',
@@ -352,7 +344,7 @@ def get_mount_passthrough_pid_list():
     pid_list = []
     for job_name in JOB_NAMES:
         try:
-            pid = _get_mount_passthrough_pid_internal(job_name)
+            pid = get_job_pid(job_name)
             pid_list.append(pid)
         except Exception, e:
             logging.warning('Failed to find PID for %s : %s', job_name, e)
