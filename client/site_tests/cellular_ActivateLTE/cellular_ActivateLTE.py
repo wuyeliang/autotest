@@ -323,6 +323,7 @@ class cellular_ActivateLTE(test.test):
         ]
 
         for test in tests:
+            logging.info("Running sub-test %s", test.__class__.__name__)
             self.test_env = test_environment.CellularPseudoMMTestEnvironment(
                     pseudomm_args = ({'family' : '3GPP',
                                       'test-module' : TEST_MODEMS_MODULE_PATH,
