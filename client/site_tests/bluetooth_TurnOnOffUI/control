@@ -6,7 +6,8 @@ AUTHOR = "Intel"
 NAME = "bluetooth_TurnOnOffUI"
 PURPOSE = "To test the DUT state on BT turned on/off through UI"
 CRITERIA = "Fail if any hang or crash"
-ATTRIBUTES = "suite:bluetooth, suite:bluetooth_sanity"
+ATTRIBUTES = ('suite:bluetooth, suite:bluetooth_sanity,'
+              'suite:bluetooth_quicksanity')
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "Bluetooth"

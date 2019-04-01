@@ -4,7 +4,8 @@
 
 AUTHOR = 'keybuk@chromium.org'
 NAME = 'bluetooth_Sanity_DefaultState'
-ATTRIBUTES = "suite:bluetooth, suite:bluetooth_sanity"
+ATTRIBUTES = ('suite:bluetooth, suite:bluetooth_sanity,'
+              'suite:bluetooth_quicksanity')
 TIME = 'SHORT'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'Server'

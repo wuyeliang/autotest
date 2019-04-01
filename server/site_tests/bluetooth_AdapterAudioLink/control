@@ -4,7 +4,7 @@
 
 AUTHOR = 'yshavit@chromium.org'
 NAME = 'bluetooth_AdapterAudioLink'
-ATTRIBUTES = "suite:bluetooth"
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity'
 # The default net duration of the test (excluding initializations)
 # is 1 minute (12 interations of 5 seconds audio).
 # Initialization time varies, usualy it takes about 2 minutes.
