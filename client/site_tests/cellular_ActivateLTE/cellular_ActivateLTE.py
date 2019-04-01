@@ -330,7 +330,4 @@ class cellular_ActivateLTE(test.test):
                                       'test-sim-class' : 'TestSIM'},))
             with self.test_env:
                 self.pseudomm = pm_proxy.PseudoMMProxy.get_proxy()
-                # Set the reset flag to False explicitly before each test
-                # sequence starts to ignore the reset as a part of the test init
-                self.SetResetCalled(False)
                 test.Run()
