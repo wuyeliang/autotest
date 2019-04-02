@@ -63,17 +63,13 @@ class security_AltSyscall(test.test):
             logging.warning("ALT_SYSCALL not supported")
             return
 
-        case_allow = ("read", "read_write_test", 0,
+        self.run_test("read", "read_write_test", 0,
                       "Allowed system calls failed")
-        case_deny_blocked = ("mmap", "read_write_test", 2,
-                             "Blocked system calls succeeded")
-        case_deny_alt_syscall = ("alt_syscall", "read_write_test", 1,
-                                 "Changing alt_syscall table succeeded")
-        case_adjtimex = ("adjtimex", "android", 0,
-                         "android_adjtimex() filtering didn't work.")
-        case_clock_adjtime = ("clock_adjtime", "android", 0,
-                              "android_clock_adjtime() filtering didn't work.")
-
-        for case in [case_allow, case_deny_blocked, case_deny_alt_syscall,
-                     case_adjtimex, case_clock_adjtime]:
-            self.run_test(*case)
+        self.run_test("mmap", "read_write_test", 2,
+                      "Blocked system calls succeeded")
+        self.run_test("alt_syscall", "read_write_test", 1,
+                      "Changing alt_syscall table succeeded")
+        self.run_test("adjtimex", "android", 0,
+                      "android_adjtimex() filtering didn't work.")
+        self.run_test("clock_adjtime", "android", 0,
+                      "android_clock_adjtime() filtering didn't work.")
