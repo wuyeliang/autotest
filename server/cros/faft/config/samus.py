@@ -14,7 +14,7 @@ class Values(object):
     ec_capability = ['adc_ectemp', 'battery', 'charging', 'keyboard',
                      'lid', 'x86', 'usb', 'peci', 'smart_usb_charge',
                      'usbpd_uart' ]
-    firmware_screen = 12
+    firmware_screen = 15
     spi_voltage = 'pp3300'
     servo_prog_state_delay = 10
     smm_store = False
