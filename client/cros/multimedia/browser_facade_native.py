@@ -123,3 +123,15 @@ class BrowserFacadeNative(object):
         """
         return self._resource.evaluate_javascript(
                 tab_descriptor, expression, timeout)
+
+
+    def get_tab_urls(self):
+        """Gets urls from current Chrome tabs.
+
+        @returns: A list of str objects which contain urls from current Chrome
+        tabs.
+        """
+        logging.info("Getting tab objects from Chrome...")
+        tabs = self._resource.get_tabs()
+
+        return [tab.url for tab in tabs]
