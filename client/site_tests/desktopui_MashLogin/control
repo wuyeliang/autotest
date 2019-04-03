@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-AUTHOR = "jamescook@chromium.org, mustash-team@google.com"
+AUTHOR = "mustash-team@google.com"
 NAME = "desktopui_MashLogin"
 PURPOSE = "Verify chrome --enable-features=Mash starts and logs in."
 CRITERIA = "Fails if chrome --enable-features=Mash does not start."
