@@ -189,23 +189,6 @@ class cellular_ActivateLTE(test.test):
             timeout=LONG_TIMEOUT)
 
 
-    def EnsureModemStateReached(self, expected_state, timeout):
-        """
-        Asserts that the underlying modem state becomes |expected_state| within
-        |timeout|.
-
-        @param expected_state: The expected modem state.
-        @param timeout: Timeout in which the condition should be met.
-
-        """
-        utils.poll_for_condition(
-                lambda: self.GetModemState() == expected_state,
-                exception=error.TestFail(
-                        'Modem failed to reach state ' +
-                        mm1_constants.ModemStateToString(expected_state)),
-                timeout=timeout)
-
-
     def CheckServiceActivationState(self, expected_state):
         """
         Asserts that the service activation state matches |expected_state|
@@ -250,27 +233,6 @@ class cellular_ActivateLTE(test.test):
         if check_not_none and not service:
             raise error.TestError('Could not find cellular service.')
         return service
-
-
-    def FindCellularDevice(self):
-        """Returns the current cellular device."""
-        device = self.test_env.shill.find_cellular_device_object()
-        if not device:
-            raise error.TestError('Could not find cellular device.')
-        return device
-
-
-    def ResetCellularDevice(self):
-        """
-        Resets all modems, guaranteeing that the operation succeeds and doesn't
-        fail due to race conditions in pseudomodem start-up and test execution.
-
-        """
-        self.EnsureModemStateReached(
-                mm1_constants.MM_MODEM_STATE_ENABLED, SHORT_TIMEOUT)
-        self.test_env.shill.reset_modem(self.FindCellularDevice())
-        self.EnsureModemStateReached(
-                mm1_constants.MM_MODEM_STATE_ENABLED, SHORT_TIMEOUT)
 
 
     def run_once(self):
