@@ -173,6 +173,7 @@ def _create_test_task(test_spec, suite_id=None,
         '-board', test_spec.board,
         '-image', test_spec.build,
         '-service-account-json', os.environ['SWARMING_CREDS'],
+        '-timeout-mins', str(test_spec.execution_timeout_mins),
         ]
     if _is_dev():
         cmd += ['-dev']
@@ -189,6 +190,7 @@ def _create_test_task(test_spec, suite_id=None,
         cmd += ['-qs-account', test_spec.quota_account]
     if test_spec.test.test_type.lower() == 'client':
         cmd += ['-client-test']
+
 
     tags = _compute_tags(test_spec.build, suite_id)
     dimensions = _compute_dimensions(

@@ -84,7 +84,7 @@ TestSpec = collections.namedtuple(
                 'dut_name',
                 'expiration_secs',
                 'grace_period_secs',
-                'execution_timeout_secs',
+                'execution_timeout_mins',
                 'io_timeout_secs',
                 'quota_account',
         ])
@@ -373,7 +373,7 @@ class Suite(object):
                 keyvals=keyvals,
                 expiration_secs=self.timeout_mins * 60,
                 grace_period_secs=swarming_lib.DEFAULT_TIMEOUT_SECS,
-                execution_timeout_secs=self.timeout_mins * 60,
+                execution_timeout_mins=self.timeout_mins,
                 io_timeout_secs=swarming_lib.DEFAULT_TIMEOUT_SECS,
                 quota_account=self.quota_account,
         )
