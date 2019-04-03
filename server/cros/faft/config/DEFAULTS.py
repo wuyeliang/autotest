@@ -93,3 +93,7 @@ class Values(object):
 
     # True if AP can access the EC flash while Chrome OS is running
     ap_access_ec_flash = True
+
+    # True if the device supports power_state:rec_force_mrc, which forces memory
+    # retraining in recovery mode
+    rec_force_mrc = True

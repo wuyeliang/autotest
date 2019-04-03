@@ -24,3 +24,6 @@ class Values(object):
     # Depthcharge USB stack can drop keys that come in too fast and get stuck
     # exiting developer mode if the delay for confirmation screen is too short.
     confirm_screen = 11
+    # There is no key sequence to force memory retraining.
+    # TODO(b/129864818): Check if there is an alternate way to do this.
+    rec_force_mrc = False

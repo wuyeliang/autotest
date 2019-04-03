@@ -27,6 +27,10 @@ class firmware_RecoveryCacheBootKeys(FirmwareTest):
     def initialize(self, host, cmdline_args, dev_mode=False):
         super(firmware_RecoveryCacheBootKeys, self).initialize(
                 host, cmdline_args)
+
+        if not self.faft_config.rec_force_mrc:
+            raise error.TestNAError('DUT cannot force memory training.')
+
         self.client = host
         self.dev_mode = dev_mode
         self.switcher.setup_mode('dev' if dev_mode else 'normal')
