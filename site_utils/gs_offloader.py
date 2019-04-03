@@ -112,7 +112,14 @@ GS_OFFLOADER_MULTIPROCESSING = global_config.global_config.get_config_value(
 D = '[0-9][0-9]'
 TIMESTAMP_PATTERN = '%s%s.%s.%s_%s.%s.%s' % (D, D, D, D, D, D, D)
 CTS_RESULT_PATTERN = 'testResult.xml'
+CTS_COMPRESSED_RESULT_PATTERN = 'testResult.xml.tgz'
 CTS_V2_RESULT_PATTERN = 'test_result.xml'
+CTS_V2_COMPRESSED_RESULT_PATTERN = 'test_result.xml.tgz'
+
+CTS_COMPRESSED_RESULT_TYPES = {
+        CTS_COMPRESSED_RESULT_PATTERN: CTS_RESULT_PATTERN,
+        CTS_V2_COMPRESSED_RESULT_PATTERN: CTS_V2_RESULT_PATTERN}
+
 # Google Storage bucket URI to store results in.
 DEFAULT_CTS_RESULTS_GSURI = global_config.global_config.get_config_value(
         'CROS', 'cts_results_server', default='')
@@ -391,7 +398,9 @@ def _upload_cts_testresult(dir_entry, multiprocessing):
         gts_v2_path = os.path.join(host, 'cheets_GTS*', 'results', '*',
                                    TIMESTAMP_PATTERN)
         for result_path, result_pattern in [(cts_path, CTS_RESULT_PATTERN),
+                            (cts_path, CTS_COMPRESSED_RESULT_PATTERN),
                             (cts_v2_path, CTS_V2_RESULT_PATTERN),
+                            (cts_v2_path, CTS_V2_COMPRESSED_RESULT_PATTERN),
                             (gts_v2_path, CTS_V2_RESULT_PATTERN)]:
             for path in glob.glob(result_path):
                 try:
@@ -507,6 +516,24 @@ def _upload_files(host, path, result_pattern, multiprocessing,
         for test_result_file in glob.glob(os.path.join(path, result_pattern)):
             # gzip test_result_file(testResult.xml/test_result.xml)
 
+            test_result_tgz_file = ''
+            if test_result_file.endswith('tgz'):
+                # Extract .xml file from tgz file for better handling in the
+                # CTS dashboard pipeline.
+                # TODO(rohitbm): work with infra team to produce .gz file so
+                # tgz to gz middle conversion is not needed.
+                try:
+                    with tarfile.open(test_result_file, 'r:gz') as tar_file:
+                        tar_file.extract(
+                                CTS_COMPRESSED_RESULT_TYPES[result_pattern])
+                        test_result_tgz_file = test_result_file
+                        test_result_file = os.path.join(path,
+                                CTS_COMPRESSED_RESULT_TYPES[result_pattern])
+                except tarfile.ReadError as error:
+                    logging.debug(error)
+                except KeyError as error:
+                    logging.debug(error)
+
             test_result_file_gz =  '%s.gz' % test_result_file
             with open(test_result_file, 'r') as f_in, (
                     gzip.open(test_result_file_gz, 'w')) as f_out:
@@ -517,6 +544,9 @@ def _upload_files(host, path, result_pattern, multiprocessing,
                           test_result_file_gz, test_result_gs_path)
             # Remove test_result_file_gz(testResult.xml.gz/test_result.xml.gz)
             os.remove(test_result_file_gz)
+            # Remove extracted test_result.xml file.
+            if test_result_tgz_file:
+               os.remove(test_result_file)
 
 
 def _emit_gs_returncode_metric(returncode):

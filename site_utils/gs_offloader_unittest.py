@@ -11,6 +11,7 @@ import shutil
 import signal
 import stat
 import sys
+import tarfile
 import tempfile
 import time
 import unittest
@@ -793,7 +794,9 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
 
         path_pattern_pair = [(timestamp_cts_folder, gs_offloader.CTS_RESULT_PATTERN),
                              (timestamp_cts_folder_2, gs_offloader.CTS_RESULT_PATTERN),
+                             (timestamp_cts_folder_2, gs_offloader.CTS_COMPRESSED_RESULT_PATTERN),
                              (timestamp_cts_v2_folder, gs_offloader.CTS_V2_RESULT_PATTERN),
+                             (timestamp_cts_v2_folder, gs_offloader.CTS_V2_COMPRESSED_RESULT_PATTERN),
                              (timestamp_gts_folder, gs_offloader.CTS_V2_RESULT_PATTERN)]
 
         # Create timestamp.zip file_path.
@@ -806,15 +809,29 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
         cts_result_file = os.path.join(timestamp_cts_folder, 'testResult.xml')
         cts_result_file_2 = os.path.join(timestamp_cts_folder_2,
                                          'testResult.xml')
+        cts_result_compressed_file_2 = os.path.join(timestamp_cts_folder_2,
+                                                     'testResult.xml.tgz')
         gts_result_file = os.path.join(timestamp_gts_folder, 'test_result.xml')
         cts_v2_result_file = os.path.join(timestamp_cts_v2_folder,
                                          'test_result.xml')
+        cts_v2_result_compressed_file = os.path.join(timestamp_cts_v2_folder,
+                                         'test_result.xml.tgz')
 
         for file_path in [cts_zip_file, cts_zip_file_2, cts_v2_zip_file,
                           gts_zip_file, cts_result_file, cts_result_file_2,
-                          gts_result_file, cts_v2_result_file]:
-            with open(file_path, 'w') as f:
-                f.write('test')
+                          cts_result_compressed_file_2, gts_result_file,
+                          cts_v2_result_file, cts_v2_result_compressed_file]:
+          if file_path.endswith('tgz'):
+              test_result_file = gs_offloader.CTS_COMPRESSED_RESULT_TYPES[
+                      os.path.basename(file_path)]
+              with open(test_result_file, 'w') as f:
+                  f.write('test')
+              with tarfile.open(file_path, 'w:gz') as tar_file:
+                  tar_file.add(test_result_file)
+              os.remove(test_result_file)
+          else:
+              with open(file_path, 'w') as f:
+                  f.write('test')
 
         return (results_folder, host_folder, path_pattern_pair)
 
