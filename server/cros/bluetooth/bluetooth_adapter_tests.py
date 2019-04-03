@@ -1031,7 +1031,8 @@ class BluetoothAdapterTests(test.test):
                 'disconnection_seen_by_adapter': disconnection_seen_by_adapter}
         return all(self.results.values())
 
-    @_test_retry_and_log
+
+    @_test_retry_and_log(False)
     def test_device_is_connected(self, device_address):
         """Test that device address given is currently connected.
 
@@ -1039,8 +1040,8 @@ class BluetoothAdapterTests(test.test):
 
         @returns: True if the device is connected.
                   False otherwise.
-
         """
+
         def _is_connected():
             """Test if device is connected.
 
@@ -1060,13 +1061,55 @@ class BluetoothAdapterTests(test.test):
                         condition=_is_connected,
                         timeout=self.ADAPTER_CONNECTION_TIMEOUT_SECS,
                         sleep_interval=self.ADAPTER_PAIRING_POLLING_SLEEP_SECS,
-                        desc='Waiting for connection to %s' % device_address)
+                        desc='Waiting to check connection to %s' %
+                              device_address)
                 connected = True
             except utils.TimeoutError as e:
                 logging.error('%s: %s', method_name, e)
             except:
                 logging.error('%s: unexpected error', method_name)
         self.results = {'has_device': has_device, 'connected': connected}
+        return all(self.results.values())
+
+
+    @_test_retry_and_log(False)
+    def test_device_is_not_connected(self, device_address):
+        """Test that device address given is NOT currently connected.
+
+        @param device_address: Address of the device.
+
+        @returns: True if the device is NOT connected.
+                  False otherwise.
+
+        """
+
+        def _is_not_connected():
+            """Test if device is not connected.
+
+            @returns: True if device is not connected. False otherwise.
+
+            """
+            return not self.bluetooth_facade.device_is_connected(
+                    device_address)
+
+
+        method_name = 'test_device_is_not_connected'
+        if self.bluetooth_facade.has_device(device_address):
+            try:
+                utils.poll_for_condition(
+                        condition=_is_not_connected,
+                        timeout=self.ADAPTER_CONNECTION_TIMEOUT_SECS,
+                        sleep_interval=self.ADAPTER_PAIRING_POLLING_SLEEP_SECS,
+                        desc='Waiting to check connection to %s' %
+                              device_address)
+                not_connected = True
+            except utils.TimeoutError as e:
+                logging.error('%s: %s', method_name, e)
+            except:
+                logging.error('%s: unexpected error', method_name)
+        else:
+            not_connected = True
+        self.results = {'not_connected': not_connected}
         return all(self.results.values())
 
 

@@ -1,0 +1,40 @@
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+from autotest_lib.server import utils
+
+AUTHOR = 'chromeos-chameleon'
+NAME = 'bluetooth_AdapterLEHIDSanity'
+PURPOSE = ('package of Bluetooth LE HID sanity tests')
+CRITERIA = 'Pass all sanity test'
+ATTRIBUTES = 'suite:bluetooth'
+TIME = 'MEDIUM'
+TEST_CATEGORY = 'Functional'
+TEST_CLASS = 'bluetooth'
+TEST_TYPE = 'server'
+DEPENDENCIES = 'bluetooth, chameleon:ble, nRF52'
+
+DOC = """
+    A package of Bluetooth LE HID sanity tests
+
+    This test is written as a package of tests in order to reduce test time,
+    since auto-test ramp up time is costy.
+    Between each two test, the method _cleanup_and_restart is called to
+    restart both peer and DUT. The HID device type can be selected per test
+    using this method.
+    At the end of each test, the method _update_test_result is called to track
+    test results.
+    At the end of the package, _print_test_results is called to print a summary
+    of the test results.
+    """
+
+args_dict = utils.args_to_dict(args)
+chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
+
+def run(machine):
+    host = hosts.create_host(machine, chameleon_args=chameleon_args)
+    job.run_test('bluetooth_AdapterLEHIDSanity', host=host,
+                  num_iterations=1)
+
+parallel_simple(run, machines)
