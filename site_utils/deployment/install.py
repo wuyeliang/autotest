@@ -893,11 +893,11 @@ def install_duts(arguments):
             gspath = _get_upload_log_path(arguments)
             sys.stderr.write('Logs will be uploaded to %s\n' % (gspath,))
             _upload_logs(arguments.logdir, gspath)
-        except Exception as e:
+        except Exception:
             upload_failure_log_path = os.path.join(arguments.logdir,
                                                    'gs_upload_failure.log')
-            with open(upload_failure_log_path, 'w') as file:
-                traceback.print_exc(limit=None, file=file)
+            with open(upload_failure_log_path, 'w') as file_:
+                traceback.print_exc(limit=None, file=file_)
             sys.stderr.write('Failed to upload logs;'
                              ' failure details are stored in {}.\n'
                              .format(upload_failure_log_path))
