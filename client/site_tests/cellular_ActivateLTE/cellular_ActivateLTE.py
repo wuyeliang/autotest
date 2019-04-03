@@ -62,11 +62,6 @@ class ActivationTest(object):
         self.Cleanup()
 
 
-    def TestModemClass(self):
-        """ Returns the name of the custom modem to use for this test. """
-        raise NotImplementedError()
-
-
     def RunTest(self):
         """
         Runs the body of the test. Should be implemented by the subclass.
@@ -80,10 +75,6 @@ class ActivationResetTest(ActivationTest):
     This test verifies that the modem resets after online payment.
 
     """
-    def TestModemClass(self):
-        return 'TestModem'
-
-
     def RunTest(self):
         # Service should appear as 'not-activated'.
         self.test.CheckServiceActivationState('not-activated')
@@ -97,35 +88,6 @@ class ActivationResetTest(ActivationTest):
         service.CompleteCellularActivation()
         time.sleep(SHORT_TIMEOUT)
         self.test.CheckResetCalled(True)
-
-
-class ActivationCompleteTest(ActivationTest):
-    """
-    This test verifies that the service eventually becomes 'activated' in the
-    case of a post-payment registration and the modem finally registers
-    to a network after a reset.
-
-    """
-    def TestModemClass(self):
-        return 'ResetRequiredForActivationModem'
-
-
-    def RunTest(self):
-        # Service should appear as 'not-activated'.
-        self.test.CheckServiceActivationState('not-activated')
-        self.test.CheckResetCalled(False)
-
-        # Call 'CompleteActivation' on the device. The service will become
-        # 'activating' and the modem should reset immediately.
-        # Not checking for the intermediate 'activating' state because it makes
-        # the test too fragile
-        service = self.test.FindCellularService()
-        service.CompleteCellularActivation()
-        time.sleep(SHORT_TIMEOUT)
-        self.test.CheckResetCalled(True)
-
-        # The service should register and be marked as 'activated'.
-        self.test.CheckServiceActivationState('activated')
 
 
 class ActivationDueToMdnTest(ActivationTest):
@@ -134,10 +96,6 @@ class ActivationDueToMdnTest(ActivationTest):
     as 'activated' when the modem is in unknown subscription state.
 
     """
-    def TestModemClass(self):
-        return 'TestModem'
-
-
     def RunTest(self):
         # Service should appear as 'not-activated'.
         self.test.CheckServiceActivationState('not-activated')
@@ -318,7 +276,6 @@ class cellular_ActivateLTE(test.test):
     def run_once(self):
         tests = [
             ActivationResetTest(self),
-            ActivationCompleteTest(self),
             ActivationDueToMdnTest(self),
         ]
 
@@ -327,7 +284,7 @@ class cellular_ActivateLTE(test.test):
             self.test_env = test_environment.CellularPseudoMMTestEnvironment(
                     pseudomm_args = ({'family' : '3GPP',
                                       'test-module' : TEST_MODEMS_MODULE_PATH,
-                                      'test-modem-class' : test.TestModemClass(),
+                                      'test-modem-class' : 'TestModem',
                                       'test-sim-class' : 'TestSIM'},))
             with self.test_env:
                 self.pseudomm = pm_proxy.PseudoMMProxy.get_proxy()
