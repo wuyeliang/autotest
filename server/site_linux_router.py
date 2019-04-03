@@ -973,7 +973,7 @@ class LinuxRouter(site_linux_system.LinuxSystem):
         @param client_mac string containing the mac address of the client.
         @param neighbor_list list of strings containing mac addresses of
                candidate APs.
-        @return bool True if BSS_TM_REQ is sent successfully.
+        @return string reply received from command
 
         """
         control_if = self.hostapd_instances[0].config_dict['ctrl_interface']
@@ -981,9 +981,7 @@ class LinuxRouter(site_linux_system.LinuxSystem):
                    (self.cmd_hostapd_cli, control_if, client_mac,
                     ',0,0,0,0 neighbor='.join(neighbor_list)))
         ret = self.router.run(command).stdout
-        if ret.splitlines()[-1] != 'OK':
-            return False
-        return True
+        return ret.splitlines()[-1]
 
     def _prep_probe_response_footer(self, footer):
         """Write probe response footer temporarily to a local file and copy
