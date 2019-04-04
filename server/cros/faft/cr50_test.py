@@ -20,6 +20,7 @@ class Cr50Test(FirmwareTest):
     """Base class that sets up helper objects/functions for cr50 tests."""
     version = 1
 
+    RESPONSE_TIMEOUT = 180
     CR50_GS_URL = 'gs://chromeos-localmirror-private/distfiles/chromeos-cr50-%s/'
     CR50_DEBUG_FILE = '*/cr50_dbg_%s.bin'
     CR50_PROD_FILE = 'cr50.%s.bin.prod'
@@ -101,6 +102,7 @@ class Cr50Test(FirmwareTest):
     def after_run_once(self):
         """Log which iteration just ran"""
         logging.info('successfully ran iteration %d', self.iteration)
+        self._confirm_dut_is_pingable()
 
 
     def _save_node_locked_dev_image(self, cr50_dev_path):
@@ -410,6 +412,18 @@ class Cr50Test(FirmwareTest):
 
         # Log any flash operation errors.
         logging.info('do_flash_op count: %d', flash_error_count)
+
+
+    def _confirm_dut_is_pingable(self):
+        """Reset the DUT if it doesn't respond to ping"""
+        logging.info('checking dut state')
+        end_time = time.time() + self.RESPONSE_TIMEOUT
+        while not self.host.is_up_fast():
+            if time.time() > end_time:
+                raise error.TestFail('DUT is unresponsive')
+            self.servo.get_power_state_controller().reset()
+            logging.info('DUT did not respond. Resetting it.')
+            time.sleep(self.faft_config.delay_reboot_to_ping)
 
 
     def _restore_cr50_state(self):
