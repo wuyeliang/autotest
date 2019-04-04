@@ -82,8 +82,7 @@ class MasterSsh(object):
             # Start a new master SSH connection.
             if not self._master_job:
                 # Create a shared socket in a temp location.
-                self._master_tempdir = autotemp.tempdir(
-                        unique_id='ssh-master', dir='/tmp')
+                self._master_tempdir = autotemp.tempdir(dir=_short_tmpdir())
 
                 # Start the master SSH connection in the background.
                 master_cmd = _MASTER_SSH_COMMAND_TEMPLATE % {
@@ -166,3 +165,14 @@ class ConnectionPool(object):
         """Closes all ssh multiplex connections."""
         for ssh in self._pool.itervalues():
             ssh.close()
+
+
+def _short_tmpdir():
+    # crbug/865171 Unix domain socket paths are limited to 108 characters.
+    # crbug/945523 Swarming does not like too many top-level directories in
+    # /tmp.
+    # So use a shared parent directory in /tmp
+    d = '/tmp/ssh-master'
+    if not os.path.exists(d):
+        os.mkdir(d)
+    return d
