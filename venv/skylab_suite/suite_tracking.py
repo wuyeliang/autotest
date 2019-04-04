@@ -91,6 +91,9 @@ def _get_failed_test_views_from_tko(task_ids):
     except mysql.connector.Error:
         logging.exception('Failed to obtain failure reasons from TKO')
         return {}
+    finally:
+        _close_ignoring_errors(conn)
+
     return {k: tko_test_views.filter_failed(v) for k, v in views.iteritems()}
 
 
@@ -115,6 +118,13 @@ def _new_tko_connection():
     except mysql.connector.Error:
         logging.exception('Failed to connect to TKO database')
         return None
+
+
+def _close_ignoring_errors(conn):
+    try:
+        conn.close()
+    except:
+        pass
 
 
 def _print_task_result_link_annotation(task_id, text):
