@@ -224,7 +224,7 @@ class SwarmingBot(object):
 
         logging.info('Download bot code from %s', url)
         urllib.urlretrieve(url, dest)
-        cmd = [sys.executable, self.BOT_FILENAME]
+        cmd = [sys.executable, self.BOT_FILENAME, 'start_bot']
         logging.debug('[Bot %s] Calling command: %s', self. bot_id, cmd)
         process = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
