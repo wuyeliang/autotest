@@ -142,6 +142,9 @@ def _get_job_idxs_from_tko(conn, task_ids):
     task_runs = {}
     run_ids = []
     for task_id in task_ids:
+        # Skylab task results have used both request ID and run ID due to log
+        # directory naming changes. So try both. See crbug/937432.
+        run_ids.append(task_id)
         run_ids += _run_ids_for_request(task_id)
         task_runs[task_id] = list(reversed(run_ids))
     run_job_idxs = _get_job_idxs_for_run_ids(conn, run_ids)
