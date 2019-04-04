@@ -391,7 +391,7 @@ def setup_logging():
             },
         },
         'root': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'handlers': ['screen'],
         },
         'disable_existing_loggers': False,
