@@ -108,3 +108,7 @@ class Values(object):
     # True if the EC will send short power button presses, such as those
     # expected during CCD open, to the AP.
     ec_forwards_short_pp_press = False
+
+    # Length of serial number that can be set in firmware; if serial number
+    # cannot be set then 0
+    serial_number_length = 0

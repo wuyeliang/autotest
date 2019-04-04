@@ -29,3 +29,4 @@ class Values(object):
     rec_force_mrc = False
     ap_up_after_cr50_reboot = False
     ec_forwards_short_pp_press = True
+    serial_number_length = 7
