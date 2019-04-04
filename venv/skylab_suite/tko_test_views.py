@@ -9,6 +9,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import logging
 import collections
 import contextlib
 import mysql.connector
@@ -118,11 +119,10 @@ def _get_rows_from_tko(conn, tko_job_ids):
             WHERE invalid = 0 AND job_idx IN (%s)
     """
     q = _GET_TKO_TEST_VIEW_2 % ', '.join(['%s'] * len(tko_job_ids))
-    with _cursor(conn) as cursor:
-        cursor.execute(q, tko_job_ids)
-        for job_idx, name, s_idx, reason in cursor.fetchall():
-            job_rows[job_idx].append(
-                    Row(name, statuses.get(s_idx, 'UNKNOWN'), reason))
+    r = _run_query(conn, q, tko_job_ids)
+    for job_idx, name, s_idx, reason in r:
+        job_rows[job_idx].append(
+                Row(name, statuses.get(s_idx, 'UNKNOWN'), reason))
     return dict(job_rows)
 
 
@@ -170,23 +170,20 @@ def _get_job_idxs_for_run_ids(conn, run_ids):
     q = _GET_TKO_JOB_Q % ', '.join(['%s'] * len(run_ids))
 
     job_idxs = {}
-    with _cursor(conn) as cursor:
-        cursor.execute(q, run_ids)
-        for run_id, tko_job_idx in cursor.fetchall():
-            if run_id in job_idxs:
-                raise Error('task run ID %s has multiple tko references' %
-                            (run_id,))
-            job_idxs[run_id] = tko_job_idx
+    r = _run_query(conn, q, run_ids)
+    for run_id, tko_job_idx in r:
+        if run_id in job_idxs:
+            raise Error('task run ID %s has multiple tko references' %
+                        (run_id,))
+        job_idxs[run_id] = tko_job_idx
     return job_idxs
 
 
 def _get_status_map(conn):
     statuses = {}
-    with _cursor(conn) as cursor:
-        cursor.execute('SELECT status_idx, word FROM tko_status')
-        r = cursor.fetchall()
-        for idx, word in r:
-            statuses[idx] = word
+    r = _run_query(conn, 'SELECT status_idx, word FROM tko_status')
+    for idx, word in r:
+        statuses[idx] = word
     return statuses
 
 
@@ -204,6 +201,15 @@ def _cursor(conn):
     finally:
         c.close()
 
+
+def _run_query(conn, q, args=None):
+    logging.debug('tko: running query %s with args %s', q, args)
+    with _cursor(conn) as cursor:
+        if args is not None:
+            cursor.execute(q, args)
+        else:
+            cursor.execute(q)
+        return cursor.fetchall()
 
 if __name__ == '__main__':
   main()
