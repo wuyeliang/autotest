@@ -35,6 +35,9 @@ def get(conn, task_ids):
     """
     try:
         task_job_ids = _get_job_idxs_from_tko(conn, task_ids)
+        if not task_job_ids:
+            return {}
+
         job_task_ids = {v: k for k, v in task_job_ids.iteritems()}
         job_rows = _get_rows_from_tko(conn, job_task_ids.keys())
         return {job_task_ids[k]: v for k, v in job_rows.iteritems()}
