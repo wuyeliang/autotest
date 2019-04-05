@@ -43,7 +43,11 @@ def print_child_test_annotations(suite_handler):
         for task_id, hspec in suite_handler.task_to_test_maps.iteritems():
             anchor_test = hspec.test_spec.test.name
             if suite_handler.is_provision():
-                anchor_test += '-' + hspec.test_spec.dut_name
+                # TODO(akeshet): Pull the dut name off of the completed swarming
+                # task information, and use that as anchor text instead of
+                # "dummy_Pass". This used to come from the test_spec, but
+                # test_spec is no longer DUT-specific.
+                pass
 
             show_text = '[Test-logs]: %s' % anchor_test
             _print_task_result_link_annotation(task_id, show_text)
@@ -295,7 +299,10 @@ def _parse_test_results(suite_handler):
         logging.info('Parsing task results of %s', task_id)
         test_handler_spec = suite_handler.get_test_by_task_id(task_id)
         name = test_handler_spec.test_spec.test.name
-        dut_name = test_handler_spec.test_spec.dut_name
+        # TODO(akeshet): If this is a provision suite, pull dut_name off of the
+        # completed swarming task information. This used to come from the test
+        # spec, but test specs are no longer dut-specific.
+        dut_name = ''
         retry_count = len(test_handler_spec.previous_retried_ids)
         all_task_ids = test_handler_spec.previous_retried_ids + [task_id]
         state = swarming_lib.get_task_final_state(child_task)

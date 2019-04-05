@@ -191,18 +191,6 @@ def get_task_final_state(task):
 
     return state
 
-
-def get_task_dut_name(task_dimensions):
-    """Get the DUT name of running this task.
-
-    @param task_dimensions: a list of dict, e.g. [{'key': k, 'value': v}, ...]
-    """
-    for dimension in task_dimensions:
-        if dimension['key'] == 'dut_name':
-            return dimension['value'][0]
-
-    return ''
-
 def bot_available(bot):
     """Check whether a bot is available.
 
