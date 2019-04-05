@@ -448,7 +448,7 @@ class ProvisionSuite(Suite):
                     self.board, self.pool, available_bots_num,
                     self._num_required)
 
-        return [dummy_test] * max(self._num_required, available_bots_num)
+        return [dummy_test] * self._num_required
 
     def _get_test_specs(self, tests, available_bots, keyvals):
         test_specs = []
