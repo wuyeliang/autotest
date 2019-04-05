@@ -219,6 +219,14 @@ class SuiteHandler(object):
         return (len(finished_tasks) == len(self._active_child_tasks)
                 and not self.retried_tasks)
 
+    def _any_task_succeeded(self):
+        """Determines if any child completed with success."""
+        for t in self._active_child_tasks:
+            if (swarming_lib.get_task_final_state(t) ==
+                swarming_lib.TASK_COMPLETED_SUCCESS):
+                return True
+        return False
+
     def _set_successful_provisioned_duts(self):
         """Set successfully provisioned duts."""
         for t in self._active_child_tasks:
@@ -241,9 +249,8 @@ class SuiteHandler(object):
     def is_finished_waiting(self):
         """Check whether the suite should finish its waiting."""
         if self.is_provision():
-            self._set_successful_provisioned_duts()
-            return (self.is_provision_successfully_finished() or
-                    self._check_all_tasks_finished())
+            if self._any_task_succeeded():
+                return True
 
         return self._check_all_tasks_finished()
 
