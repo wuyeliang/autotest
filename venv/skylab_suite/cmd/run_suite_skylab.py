@@ -40,10 +40,10 @@ def _parse_suite_handler_spec(options):
             provision_num_required=provision_num_required)
 
 
-def _should_run(suite_spec):
+def _should_run(swarming_client, suite_spec):
     tags = {'build': suite_spec.test_source_build,
             'suite': suite_spec.suite_name}
-    tasks = swarming_lib.query_task_by_tags(tags)
+    tasks = swarming_client.query_task_by_tags(tags)
     current_task_id = suite_tracking.get_task_id_for_task_summaries(
             os.environ.get('SWARMING_TASK_ID'))
     logging.info('The current task id is: %s', current_task_id)
@@ -61,7 +61,7 @@ def _run_suite(options):
     logging.info('Kicked off suite %s', options.suite_name)
     suite_spec = suite_parser.parse_suite_spec(options)
     if options.pre_check:
-        extra_task_ids = _should_run(suite_spec)
+        extra_task_ids = _should_run(swarming_client, suite_spec)
         if extra_task_ids:
             logging.info(
                     'The same suites are already run in the past: \n%s',
