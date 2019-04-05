@@ -65,32 +65,6 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
       self._services.restore_services()
     super(graphics_GLBench, self).cleanup()
 
-  def report_temperature(self, keyname):
-    """Report current max observed temperature with given keyname.
-
-    @param keyname: key to be used when reporting perf value.
-    """
-    temperature = utils.get_temperature_input_max()
-    logging.info('%s = %f degree Celsius', keyname, temperature)
-    self.output_perf_value(
-        description=keyname,
-        value=temperature,
-        units='Celsius',
-        higher_is_better=False)
-
-  def report_temperature_critical(self, keyname):
-    """Report temperature at which we will see throttling with given keyname.
-
-    @param keyname: key to be used when reporting perf value.
-    """
-    temperature = utils.get_temperature_critical()
-    logging.info('%s = %f degree Celsius', keyname, temperature)
-    self.output_perf_value(
-        description=keyname,
-        value=temperature,
-        units='Celsius',
-        higher_is_better=False)
-
   def is_no_checksum_test(self, testname):
     """Check if given test requires no screenshot checksum.
 
@@ -149,14 +123,14 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
                             stdout_tee=utils.TEE_TO_LOGS,
                             stderr_tee=utils.TEE_TO_LOGS).stdout
       else:
-        self.report_temperature_critical('temperature_critical')
-        self.report_temperature('temperature_1_start')
+        utils.report_temperature_critical(self, 'temperature_critical')
+        utils.report_temperature(self, 'temperature_1_start')
         # Wrap the test run inside of a PerfControl instance to make machine
         # behavior more consistent.
         with perf.PerfControl() as pc:
           if not pc.verify_is_valid():
             raise error.TestFail('Failed: %s' % pc.get_error_reason())
-          self.report_temperature('temperature_2_before_test')
+          utils.report_temperature(self, 'temperature_2_before_test')
 
           # Run the test. If it gets the CPU too hot pc should notice.
           summary = utils.run(cmd,
@@ -279,7 +253,7 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
         f.write('# unknown [' + imagefile + '] (setting perf as -2.0)\n')
     f.close()
     if not hasty:
-      self.report_temperature('temperature_3_after_test')
+      utils.report_temperature(self, 'temperature_3_after_test')
       self.write_perf_keyval(keyvals)
 
     # Raise exception if images don't match.

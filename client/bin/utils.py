@@ -1758,6 +1758,36 @@ def wait_for_cool_machine():
     return False
 
 
+def report_temperature(test, keyname):
+    """Report current max observed temperature with given keyname.
+
+    @param test: autotest_lib.client.bin.test.test instance
+    @param keyname: key to be used when reporting perf value.
+    """
+    temperature = get_temperature_input_max()
+    logging.info('%s = %f degree Celsius', keyname, temperature)
+    test.output_perf_value(
+        description=keyname,
+        value=temperature,
+        units='Celsius',
+        higher_is_better=False)
+
+
+def report_temperature_critical(test, keyname):
+    """Report temperature at which we will see throttling with given keyname.
+
+    @param test: autotest_lib.client.bin.test.test instance
+    @param keyname: key to be used when reporting perf value.
+    """
+    temperature = get_temperature_critical()
+    logging.info('%s = %f degree Celsius', keyname, temperature)
+    test.output_perf_value(
+        description=keyname,
+        value=temperature,
+        units='Celsius',
+        higher_is_better=False)
+
+
 # System paths for machine performance state.
 _CPUINFO = '/proc/cpuinfo'
 _DIRTY_WRITEBACK_CENTISECS = '/proc/sys/vm/dirty_writeback_centisecs'
