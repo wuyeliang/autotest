@@ -227,16 +227,6 @@ class SuiteHandler(object):
                 return True
         return False
 
-    def _set_successful_provisioned_duts(self):
-        """Set successfully provisioned duts."""
-        for t in self._active_child_tasks:
-            if (swarming_lib.get_task_final_state(t) ==
-                swarming_lib.TASK_COMPLETED_SUCCESS):
-                dut_name = self.get_test_by_task_id(
-                        t['task_id']).test_spec.dut_name
-                if dut_name:
-                    self.successfully_provisioned_duts.add(dut_name)
-
     def is_provision_successfully_finished(self):
         """Check whether provision succeeds."""
         logging.info('Found %d successfully provisioned duts, '
