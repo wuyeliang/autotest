@@ -37,19 +37,39 @@ class logging_CrashSender(crash_test.CrashTest):
             raise error.TestFail('Expected hwclass %s in output' % hwclass)
 
 
+    def _check_send_result(self, result, report_kind, payload_name,
+                           exec_name):
+        if result['report_exists']:
+            raise error.TestFail('Test report was not deleted after sending')
+        if result['rate_count'] != 1:
+            raise error.TestFail('Rate limit was not updated properly: #%d' %
+                                 result['rate_count'])
+        if not result['send_attempt']:
+            raise error.TestFail('Sender did not attempt the send')
+        if not result['send_success']:
+            raise error.TestFail('Send did not complete successfully')
+        if (result['sleep_time'] < 0 or
+            result['sleep_time'] >= _SECONDS_SEND_SPREAD):
+            raise error.TestFail('Sender did not sleep for an appropriate '
+                                 'amount of time: #%d' % result['sleep_time'])
+        if result['report_kind'] != report_kind:
+            raise error.TestFail('Incorrect report kind "%s", expected "%s"',
+                                 result['report_kind'], report_kind)
+        desired_payload = self.get_crash_dir_name(payload_name)
+        if result['report_payload'] != desired_payload:
+            raise error.TestFail('Payload filename was incorrect, got "%s", '
+                                 'expected "%s"', result['report_payload'],
+                                 desired_payload)
+        if result['exec_name'] != exec_name:
+            raise error.TestFail('ExecName was incorrect, expected "%s", '
+                                 'got "%s"', exec_name, result['exec_name'])
+
+
     def _check_simple_minidump_send(self, report, log_path=None):
         result = self._call_sender_one_crash(report=report)
-        if (result['report_exists'] or
-            result['rate_count'] != 1 or
-            not result['send_attempt'] or
-            not result['send_success'] or
-            result['sleep_time'] < 0 or
-            result['sleep_time'] >= _SECONDS_SEND_SPREAD or
-            result['report_kind'] != 'minidump' or
-            result['report_payload'] != self.get_crash_dir_name(
-                '%s.dmp' % self._FAKE_TEST_BASENAME) or
-            result['exec_name'] != 'fake' or
-            not 'Version: my_ver' in result['output']):
+        self._check_send_result(result, 'minidump',
+                                '%s.dmp' % self._FAKE_TEST_BASENAME, 'fake')
+        if (not 'Version: my_ver' in result['output']):
             raise error.TestFail('Simple minidump send failed')
         if log_path and not ('log: @%s' % log_path) in result['output']:
             raise error.TestFail('Minidump send missing log')
@@ -108,17 +128,8 @@ class logging_CrashSender(crash_test.CrashTest):
                              'kernel',
                              kcrash_fake_report)
         result = self._call_sender_one_crash(report=kcrash_fake_report)
-        if (result['report_exists'] or
-            result['rate_count'] != 1 or
-            not result['send_attempt'] or
-            not result['send_success'] or
-            result['sleep_time'] < 0 or
-            result['sleep_time'] >= _SECONDS_SEND_SPREAD or
-            result['report_kind'] != 'kcrash' or
-            (result['report_payload'] !=
-             self.get_crash_dir_name('kernel.today.kcrash')) or
-            result['exec_name'] != 'kernel'):
-            raise error.TestFail('Simple kcrash send failed')
+        self._check_send_result(result, 'kcrash', 'kernel.today.kcrash',
+                                'kernel')
         self._check_hardware_info(result)
 
 
