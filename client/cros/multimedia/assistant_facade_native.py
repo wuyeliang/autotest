@@ -4,7 +4,12 @@
 import logging
 
 from autotest_lib.client.common_lib.cros import assistant_util
-from autotest_lib.client.common_lib.cros import assistant_util_private
+# TODO (crbug.com/949874): Remove this when we make sure assistant_util_private
+# is available.
+try:
+    from autotest_lib.client.common_lib.cros import assistant_util_private
+except ImportError:
+    logging.error("Failed to import assistant_util_private")
 
 class AssistantNativeError(Exception):
     """Error in AssistantFacadeNative."""
