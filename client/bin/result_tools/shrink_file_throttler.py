@@ -22,9 +22,11 @@ UNSHRINKABLE_EXTENSIONS = set([
         '.journal',
         '.jpg',
         '.json',
+        '.pcap',
         '.png',
         '.tar',
         '.tgz',
+        '.trc', # TODO: unify with .pcap?
         '.xml',
         '.xz',
         '.zip',
