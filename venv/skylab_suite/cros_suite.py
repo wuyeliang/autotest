@@ -77,11 +77,6 @@ TestSpec = collections.namedtuple(
                 'pool',
                 'build',
                 'keyvals',
-                # TODO(akeshet): Determine why this is necessary
-                # (can't this just be specified as its own dimension?) and
-                # delete it if it isn't necessary.
-                'bot_id',
-                'dut_name',
                 'expiration_secs',
                 'grace_period_secs',
                 'execution_timeout_mins',
@@ -357,7 +352,7 @@ class Suite(object):
         tests = self._find_tests(available_bots_num=len(available_bots))
         self.test_specs = self._get_test_specs(tests, available_bots, keyvals)
 
-    def _create_test_spec(self, test, keyvals, bot_id='', dut_name=''):
+    def _create_test_spec(self, test, keyvals):
         return TestSpec(
                 test=test,
                 priority=self.priority,
@@ -365,8 +360,6 @@ class Suite(object):
                 model=self.model,
                 pool=self.pool,
                 build=self.test_source_build,
-                bot_id=bot_id,
-                dut_name=dut_name,
                 keyvals=keyvals,
                 expiration_secs=self.timeout_mins * 60,
                 grace_period_secs=swarming_lib.DEFAULT_TIMEOUT_SECS,

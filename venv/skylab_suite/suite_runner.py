@@ -67,18 +67,20 @@ def _resume_suite(client, test_specs, suite_handler, dry_run=False):
 def _get_unscheduled_test_specs(test_specs, suite_handler, all_tasks):
     not_yet_scheduled = []
     for test_spec in test_specs:
-        if suite_handler.is_provision():
-            # We cannot check bot_id because pending tasks do not have it yet.
-            bot_id_tag = 'id:%s' % test_spec.bot_id
-            tasks = [t for t in all_tasks if bot_id_tag in t['tags']]
-        else:
-            tasks = [t for t in all_tasks if t['name']==test_spec.test.name]
+        tasks = [t for t in all_tasks if t['name']==test_spec.test.name]
 
         if not tasks:
             not_yet_scheduled.append(test_spec)
             continue
 
-        current_task = _get_current_task(tasks)
+        # If there are multiple running tasks for a given test name, arbitrarily
+        # pick the first one as the representative "current one".
+        current_task = None
+        for t in tasks:
+            if t['state'] not in swarming_lib.TASK_FINISHED_STATUS:
+                current_task = t
+                break
+
         test_task_id = (current_task['task_id'] if current_task
                         else tasks[0]['task_id'])
         remaining_retries = test_spec.test.job_retries - len(tasks)
@@ -92,26 +94,6 @@ def _get_unscheduled_test_specs(test_specs, suite_handler, all_tasks):
                         previous_retried_ids=previous_retried_ids))
 
     return not_yet_scheduled
-
-
-def _get_current_task(tasks):
-    """Get current running task.
-
-    @param tasks: A list of task dicts including task_id, state, etc.
-
-    @return a dict representing the current running task.
-    """
-    current_task = None
-    for t in tasks:
-        if t['state'] not in swarming_lib.TASK_FINISHED_STATUS:
-            if current_task:
-                raise ValueError(
-                        'Parent task has 2 same running child tasks: %s, %s'
-                        % (current_task['task_id'], t['task_id']))
-
-            current_task = t
-
-    return current_task
 
 
 def _run_suite(test_specs, suite_handler, dry_run=False):
@@ -191,8 +173,7 @@ def _create_test_task(test_spec, suite_id=None, dry_run=False):
 
 
     tags = _compute_tags(test_spec.build, suite_id)
-    dimensions = _compute_dimensions(
-            test_spec.bot_id, test_spec.test.dependencies)
+    dimensions = _compute_dimensions(test_spec.test.dependencies)
     keyvals_flat = _compute_job_keyvals_flat(test_spec.keyvals, suite_id)
 
     for tag in tags:
@@ -233,10 +214,8 @@ def _compute_tags(build, suite_id):
     return tags
 
 
-def _compute_dimensions(bot_id, dependencies):
+def _compute_dimensions(dependencies):
     dimensions = []
-    if bot_id:
-        dimensions += ['id:%s' % bot_id]
     deps = _filter_unsupported_dependencies(dependencies)
     flattened_swarming_deps = sorted([
         '%s:%s' % (k, v) for
