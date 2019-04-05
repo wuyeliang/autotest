@@ -452,14 +452,7 @@ class ProvisionSuite(Suite):
 
     def _get_test_specs(self, tests, available_bots, keyvals):
         test_specs = []
-        for idx, test in enumerate(tests):
-            if idx < len(available_bots):
-                bot = available_bots[idx]
-                test_specs.append(self._create_test_spec(
-                        test, keyvals, bot_id=bot['bot_id'],
-                        dut_name=swarming_lib.get_task_dut_name(
-                                bot['dimensions'])))
-            else:
-                test_specs.append(self._create_test_spec(test, keyvals))
+        for test in tests:
+            test_specs.append(self._create_test_spec(test, keyvals))
 
         return test_specs
