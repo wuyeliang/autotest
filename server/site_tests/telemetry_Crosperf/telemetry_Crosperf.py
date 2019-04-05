@@ -49,57 +49,6 @@ HISTOGRAM_REGEX = re.compile(r'(?P<IMPORTANT>\*)?HISTOGRAM '
                              r'(?P<GRAPH>[^:]*): (?P<TRACE>[^=]*)= '
                              r'(?P<VALUE_JSON>{.*})(?P<UNITS>.+)?')
 
-_RUN_BACKGROUND_TEMPLATE = '(%(cmd)s) </dev/null >/dev/null 2>&1 & echo -n $!'
-
-_WAIT_CMD_TEMPLATE = """\
-to=%(timeout)d; \
-while test ${to} -ne 0; do \
-  ps %(pid)d >/dev/null || break; \
-  sleep 1; \
-  to=$((to - 1)); \
-done; \
-! ps %(pid)d >/dev/null \
-"""
-
-
-def _run_in_background(host, cmd, stdout, stderr, timeout):
-    """Launch command on host; return without waiting for it to finish.
-
-    @param host: A host object representing where the command runs.
-    @param cmd: The command to run.
-
-    @return The result of launching this command, which contains pid info.
-    """
-    background_cmd = _RUN_BACKGROUND_TEMPLATE % {'cmd': cmd}
-    logging.info('BACKGROUND CMD: %s', background_cmd)
-    return host.run(background_cmd,
-                stdout_tee=stdout,
-                stderr_tee=stderr,
-                timeout=timeout)
-
-
-def _wait_for_process(host, pid, timeout=-1):
-    """Waits for a process on the DUT to terminate.
-
-    @param host: A host object representing the DUT.
-    @param pid: The process ID (integer).
-    @param timeout: Number of seconds to wait; default is wait forever.
-    """
-    wait_cmd = _WAIT_CMD_TEMPLATE % {'pid': pid, 'timeout': timeout}
-    host.run(wait_cmd, ignore_status=True).exit_status
-
-
-def _kill_perf(host):
-    """Kills perf on the DUT.
-
-    @param host: A host object representing the DUT.
-    """
-    # Note that here -2 equals -INT. ChromeOS release image cannot recognize
-    # -INT, so we need to specify it here.
-    kill_cmd = 'killall -2 perf'
-    logging.info('Killing perf using: %s', kill_cmd)
-    host.run(kill_cmd, ignore_status=True).exit_status
-
 
 def _find_chrome_root_dir():
     # Look for chrome source root, either externally mounted, or inside
@@ -244,19 +193,15 @@ class telemetry_Crosperf(test.test):
                            ' --interval-profiler-options="%s"' \
                            % (profiler_args)
 
-            logging.info('BENCHMARK CMD: %s', command)
-            # Run benchmark at background and get pid of it.
-            result = _run_in_background(runner, command, stdout, stderr,
-                                        WAIT_FOR_CMD_TIMEOUT_SECS)
-            benchmark_pid = int(result.stdout.rstrip())
-
-            # Wait until benchmark run finished
-            _wait_for_process(runner, benchmark_pid,
-                              TELEMETRY_TIMEOUT_MINS * 60)
-
-            # If no command error happens, set exit_code to 0
-            exit_code = 0
-
+            logging.info('CMD: %s', command)
+            result = runner.run(command, stdout_tee=stdout, stderr_tee=stderr,
+                                timeout=TELEMETRY_TIMEOUT_MINS*60)
+            exit_code = result.exit_status
+            if exit_code != 0:
+              raise RuntimeError
+        except RuntimeError:
+            logging.debug('Telemetry test failed.')
+            raise error.TestFail('Test failed while executing telemetry test.')
         except error.CmdError as e:
             logging.debug('Error occurred executing telemetry.')
             exit_code = e.result_obj.exit_status
@@ -267,13 +212,6 @@ class telemetry_Crosperf(test.test):
             exit_code = -1
             raise
         finally:
-            # Make sure perf on DUT is gone in case of any unexpected thing
-            # happens above. We don't want some perf process continues to run
-            # on DUT to fill up the disk after we finish.
-            try:
-                _kill_perf(dut)
-            except:
-                pass
             stdout_str = stdout.getvalue()
             stderr_str = stderr.getvalue()
             stdout.close()
