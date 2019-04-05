@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import collections
 import logging
 import sys
 import time
@@ -34,14 +35,15 @@ _POLLING_INTERVAL_S = 10
 _WAIT_FOR_DUTS_TIMEOUT_S = 20 * 60
 
 # Dictionary of test results expected in suite:skylab_staging_test.
-_EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         'GOOD',
-                          'provision_AutoUpdate.double':  'GOOD',
-                          'dummy_Pass.*':                 'GOOD',
-                          'dummy_Fail.Fail$':             'FAIL',
-                          'dummy_Fail.Error$':            'ERROR',
-                          'dummy_Fail.Warn$':             'WARN',
-                          'dummy_Fail.NAError$':          'TEST_NA',
-                          'dummy_Fail.Crash$':            'GOOD'}
+_EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         ['GOOD'],
+                          'provision_AutoUpdate.double':  ['GOOD'],
+                          'dummy_Pass.*':                 ['GOOD'],
+                          'dummy_Fail.Fail$':             ['FAIL'],
+                          'dummy_Fail.Error$':            ['ERROR'],
+                          'dummy_Fail.Warn$':             ['WARN'],
+                          'dummy_Fail.NAError$':          ['TEST_NA'],
+                          'dummy_Fail.Crash$':            ['GOOD'],
+                          }
 
 # Some test could be missing from the test results for various reasons. Add
 # such test in this list and explain the reason.
@@ -235,7 +237,9 @@ def _view_is_preserved(view):
 def _verify_and_summarize(available_views, expected_results):
   """Verify and generate summaries for test_push results."""
   test_push_common = autotest.load('site_utils.test_push_common')
-  views = {v['test_name']:v['status'] for v in available_views}
+  views = collections.defaultdict(list)
+  for view in available_views:
+    views[view['test_name']].append(view['status'])
   return test_push_common.summarize_push(views, expected_results,
                                          _IGNORED_TESTS)
 
