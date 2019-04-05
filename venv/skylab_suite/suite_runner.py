@@ -145,7 +145,6 @@ def _create_test_tasks(test_specs, suite_handler, suite_id, dry_run=False):
         test_task_id = _create_test_task(
                 test_spec,
                 suite_id=suite_id,
-                is_provision=suite_handler.is_provision(),
                 dry_run=dry_run)
         suite_handler.add_test_by_task_id(
                 test_task_id,
@@ -155,8 +154,7 @@ def _create_test_tasks(test_specs, suite_handler, suite_id, dry_run=False):
                         previous_retried_ids=[]))
 
 
-def _create_test_task(test_spec, suite_id=None,
-                      is_provision=False, dry_run=False):
+def _create_test_task(test_spec, suite_id=None, dry_run=False):
     """Create a test task for a given test spec.
 
     @param test_spec: A cros_suite.TestSpec object.
@@ -336,7 +334,6 @@ def _retry_test(suite_handler, task_id, dry_run=False):
     retried_task_id = _create_test_task(
             last_retry_spec.test_spec,
             suite_id=suite_handler.suite_id,
-            is_provision=suite_handler.is_provision(),
             dry_run=dry_run)
     previous_retried_ids = last_retry_spec.previous_retried_ids + [task_id]
     suite_handler.add_test_by_task_id(
