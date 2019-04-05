@@ -25,9 +25,7 @@ PROVISION_SUITE_NAME = 'provision'
 
 
 def _parse_suite_handler_spec(options):
-    provision_num_required = 0
-    if 'num_required' in options.suite_args:
-        provision_num_required = options.suite_args['num_required']
+    provision_num_required = options.suite_args.get('num_required', 0)
 
     return cros_suite.SuiteHandlerSpec(
             suite_name=options.suite_name,
