@@ -30,6 +30,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib
 
 from optparse import OptionParser
 
@@ -478,6 +479,15 @@ def _upload_files(host, path, result_pattern, multiprocessing,
     build = keyval.get('build')
     suite = keyval.get('suite')
 
+    host_keyval = models.test.parse_host_keyval(host, keyval.get('hostname'))
+    labels =  urllib.unquote(host_keyval.get('labels'))
+    try:
+        host_model_name = re.search(r'model:(\w+)', labels).group(1)
+    except AttributeError:
+        logging.error('Model: name attribute is missing in %s/host_keyval/%s.',
+                      host, keyval.get('hostname'))
+        return
+
     if not _is_valid_result(build, result_pattern, suite):
         # No need to upload current folder, return.
         return
@@ -495,8 +505,20 @@ def _upload_files(host, path, result_pattern, multiprocessing,
     if not _is_test_collector(package):
         # Path: bucket/build/parent_job_id/cheets_CTS.*/job_id_timestamp/
         # or bucket/build/parent_job_id/cheets_GTS.*/job_id_timestamp/
+        index = build.find('-release')
+        build_with_model_name = ''
+        if index == -1:
+            logging.info('Not a release build.'
+                         'Non release build results can be skipped from offloading')
+            return
+
+        # CTS v2 pipeline requires device info in 'board.model' format.
+        # e.g. coral.robo360-release, eve.eve-release
+        build_with_model_name = (build[:index] + '.' + host_model_name +
+                                     build[index:])
+
         cts_apfe_gs_path = os.path.join(
-                apfe_gs_bucket, build, parent_job_id,
+                apfe_gs_bucket, build_with_model_name, parent_job_id,
                 package, job_id + '_' + timestamp) + '/'
 
         for zip_file in glob.glob(os.path.join('%s.zip' % path)):

@@ -783,6 +783,25 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
         timestamp_cts_v2_folder = os.path.join(cts_v2_result_folder, timestamp_str)
         timestamp_gts_folder = os.path.join(gts_result_folder, timestamp_str)
 
+        # Build host keyvals set to parse model info.
+        host_info_path = os.path.join(host_folder, 'host_keyvals')
+        dir_to_create = '/'
+        for tdir in host_info_path.split('/'):
+            dir_to_create = os.path.join(dir_to_create, tdir)
+            if not os.path.exists(dir_to_create):
+                os.mkdir(dir_to_create)
+        with open(os.path.join(host_info_path, 'chromeos4-row9-rack11-host22'), 'w') as store_file:
+            store_file.write('labels=board%3Acoral,hw_video_acc_vp9,cros,'+
+                             'hw_jpeg_acc_dec,bluetooth,model%3Arobo360,'+
+                             'accel%3Acros-ec,'+
+                             'sku%3Arobo360_IntelR_CeleronR_CPU_N3450_1_10GHz_4Gb')
+
+        # .autoserv_execute file is needed for the test results package to look
+        # legit.
+        autoserve_path = os.path.join(host_folder, '.autoserv_execute')
+        with open(autoserve_path, 'w') as temp_file:
+            temp_file.write(' ')
+
         # Test results in cts_result_folder with a different time-stamp.
         timestamp_str_2 = '2016.04.28_10.41.44'
         timestamp_cts_folder_2 = os.path.join(cts_result_folder, timestamp_str_2)
@@ -867,6 +886,7 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
         for path, pattern in path_pattern_pair:
             models.test.parse_job_keyval(mox.IgnoreArg()).AndReturn({
                 'build': 'veyron_minnie-cheets-release/R52-8248.0.0',
+                'hostname': 'chromeos4-row9-rack11-host22',
                 'parent_job_id': 'p_id',
                 'suite': 'arc-cts'
             })
