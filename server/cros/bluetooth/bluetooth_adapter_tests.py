@@ -2098,6 +2098,47 @@ class BluetoothAdapterTests(test.test):
         return actual_events == expected_events
 
 
+    def is_newer_kernel_version(self, version, minimum_version):
+        """ Check if given kernel version is newer than unsupported version."""
+
+        return utils.compare_versions(version, minimum_version) >= 0
+
+
+    def is_supported_kernel_version(self, kernel_version, minimum_version,
+                                    msg=None):
+        """ Check if kernel version is greater than minimum version.
+
+            Check if given kernel version is greater than or equal to minimum
+            version. Raise TEST_NA if given kernel version is lower than the
+            minimum version.
+
+            Note: Kernel version may have suffixes, so ensure that minimum
+            version should be the smallest version that is permissible.
+            Ex: If minimum version is 3.8.11 then 3.8.11-<random> will
+            pass the check.
+
+            @param kernel_version: kernel version to be checked as a string
+            @param: minimum_version: minimum kernel version requried
+
+            @returns: None
+
+            @raises: TEST_NA if kernel version is not greater than the minimum
+                     version
+        """
+
+        logging.debug('kernel version is {} minimum version'
+                      'is {}'.format(kernel_version,minimum_version))
+
+        if msg is None:
+            msg = 'Test not supported on this kernel version'
+
+        if not self.is_newer_kernel_version(kernel_version, minimum_version):
+            logging.debug('Kernel version check failed. Exiting the test')
+            raise error.TestNAError(msg)
+
+        logging.debug('Kernel version check passed')
+
+
     # -------------------------------------------------------------------
     # Autotest methods
     # -------------------------------------------------------------------

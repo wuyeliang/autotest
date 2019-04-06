@@ -34,18 +34,11 @@ import logging
 import time
 
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_tests
 from autotest_lib.server.cros.multimedia import bluetooth_le_facade_adapter
 
 
 test_case_log = bluetooth_adapter_tests.test_case_log
-UNSUPPORTED_KERNEL = "3.8.11"
-
-def is_supported_kernel_version(version):
-    """ Check if given kernel version is newer than unsupported version."""
-
-    return utils.compare_versions(version,UNSUPPORTED_KERNEL) == 1
 
 
 class bluetooth_AdapterLEAdvertising(
@@ -126,6 +119,28 @@ class bluetooth_AdapterLEAdvertising(
         kernel_command = "uname -r"
         kernel_version = self.host.run(kernel_command).stdout.strip()
         return kernel_version
+
+    def check_kernel_version(self):
+        """ Check if test can execute on this kernel version."""
+
+        logging.info("Checking kernel version {}".format(self.kernel_version))
+        #
+        # Due to crbug/729648, we cannot set advertising intervals
+        # on kernels that are 3.8.11 and below, so we raise TestNAError.
+        # 3.8.12 used so that version of the form 3.8.11<suffix> fails the check
+        #
+        self.is_supported_kernel_version(self.kernel_version, "3.8.12",
+                                         'Test cannnot proceed on old kernels')
+        #
+        # Due to crbug/946835, some messages does not reach btmon
+        # causing our tests to fails. This is seen on kernel 3.18 and lower.
+        # Remove this check when the issue is fixed
+        # TODO(crbug/946835)
+        #
+        self.is_supported_kernel_version(self.kernel_version, "3.19",
+                                         'Test cannnot proceed on this'
+                                         'kernel due to crbug/946835 ')
+        logging.debug("Test is supported on this kernel version")
 
 
     # ---------------------------------------------------------------
@@ -1018,11 +1033,7 @@ class bluetooth_AdapterLEAdvertising(
         """
         self.host = host
         self.kernel_version = self.get_kernel_version(self.host)
-        if not is_supported_kernel_version(self.kernel_version):
-            # NOTE: Due to crbug/729648, we cannot set advertising intervals
-            # on kernels that are 3.8.11 and below, so we raise TestNAError.
-            raise error.TestNAError('Test cannnot proceed on old kernel '
-                                    ' versions.')
+        self.check_kernel_version()
 
         self.advertisements = advertisements
         self.first_advertisement = advertisements[0]
