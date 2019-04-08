@@ -292,32 +292,37 @@ class TradefedTest(test.test):
         @param host: DUT that need to be connected.
         @return boolean indicating if adb connected successfully.
         """
-        # This may fail return failure due to a race condition in adb connect
-        # (b/29370989). If adb is already connected, this command will
-        # immediately return success.
-        host_port = self._get_adb_target(host)
-        result = self._run_adb_cmd(
-            host, args=('connect', host_port), verbose=True, ignore_status=True,
-            timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
-        if result.exit_status != 0:
-            return False
+        try:
+            # This may fail return failure due to a race condition in adb
+            # connect (b/29370989). If adb is already connected, this command
+            # will immediately return success.
+            host_port = self._get_adb_target(host)
+            result = self._run_adb_cmd(
+                host, args=('connect', host_port), verbose=True,
+                ignore_status=True,
+                timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
+            if result.exit_status != 0:
+                return False
 
-        result = self._run_adb_cmd(host, args=('devices',),
-            timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
-        if not re.search(r'{}\s+(device|unauthorized)'.format(
-                re.escape(host_port)), result.stdout):
-            logging.info('No result found in with pattern: %s',
-                         r'{}\s+(device|unauthorized)'.format(
-                             re.escape(host_port)))
-            return False
+            result = self._run_adb_cmd(host, args=('devices',),
+                timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
+            if not re.search(r'{}\s+(device|unauthorized)'.format(
+                    re.escape(host_port)), result.stdout):
+                logging.info('No result found in with pattern: %s',
+                             r'{}\s+(device|unauthorized)'.format(
+                                 re.escape(host_port)))
+                return False
 
-        # Actually test the connection with an adb command as there can be
-        # a race between detecting the connected device and actually being
-        # able to run a commmand with authenticated adb.
-        result = self._run_adb_cmd(
-            host, args=('shell', 'exit'), ignore_status=True,
-            timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
-        return result.exit_status == 0
+            # Actually test the connection with an adb command as there can be
+            # a race between detecting the connected device and actually being
+            # able to run a commmand with authenticated adb.
+            result = self._run_adb_cmd(
+                host, args=('shell', 'exit'), ignore_status=True,
+                timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
+            return result.exit_status == 0
+        except error.CmdTimeoutError as e:
+            logging.warning(e)
+            return False
 
     def _android_shell(self, host, command):
         """Run a command remotely on the device in an android shell
