@@ -104,8 +104,12 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
     # _USB_POWER_TIMEOUT: Time to allow for USB to power toggle ON and OFF.
     # _POWER_CYCLE_TIMEOUT: Time to allow for manual power cycle.
+    # _CHANGE_SERVO_ROLE_TIMEOUT: Time to allow DUT regain network connection
+    #                             since changing servo role will reset USB state
+    #                             and causes temporary ethernet drop.
     _USB_POWER_TIMEOUT = 5
     _POWER_CYCLE_TIMEOUT = 10
+    _CHANGE_SERVO_ROLE_TIMEOUT = 180
 
     _RPM_HOSTNAME_REGEX = ('chromeos(\d+)(-row(\d+))?-rack(\d+[a-z]*)'
                            '-host(\d+)')
@@ -124,16 +128,25 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
     # Allowed values for the power_method argument.
 
-    # POWER_CONTROL_RPM: Passed as default arg for power_off/on/cycle() methods.
+    # POWER_CONTROL_RPM: Used in power_off/on/cycle() methods, default for all
+    #                    DUTs except those with servo_v4 CCD.
+    # POWER_CONTROL_CCD: Used in power_off/on/cycle() methods, default for all
+    #                    DUTs with servo_v4 CCD.
     # POWER_CONTROL_SERVO: Used in set_power() and power_cycle() methods.
     # POWER_CONTROL_MANUAL: Used in set_power() and power_cycle() methods.
     POWER_CONTROL_RPM = 'RPM'
+    POWER_CONTROL_CCD = 'CCD'
     POWER_CONTROL_SERVO = 'servoj10'
     POWER_CONTROL_MANUAL = 'manual'
 
     POWER_CONTROL_VALID_ARGS = (POWER_CONTROL_RPM,
+                                POWER_CONTROL_CCD,
                                 POWER_CONTROL_SERVO,
                                 POWER_CONTROL_MANUAL)
+
+    # CCD_SERVO: The string of servo type to compare with the return value of
+    #            self.servo.get_servo_version() to decide default power method.
+    CCD_SERVO = 'servo_v4_with_ccd_cr50'
 
     _RPM_OUTLET_CHANGED = 'outlet_changed'
 
@@ -286,6 +299,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 dut=self, servo_args=servo_args,
                 try_lab_servo=try_lab_servo,
                 try_servo_repair=try_servo_repair))
+        self._default_power_method = None
 
         # TODO(waihong): Do the simplication on Chameleon too.
         self._chameleon_host = chameleon_host.create_chameleon_host(
@@ -1476,17 +1490,22 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
 
     def _set_power(self, state, power_method):
-        """Sets the power to the host via RPM, Servo or manual.
+        """Sets the power to the host via RPM, CCD, Servo or manual.
 
         @param state Specifies which power state to set to DUT
         @param power_method Specifies which method of power control to
-                            use. By default "RPM" will be used. Valid values
-                            are the strings "RPM", "manual", "servoj10".
+                            use. By default "RPM" or "CCD" will be used based
+                            on servo type. Valid values from
+                            POWER_CONTROL_VALID_ARGS, or None to use default.
 
         """
         ACCEPTABLE_STATES = ['ON', 'OFF']
 
-        if state.upper() not in ACCEPTABLE_STATES:
+        if not power_method:
+            power_method = self.get_default_power_method()
+
+        state = state.upper()
+        if state not in ACCEPTABLE_STATES:
             raise error.TestError('State must be one of: %s.'
                                    % (ACCEPTABLE_STATES,))
 
@@ -1498,45 +1517,61 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             logging.info('You have %d seconds to set the AC power to %s.',
                          self._POWER_CYCLE_TIMEOUT, state)
             time.sleep(self._POWER_CYCLE_TIMEOUT)
+        elif power_method == self.POWER_CONTROL_CCD:
+            servo_role = 'src' if state == 'ON' else 'snk'
+            logging.info('servo ccd power pass through detected,'
+                         ' changing servo_role to %s.', servo_role)
+            self.servo.set_servo_v4_role(servo_role)
+            if not self.ping_wait_up(timeout=self._CHANGE_SERVO_ROLE_TIMEOUT):
+                raise error.AutoservError(
+                    'DUT failed to regain network connection after %d seconds.'
+                    % self._CHANGE_SERVO_ROLE_TIMEOUT)
         else:
             if not self.has_power():
                 raise error.TestFail('DUT does not have RPM connected.')
             self._add_rpm_changed_tag()
-            rpm_client.set_power(self, state.upper(), timeout_mins=5)
+            rpm_client.set_power(self, state, timeout_mins=5)
 
 
-    def power_off(self, power_method=POWER_CONTROL_RPM):
-        """Turn off power to this host via RPM, Servo or manual.
+    def power_off(self, power_method=None):
+        """Turn off power to this host via RPM, CCD, Servo or manual.
 
         @param power_method Specifies which method of power control to
-                            use. By default "RPM" will be used. Valid values
-                            are the strings "RPM", "manual", "servoj10".
+                            use. By default "RPM" or "CCD" will be used based
+                            on servo type. Valid values from
+                            POWER_CONTROL_VALID_ARGS, or None to use default.
 
         """
         self._set_power('OFF', power_method)
 
 
-    def power_on(self, power_method=POWER_CONTROL_RPM):
-        """Turn on power to this host via RPM, Servo or manual.
+    def power_on(self, power_method=None):
+        """Turn on power to this host via RPM, CCD, Servo or manual.
 
         @param power_method Specifies which method of power control to
-                            use. By default "RPM" will be used. Valid values
-                            are the strings "RPM", "manual", "servoj10".
+                            use. By default "RPM" or "CCD" will be used based
+                            on servo type. Valid values from
+                            POWER_CONTROL_VALID_ARGS, or None to use default.
 
         """
         self._set_power('ON', power_method)
 
 
-    def power_cycle(self, power_method=POWER_CONTROL_RPM):
+    def power_cycle(self, power_method=None):
         """Cycle power to this host by turning it OFF, then ON.
 
         @param power_method Specifies which method of power control to
-                            use. By default "RPM" will be used. Valid values
-                            are the strings "RPM", "manual", "servoj10".
+                            use. By default "RPM" or "CCD" will be used based
+                            on servo type. Valid values from
+                            POWER_CONTROL_VALID_ARGS, or None to use default.
 
         """
+        if not power_method:
+            power_method = self.get_default_power_method()
+
         if power_method in (self.POWER_CONTROL_SERVO,
-                            self.POWER_CONTROL_MANUAL):
+                            self.POWER_CONTROL_MANUAL,
+                            self.POWER_CONTROL_CCD):
             self.power_off(power_method=power_method)
             time.sleep(self._POWER_CYCLE_TIMEOUT)
             self.power_on(power_method=power_method)
@@ -1973,3 +2008,17 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
     def get_labels(self):
         """Return the detected labels on the host."""
         return self.labels.get_labels(self)
+
+
+    def get_default_power_method(self):
+        """
+        Get the default power method for power_on/off/cycle() methods.
+        @return POWER_CONTROL_RPM or POWER_CONTROL_CCD
+        """
+        if not self._default_power_method:
+            info = self.host_info_store.get()
+            if info.attributes.get('servo_type') == self.CCD_SERVO:
+                self._default_power_method = self.POWER_CONTROL_CCD
+            else:
+                self._default_power_method = self.POWER_CONTROL_RPM
+        return self._default_power_method
