@@ -5,7 +5,7 @@
 import logging
 import os
 
-from autotest_lib.client.bin import test, utils
+from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import perf
 from autotest_lib.client.cros import service_stopper
@@ -51,6 +51,7 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
   }
 
   def setup(self):
+    """Testcase setup."""
     self.job.setup_dep(['glbench'])
 
   def initialize(self):
@@ -112,6 +113,12 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
 
   @graphics_utils.GraphicsTest.failure_report_decorator('graphics_GLBench')
   def run_once(self, options='', hasty=False):
+    """Run the test.
+
+    @param options: String of options to run the glbench executable with.
+    @param hasty: Run the test more quickly by running fewer iterations,
+        lower resolution, and without waiting for the dut to cool down.
+    """
     dep = 'glbench'
     dep_dir = os.path.join(self.autodir, 'deps', dep)
     self.job.install_pkg(dep, 'dep', dep_dir)
