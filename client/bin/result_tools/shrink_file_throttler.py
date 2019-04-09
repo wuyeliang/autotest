@@ -14,6 +14,7 @@ import utils_lib
 UNSHRINKABLE_EXTENSIONS = set([
         '.bin',
         '.data',
+        '.devcore',
         '.dmp',
         '.gz',
         '.htm',
