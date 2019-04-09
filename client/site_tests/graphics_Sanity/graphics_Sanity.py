@@ -69,7 +69,7 @@ class graphics_Sanity(graphics_utils.GraphicsTest):
 
         w, h = graphics_utils.get_internal_resolution()
         megapixels = (w * h) / 1000000
-        filesize_threshold = 25 * megapixels
+        filesize_threshold = 15 * megapixels
         screenshot1 = graphics_utils.take_screenshot(self.resultsdir,
                                                      'oobe or signin')
 
@@ -89,9 +89,10 @@ class graphics_Sanity(graphics_utils.GraphicsTest):
                 return
 
         raise error.TestFail(
-            'Screenshot filesize is very small. This indicates that '
-            'there is nothing on screen. This ChromeOS image could be '
-            'unusable. Check the screenshot in the results folder.')
+            'Screenshot filesize is smaller than expected(%s <= %s). This '
+            'indicates that there is nothing on screen. This ChromeOS image '
+            'could be unusable. Check the screenshot in the results folder.',
+            file_size_kb, filesize_threshold)
 
     def test_generated_screenshots_match_expectation(self):
         """Draws a texture with a soft ellipse twice and captures each image.
