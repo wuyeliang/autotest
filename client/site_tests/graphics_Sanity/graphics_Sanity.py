@@ -91,8 +91,8 @@ class graphics_Sanity(graphics_utils.GraphicsTest):
         raise error.TestFail(
             'Screenshot filesize is smaller than expected(%s <= %s). This '
             'indicates that there is nothing on screen. This ChromeOS image '
-            'could be unusable. Check the screenshot in the results folder.',
-            file_size_kb, filesize_threshold)
+            'could be unusable. Check the screenshot in the results folder.' %
+            (file_size_kb, filesize_threshold))
 
     def test_generated_screenshots_match_expectation(self):
         """Draws a texture with a soft ellipse twice and captures each image.
