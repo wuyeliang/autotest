@@ -14,6 +14,10 @@ class platform_StageAndRecover(test.test):
 
     _INSTALL_DELAY_TIMEOUT = 540
     _TEST_IMAGE_BOOT_DELAY = 120
+    _USB_PARTITION = '/dev/sda1'
+    _MOUNT_PATH = '/media/removable'
+    _VERIFY_STR = 'ChromeosChrootPostinst complete'
+    _RECOVERY_LOG = '/recovery_logs*/recovery.log'
 
     def cleanup(self):
         """ Clean up by switching servo usb towards servo host. """
@@ -83,6 +87,29 @@ class platform_StageAndRecover(test.test):
         return result
 
 
+    def verify_recovery_log(self):
+        """ Mount USB partition to servo and verify the recovery log. """
+        recovery_info = ''
+
+        self.set_servo_usb_reimage()
+        self.host.servo.system('mount -r %s %s'
+                               % (self._USB_PARTITION, self._MOUNT_PATH))
+        recovery_info = self.host.servo.system_output('cat %s%s'
+                % (self._MOUNT_PATH, self._RECOVERY_LOG), ignore_status=True)
+        if recovery_info:
+            if (recovery_info.find(self._VERIFY_STR) != -1):
+                logging.info('Recovery log successfully verified.')
+            else:
+                log_list = recovery_info.split('\n')
+                failure_tag = 'Failed Command'
+                reasons = [line for line in log_list if failure_tag in line]
+                logging.info('Recovery log:\n%s\n' % (recovery_info))
+                self.error_messages.append(' %s ' % (','.join(reasons)))
+        else:
+            self.error_messages.append('Recovery log is missing.')
+        self.host.servo.system('umount %s' % (self._MOUNT_PATH))
+
+
     def run_once(self, host):
         """ Runs the test."""
         self.host = host
@@ -92,6 +119,7 @@ class platform_StageAndRecover(test.test):
 
         self.stage_copy_recover_with('recovery_image')
         self.wait_for_dut_ping_after('RECOVERY', self._INSTALL_DELAY_TIMEOUT)
+        self.verify_recovery_log()
 
         self.stage_copy_recover_with('test_image')
 
