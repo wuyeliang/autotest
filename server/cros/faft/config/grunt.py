@@ -10,3 +10,4 @@ class Values(object):
     ec_capability = ['battery', 'charging', 'keyboard', 'lid', 'x86' ]
     servo_prog_state_delay = 10
     smm_store = False
+    gsc_can_wake_ec_with_reset = False

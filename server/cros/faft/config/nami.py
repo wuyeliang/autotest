@@ -14,3 +14,4 @@ class Values(object):
     servo_prog_state_delay = 10
     dark_resume_capable = True
     smm_store = False
+    gsc_can_wake_ec_with_reset = False

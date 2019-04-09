@@ -27,6 +27,10 @@ class firmware_Cr50ECReset(Cr50Test):
     def initialize(self, host, cmdline_args, full_args):
         super(firmware_Cr50ECReset, self).initialize(host, cmdline_args,
                                                      full_args)
+        if not self.faft_config.gsc_can_wake_ec_with_reset:
+            raise error.TestNAError("This DUT has a hardware limitation that "
+                                    "prevents cr50 from waking the EC with "
+                                    "EC_RST_L.")
         # Don't bother if there is no Chrome EC or if EC hibernate doesn't work.
         if not self.check_ec_capability():
             raise error.TestNAError("Nothing needs to be tested on this device")

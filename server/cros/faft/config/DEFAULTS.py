@@ -97,3 +97,6 @@ class Values(object):
     # True if the device supports power_state:rec_force_mrc, which forces memory
     # retraining in recovery mode
     rec_force_mrc = True
+
+    # True if the GSC can wake the EC with it's reset GPIO.
+    gsc_can_wake_ec_with_reset = True
