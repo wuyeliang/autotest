@@ -129,7 +129,7 @@ class graphics_VideoRenderingPower(graphics_utils.GraphicsTest):
                 logging.debug(measurements)
 
                 for category in sorted(measurements):
-                    if category.endswith('_pwr'):
+                    if category.endswith('_pwr_avg'):
                         description = '%s_%s_%s' % (
                             video_short_name, test_name_and_flags[0], category)
                         self.output_perf_value(
