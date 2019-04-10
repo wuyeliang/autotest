@@ -979,9 +979,9 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                     label_version = label_version[:-len('-cheetsth')]
                 if label_version != release_builder_path:
                     logging.warn(
-                        'cros-version label "%s" does not match '
-                        'release_builder_path %s. Removing the label.',
-                        label.name, release_builder_path)
+                        'version according to cros-version label "%s" does not '
+                        'match DUT-determined version %s. Removing the label.',
+                        label_version, release_builder_path)
                     label.remove_hosts(hosts=host_list)
                     mismatch_found = True
         if mismatch_found:
