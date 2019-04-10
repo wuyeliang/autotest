@@ -63,7 +63,6 @@ SKYLAB_HWTEST_PRIORITIES_MAP = {
     'Build': 110,
     'PFQ': 80,
     'CQ': 50,
-    'Super': 49,
 }
 SORTED_SKYLAB_HWTEST_PRIORITY = sorted(
         SKYLAB_HWTEST_PRIORITIES_MAP.items(),
