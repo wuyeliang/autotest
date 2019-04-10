@@ -2158,8 +2158,11 @@ def _run_with_skylab(options):
                '-pool', options.pool,
                '-timeout-mins', str(options.timeout_mins),
                '-priority', priorities.Priority.get_string(options.priority),
-               '-max-retries', str(options.max_retries),
                '-service-account-json', _SKYLAB_SERVICE_ACCOUNT]
+
+        if options.max_retries is not None:
+            cmd.extend(['-max-retries', str(options.max_retries)])
+
         if options.model is not None:
             cmd.extend(['-model', options.model])
 
