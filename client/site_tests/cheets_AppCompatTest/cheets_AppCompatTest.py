@@ -42,7 +42,7 @@ class cheets_AppCompatTest(arc.ArcTest):
         super(cheets_AppCompatTest, self).initialize(
             disable_arc_opt_in=False, extra_browser_args=browser_args,
             disable_app_sync=True, disable_play_auto_install=True,
-            username='crosarcappcompat@gmail.com',
+            username='crosarcappcomp201904@gmail.com',
             password='appcompatautotest')
 
 
