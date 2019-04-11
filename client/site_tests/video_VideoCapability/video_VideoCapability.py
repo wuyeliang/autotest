@@ -18,16 +18,20 @@ class video_VideoCapability(test.test):
     """
     version = 1
     avtest_label_to_capability = {
-        'hw_video_acc_h264'    : 'hw_dec_h264_1080_30',
-        'hw_video_acc_vp8'     : 'hw_dec_vp8_1080_30',
-        'hw_video_acc_vp9'     : 'hw_dec_vp9_1080_30',
-        'hw_video_acc_vp9_2'   : 'hw_dec_vp9-2_1080_30',
-        'hw_jpeg_acc_dec'      : 'hw_dec_jpeg',
-        'hw_jpeg_acc_enc'      : 'hw_enc_jpeg',
-        'hw_video_acc_enc_h264': 'hw_enc_h264_1080_30',
-        'hw_video_acc_enc_vp8' : 'hw_enc_vp8_1080_30',
-        'hw_video_acc_enc_vp9' : 'hw_enc_vp9_1080_30',
-        'webcam'               : 'usb_camera',
+        'hw_video_acc_h264'      : 'hw_dec_h264_1080_30',
+        'hw_video_acc_vp8'       : 'hw_dec_vp8_1080_30',
+        'hw_video_acc_vp9'       : 'hw_dec_vp9_1080_30',
+        'hw_video_acc_vp9_2'     : 'hw_dec_vp9-2_1080_30',
+        'hw_jpeg_acc_dec'        : 'hw_dec_jpeg',
+        'hw_jpeg_acc_enc'        : 'hw_enc_jpeg',
+        'hw_video_acc_enc_h264'  : 'hw_enc_h264_1080_30',
+        'hw_video_acc_enc_vp8'   : 'hw_enc_vp8_1080_30',
+        'hw_video_acc_enc_vp9'   : 'hw_enc_vp9_1080_30',
+        'builtin_usb_camera'     : 'builtin_usb_camera',
+        'builtin_mipi_camera'    : 'builtin_mipi_camera',
+        'vivid_camera'           : 'vivid_camera',
+        'builtin_camera'         : 'builtin_camera',
+        'builtin_or_vivid_camera': 'builtin_or_vivid_camera',
     }
 
 

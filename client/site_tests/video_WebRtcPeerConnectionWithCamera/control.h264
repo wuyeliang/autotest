@@ -24,6 +24,6 @@ checking both the video tag's attributes and peer connection stats
 reported to the performance dashboard.
 """
 
-capability='usb_camera'
+capability='builtin_or_vivid_camera'
 job.run_test("video_WebRtcPeerConnectionWithCamera",
              video_codec="H264", tag='h264', capability=capability)

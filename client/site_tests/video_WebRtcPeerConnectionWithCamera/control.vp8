@@ -29,6 +29,6 @@ Black frames/freezes/fps are reported to the perf dashboard and
 must be monitored there.
 """
 
-capability='usb_camera'
+capability='builtin_or_vivid_camera'
 job.run_test("video_WebRtcPeerConnectionWithCamera",
              video_codec="VP8", tag='vp8', capability=capability)

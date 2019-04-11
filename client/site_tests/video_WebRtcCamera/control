@@ -30,5 +30,5 @@ mean that the gUM call succeeded, but the CrOS device fails to deliver
 sane video frames.
 """
 
-capability='usb_camera'
+capability='builtin_or_vivid_camera'
 job.run_test("video_WebRtcCamera", capability=capability)
