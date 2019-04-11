@@ -7,18 +7,18 @@ import time
 
 from autotest_lib.client.common_lib import enum, error
 from autotest_lib.server import test
+from autotest_lib.server.cros import servo_keyboard_utils
 from autotest_lib.server.cros.dark_resume_utils import DarkResumeUtils
 from autotest_lib.server.cros.faft.config.config import Config as FAFTConfig
 from autotest_lib.server.cros.servo import chrome_ec
 
-
 # Possible states base can be forced into.
 BASE_STATE = enum.Enum('ATTACH', 'DETACH', 'RESET')
 
-
- # List of wake sources expected to cause a full resume.
-FULL_WAKE_SOURCES = ['PWR_BTN', 'LID_OPEN', 'BASE_ATTACH',
-                     'BASE_DETACH', 'INTERNAL_KB']
+# List of wake sources expected to cause a full resume.
+FULL_WAKE_SOURCES = [
+    'PWR_BTN', 'LID_OPEN', 'BASE_ATTACH', 'BASE_DETACH', 'INTERNAL_KB', 'USB_KB'
+]
 
 # Max time taken by the system to resume.
 RESUME_DURATION_SECS = 5
@@ -31,6 +31,10 @@ SUSPEND_DURATION_SECS = 5
 
 # Time to allow lid transition to take effect.
 WAIT_TIME_LID_TRANSITION_SECS = 5
+
+# Time to wait for the DUT to see USB keyboard after restting the Atmega USB
+# emulator on Servo.
+USB_PRESENT_DELAY = 1
 
 
 class power_WakeSources(test.test):
@@ -73,6 +77,11 @@ class power_WakeSources(test.test):
             return self._host.run(
                 'set_power_policy --lid_closed_action suspend',
                 ignore_status=True).exit_status == 0
+        if wake_source == 'USB_KB':
+            # Initialize USB keyboard.
+            self._host.servo.set_nocheck('init_usb_keyboard', 'on')
+            return True
+
         return True
 
     def _force_base_state(self, base_state):
@@ -114,7 +123,7 @@ class power_WakeSources(test.test):
         """
         if wake_source.startswith('BASE'):
             if self._host.run('which hammerd', ignore_status=True).\
-                exit_status == 0:
+                    exit_status == 0:
                 # Smoke test to see if EC has support to reset base.
                 return self._force_base_state(BASE_STATE.RESET)
             else:
@@ -123,6 +132,29 @@ class power_WakeSources(test.test):
             return self._dr_utils.host_has_lid()
         if wake_source == 'INTERNAL_KB':
             return self._faft_config.has_keyboard
+        if wake_source == 'USB_KB':
+            # Initialize USB keyboard.
+            self._host.servo.set_nocheck('init_usb_keyboard', 'on')
+            time.sleep(USB_PRESENT_DELAY)
+            # Check if DUT can see a wake capable Atmel USB keyboard.
+            if servo_keyboard_utils.is_servo_usb_keyboard_present(
+                    self._host):
+                if servo_keyboard_utils.is_servo_usb_wake_capable(
+                        self._host):
+                    return True
+                else:
+                    logging.warning(
+                        'Atmel USB keyboard does not have wake capability.'
+                        ' Please run firmware_FlashServoKeyboardMap Autotest '
+                        'to update the Atmel firmware.')
+                    return False
+            else:
+                logging.warning(
+                    'DUT cannot see a Atmel USB keyboard. '
+                    ' Please plug in USB C charger into Servo if using V4.')
+
+                return False
+
         return True
 
     def _test_full_wake(self, wake_source):
@@ -133,8 +165,9 @@ class power_WakeSources(test.test):
             triggers a full wake.
         """
         is_success = True
-        logging.info('Testing wake by %s triggers a '
-                     'full wake when dark resume is enabled.', wake_source)
+        logging.info(
+            'Testing wake by %s triggers a '
+            'full wake when dark resume is enabled.', wake_source)
         if not self._before_suspend(wake_source):
             logging.error('Before suspend action failed for %s', wake_source)
             is_success = False
@@ -182,9 +215,10 @@ class power_WakeSources(test.test):
 
         count_after = self._dr_utils.count_dark_resumes()
         if count_before != count_after - 1:
-            logging.error(' RTC did not cause a dark resume.'
-                          'count before = %d, count after = %d',
-                          count_before, count_after)
+            logging.error(
+                'RTC did not cause a dark resume.'
+                'count before = %d, count after = %d', count_before,
+                count_after)
             return False
         return True
 
@@ -206,6 +240,8 @@ class power_WakeSources(test.test):
             self._force_base_state(BASE_STATE.DETACH)
         elif wake_source == 'INTERNAL_KB':
             self._host.servo.ctrl_key()
+        elif wake_source == 'USB_KB':
+            self._host.servo.set_nocheck('usb_keyboard_enter_key', '10')
 
     def cleanup(self):
         """cleanup."""
@@ -226,8 +262,8 @@ class power_WakeSources(test.test):
     def run_once(self):
         """Body of the test."""
 
-        test_ws = set(ws for ws in FULL_WAKE_SOURCES if \
-            self._is_valid_wake_source(ws))
+        test_ws = set(
+            ws for ws in FULL_WAKE_SOURCES if self._is_valid_wake_source(ws))
         passed_ws = set(ws for ws in test_ws if self._test_full_wake(ws))
         failed_ws = test_ws.difference(passed_ws)
         skipped_ws = set(FULL_WAKE_SOURCES).difference(test_ws)
@@ -240,11 +276,12 @@ class power_WakeSources(test.test):
             logging.info('[%s] woke the device as expected.',
                          ''.join(str(elem) + ', ' for elem in passed_ws))
         if skipped_ws:
-            logging.info('[%s] are not wake sources on this platform. '
-                         'Please test manually if not the case.',
-                         ''.join(str(elem) + ', ' for elem in skipped_ws))
+            logging.info(
+                '[%s] are not wake sources on this platform. '
+                'Please test manually if not the case.',
+                ''.join(str(elem) + ', ' for elem in skipped_ws))
 
         if len(failed_ws):
             raise error.TestFail(
-                '[%s] wake sources did not behave as expected.'
-                % (''.join(str(elem) + ', ' for elem in failed_ws)))
+                '[%s] wake sources did not behave as expected.' %
+                (''.join(str(elem) + ', ' for elem in failed_ws)))
