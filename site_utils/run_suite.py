@@ -2065,7 +2065,12 @@ def _log_create_task(job_timer, job_url, job_id):
 
 
 def _check_if_use_skylab(options):
-    """Detect whether to run suite in skylab."""
+    """Detect whether to run suite in skylab.
+
+    Returns:
+        A tuple of (bool, string, string) to indicate
+            (if_use_skylab, override_pool, override_qs_account)
+    """
     # An autotest job id is a number of at least 9 digits, e.g. 296843118.
     # A skylab task id is of 16 chars, e.g. 43cabbb4e118ea10.
     if len(str(options.mock_job_id)) >= 16:
@@ -2091,10 +2096,16 @@ def _check_if_use_skylab(options):
                                        options.name,
                                        options.pool):
             logging.info('Task (%s) Should run in skylab', task_info)
-            return True
+            override_pool, override_qs_account = skylab.get_override_info(
+                    _migration_config,
+                    options.board,
+                    options.model,
+                    options.name,
+                    options.pool)
+            return True, override_pool, override_qs_account
 
     logging.info('Task (%s) Should run in autotest', task_info)
-    return False
+    return False, '', ''
 
 
 def _get_skylab_suite_result(child_tasks):
@@ -2129,10 +2140,11 @@ def _log_skylab_for_buildbot(stdout):
     logging.info(stdout)
 
 
-def _run_with_skylab(options):
+def _run_with_skylab(options, override_pool, override_qs_account):
     """Run suite inside skylab."""
     builds = suite_common.make_builds_from_options(options)
     skylab_tool = os.environ.get('SKYLAB_TOOL') or _SKYLAB_TOOL
+    pool = override_pool or options.pool
     if options.mock_job_id:
         taskID = options.mock_job_id
         cmd = [skylab_tool, 'wait-suite',
@@ -2155,10 +2167,12 @@ def _run_with_skylab(options):
         cmd = [skylab_tool, 'create-suite',
                '-board', options.board,
                '-image', builds[provision.CROS_VERSION_PREFIX],
-               '-pool', options.pool,
+               '-pool', pool,
                '-timeout-mins', str(options.timeout_mins),
                '-priority', priorities.Priority.get_string(options.priority),
                '-service-account-json', _SKYLAB_SERVICE_ACCOUNT]
+        if override_qs_account:
+            cmd.extend(['-qs-account', override_qs_account])
 
         if options.max_retries is not None:
             cmd.extend(['-max-retries', str(options.max_retries)])
@@ -2233,8 +2247,11 @@ def main():
         result = run_suite_common.SuiteResult(
                 run_suite_common.RETURN_CODES.INVALID_OPTIONS)
     else:
-        if _check_if_use_skylab(options):
-            result = _run_with_skylab(options)
+        is_skylab, override_pool, override_qs_account = _check_if_use_skylab(
+                options)
+        if is_skylab:
+            result = _run_with_skylab(options, override_pool,
+                                      override_qs_account)
         else:
             result = _run_with_autotest(options)
 
