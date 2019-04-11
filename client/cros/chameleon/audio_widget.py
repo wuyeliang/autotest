@@ -551,21 +551,18 @@ class ChameleonOutputWidgetHandler(ChameleonWidgetHandler):
             test_data_for_chameleon.delete()
 
 
-    def start_playback(self, path, blocking=False, node_type=None):
+    def start_playback(self, path, blocking=False, **kargs):
         """Starts playback.
 
         @param path: The path to the file to play on Chameleon.
         @param blocking: Blocks this call until playback finishes.
-        @param node_type: A Cras node type defined in cras_utils.CRAS_NODE_TYPES
+        @param kargs: Other arguments that Chameleon doesn't support.
 
+        @raises: NotImplementedError if blocking is True.
         """
         if blocking:
             raise NotImplementedError(
                     'Blocking playback on chameleon is not supported')
-
-        if node_type:
-            raise NotImplementedError(
-                    'Pinned stream playback on chameleon is not supported')
 
         self._port.start_playing_audio(
                 path, self._test_data_for_chameleon_format)
