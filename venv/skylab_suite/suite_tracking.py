@@ -49,8 +49,7 @@ def print_child_test_annotations(suite_handler):
                 # test_spec is no longer DUT-specific.
                 pass
 
-            show_text = '[Test-logs]: %s' % anchor_test
-            _print_task_result_link_annotation(task_id, show_text)
+            _print_task_result_link_annotation(task_id, anchor_test)
 
 
 def log_suite_results(suite_name, suite_handler):
