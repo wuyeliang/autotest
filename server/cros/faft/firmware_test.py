@@ -1114,6 +1114,13 @@ class FirmwareTest(FAFTBase):
             time.sleep(self.faft_config.software_sync)
             self.servo.power_short_press()
 
+    def stop_powerd(self):
+        """Stop the powerd daemon on the AP.
+
+        This will cause the AP to ignore power button presses sent by the EC.
+        """
+        self.faft_client.system.run_shell_command("stop powerd")
+
     def _modify_usb_kernel(self, usb_dev, from_magic, to_magic):
         """Modify the kernel header magic in USB stick.
 

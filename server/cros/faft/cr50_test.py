@@ -665,6 +665,11 @@ class Cr50Test(FirmwareTest):
 
     def ccd_open_from_ap(self):
         """Start the open process and press the power button."""
+        # Opening CCD requires power button presses. If those presses would
+        # power off the AP and prevent CCD open from completing, ignore them.
+        if self.faft_config.ec_forwards_short_pp_press:
+            self.stop_powerd()
+
         self._ccd_open_last_len = 0
 
         self._ccd_open_stdout = StringIO.StringIO()

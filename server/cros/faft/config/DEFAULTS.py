@@ -104,3 +104,7 @@ class Values(object):
     # True if AP is normally expected to be powered on after the Cr50 reboots
     # (when AC power is connected).
     ap_up_after_cr50_reboot = True
+
+    # True if the EC will send short power button presses, such as those
+    # expected during CCD open, to the AP.
+    ec_forwards_short_pp_press = False

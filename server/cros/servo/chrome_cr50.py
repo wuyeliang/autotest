@@ -799,6 +799,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         For testlab enable/disable you must press the power button 5 times
         spaced between 100msec and 5 seconds apart.
         """
+        ap_on_before = self.ap_is_on()
+
         end_time = time.time() + unlock_timeout
 
         logging.info('Pressing power button for %ds to unlock the console.',
@@ -809,6 +811,17 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         while time.time() < end_time:
             self._servo.power_short_press()
             time.sleep(1)
+
+        # If the last power button press left the AP powered off, and it was on
+        # before, turn it back on.
+        time.sleep(self.faft_config.shutdown)
+        ap_on_after = self.ap_is_on()
+        logging.debug('During run_pp, AP %s -> %s',
+                'on' if ap_on_before else 'off',
+                'on' if ap_on_after else 'off')
+        if ap_on_before and not ap_on_after:
+            self._servo.power_short_press()
+            logging.debug('Pressing PP to turn back on')
 
 
     def gettime(self):
@@ -882,3 +895,28 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         logging.debug(result)
 
         return result.lower() == 'enabled'
+
+    def ap_is_on(self):
+        """Get the power state of the AP.
+
+        Returns True if the AP is on; False otherwise.
+        """
+        # Look for a line like 'AP: on' or 'AP: off'. 'debouncing' or 'unknown'
+        # may appear transiently. 'debouncing' should transition to 'on' or
+        # 'off' within 1 second, and 'unknown' should do so within 20 seconds.
+        ap_state = ''
+        max_tries = 20
+        tries = 0
+        while not (ap_state == 'on' or ap_state == 'off') and tries < max_tries:
+            ap_state = self.send_command_get_output('ccdstate',
+                                                    [r'\bAP:\s*(\w+)\b'])[0][1]
+            tries += 1
+            time.sleep(1)
+
+        if ap_state == 'on':
+            return True
+        elif ap_state == 'off':
+            return False
+        else:
+            raise error.TestFail('Read unusable AP state from ccdstate: "%s"',
+                                 ap_state)
