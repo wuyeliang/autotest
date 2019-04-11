@@ -418,12 +418,12 @@ class Cr50Test(FirmwareTest):
         """Reset the DUT if it doesn't respond to ping"""
         logging.info('checking dut state')
         end_time = time.time() + self.RESPONSE_TIMEOUT
-        while not self.host.is_up_fast():
+        while not self.host.ping_wait_up(
+                self.faft_config.delay_reboot_to_ping):
             if time.time() > end_time:
                 raise error.TestFail('DUT is unresponsive')
             self.servo.get_power_state_controller().reset()
             logging.info('DUT did not respond. Resetting it.')
-            time.sleep(self.faft_config.delay_reboot_to_ping)
 
 
     def _restore_cr50_state(self):
