@@ -49,16 +49,6 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
             raise error.TestNAError('Plug in servo v4 type c cable into ccd '
                     'port')
 
-        # Asserting warm_reset will hold the AP in reset if the system uses
-        # SYS_RST instead of PLT_RST. If the system uses PLT_RST, we have to
-        # hold the EC in reset to guarantee the device won't turn on during
-        # open.
-        # warm_reset doesn't interfere with rdd, so it's best to use that when
-        # possible.
-        self.reset_signal = ('cold_reset' if self.cr50.get_board_properties() &
-                self.PLT_RST else 'warm_reset')
-        logging.info('Using %r for reset', self.reset_signal)
-
         self.fast_open(enable_testlab=True)
         # make sure password is cleared.
         self.cr50.send_command('ccd reset')
@@ -67,12 +57,18 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         # a password, so we can use it to open cr50 while the AP is off.
         self.set_ccd_password(self.PASSWORD)
 
+        # Asserting warm_reset will hold the AP in reset if the system uses
+        # SYS_RST instead of PLT_RST. If the system uses PLT_RST, we have to
+        # hold the EC in reset to guarantee the device won't turn on during
+        # open.
+        # warm_reset doesn't interfere with rdd, so it's best to use that when
+        # possible.
+        self.reset_ec = self.cr50.get_board_properties() & self.PLT_RST
         self.changed_dut_state = True
-        self.assert_reset = True
-        if not self.reset_device_get_deep_sleep_count(True):
+        if self.reset_ec and not self.reset_device_get_deep_sleep_count(True):
             # Some devices can't tell the AP is off when the EC is off. Try
             # deep sleep with just the AP off.
-            self.assert_reset = False
+            self.reset_ec = False
             # If deep sleep doesn't work at all, we can't run the test.
             if not self.reset_device_get_deep_sleep_count(True):
                 raise error.TestNAError('Skipping test on device without deep '
@@ -132,27 +128,21 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         If we are testing ccd open fully, it will also assert device reset so
         power button presses wont turn on the AP
         """
-        # Make sure to release the device from reset before trying anything
-        self.servo.set(self.reset_signal, 'off')
+        reset_signal_state = 'on' if state == 'off' else 'off'
+
+        self.servo.set('warm_reset', reset_signal_state)
+
+        # Hold the EC in reset or release it from reset based on state
+        if self.reset_ec:
+            self.servo.set('cold_reset', reset_signal_state)
 
         time.sleep(self.SHORT_DELAY)
 
-        # Turn off the AP
-        if state == 'off':
-            self.servo.set_nocheck('power_state', 'off')
-            time.sleep(self.SHORT_DELAY)
-
-        # Hold the EC in reset or release it from reset based on state
-        if self.assert_reset:
-            # The reset control is the inverse of device state, so convert the
-            # state self.servo.set(reset_signal, 'on' if state == 'off' else
-            # 'off')
-            self.servo.set(self.reset_signal, 'on' if state == 'off' else 'off')
-            time.sleep(self.SHORT_DELAY)
-
-        # Turn on the AP
+        # Press the power button to turn on the AP
         if state == 'on':
             self.servo.power_short_press()
+
+        time.sleep(self.SHORT_DELAY)
 
 
     def reset_device_get_deep_sleep_count(self, deep_sleep):
