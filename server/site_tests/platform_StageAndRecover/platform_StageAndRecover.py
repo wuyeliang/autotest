@@ -16,6 +16,7 @@ class platform_StageAndRecover(test.test):
     _TEST_IMAGE_BOOT_DELAY = 120
     _USB_PARTITION = '/dev/sda1'
     _MOUNT_PATH = '/media/removable'
+    _MOUNT_DELAY = 5
     _VERIFY_STR = 'ChromeosChrootPostinst complete'
     _RECOVERY_LOG = '/recovery_logs*/recovery.log'
 
@@ -28,6 +29,9 @@ class platform_StageAndRecover(test.test):
         """ Turns USB_HUB_2 servo port to DUT, and disconnects servo from DUT.
         Avoiding peripherals plugged at this servo port.
         """
+        # Set prtctl4_pwren to power on servo USB
+        self.host.servo.set('prtctl4_pwren','on')
+
         self.host.servo.set('usb_mux_sel3', 'dut_sees_usbkey')
         self.host.servo.set('dut_hub1_rst1','on')
 
@@ -92,6 +96,7 @@ class platform_StageAndRecover(test.test):
         recovery_info = ''
 
         self.set_servo_usb_reimage()
+        time.sleep(self._MOUNT_DELAY)
         self.host.servo.system('mount -r %s %s'
                                % (self._USB_PARTITION, self._MOUNT_PATH))
         recovery_info = self.host.servo.system_output('cat %s%s'
