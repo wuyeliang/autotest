@@ -18,7 +18,8 @@ class login_UnicornLogin(test.test):
     if not (child_user and child_pass and parent_user and parent_pass):
       raise error.TestFail('Credentials not set.')
 
-    with chrome.Chrome(auto_login=False) as cr:
+    with chrome.Chrome(auto_login=False,
+                       disable_gaia_services=False) as cr:
       cr.browser.oobe.NavigateUnicornLogin(
           child_user=child_user, child_pass=child_pass,
           parent_user=parent_user, parent_pass=parent_pass)
@@ -31,17 +32,18 @@ class login_UnicornLogin(test.test):
       # parsing accounts.google.com.
       tab.Navigate('http://accounts.google.com')
       tab.WaitForDocumentReadyStateToBeComplete()
-      res = tab.EvaluateJavaScript( '''
-          var res = '',
-          divs = document.getElementsByTagName('div');
-          for (var i = 0; i < divs.length; i++) {
-            res = divs[i].textContent;
-            if (res.search('%s') > 1) {
-              break;
-            }
-          }
-          res;
-      ''' % child_user)
+      res = tab.EvaluateJavaScript(
+          '''
+              var res = '',
+              divs = document.getElementsByTagName('div');
+              for (var i = 0; i < divs.length; i++) {
+                res = divs[i].textContent;
+                if (res.search('%s') > 1) {
+                  break;
+                }
+              }
+              res;
+          ''' % child_user.lower())
       if not res:
         raise error.TestFail('No references to %s on accounts page.'
                              % child_user)
