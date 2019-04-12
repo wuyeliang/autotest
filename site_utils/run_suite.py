@@ -96,6 +96,8 @@ except django_exceptions.ImproperlyConfigured as e:
                       'Please re-run utils/build_externals.py inside[outside] '
                       'of the chroot accordingly.')
     raise
+
+from autotest_lib.site_utils import paygen
 from autotest_lib.site_utils import run_suite_common
 
 CONFIG = global_config.global_config
@@ -2141,8 +2143,44 @@ def _log_skylab_for_buildbot(stdout):
     logging.info(stdout)
 
 
+def _run_paygen_with_skylab(options, override_pool, override_qs_account):
+    """Run paygen suites with skylab."""
+    builds = suite_common.make_builds_from_options(options)
+    skylab_tool = os.environ.get('SKYLAB_TOOL') or _SKYLAB_TOOL
+    test_source_build = suite_common.get_test_source_build(builds)
+    pool = ('DUT_POOL_%s' % options.pool.upper()
+            if not override_pool else override_pool)
+    paygen_tests = paygen.get_paygen_tests(test_source_build, options.name)
+    for test in paygen_tests:
+        cmd = [skylab_tool, 'create-test']
+        cmd += paygen.paygen_skylab_args(
+                test, options.name, test_source_build, pool, options.board,
+                options.model, options.timeout_mins,
+                override_qs_account, _SKYLAB_SERVICE_ACCOUNT)
+        job_created_on = time.time()
+        try:
+            res = cros_build_lib.RunCommand(cmd, capture_output=True)
+        except cros_build_lib.RunCommandError as e:
+            logging.error(str(e))
+            return run_suite_common.SuiteResult(
+                    run_suite_common.RETURN_CODES.INFRA_FAILURE)
+
+        logging.info(res.output)
+        job_url = res.output.split()[-1]
+        job_id = job_url.split('id=')[-1]
+        job_timer = diagnosis_utils.JobTimer(
+                job_created_on, float(options.timeout_mins))
+        _log_create_task(job_timer, job_url, job_id)
+
+    return run_suite_common.SuiteResult(run_suite_common.RETURN_CODES.OK)
+
+
 def _run_with_skylab(options, override_pool, override_qs_account):
     """Run suite inside skylab."""
+    if paygen.is_paygen_suite(options.name):
+        return _run_paygen_with_skylab(options, override_pool,
+                                       override_qs_account)
+
     builds = suite_common.make_builds_from_options(options)
     skylab_tool = os.environ.get('SKYLAB_TOOL') or _SKYLAB_TOOL
     pool = override_pool or options.pool

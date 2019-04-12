@@ -109,13 +109,14 @@ def get_test_source_build(builds, **dargs):
     return test_source_build
 
 
-def stage_build_artifacts(build, hostname=None):
+def stage_build_artifacts(build, hostname=None, artifacts=[]):
     """
     Ensure components of |build| necessary for installing images are staged.
 
     @param build image we want to stage.
     @param hostname hostname of a dut may run test on. This is to help to locate
         a devserver closer to duts if needed. Default is None.
+    @param artifacts A list of string artifact name to be staged.
 
     @raises StageControlFileFailure: if the dev server throws 500 while staging
         suite control files.
@@ -132,6 +133,8 @@ def stage_build_artifacts(build, hostname=None):
     timings[constants.DOWNLOAD_STARTED_TIME] = _formatted_now()
     try:
         ds.stage_artifacts(image=build, artifacts=['test_suites'])
+        if artifacts:
+          ds.stage_artifacts(image=build, artifacts=artifacts)
     except dev_server.DevServerException as e:
         raise error.StageControlFileFailure(
                 "Failed to stage %s on %s: %s" % (build, ds_name, e))
