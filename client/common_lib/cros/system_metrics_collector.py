@@ -206,7 +206,7 @@ class StorageWrittenCountMetric(Metric):
         # fatrace outputs a line of text for each file it detects being written
         # to.
         written_count = output.count('\n')
-        self.values.append(written_count)
+        self._store_sample(written_count)
 
     def post_collect(self):
         self.system_facade.stop_bg_worker()
