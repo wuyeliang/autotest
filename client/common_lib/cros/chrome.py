@@ -58,6 +58,7 @@ class Chrome(object):
                  username=None, password=None, gaia_id=None,
                  arc_mode=None, disable_arc_opt_in=True,
                  disable_arc_opt_in_verification=True,
+                 disable_arc_cpu_restriction=True,
                  disable_app_sync=False,
                  disable_play_auto_install=False,
                  disable_locale_sync=True,
@@ -102,6 +103,12 @@ class Chrome(object):
              for data migration tests where user's home data is already set up
              with opted-in state before login, this option needs to be set to
              False with disable_arc_opt_in=True to make ARC container work.
+        @param disable_arc_cpu_restriction:
+             Adds --disable-arc-cpu-restriction to browser args. This is enabled
+             by default and will make tests run faster and is generally
+             desirable unless a test is actually trying to test performance
+             where ARC is running in the background for some porition of the
+             test.
         @param disable_app_sync:
             Adds --arc-disable-app-sync to browser args and this disables ARC
             app sync flow. By default it is enabled.
@@ -146,6 +153,9 @@ class Chrome(object):
             if disable_arc_opt_in and disable_arc_opt_in_verification:
                 finder_options.browser_options.AppendExtraBrowserArgs(
                         ['--disable-arc-opt-in-verification'])
+            if disable_arc_cpu_restriction:
+                finder_options.browser_options.AppendExtraBrowserArgs(
+                        ['--disable-arc-cpu-restriction'])
             if disable_app_sync:
                 finder_options.browser_options.AppendExtraBrowserArgs(
                         ['--arc-disable-app-sync'])
