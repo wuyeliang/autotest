@@ -164,11 +164,13 @@ class TradefedTest(test.test):
                 self._run_adb_cmd(host, verbose=True, args=('kill-server',))
             except (error.CmdError, AttributeError):
                 pass
-        logging.info('Cleaning up %s.', self._tradefed_install)
-        try:
-            shutil.rmtree(self._tradefed_install)
-        except IOError:
-            pass
+
+        if hasattr(self, '_tradefed_install'):
+            logging.info('Cleaning up %s.', self._tradefed_install)
+            try:
+                shutil.rmtree(self._tradefed_install)
+            except IOError:
+                pass
 
         # Create perf data for Chromeperf.
         for perf in self._perf_results:
