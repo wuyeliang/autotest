@@ -132,7 +132,7 @@ def _create_test_tasks(test_specs, suite_handler, suite_id, dry_run=False):
                 test_task_id,
                 cros_suite.TestHandlerSpec(
                         test_spec=test_spec,
-                        remaining_retries=test_spec.test.job_retries - 1,
+                        remaining_retries=test_spec.test.job_retries,
                         previous_retried_ids=[]))
 
 
