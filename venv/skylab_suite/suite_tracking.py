@@ -85,6 +85,9 @@ def _get_failed_test_views_from_tko(task_ids):
     @param task_ids: list of Swarming request IDs.
     @return {task_id: [tko_test_views.Row()]}
     """
+    if not task_ids:
+        return {}
+
     conn = _new_tko_connection()
     if conn is None:
         return {}
