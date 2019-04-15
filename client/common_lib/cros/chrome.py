@@ -66,6 +66,7 @@ class Chrome(object):
                  enable_assistant=False,
                  enterprise_arc_test=False,
                  init_network_controller=False,
+                 mute_audio=False,
                  login_delay=0):
         """
         Constructor of telemetry wrapper.
@@ -115,6 +116,8 @@ class Chrome(object):
         @param disable_play_auto_install:
             Adds --arc-disable-play-auto-install to browser args and this
             disables ARC Play Auto Install flow. By default it is enabled.
+        @param enable_assistant: For tests that require to enable Google
+                                  Assistant service. Default is False.
         @param enterprise_arc_test: Skips opt_in causing enterprise tests to fail
         @param disable_locale_sync:
             Adds --arc-disable-locale-sync to browser args and this
@@ -128,10 +131,9 @@ class Chrome(object):
             Adds --arc-play-store-auto-update=off to browser args and this
             disables Play Store, GMS Core and third-party apps auto-update.
             By default auto-update is off to have stable autotest environment.
+        @param mute_audio: Mute audio.
         @param login_delay: Time for idle in login screen to simulate the time
                             required for password typing.
-        @param enable_assistant: For tests that require to enable Google
-                                  Assistant service. Default is False.
         """
         self._autotest_ext_path = None
 
@@ -196,6 +198,7 @@ class Chrome(object):
 
         b_options.auto_login = auto_login
         b_options.gaia_login = gaia_login
+        b_options.mute_audio = mute_audio
         b_options.login_delay = login_delay
 
         if utils.is_arc_available() and not disable_arc_opt_in:
