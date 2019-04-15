@@ -9,6 +9,7 @@ import common
 
 from autotest_lib.server import utils
 from autotest_lib.server.hosts.cros_label import BoardLabel
+from autotest_lib.server.hosts.cros_label import Cr50Label
 from autotest_lib.server.hosts.cros_label import ModelLabel
 from autotest_lib.server.hosts import host_info
 
@@ -60,6 +61,25 @@ CHROMEOS_AUSERVER=http://server.bld.corp.google.com:8080/update
 CHROMEOS_RELEASE_MODELS=coral astronaut blue bruce lava nasher
 """
 
+GSCTOOL_OUTPUT_PVT = """
+start
+target running protocol version 6
+keyids: RO 0xaa66150f, RW 0xde88588d
+offsets: backup RO at 0x40000, backup RW at 0x44000
+Current versions:
+RO 0.0.10
+RW 0.3.14
+"""
+
+GSCTOOL_OUTPUT_PREPVT = """
+start
+target running protocol version 6
+keyids: RO 0xaa66150f, RW 0xde88588d
+offsets: backup RO at 0x40000, backup RW at 0x44000
+Current versions:
+RO 0.0.10
+RW 0.4.15
+"""
 
 class MockCmd(object):
     """Simple mock command with base command and results"""
@@ -169,6 +189,25 @@ class BoardLabelTests(unittest.TestCase):
     def test_existing_label_in_host_info_store(self):
         host = MockHostWithoutAFE(['board:existing'])
         self.assertEqual(BoardLabel().generate_labels(host), ['existing'])
+
+
+class Cr50LabelTests(unittest.TestCase):
+    """Unit tests for Cr50Label"""
+
+    def test_cr50_prepvt(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
+        self.assertEqual(Cr50Label().get(host), ['cr50:prepvt'])
+
+    def test_cr50_pvt(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
+        self.assertEqual(Cr50Label().get(host), ['cr50:pvt'])
+
+    def test_gsctool_fails(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 1, ''))
+        self.assertEqual(Cr50Label().get(host), [])
 
 
 if __name__ == '__main__':
