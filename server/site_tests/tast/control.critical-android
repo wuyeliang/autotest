@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = 'Chromium OS team'
-NAME = 'tast.mustpass-android'
+NAME = 'tast.critical-android'
 TIME = 'MEDIUM'
 TEST_TYPE = 'Server'
 # Android tests can also be broken by Chrome and OS changes, so these tests need
