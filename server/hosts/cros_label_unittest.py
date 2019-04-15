@@ -197,12 +197,12 @@ class Cr50LabelTests(unittest.TestCase):
     def test_cr50_prepvt(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
-        self.assertEqual(Cr50Label().get(host), ['cr50:prepvt'])
+        self.assertEqual(Cr50Label().get(host), ['cr50:0.4.15', 'cr50:prepvt'])
 
     def test_cr50_pvt(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
-        self.assertEqual(Cr50Label().get(host), ['cr50:pvt'])
+        self.assertEqual(Cr50Label().get(host), ['cr50:0.3.14', 'cr50:pvt'])
 
     def test_gsctool_fails(self):
         host = MockHost([],

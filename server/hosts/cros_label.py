@@ -182,10 +182,11 @@ class Cr50Label(base_label.StringPrefixLabel):
 
     def generate_labels(self, host):
         # Check the major version to determine prePVT vs PVT
-        major_ver = int(re.search('RW \d+\.(\d+)\.\d+[\r\n]',
-                self.ver.stdout).group(1))
+        version_info = re.search('RW (\d+\.(\d+)\.\d+)$', self.ver.stdout)
+        full_version = version_info.group(1)
+        major_version = int(version_info.group(2))
         # PVT images have a odd major version prePVT have even
-        return ['pvt' if (major_ver % 2) else 'prepvt']
+        return [full_version, 'pvt' if (major_version % 2) else 'prepvt']
 
 
 class AccelsLabel(base_label.BaseLabel):
