@@ -29,6 +29,7 @@ class firmware_DevScreenTimeout(FirmwareTest):
     # If the margin is too small and firmware initialization is too fast,
     # the test will fail incorrectly.
     TIMEOUT_MARGIN = 5
+    GET_BOOT_TIME_TIMEOUT_MARGIN = 5
 
     fw_time_record = {}
 
@@ -39,13 +40,17 @@ class firmware_DevScreenTimeout(FirmwareTest):
         @param tag: A tag about this boot.
         @raise TestError: If the firmware-boot-time file does not exist.
         """
-        [fw_time] = self.faft_client.system.run_shell_command_get_output(
-                'cat /tmp/firmware-boot-time')
-        logging.info('Got firmware boot time [%s]: %s', tag, fw_time)
-        if fw_time:
-            self.fw_time_record[tag] = float(fw_time)
-        else:
-            raise error.TestError('Failed to get the firmware boot time.')
+        timeout_time = time.time() + self.GET_BOOT_TIME_TIMEOUT_MARGIN
+        while True:
+            [fw_time] = self.faft_client.system.run_shell_command_get_output(
+                    'cat /tmp/firmware-boot-time')
+            logging.info('Got firmware boot time [%s]: %s', tag, fw_time)
+            if fw_time:
+                self.fw_time_record[tag] = float(fw_time)
+                break
+
+            if time.time() > timeout_time:
+                raise error.TestError('Failed to get the firmware boot time.')
 
     def check_timeout_period(self):
         """Check the firmware screen timeout period matches our spec.
