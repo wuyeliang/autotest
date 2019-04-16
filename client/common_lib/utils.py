@@ -2820,6 +2820,42 @@ def poll_for_condition_ex(condition, timeout=10, sleep_interval=0.1, desc=None):
     raise to_raise
 
 
+def shadowroot_query(element, action):
+    """Recursively queries shadowRoot.
+
+    @param element: element to query for.
+    @param action: action to be performed on the element.
+
+    @return JS functions to execute.
+
+    """
+    # /deep/ CSS query has been removed from ShadowDOM. The only way to access
+    # elements now is to recursively query in each shadowRoot.
+    shadowroot_script = """
+    function deepQuerySelectorAll(root, targetQuery) {
+        const elems = Array.prototype.slice.call(
+            root.querySelectorAll(targetQuery[0]));
+        const remaining = targetQuery.slice(1);
+        if (remaining.length === 0) {
+            return elems;
+        }
+
+        let res = [];
+        for (let i = 0; i < elems.length; i++) {
+            if (elems[i].shadowRoot) {
+                res = res.concat(
+                    deepQuerySelectorAll(elems[i].shadowRoot, remaining));
+            }
+        }
+        return res;
+    };
+    var testing_element = deepQuerySelectorAll(document, %s);
+    testing_element[0].%s;
+    """
+    script_to_execute = shadowroot_script % (element, action)
+    return script_to_execute
+
+
 def threaded_return(function):
     """
     Decorator to add to a function to get that function to return a thread
