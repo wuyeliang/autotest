@@ -290,7 +290,7 @@ class AudioOutputWidget(AudioWidget):
                     self.port_id)
 
         self.handler.start_playback(
-                self._remote_playback_path, blocking, node_type)
+                self._remote_playback_path, blocking, node_type=node_type)
 
     def start_playback_with_path(self, remote_playback_path, blocking=False):
         """Starts playing audio specified in previous set_playback_data call
