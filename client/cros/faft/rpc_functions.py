@@ -752,14 +752,14 @@ class RPCFunctions(object):
 
         @param append: use for the shellball name.
         """
-        self._updater.extract_shellball(append)
+        return self._updater.extract_shellball(append)
 
     def _updater_repack_shellball(self, append=None):
         """Repack shellball with new fwid.
 
-        @param append: use for new fwid naming.
+        @param append: use for the shellball name.
         """
-        self._updater.repack_shellball(append)
+        return self._updater.repack_shellball(append)
 
     def _updater_run_autoupdate(self, append):
         """Run chromeos-firmwareupdate with autoupdate mode."""
