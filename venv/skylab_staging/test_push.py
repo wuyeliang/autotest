@@ -38,11 +38,12 @@ _WAIT_FOR_DUTS_TIMEOUT_S = 20 * 60
 _EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         ['GOOD'],
                           'provision_AutoUpdate.double':  ['GOOD'],
                           'dummy_Pass.*':                 ['GOOD'],
-                          'dummy_Fail.Fail$':             ['FAIL'],
-                          'dummy_Fail.Error$':            ['ERROR'],
-                          'dummy_Fail.Warn$':             ['WARN'],
-                          'dummy_Fail.NAError$':          ['TEST_NA'],
-                          'dummy_Fail.Crash$':            ['GOOD'],
+                          'dummy_Fail.Fail$':             ['FAIL', 'FAIL'],
+                          'dummy_Fail.Error$':            ['ERROR', 'ERROR'],
+                          'dummy_Fail.Warn$':             ['WARN', 'WARN'],
+                          'dummy_Fail.NAError$':          ['TEST_NA',
+                                                           'TEST_NA'],
+                          'dummy_Fail.Crash$':            ['GOOD', 'GOOD'],
                           }
 
 # Some test could be missing from the test results for various reasons. Add

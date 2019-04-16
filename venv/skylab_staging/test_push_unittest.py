@@ -19,6 +19,11 @@ EXAMPLE_TEST_RESULTS = [
     ('dummy_Fail.Warn', 'WARN'),
     ('dummy_Fail.NAError', 'TEST_NA'),
     ('dummy_Fail.Crash', 'GOOD'),
+    ('dummy_Fail.Fail', 'FAIL'),
+    ('dummy_Fail.Error', 'ERROR'),
+    ('dummy_Fail.Warn', 'WARN'),
+    ('dummy_Fail.NAError', 'TEST_NA'),
+    ('dummy_Fail.Crash', 'GOOD'),
     ('login_LoginSuccess', 'GOOD'),
     ('provision_AutoUpdate.double', 'GOOD'),
 ]
