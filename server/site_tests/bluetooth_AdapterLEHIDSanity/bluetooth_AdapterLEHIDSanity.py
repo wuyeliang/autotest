@@ -188,31 +188,34 @@ class bluetooth_AdapterLEHIDSanity(
         # Restart the link to HID device
         logging.info('Restarting HID device...')
         self.cleanup()
-        self.device = self.get_device(device_type)
+        self.devices[device_type] = None
+        if device_type is not None:
+            self.device = self.get_device(device_type)
 
-    def _cleanup_and_restart(self, device_type, test_name):
+    def _cleanup_and_restart(self, device_type=None, test_name=None):
         """Restart and clear peer device and DUT Bluetooth adapter"""
+        if device_type is not None:
+            logging.info('Cleanning up and restarting towards next test...')
 
-        logging.info('Cleanning up and restarting towards next test...')
-        # Restart and clear peer HID device
-        self._restart_hid(device_type)
-
+        self.bluetooth_facade.stop_discovery()
         # Disconnect the device, and remove the pairing.
-        self.bluetooth_facade.disconnect_device(self.device.address)
-        device_is_paired = self.bluetooth_facade.device_is_paired(
-                self.device.address)
-        if device_is_paired:
-            self.bluetooth_facade.remove_device_object(
+        if self.device is not None:
+            self.bluetooth_facade.disconnect_device(self.device.address)
+            device_is_paired = self.bluetooth_facade.device_is_paired(
                     self.device.address)
-
+            if device_is_paired:
+                self.bluetooth_facade.remove_device_object(
+                        self.device.address)
         # Reset the adapter
         self.test_reset_on_adapter()
-
+        # Restart and clear peer HID device
+        self._restart_hid(device_type)
         # Initialize bluetooth_adapter_tests class (also clears self.fails)
         self.initialize()
-        time.sleep(self.TEST_SLEEP_SECS)
-        self._print_delimiter()
-        logging.info('Starting test: %s', test_name)
+        if device_type is not None:
+            time.sleep(self.TEST_SLEEP_SECS)
+            self._print_delimiter()
+            logging.info('Starting test: %s', test_name)
 
 
     def _print_test_results(self):
@@ -239,12 +242,13 @@ class bluetooth_AdapterLEHIDSanity(
 
         """
         self.host = host
+        self.device = None
         factory = remote_facade_factory.RemoteFacadeFactory(host)
         self.bluetooth_facade = factory.create_bluetooth_hid_facade()
         self.input_facade = factory.create_input_facade()
         self.check_chameleon()
+        self._print_delimiter()
 
-        self._print_delimiter();
         logging.info('Starting LE HID Sanity Tests')
         # Main loop running all LE HID sanity tests
         for iter in xrange(num_iterations):
@@ -256,3 +260,5 @@ class bluetooth_AdapterLEHIDSanity(
             self._test_auto_reconnect()
 
         self._print_test_results()
+        # Cleanup before existing
+        self._cleanup_and_restart(None)
