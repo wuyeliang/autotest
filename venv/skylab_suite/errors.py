@@ -28,7 +28,7 @@ class NoAvailableDUTsError(Exception):
                 board, pool, available_num, required_num)
 
     def __str__(self):
-        return ('The available number of DUTs for board %s and pool %s is %d ,'
+        return ('The available number of DUTs for board %s and pool %s is %d, '
                 'which is less than %d, the required number.' % (
                         self.board, self.pool, self.available_num,
                         self.required_num))
