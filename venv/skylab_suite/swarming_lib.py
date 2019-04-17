@@ -292,18 +292,21 @@ class Client(object):
                 return False
 
             try:
-                return json.loads(child_tasks.output)
+                return json.loads(child_tasks.output)['items']
             except ValueError:
                 logging.error('load child task list: stdout:\n%s',
                               child_tasks.output)
                 logging.error('load child task list: stderr:\n%s',
                               child_tasks.error)
                 return False
+            except KeyError as e:
+                logging.exception(str(e))
+                return False
 
         utils = autotest.load('client.common_lib.utils')
         error_msg_prefix = 'Failed to get child tasks for %s: ' % parent_task_id
         try:
-            result = utils.poll_for_condition(
+            return utils.poll_for_condition(
                 _get_tasks,
                 exception=timeout_util.TimeoutError(
                         'Timeout in retrying loading child tasks'),
@@ -311,12 +314,6 @@ class Client(object):
                 sleep_interval=60)
         except timeout_util.TimeoutError as e:
             raise errors.SwarmingCallError(error_msg_prefix +  str(e))
-
-        try:
-            return result['items']
-        except KeyError as e:
-            raise errors.SwarmingCallError(error_msg_prefix +
-                                           "Missing key 'items'")
 
     def get_basic_swarming_cmd(self, command):
         cmd = [_get_client_path(), command, '--swarming', get_swarming_server()]
