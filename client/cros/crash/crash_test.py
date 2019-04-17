@@ -591,7 +591,11 @@ class CrashTest(test.test):
         else:
             report_exists = False
         if os.path.exists(self._CRASH_SENDER_RATE_DIR):
-            rate_count = len(os.listdir(self._CRASH_SENDER_RATE_DIR))
+            rate_count = len([
+                name for name in os.listdir(self._CRASH_SENDER_RATE_DIR)
+                if os.path.isfile(os.path.join(self._CRASH_SENDER_RATE_DIR,
+                                               name))
+            ])
         else:
             rate_count = 0
 
