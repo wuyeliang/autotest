@@ -174,9 +174,8 @@ class firmware_IntegratedU2F(FirmwareTest):
             raise error.TestFail('could not start u2ftest')
 
         try:
-            # This will timeout if the process doesn't complete in 10 seconds.
             utils.wait_for_value(self.check_u2ftest_and_press_power_button,
-                expected_value=True)
+                expected_value=True, timeout_sec=30)
         finally:
             self.close_u2ftest()
 
