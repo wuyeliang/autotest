@@ -95,6 +95,7 @@ class SuiteHandler(object):
         self._suite_name = specs.suite_name
         self._wait = specs.wait
         self._timeout_mins = specs.timeout_mins
+        # TODO(akeshet): Delete this variable and references to it.
         self._provision_num_required = specs.provision_num_required
         self._test_retry = specs.test_retry
         self._max_retries = specs.max_retries
@@ -417,10 +418,16 @@ class Suite(object):
 class ProvisionSuite(Suite):
     """The class for a CrOS provision suite."""
     EXPIRATION_SECS = swarming_lib.DEFAULT_EXPIRATION_SECS
+    # Create at most this many dummy tasks for provisioning purposes. This is
+    # a somewhat arbitrary choice, and is selected independently of the size
+    # of the device pool. It should be high enough to provide a bit of
+    # protection from 1-off provision flake, but low enough that it doesn't
+    # expand to an entire device pool, which would be undesirable for large
+    # pools like the quotascheduler pool.
+    MAX_TASKS_TO_CREATE = 3
 
     def __init__(self, spec, client):
         super(ProvisionSuite, self).__init__(spec, client)
-        self._num_required = spec.suite_args['num_required']
 
     def _find_tests(self, available_bots_num=0):
         """Fetch the child tests for provision suite."""
@@ -431,14 +438,16 @@ class ProvisionSuite(Suite):
                 self.test_source_build, self.ds)
         dummy_test = suite_common.retrieve_control_data_for_test(
                 cf_getter, 'dummy_Pass')
-        logging.info('Get %d available DUTs for provision.', available_bots_num)
-        if available_bots_num < self._num_required:
-            logging.warning('Not enough available DUTs for provision.')
+        logging.info('Found %d available DUTs for provision.',
+                     available_bots_num)
+        if available_bots_num == 0:
+            logging.warning('0 DUTs available for provision, need at least 1')
             raise errors.NoAvailableDUTsError(
-                    self.board, self.pool, available_bots_num,
-                    self._num_required)
+                    self.board, self.pool, available_bots_num, 1)
 
-        return [dummy_test] * self._num_required
+        tasks_to_create = min(self.MAX_TASKS_TO_CREATE, available_bots_num)
+        logging.info('Creating %d dummy tasks.', tasks_to_create)
+        return [dummy_test] * tasks_to_create
 
     def _get_test_specs(self, tests, available_bots, keyvals):
         test_specs = []
