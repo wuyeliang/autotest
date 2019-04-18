@@ -363,7 +363,8 @@ def is_android_process_running(process_name):
 
     @param process_name: Process name.
     """
-    output = adb_shell('pgrep -c -f %s' % pipes.quote(process_name))
+    output = adb_shell('pgrep -c -f %s' % pipes.quote(process_name),
+                       ignore_status=True)
     return int(output) > 0
 
 
@@ -372,8 +373,9 @@ def check_android_file_exists(filename):
 
     @param filename: File to check.
     """
-    return adb_shell('test -e {} && echo FileExists'.format(
-            pipes.quote(filename))).find("FileExists") >= 0
+    return adb_shell(
+        'test -e {} && echo FileExists'.format(pipes.quote(filename)),
+        ignore_status=True).find("FileExists") >= 0
 
 
 def read_android_file(filename):
