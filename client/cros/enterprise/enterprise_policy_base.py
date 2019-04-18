@@ -385,7 +385,8 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
         arc.write_android_file(temp_shell_script_path, cmd)
 
         logging.info('Running clouddpc test with policy: %s', policy_blob_str)
-        results = arc.adb_shell('sh ' + temp_shell_script_path).strip()
+        results = arc.adb_shell('sh ' + temp_shell_script_path,
+                                ignore_status=True).strip()
         arc.remove_android_file(temp_shell_script_path)
         if results.find('FAILURES!!!') >= 0:
             logging.info('CloudDPC E2E Results:\n%s', results)
