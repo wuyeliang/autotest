@@ -116,3 +116,6 @@ activate_date.s,root,root,No,No,No,No,No
 crx-import.sh,root,root,No,No,No,No,No
 lockbox-cache.s,root,root,No,No,No,No,No
 powerd-pre-star,root,root,No,No,No,No,No
+
+# auditd
+auditd,root,root,No,No,No,No,No
