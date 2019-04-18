@@ -128,13 +128,13 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         If we are testing ccd open fully, it will also assert device reset so
         power button presses wont turn on the AP
         """
+        # Assert or deassert the device reset signal. The reset signal state
+        # should be the inverse of the device state.
         reset_signal_state = 'on' if state == 'off' else 'off'
-
-        self.servo.set('warm_reset', reset_signal_state)
-
-        # Hold the EC in reset or release it from reset based on state
         if self.reset_ec:
             self.servo.set('cold_reset', reset_signal_state)
+        else:
+            self.servo.set('warm_reset', reset_signal_state)
 
         time.sleep(self.SHORT_DELAY)
 
