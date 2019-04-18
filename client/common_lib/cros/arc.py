@@ -891,7 +891,8 @@ class ArcTest(test.test):
                 if not is_package_installed(pkg):
                     raise error.TestError('Package %s was not installed' % pkg)
                 adb_uninstall(pkg)
-        if self.uiautomator:
+        if (self.uiautomator and
+            is_package_installed(self._FULL_PKG_NAME_UIAUTOMATOR)):
             logging.info('Uninstalling %s', self._FULL_PKG_NAME_UIAUTOMATOR)
             adb_uninstall(self._FULL_PKG_NAME_UIAUTOMATOR)
         if self._should_reenable_play_store:
