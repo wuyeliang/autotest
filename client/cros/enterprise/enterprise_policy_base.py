@@ -65,6 +65,7 @@ GAIA_ID = 'fake-gaia-id'
 
 # Convert from chrome://policy name to what fake dms expects.
 DEVICE_POLICY_DICT = {
+    'DeviceAllowBluetooth': 'allow_bluetooth',
     'DeviceAutoUpdateDisabled': 'update_disabled',
     'DeviceEphemeralUsersEnabled': 'ephemeral_users_enabled',
     'DeviceOpenNetworkConfiguration': 'open_network_configuration',
@@ -927,6 +928,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
         if enroll:
             self.cr = chrome.Chrome(
                     auto_login=False,
+                    autotest_ext=True,
                     extra_browser_args=extra_flags,
                     extension_paths=extension_paths,
                     expect_policy_fetch=True)
