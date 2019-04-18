@@ -563,9 +563,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         if self.using_ccd():
             return self._servo.get('ccd_state') == 'on'
         else:
-            result = self.send_command_retry_get_output('gpioget',
-                    ['(0|1)[ \S]*CCD_MODE_L'])
-            return not bool(int(result[0][1]))
+            return not bool(self.gpioget('CCD_MODE_L'))
 
 
     @servo_v4_command
@@ -920,3 +918,63 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         else:
             raise error.TestFail('Read unusable AP state from ccdstate: "%s"',
                                  ap_state)
+
+    def gpioget(self, signal_name):
+        """Get the current state of the signal
+
+        Returns:
+            an integer 1 or 0 based on the gpioget value
+        """
+        result = self.send_command_retry_get_output('gpioget',
+                ['(0|1)[ \S]*%s' % signal_name])
+        return int(result[0][1])
+
+    def batt_pres_is_reset(self):
+        """Returns True if batt pres is reset to always follow batt pres"""
+        follow_bp, _, follow_bp_atboot, _ = self.get_batt_pres_state()
+        return follow_bp and follow_bp_atboot
+
+    def get_batt_pres_state(self):
+        """Returns a tuple of the current battery presence state.
+
+        The atboot setting cannot really be determined now if it is set to
+        follow battery presence. It is likely to remain the same after reboot,
+        but who knows. If the third element of the tuple is True, the last
+        element will not be that useful
+
+        Returns:
+            (True if current state is to follow batt presence,
+             True if battery is connected,
+             True if current state is to follow batt presence atboot,
+             True if battery is connected atboot)
+        """
+        # bpforce is added in 4.16. If the image doesn't have the command, cr50
+        # always follows battery presence. In these images 'gpioget BATT_PRES_L'
+        # accurately represents the battery presence state, because it can't be
+        # overidden.
+        if not self.has_command('bpforce'):
+            batt_pres = not bool(self.gpioget('BATT_PRES_L'))
+            return (True, batt_pres, True, batt_pres)
+
+        # The bpforce command is very similar to the wp command. It just
+        # substitutes 'connected' for 'enabled' and 'disconnected' for
+        # 'disabled'.
+        rv = self.send_command_get_output('bpforce',
+                ['batt pres: (forced )?(con|dis).*at boot: (forced )?'
+                 '(follow|discon|con)'])[0]
+        _, forced, connected, _, atboot = rv
+        logging.info(rv)
+        return (not forced, connected == 'con', atboot == 'follow',
+                atboot == 'con')
+
+    def set_batt_pres_state(self, state, atboot):
+        """Override the battery presence state.
+
+        Args:
+            state: a string of the battery presence setting: 'connected',
+                  'disconnected', or 'follow_batt_pres'
+            atboot: True if we're overriding battery presence atboot
+        """
+        cmd = 'bpforce %s%s' % (state, ' atboot' if atboot else '')
+        logging.info('running %r', cmd)
+        self.send_command(cmd)
