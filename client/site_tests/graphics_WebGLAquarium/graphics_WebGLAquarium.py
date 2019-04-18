@@ -499,4 +499,4 @@ class graphics_WebGLAquarium(graphics_utils.GraphicsTest):
         self.write_perf_keyval(self.perf_keyval)
 
         if pc_error_reason:
-            raise error.TestFail('Failed: %s' % pc_error_reason)
+            raise error.TestWarn('Warning: %s' % pc_error_reason)
