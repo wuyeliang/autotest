@@ -37,21 +37,23 @@ _WAIT_FOR_DUTS_TIMEOUT_S = 20 * 60
 # Dictionary of test results expected in suite:skylab_staging_test.
 _EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         ['GOOD'],
                           'provision_AutoUpdate.double':  ['GOOD'],
-                          'dummy_Pass.*':                 ['GOOD'],
+                          'dummy_Pass$':                  ['GOOD'],
+                          'dummy_Pass.actionable$':       ['GOOD'],
+                          # ssp and nossp.
+                          'dummy_PassServer$':            ['GOOD', 'GOOD'],
+                          # The entire dummy_Fail test is retried.
                           'dummy_Fail.Fail$':             ['FAIL', 'FAIL'],
                           'dummy_Fail.Error$':            ['ERROR', 'ERROR'],
                           'dummy_Fail.Warn$':             ['WARN', 'WARN'],
                           'dummy_Fail.NAError$':          ['TEST_NA',
                                                            'TEST_NA'],
                           'dummy_Fail.Crash$':            ['GOOD', 'GOOD'],
+                          'tast.*':                       ['GOOD'],
                           }
 
 # Some test could be missing from the test results for various reasons. Add
 # such test in this list and explain the reason.
 _IGNORED_TESTS = [
-    # TODO(pprabhu): Remove once R70 is stable.
-    'dummy_Fail.RetrySuccess',
-    'dummy_Fail.RetryFail',
 ]
 
 _logger = logging.getLogger(__name__)
