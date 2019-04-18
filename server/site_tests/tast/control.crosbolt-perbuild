@@ -30,6 +30,6 @@ def run(machine):
                  host=hosts.create_host(machine),
                  test_exprs=['(!disabled && "group:crosbolt" && '
                              'crosbolt_perbuild)'],
-                 ignore_test_failures=False)
+                 ignore_test_failures=True)
 
 parallel_simple(run, machines)
