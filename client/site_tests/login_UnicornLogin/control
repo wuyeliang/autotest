@@ -8,13 +8,14 @@ TIME = "SHORT"
 TEST_CATEGORY = "General"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
+ATTRIBUTES = "suite:bvt-perbuild"
 
 DOC = """
 This test verifies that logging into a Unicorn account works correctly.
 """
 
 job.run_test('login_UnicornLogin',
-             child_user='',
-             child_pass='',
-             parent_user='',
-             parent_pass='')
+             child_user='tak.TestyVanHorn.1531778905679@gmail.com',
+             child_pass='7VAe.Aw-EKdT',
+             parent_user='tau.JenSethurama.1531773872417@gmail.com',
+             parent_pass='yCC_-WbJwdBH')
