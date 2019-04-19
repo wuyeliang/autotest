@@ -83,7 +83,9 @@ def _get_unscheduled_test_specs(test_specs, suite_handler, all_tasks):
 
         test_task_id = (current_task['task_id'] if current_task
                         else tasks[0]['task_id'])
-        remaining_retries = test_spec.test.job_retries - len(tasks)
+
+        # The first run is not counted against JOB_RETRIES, hence +1.
+        remaining_retries = test_spec.test.job_retries - len(tasks) + 1
         previous_retried_ids = [t['task_id'] for t in tasks
                                 if t['task_id'] != test_task_id]
         suite_handler.add_test_by_task_id(
