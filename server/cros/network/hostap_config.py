@@ -282,10 +282,7 @@ class HostapConfig(object):
     @property
     def _require_ht(self):
         """@return True iff clients should be required to support HT."""
-        # TODO(wiley) Why? (crbug.com/237370)
-        logging.warning('Not enforcing pure N mode because Snow does '
-                        'not seem to support it...')
-        return False
+        return self._mode == self.MODE_11N_PURE
 
 
     @property
