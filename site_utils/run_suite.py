@@ -127,6 +127,11 @@ _SEARCH_JOB_MAX_DAYS = 14
 
 _PROVISION_SUITE = 'provision'
 
+# Only special tasks can have a priority lower than 50.
+_SKYLAB_PRIORITY_MIN = 50
+# Mandated by Swarming.
+_SKYLAB_PRIORITY_MAX = 255
+
 
 @functools.total_ordering
 class _ReturnResult(object):
@@ -272,6 +277,21 @@ def _get_priority_value(x):
             raise argparse.ArgumentTypeError(
                 'Unknown priority level %s.  Try one of %s.'
                 % (x, ', '.join(priorities.Priority.names)))
+
+
+def skylab_priority_for(afe_priority):
+  """Convert AFE priority to Skylab priority.
+
+  Args:
+    afe_priority: An integer get from _get_priority_value().
+
+  Returns:
+    An integer representing Skylab priority.
+  """
+  skylab_priority = 260 - 3 * int(afe_priority)
+  skylab_priority = min(skylab_priority, _SKYLAB_PRIORITY_MAX)
+  skylab_priority = max(skylab_priority, _SKYLAB_PRIORITY_MIN)
+  return skylab_priority
 
 
 def make_parser():
@@ -2208,7 +2228,7 @@ def _run_with_skylab(options, override_pool, override_qs_account):
                '-image', builds[provision.CROS_VERSION_PREFIX],
                '-pool', pool,
                '-timeout-mins', str(options.timeout_mins),
-               '-priority', priorities.Priority.get_string(options.priority),
+               '-priority', str(skylab_priority_for(options.priority)),
                '-service-account-json', _SKYLAB_SERVICE_ACCOUNT]
         if override_qs_account:
             cmd.extend(['-qs-account', override_qs_account])
