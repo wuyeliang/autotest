@@ -9,9 +9,7 @@ import json
 import os
 
 from autotest_lib.client.common_lib.cros import chip_utils
-from autotest_lib.client.cros.faft.utils import (common,
-                                                 flashrom_handler,
-                                                 saft_flashrom_util,
+from autotest_lib.client.cros.faft.utils import (flashrom_handler,
                                                  shell_wrapper)
 
 
@@ -40,21 +38,19 @@ class FirmwareUpdater(object):
         self._work_path = os.path.join(self._temp_path, 'work')
         self._bios_path = 'bios.bin'
         self._ec_path = 'ec.bin'
+
         pubkey_path = os.path.join(self._keys_path, 'root_key.vbpubk')
-        self._bios_handler = common.LazyInitHandlerProxy(
-                flashrom_handler.FlashromHandler,
-                saft_flashrom_util,
-                os_if,
-                pubkey_path,
-                self._keys_path,
-                'bios')
-        self._ec_handler = common.LazyInitHandlerProxy(
-                flashrom_handler.FlashromHandler,
-                saft_flashrom_util,
-                os_if,
-                pubkey_path,
-                self._keys_path,
-                'ec')
+        self._real_bios_handler = flashrom_handler.FlashromHandler(
+            self.os_if,
+            pubkey_path,
+            self._keys_path,
+            'bios',
+        )
+        self._real_ec_handler = flashrom_handler.FlashromHandler(
+            self.os_if,
+            pubkey_path,
+            self._keys_path,
+            'ec', )
 
         # _detect_image_paths always needs to run during initialization
         # or after extract_shellball is called.
@@ -66,6 +62,45 @@ class FirmwareUpdater(object):
             self._setup_temp_dir()
         else:
             self._detect_image_paths()
+
+    @property
+    def _bios_handler(self):
+        """Return the BIOS flashrom handler, after initializing it if necessary
+
+        @rtype: flashrom_handler.FlashromHandler
+        """
+        if not self._real_bios_handler.initialized:
+            bios_file = os.path.join(self._work_path, self._bios_path)
+            self._real_bios_handler.init(bios_file)
+
+        return self._real_bios_handler
+
+    @property
+    def _ec_handler(self):
+        """Return the EC flashrom handler, after initializing it if necessary.
+        If there's no usable EC flash, this will raise an exception, instead of
+        allowing further attempts to run flashrom commands.
+
+        @rtype: flashrom_handler.FlashromHandler
+        @raise: FirmwareUpdaterError
+        """
+        # Raise an exception early if there's no usable EC flash.
+        if not self._real_ec_handler.is_available():
+            # Can't tell for sure whether it's broken or simply nonexistent.
+            raise FirmwareUpdaterError("No usable EC flash was detected.")
+
+        if not self._real_ec_handler.initialized:
+            ec_file = os.path.join(self._work_path, self._ec_path)
+
+            if os.path.exists(ec_file):
+                self._real_ec_handler.init(ec_file)
+            else:
+                self.os_if.log("Shellball EC image missing: %s\n"
+                               "Trying current flash contents instead."
+                               % ec_file)
+                self._real_ec_handler.init()
+
+        return self._real_ec_handler
 
     def _setup_temp_dir(self):
         """Setup temporary directory.

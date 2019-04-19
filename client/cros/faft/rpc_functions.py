@@ -11,16 +11,14 @@ import functools, os, tempfile
 import traceback
 
 from autotest_lib.client.cros.faft.utils import (cgpt_handler,
-                                                 common,
                                                  os_interface,
                                                  firmware_check_keys,
                                                  firmware_updater,
                                                  flashrom_handler,
                                                  kernel_handler,
                                                  rootfs_handler,
-                                                 saft_flashrom_util,
                                                  tpm_handler,
-                                                )
+                                                 )
 
 
 def allow_multiple_section_input(image_operator):
@@ -53,23 +51,22 @@ class RPCFunctions(object):
     this name to '_[categories]_[method_name]'.
 
     Attributes:
-        _os_if: An object to encapsulate OS services functions.
-        _bios_handler: An object to automate BIOS flashrom testing.
-        _ec_handler: An object to automate EC flashrom testing.
-        _kernel_handler: An object to provide kernel related actions.
-        _log_file: Path of the log file.
-        _tpm_handler: An object to control TPM device.
-        _updater: An object to update firmware.
-        _temp_path: Path of a temp directory.
-        _keys_path: Path of a directory, keys/, in temp directory.
-        _work_path: Path of a directory, work/, in temp directory.
+    @ivar _os_if: An object to encapsulate OS services functions.
+    @ivar _bios_handler: An object to automate BIOS flashrom testing.
+    @ivar _ec_handler: An object to automate EC flashrom testing.
+    @ivar _kernel_handler: An object to provide kernel related actions.
+    @ivar _log_file: Path of the log file.
+    @ivar _tpm_handler: An object to control TPM device.
+    @ivar _updater: An object to update firmware.
+    @ivar _temp_path: Path of a temp directory.
+    @ivar _keys_path: Path of a directory, keys/, in temp directory.
+    @ivar _work_path: Path of a directory, work/, in temp directory.
     """
 
     def __init__(self):
         """Initialize the data attributes of this class."""
-        # TODO(waihong): Move the explicit object.init() methods to the
-        # objects' constructors (OSInterface, FlashromHandler,
-        # KernelHandler, and TpmHandler).
+        # TODO(dgoyette): Convert most init() methods into __init__().
+        # Affected: OSInterface, Crossystem, LocalShell, and many others.
         self._os_if = os_interface.OSInterface()
         # We keep the state of FAFT test in a permanent directory over reboots.
         state_dir = '/var/tmp/faft'
@@ -77,34 +74,31 @@ class RPCFunctions(object):
         self._os_if.init(state_dir, log_file=self._log_file)
         os.chdir(state_dir)
 
-        self._bios_handler = common.LazyInitHandlerProxy(
-                flashrom_handler.FlashromHandler,
-                saft_flashrom_util,
-                self._os_if,
-                None,
-                '/usr/share/vboot/devkeys',
-                'bios')
+        # These attributes are accessed via properties, so they can load only
+        # when actually used by the test.
+        self._real_bios_handler = flashrom_handler.FlashromHandler(
+            self._os_if,
+            None,
+            '/usr/share/vboot/devkeys',
+            'bios')
+        self._real_ec_handler = None
+        self._real_tpm_handler = tpm_handler.TpmHandler(self._os_if)
 
-        self._ec_handler = None
-        if self._os_if.run_shell_command_get_status('mosys ec info') == 0:
-            self._ec_handler = common.LazyInitHandlerProxy(
-                    flashrom_handler.FlashromHandler,
-                    saft_flashrom_util,
-                    self._os_if,
-                    'ec_root_key.vpubk',
-                    '/usr/share/vboot/devkeys',
-                    'ec')
+        ec_status = self._os_if.run_shell_command_get_status('mosys ec info')
+        if ec_status == 0:
+            self._real_ec_handler = flashrom_handler.FlashromHandler(
+                self._os_if,
+                'ec_root_key.vpubk',
+                '/usr/share/vboot/devkeys',
+                'ec')
+
         else:
-            self._os_if.log('No EC is reported by mosys.')
+            self._os_if.log('No EC is reported by mosys (rc=%s).' % ec_status)
 
         self._kernel_handler = kernel_handler.KernelHandler()
         self._kernel_handler.init(self._os_if,
                                   dev_key_path='/usr/share/vboot/devkeys',
                                   internal_disk=True)
-
-        self._tpm_handler = common.LazyInitHandlerProxy(
-                tpm_handler.TpmHandler,
-                self._os_if)
 
         self._cgpt_handler = cgpt_handler.CgptHandler(self._os_if)
 
@@ -118,6 +112,40 @@ class RPCFunctions(object):
         self._temp_path = '/var/tmp/faft/autest'
         self._keys_path = os.path.join(self._temp_path, 'keys')
         self._work_path = os.path.join(self._temp_path, 'work')
+
+    @property
+    def _bios_handler(self):
+        """Return the BIOS flashrom handler, after initializing it if necessary
+
+        @rtype: flashrom_handler.FlashromHandler
+        """
+        if not self._real_bios_handler.initialized:
+            self._real_bios_handler.init()
+        return self._real_bios_handler
+
+    @property
+    def _ec_handler(self):
+        """Return the EC flashrom handler, after initializing it if necessary
+
+        @rtype: flashrom_handler.FlashromHandler
+        """
+        if not self._real_ec_handler:
+            # No EC handler if board has no EC
+            return None
+
+        if not self._real_ec_handler.initialized:
+            self._real_ec_handler.init()
+        return self._real_ec_handler
+
+    @property
+    def _tpm_handler(self):
+        """Handler for the TPM
+
+        @rtype: tpm_handler.TpmHandler
+        """
+        if not self._real_tpm_handler.initialized:
+            self._real_tpm_handler.init()
+        return self._real_tpm_handler
 
     def _dispatch(self, method, params):
         """This _dispatch method handles string conversion especially.
@@ -356,7 +384,7 @@ class RPCFunctions(object):
 
     def _bios_reload(self):
         """Reload the firmware image that may be changed."""
-        self._bios_handler.reload()
+        self._bios_handler.new_image()
 
     def _bios_get_gbb_flags(self):
         """Get the GBB flags.
@@ -485,6 +513,10 @@ class RPCFunctions(object):
         """
         self._bios_handler.new_image(bios_path)
         self._bios_handler.write_whole()
+
+    def _ec_reload(self):
+        """Reload the firmware image that may be changed."""
+        self._ec_handler.new_image()
 
     def _ec_get_version(self):
         """Get EC version via mosys.

@@ -17,6 +17,8 @@ import struct
 import tempfile
 
 from autotest_lib.client.common_lib.cros import chip_utils
+from autotest_lib.client.cros.faft.utils import saft_flashrom_util
+
 
 class FvSection(object):
     """An object to hold information about a firmware section.
@@ -26,6 +28,14 @@ class FvSection(object):
     """
 
     def __init__(self, sig_name, body_name, fwid_name=None):
+        """
+        @param sig_name: name of signature section in fmap
+        @param body_name: name of body section in fmap
+        @param fwid_name: name of fwid section in fmap
+        @type sig_name: str | None
+        @type body_name: str | None
+        @type fwid_name: str | None
+        """
         self._sig_name = sig_name
         self._body_name = body_name
         self._fwid_name = fwid_name
@@ -37,6 +47,7 @@ class FvSection(object):
         self._kernel_subkey_version = -1 # Is not set on construction.
 
     def names(self):
+        """Return the desired file names for the signature, body, and fwid."""
         return (self._sig_name, self._body_name, self._fwid_name)
 
     def get_sig_name(self):
@@ -84,7 +95,9 @@ class FvSection(object):
     def set_kernel_subkey_version(self, version):
         self._kernel_subkey_version = version
 
+
 class FlashromHandlerError(Exception):
+    """An object to represent Flashrom errors"""
     pass
 
 
@@ -100,29 +113,37 @@ class FlashromHandler(object):
     KERNEL_SUBKEY_FILE_NAME = 'kernel_subkey.vbpubk'
     EC_EFS_KEY_FILE_NAME = 'key_ec_efs.vbprik2'
 
-    def __init__(self):
-    # make sure it does not accidentally overwrite the image.
-        self.fum = None
-        self.os_if = None
-        self.image = ''
-        self.pub_key_file = ''
+    def __init__(self,
+                 os_if,
+                 pub_key_file=None,
+                 dev_key_path='./',
+                 target='bios',
+                 ):
+        """The flashrom handler is not fully initialized upon creation
 
-    def init(self, flashrom_util_module,
-             os_if,
-             pub_key_file=None,
-             dev_key_path='./',
-             target='bios'):
-        """Flashrom handler initializer.
-
-        Args:
-          flashrom_util_module - a module providing flashrom access utilities.
-          os_if - a module providing interface to OS services
-          pub_key_file - a string, name of the file contaning a public key to
-                         use for verifying both existing and new firmware.
+        @param os_if: an object providing interface to OS services
+        @param pub_key_file: the name of the file contaning a public key to
+                             use for verifying both existing and new firmware.
+        @param dev_key_path: path to directory containing *.vpubk and *.vbprivk
+                             files, for use in signing
+        @param target: flashrom target ('bios' or 'ec')
+        @type os_if: client.cros.faft.utils.os_interface.OSInterface
+        @type pub_key_file: str | None
+        @type dev_key_path: str
+        @type target: str
         """
+        self.fum = None
+        self.image = ''
+        self.os_if = os_if
+        self.initialized = False
+        self._available = None
+
+        self.pub_key_file = pub_key_file
+        self.dev_key_path = dev_key_path
+
         if target == 'bios':
-            self.fum = flashrom_util_module.flashrom_util(
-                    os_if, target_is_ec=False)
+            self.fum = saft_flashrom_util.flashrom_util(
+                self.os_if, target_is_ec=False)
             self.fv_sections = {
                 'ro': FvSection(None, None, 'RO_FRID'),
                 'a': FvSection('VBOOTA', 'FVMAIN', 'RW_FWID_A'),
@@ -130,29 +151,44 @@ class FlashromHandler(object):
                 'rec': FvSection(None, 'RECOVERY_MRC_CACHE'),
                 'ec_a': FvSection(None, 'ECMAINA'),
                 'ec_b': FvSection(None, 'ECMAINB'),
-                }
+            }
         elif target == 'ec':
-            self.fum = flashrom_util_module.flashrom_util(
-                    os_if, target_is_ec=True)
+            self.fum = saft_flashrom_util.flashrom_util(
+                self.os_if, target_is_ec=True)
             self.fv_sections = {
                 'rw': FvSection(None, 'EC_RW', 'RW_FWID'),
                 'rw_b': FvSection(None, 'EC_RW_B'),
-                }
+            }
         else:
             raise FlashromHandlerError("Invalid target.")
-        self.os_if = os_if
-        self.pub_key_file = pub_key_file
-        self.dev_key_path = dev_key_path
-        self.new_image()
+
+    def is_available(self):
+        """Check if the programmer is available, by specifying no commands.
+
+        @rtype: bool
+        """
+        if self._available is None:
+            # Cache the status to avoid trying flashrom every time.
+            self._available = self.fum.check_target()
+        return self._available
+
+    def init(self, image_file=None):
+        """Initialize the object, by reading the image.
+
+        This is separate from new_image, to isolate the implementation detail of
+        self.image being non-empty.
+        """
+        self.new_image(image_file)
+        self.initialized = True
 
     def new_image(self, image_file=None):
         """Parse the full flashrom image and store sections into files.
 
-        Args:
-          image_file - a string, the name of the file contaning full ChromeOS
-                       flashrom image. If not passed in or empty - the actual
-                       flashrom is read and its contents are saved into a
+        @param image_file: the name of the file containing a full ChromeOS
+                       flashrom image. If not passed in or empty, the actual
+                       flash device is read and its contents are saved into a
                        temporary file which is used instead.
+        @type image_file: str
 
         The input file is parsed and the sections of importance (as defined in
         self.fv_sections) are saved in separate files in the state directory

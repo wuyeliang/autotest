@@ -22,6 +22,7 @@ For more information, see help(saft_flashrom_util.flashrom_util).
 """
 
 class TestError(Exception):
+    """Represents an internal error, such as invalid arguments."""
     pass
 
 
@@ -196,7 +197,7 @@ class flashrom_util(object):
     stored locally, this map can be overwritten by an explicitly passed user
     map.
 
-   To perform a (partial) write:
+    To perform a (partial) write:
 
      1. Prepare a buffer storing an image to be written into the flashrom.
      2. Have the map generated automatically or prepare your own, for instance:
@@ -208,14 +209,21 @@ class flashrom_util(object):
           flashrom.write_partial(new_image, (<section_name>, ...))
         ex using explicitly provided map:
           flashrom.write_partial(new_image, layout_map_all, ('all',))
-
-    Attributes:
-        keep_temp_files: boolean flag to control cleaning of temporary files
     """
 
     def __init__(self, os_if, keep_temp_files=False,
                  target_is_ec=False):
-        """ constructor of flashrom_util. help(flashrom_util) for more info """
+        """ constructor of flashrom_util. help(flashrom_util) for more info
+
+        @param os_if: an object providing interface to OS services
+        @param keep_temp_files: if true, preserve temp files after operations
+        @param target_is_ec: if false, target is BIOS/AP
+
+        @type os_if: client.cros.faft.utils.os_interface.OSInterface
+        @type keep_temp_files: bool
+        @type target_is_ec: bool
+        """
+
         self.os_if = os_if
         self.keep_temp_files = keep_temp_files
         self.firmware_layout = {}
@@ -257,6 +265,11 @@ class flashrom_util(object):
         tmpfn = self._get_temp_filename('lay_')
         self.os_if.write_file(tmpfn, '\n'.join(layout_text) + '\n')
         return tmpfn
+
+    def check_target(self):
+        """Check if the programmer is available, by specifying no commands."""
+        cmd = 'flashrom %s' % self._target_command
+        return self.os_if.run_shell_command_get_status(cmd) == 0
 
     def get_section(self, base_image, section_name):
         """
