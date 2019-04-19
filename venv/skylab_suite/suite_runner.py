@@ -155,6 +155,7 @@ def _create_test_task(test_spec, suite_id=None, dry_run=False):
         '-board', test_spec.board,
         '-image', test_spec.build,
         '-service-account-json', os.environ['SWARMING_CREDS'],
+        '-priority', str(test_spec.priority),
         '-timeout-mins', str(test_spec.execution_timeout_mins),
         ]
     if _is_dev():
