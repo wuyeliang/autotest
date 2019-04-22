@@ -89,6 +89,10 @@ class _BaseProgrammer(object):
             except error.TestFail:
                 logging.warn('Missing servo control: %s', key)
                 continue
+            if present == 'not_applicable':
+                # control is has no bearing in this servo config so ignore it.
+                logging.debug('Servo control %s is NA .. skipping', key)
+                continue
             if present != value:
                 self._servo_saved_state.append('%s:%s' % (key, present))
             self._servo.set(key, value)
