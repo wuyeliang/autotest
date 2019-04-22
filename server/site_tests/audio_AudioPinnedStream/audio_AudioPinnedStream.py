@@ -27,6 +27,7 @@ class audio_AudioPinnedStream(audio_test.AudioTest):
     DELAY_BEFORE_RECORD_SECONDS = 0.5
     RECORD_SECONDS = 3
     DELAY_AFTER_BINDING = 0.5
+    DELAY_AFTER_SETTING = 5
 
     def run_once(self, host):
         """Running basic pinned stream audio tests.
@@ -68,6 +69,14 @@ class audio_AudioPinnedStream(audio_test.AudioTest):
                 time.sleep(self.DELAY_AFTER_BINDING)
 
                 audio_facade = factory.create_audio_facade()
+                plugger = chameleon_board.get_audio_board().get_jack_plugger()
+
+                # Fix for chameleon rack hosts because audio jack is always plugged.
+                # crbug.com/955009
+                if plugger is None:
+                    audio_facade.set_selected_node_types(['HEADPHONE'], [''])
+                    time.sleep(self.DELAY_AFTER_SETTING)
+
                 audio_test_utils.check_audio_nodes(
                     audio_facade, (['HEADPHONE'], None))
 
