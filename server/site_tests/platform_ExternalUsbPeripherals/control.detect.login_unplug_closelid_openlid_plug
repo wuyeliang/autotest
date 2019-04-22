@@ -51,7 +51,7 @@ def run(machine):
     action_sequence = str(args_dict.get("action_sequence", default_actions))
 
     usb_list = ["\"Kingston Technology Company Inc.\"",
-                "\"Alcor Micro Corp.\"",
+                "\"Alcor Micro Corp.|GEMBIRD\"",
                 "\"USB PnP Sound Device: USB Audio|C-Media Electronics, Inc.* Audio\"",
                ]
     usb_checks = {
