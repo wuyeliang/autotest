@@ -69,6 +69,9 @@ class FirmwareTest(FAFTBase):
     # Delay between closing and opening lid
     LID_DELAY = 1
 
+    # UARTs that may be captured
+    UARTS = ('cpu', 'cr50', 'ec', 'servo_micro', 'servo_v4', 'usbpd')
+
     _SERVOD_LOG = '/var/log/servod.log'
 
     _ROOTFS_PARTITION_NUMBER = 3
@@ -122,21 +125,11 @@ class FirmwareTest(FAFTBase):
             match = re.search("^(\w+)=(.+)", arg)
             if match:
                 args[match.group(1)] = match.group(2)
-        if 'power_control' in args:
-            self.power_control = args['power_control']
-            if self.power_control not in host.POWER_CONTROL_VALID_ARGS:
-                raise error.TestError('Valid values for --args=power_control '
-                                      'are %s. But you entered wrong argument '
-                                      'as "%s".'
-                                       % (host.POWER_CONTROL_VALID_ARGS,
-                                       self.power_control))
+
         self._no_ec_sync = False
         if 'no_ec_sync' in args:
             if 'true' in args['no_ec_sync'].lower():
                 self._no_ec_sync = True
-
-        if not self.faft_client.system.dev_tpm_present():
-            raise error.TestError('/dev/tpm0 does not exist on the client')
 
         self.faft_config = FAFTConfig(
                 self.faft_client.system.get_platform_name())
@@ -154,6 +147,18 @@ class FirmwareTest(FAFTBase):
         # Get pdtester console
         self.pdtester = host.pdtester
         self.pdtester_host = host._pdtester_host
+
+        if 'power_control' in args:
+            self.power_control = args['power_control']
+            if self.power_control not in host.POWER_CONTROL_VALID_ARGS:
+                raise error.TestError('Valid values for --args=power_control '
+                                      'are %s. But you entered wrong argument '
+                                      'as "%s".'
+                                      % (host.POWER_CONTROL_VALID_ARGS,
+                                         self.power_control))
+
+        if not self.faft_client.system.dev_tpm_present():
+            raise error.TestError('/dev/tpm0 does not exist on the client')
 
         # Create the BaseEC object. None if not available.
         self.base_ec = chrome_base_ec.create_base_ec(self.servo)
@@ -735,7 +740,9 @@ class FirmwareTest(FAFTBase):
                            'wpsw_boot': '1' if self._old_wpsw_boot else '0'}))
 
     def _setup_uart_capture(self):
-        """Setup the CPU/EC/PD UART capture."""
+        """Set up the CPU/EC/PD UART capture."""
+
+        # If adding another capture, make sure to update the UARTS constant.
         self.cpu_uart_file = os.path.join(self.resultsdir, 'cpu_uart.txt')
         self.servo.set('cpu_uart_capture', 'on')
         self.cr50_uart_file = None
@@ -743,6 +750,7 @@ class FirmwareTest(FAFTBase):
         self.servo_micro_uart_file = None
         self.servo_v4_uart_file = None
         self.usbpd_uart_file = None
+
         try:
             # Check that the console works before declaring the cr50 console
             # connection exists and enabling uart capture.
@@ -790,44 +798,23 @@ class FirmwareTest(FAFTBase):
 
     def _record_uart_capture(self):
         """Record the CPU/EC/PD UART output stream to files."""
-        if self.cpu_uart_file:
-            with open(self.cpu_uart_file, 'a') as f:
-                f.write(ast.literal_eval(self.servo.get('cpu_uart_stream')))
-        if self.cr50_uart_file:
-            with open(self.cr50_uart_file, 'a') as f:
-                f.write(ast.literal_eval(self.servo.get('cr50_uart_stream')))
-        if self.ec_uart_file and self.faft_config.chrome_ec:
-            with open(self.ec_uart_file, 'a') as f:
-                f.write(ast.literal_eval(self.servo.get('ec_uart_stream')))
-        if self.servo_micro_uart_file:
-            with open(self.servo_micro_uart_file, 'a') as f:
-                f.write(ast.literal_eval(self.servo.get(
-                        'servo_micro_uart_stream')))
-        if self.servo_v4_uart_file:
-            with open(self.servo_v4_uart_file, 'a') as f:
-                f.write(ast.literal_eval(self.servo.get(
-                        'servo_v4_uart_stream')))
-        if (self.usbpd_uart_file and self.faft_config.chrome_ec and
-            self.check_ec_capability(['usbpd_uart'], suppress_warning=True)):
-            with open(self.usbpd_uart_file, 'a') as f:
-                f.write(ast.literal_eval(self.servo.get('usbpd_uart_stream')))
+        for uart in self.UARTS:
+            # Attribute will be nonexistent or empty if capture wasn't set up.
+            uart_file = getattr(self, '%s_uart_file' % uart, None)
+            if uart_file:
+                with open(uart_file, 'a') as f:
+                    f.write(ast.literal_eval(
+                        self.servo.get('%s_uart_stream' % uart)))
 
     def _cleanup_uart_capture(self):
         """Cleanup the CPU/EC/PD UART capture."""
-        # Flush the remaining UART output.
+        # Flush the remaining UART output first.
         self._record_uart_capture()
-        self.servo.set('cpu_uart_capture', 'off')
-        if self.cr50_uart_file:
-            self.servo.set('cr50_uart_capture', 'off')
-        if self.ec_uart_file and self.faft_config.chrome_ec:
-            self.servo.set('ec_uart_capture', 'off')
-        if self.servo_micro_uart_file:
-            self.servo.set('servo_micro_uart_capture', 'off')
-        if self.servo_v4_uart_file:
-            self.servo.set('servo_v4_uart_capture', 'off')
-        if (self.usbpd_uart_file and self.faft_config.chrome_ec and
-            self.check_ec_capability(['usbpd_uart'], suppress_warning=True)):
-            self.servo.set('usbpd_uart_capture', 'off')
+        for uart in self.UARTS:
+            # Attribute will be nonexistent or empty if capture wasn't set up.
+            uart_file = getattr(self, '%s_uart_file' % uart, None)
+            if uart_file:
+                self.servo.set('%s_uart_capture' % uart, 'off')
 
     def _get_power_state(self, power_state):
         """
@@ -882,11 +869,12 @@ class FirmwareTest(FAFTBase):
 
     def _record_servo_log(self):
         """Record the servo log to the results directory."""
-        if self.servo_log_original_len != -1:
-            servo_log = self._fetch_servo_log()
-            servo_log_file = os.path.join(self.resultsdir, 'servod.log')
-            with open(servo_log_file, 'a') as f:
-                f.write(servo_log[self.servo_log_original_len:])
+        if hasattr(self, 'servo_log_original_len'):
+            if self.servo_log_original_len != -1:
+                servo_log = self._fetch_servo_log()
+                servo_log_file = os.path.join(self.resultsdir, 'servod.log')
+                with open(servo_log_file, 'a') as f:
+                    f.write(servo_log[self.servo_log_original_len:])
 
     def _record_faft_client_log(self):
         """Record the faft client log to the results directory."""
