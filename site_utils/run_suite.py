@@ -2066,7 +2066,7 @@ def _log_create_task(job_timer, job_url, job_id):
     logging.info('Created task id: %s', job_id)
 
 
-def _check_if_use_skylab(options):
+def _if_run_in_skylab(options):
     """Detect whether to run suite in skylab.
 
     Returns:
@@ -2286,11 +2286,17 @@ def main():
         result = run_suite_common.SuiteResult(
                 run_suite_common.RETURN_CODES.INVALID_OPTIONS)
     else:
-        is_skylab, override_pool, override_qs_account = _check_if_use_skylab(
-                options)
+        try:
+            is_skylab, ovrd_pool, ovrd_qs_account = _if_run_in_skylab(options)
+        except Exception as e:
+            logging.exception(str(e))
+            logging.info('fall back to Autotest due to trampoline errors')
+            is_skylab = False
+            ovrd_pool = ''
+            ovrd_qs_account = ''
+
         if is_skylab:
-            result = _run_with_skylab(options, override_pool,
-                                      override_qs_account)
+            result = _run_with_skylab(options, ovrd_pool, ovrd_qs_account)
         else:
             result = _run_with_autotest(options)
 
