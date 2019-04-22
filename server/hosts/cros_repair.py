@@ -419,6 +419,31 @@ class KvmExistsVerifier(hosts.Verifier):
         return '/dev/kvm should exist if device supports Linux VMs'
 
 
+class ServoTypeVerifier(hosts.Verifier):
+    """Verify that servo_type attribute exists"""
+
+    def verify(self, host):
+        if not host.servo:
+            logging.info("Host has no working servo.")
+            return
+
+        info = host.host_info_store.get()
+        if 'servo_type' not in info.attributes:
+            logging.info('Host is missing servo_type attribute, updating...')
+            try:
+                servo_type = host.servo.get_servo_version()
+                info.attributes['servo_type'] = servo_type
+                host.host_info_store.commit(info)
+            except Exception as e:
+                # We don't want fail the verifier and break DUTs here just
+                # because of servo issue.
+                logging.error("Failed to update servo_type, %s", str(e))
+
+    @property
+    def description(self):
+        return 'The host has servo_type attribute'
+
+
 class _ResetRepairAction(hosts.RepairAction):
     """Common handling for repair actions that reset a DUT."""
 
@@ -634,7 +659,8 @@ def _cros_verify_dag():
     FirmwareStatusVerifier = cros_firmware.FirmwareStatusVerifier
     FirmwareVersionVerifier = cros_firmware.FirmwareVersionVerifier
     verify_dag = (
-        (repair_utils.SshVerifier,        'ssh',      ()),
+        (repair_utils.SshVerifier,        'ssh',        ()),
+        (ServoTypeVerifier,               'servo_type', ()),
         (DevModeVerifier,                 'devmode',  ('ssh',)),
         (HWIDVerifier,                    'hwid',     ('ssh',)),
         (ACPowerVerifier,                 'power',    ('ssh',)),
