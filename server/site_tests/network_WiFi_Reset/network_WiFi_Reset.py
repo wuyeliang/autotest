@@ -161,9 +161,11 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
     def run_once(self):
         """Body of the test."""
 
+        client = self.context.client
+
+        self.boot_id = client.host.get_boot_id()
         self.reset_driver = self.get_reset_driver()
 
-        client = self.context.client
         ap_config = hostap_config.HostapConfig(channel=1)
         ssid = self.configure_and_connect_to_ap(ap_config)
 
@@ -171,8 +173,6 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
 
         router = self.context.router
         ssid = router.get_ssid()
-
-        boot_id = client.host.get_boot_id()
 
         logging.info("Running %d suspends", self._NUM_SUSPENDS)
         for _ in range(self._NUM_SUSPENDS):
@@ -183,15 +183,23 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
                 self.context.assert_ping_from_dut()
 
             client.do_suspend(self._SUSPEND_DELAY)
-            client.host.test_wait_for_resume(boot_id)
+            client.host.test_wait_for_resume(self.boot_id)
             client.wait_for_connection(ssid)
 
     def cleanup(self):
         """Performs cleanup at exit. May reboot the DUT, to keep the system
         functioning for the next test.
         """
-        super(network_WiFi_Reset, self).cleanup()
-
+        # TODO: Technically, we should be able to handle both
+        # super(...).cleanup() and arbitrary reboots (either driver crashes or
+        # forced reboot). This would require fixing up some of WiFiCellTestBase
+        # (e.g., not to assume a persistent xmlrpc connection in cleanup()).
+        # But cleanup() is not absolutely critical -- subsequent tests should
+        # handle re-initializing state.
         if hasattr(self, 'reset_driver') and self.reset_driver.need_reboot():
             logging.info("Test left DUT in bad state; rebooting")
             self.context.client.reboot(timeout=60)
+        elif self.context.client.host.get_boot_id() == self.boot_id:
+            super(network_WiFi_Reset, self).cleanup()
+        else:
+            logging.info('May have rebooted during test; skipping cleanup')
