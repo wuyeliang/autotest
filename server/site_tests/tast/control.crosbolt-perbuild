@@ -20,7 +20,6 @@ of Autotest. See https://chromium.googlesource.com/chromiumos/platform/tast/ for
 more information.
 
 This test runs Tast-based crosbolt performance tests against a remote DUT.
-It fails if any individual Tast tests fail.
 
 See http://go/tast-failures for information about investigating failures.
 '''

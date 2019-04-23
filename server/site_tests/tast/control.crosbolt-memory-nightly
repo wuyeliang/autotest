@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 
 AUTHOR = 'Chromium OS team'
-NAME = 'tast.crosbolt-nightly'
-TIME = 'MEDIUM'
+NAME = 'tast.crosbolt-memory-nightly'
+TIME = 'LENGTHY'
 TEST_TYPE = 'Server'
 ATTRIBUTES = 'suite:crosbolt_perf_nightly'
 MAX_RESULT_SIZE_KB = 50 * 1024
@@ -13,13 +13,14 @@ MAX_RESULT_SIZE_KB = 50 * 1024
 REQUIRE_SSP = True
 
 DOC = '''
-Run the Tast crosbolt performance test suite.
+Run the Tast crosbolt performance memory test suite.
 
 Tast is an integration-testing framework analagous to the test-running portion
 of Autotest. See https://chromium.googlesource.com/chromiumos/platform/tast/ for
 more information.
 
-This test runs Tast-based crosbolt performance tests against a remote DUT.
+This test runs Tast-based memory-related crosbolt performance tests against a
+remote DUT.
 
 See http://go/tast-failures for information about investigating failures.
 '''
@@ -28,7 +29,7 @@ def run(machine):
     job.run_test('tast',
                  host=hosts.create_host(machine),
                  test_exprs=['(!disabled && "group:crosbolt" && '
-                             'crosbolt_nightly)'],
+                             'crosbolt_memory_nightly)'],
                  ignore_test_failures=True)
 
 parallel_simple(run, machines)
