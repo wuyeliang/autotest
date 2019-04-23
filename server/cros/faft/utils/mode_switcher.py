@@ -116,6 +116,9 @@ class _CtrlDBypasser(_BaseFwBypasser):
         if self.faft_config.rec_button_dev_switch:
             logging.info('RECOVERY button pressed to switch to dev mode')
             self.servo.toggle_recovery_switch()
+        elif self.faft_config.power_button_dev_switch:
+            logging.info('POWER button pressed to switch to dev mode')
+            self.servo.power_normal_press()
         else:
             logging.info('ENTER pressed to switch to dev mode')
             self.servo.enter_key()

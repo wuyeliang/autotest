@@ -23,6 +23,7 @@ class Values(object):
     has_lid = True
     has_keyboard = True
     has_powerbutton = True
+    power_button_dev_switch = False
     rec_button_dev_switch = False
     ec_capability = list()
     spi_voltage = 'pp1800'
