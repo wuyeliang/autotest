@@ -82,6 +82,12 @@ class Frame(object):
         return self._datetime.strftime(self.TIME_FORMAT)
 
 
+    def __str__(self):
+        return '%s: rate %s, MCS %s, SSID %s, SA %s' % (
+                self.time_datetime, self.bit_rate, self.mcs_index, self.ssid,
+                self.source_addr)
+
+
 def _fetch_frame_field_value(frame, field):
     """
     Retrieve the value of |field| within the |frame|.

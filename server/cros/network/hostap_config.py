@@ -480,6 +480,13 @@ class HostapConfig(object):
         """@return int _max_stas value, or None."""
         return self._max_stas
 
+    @property
+    def supported_rates(self):
+        """@return list of supported bitrates (in Mbps, or None if not
+           specified.
+        """
+        return self._supported_rates
+
     def __init__(self, mode=MODE_11B, channel=None, frequency=None,
                  n_capabilities=None, hide_ssid=None, beacon_interval=None,
                  dtim_period=None, frag_threshold=None, ssid=None, bssid=None,
@@ -492,6 +499,8 @@ class HostapConfig(object):
                  beacon_footer='',
                  spectrum_mgmt_required=None,
                  scenario_name=None,
+                 supported_rates=None,
+                 basic_rates=None,
                  min_streams=None,
                  nas_id=None,
                  mdid=None,
@@ -532,6 +541,10 @@ class HostapConfig(object):
             spectrum management.
         @param scenario_name string to be included in file names, instead
             of the interface name.
+        @param supported_rates list of rates (in Mbps) that the AP should
+             advertise.
+        @param basic_rates list of basic rates (in Mbps) that the AP should
+            advertise.
         @param min_streams int number of spatial streams required.
         @param nas_id string for RADIUS messages (needed for 802.11r)
         @param mdid string used to indicate a group of APs for FT
@@ -613,6 +626,8 @@ class HostapConfig(object):
         self._beacon_footer = beacon_footer
         self._spectrum_mgmt_required = spectrum_mgmt_required
         self._scenario_name = scenario_name
+        self._supported_rates = supported_rates
+        self._basic_rates = basic_rates
         self._min_streams = min_streams
         self._nas_id = nas_id
         self._mdid = mdid
@@ -718,6 +733,16 @@ class HostapConfig(object):
             conf['bssid'] = self._bssid
         conf['channel'] = self.channel
         conf['hw_mode'] = self._hw_mode
+
+        # hostapd specifies rates in units of 100Kbps.
+        rate_to_100kbps = lambda rate: str(int(rate * 10))
+        if self._supported_rates:
+            conf['supported_rates'] = ' '.join(map(rate_to_100kbps,
+                                                   self._supported_rates))
+        if self._basic_rates:
+            conf['basic_rates'] = ' '.join(map(rate_to_100kbps,
+                                               self._basic_rates))
+
         if self._hide_ssid:
             conf['ignore_broadcast_ssid'] = 1
         if self._is_11n or self.is_11ac:
