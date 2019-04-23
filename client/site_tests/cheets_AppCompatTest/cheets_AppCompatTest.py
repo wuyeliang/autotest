@@ -53,7 +53,7 @@ class cheets_AppCompatTest(arc.ArcTest):
     def cleanup(self):
         arc.adb_cmd('uninstall com.hcl.actframework')
         arc.adb_cmd('uninstall com.hcl.actframework.test')
-        arc.adb_cmd('uninstall %s' % self._pkg_name)
+        arc.adb_cmd('uninstall %s' % self._pkg_name, ignore_status=True)
         arc.adb_shell('rm -f /sdcard/autresources.xml > /dev/null')
         arc.adb_shell('rm -f /sdcard/touchView.txt > /dev/null',
                       ignore_status=True)
