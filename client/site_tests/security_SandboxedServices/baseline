@@ -50,7 +50,6 @@ bluetoothd,bluetooth,bluetooth,No,No,Yes,Yes,No
 debugd,root,root,No,Yes,No,No,No
 cras,cras,cras,No,Yes,Yes,Yes,No
 tcsd,tss,tss,No,No,Yes,No,No
-cromo,cromo,cromo,No,No,No,No,No
 wimax-manager,root,root,No,No,No,No,No
 mtpd,mtp,mtp,Yes,Yes,Yes,Yes,Yes
 tlsdated,tlsdate,tlsdate,No,No,Yes,No,No
