@@ -39,6 +39,7 @@ _EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         ['GOOD'],
                           'provision_AutoUpdate.double':  ['GOOD'],
                           'dummy_Pass$':                  ['GOOD'],
                           'dummy_Pass.actionable$':       ['GOOD'],
+                          'dummy_Pass.bluetooth$':        ['GOOD'],
                           # ssp and nossp.
                           'dummy_PassServer$':            ['GOOD', 'GOOD'],
                           # The entire dummy_Fail test is retried.
