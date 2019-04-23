@@ -133,51 +133,32 @@ class _PowerStateController(object):
 
 
 class _Uart(object):
-    """Class to capture UART streams of CPU, EC, Cr50, etc."""
-    _UartToCapture = ('cpu', 'ec', 'cr50', 'servo_v4', 'servo_micro')
-
+    """Class to capture CPU/EC UART streams."""
     def __init__(self, servo):
         self._servo = servo
         self._streams = []
-        self.logs_dir = None
-
-    def _start_stop_capture(self, uart, start):
-        """Helper function to start/stop capturing on specified UART.
-
-        @param uart:  The UART name to start/stop capturing.
-        @param start:  True to start capturing, otherwise stop.
-
-        @returns True if the operation completes successfully. False if the UART
-                 capturing is not supported.
-        @raises error.TestFail when operation is supported but failed.
-        """
-        try:
-            logging.debug('%s capturing %s UART.',
-                          'Start' if start else 'Stop', uart)
-            self._servo.set('%s_uart_capture' % uart,
-                            'on' if start else 'off')
-            return True
-        except error.TestFail as err:
-            if 'No control named' in str(err):
-                logging.debug('The servod is too old that %s_uart_capture '
-                              'not supported.', uart)
-                return False
-            raise err
+        self._logs_dir = None
 
     def start_capture(self):
-        """Start capturing UART streams."""
-        for uart in self._UartToCapture:
-            if self._start_stop_capture(uart, True):
-                self._streams.append(('%s_uart_stream' % uart, '%s_uart.log' %
-                                      uart))
+        """Start capturing Uart streams."""
+        logging.debug('Start capturing CPU/EC UART.')
+        self._servo.set('cpu_uart_capture', 'on')
+        self._streams.append(('cpu_uart_stream', 'cpu_uart.log'))
+        try:
+            self._servo.set('ec_uart_capture', 'on')
+            self._streams.append(('ec_uart_stream', 'ec_uart.log'))
+        except error.TestFail as err:
+            if 'No control named' in str(err):
+                logging.debug('The servod is too old that ec_uart_capture not '
+                              'supported.')
 
     def dump(self):
         """Dump UART streams to log files accordingly."""
-        if not self.logs_dir:
+        if not self._logs_dir:
             return
 
         for stream, logfile in self._streams:
-            logfile_fullname = os.path.join(self.logs_dir, logfile)
+            logfile_fullname = os.path.join(self._logs_dir, logfile)
             try:
                 content = self._servo.get(stream)
             except Exception as err:
@@ -192,12 +173,29 @@ class _Uart(object):
 
     def stop_capture(self):
         """Stop capturing UART streams."""
-        for uart in self._UartToCapture:
+        logging.debug('Stop capturing CPU/EC UART.')
+        for uart in ('cpu_uart_capture', 'ec_uart_capture'):
             try:
-                self._start_stop_capture(uart, False)
+                self._servo.set(uart, 'off')
+            except error.TestFail as err:
+                if 'No control named' in str(err):
+                    logging.debug('The servod is too old that %s not '
+                                  'supported.', uart)
             except Exception as err:
                 logging.warn('Failed to stop UART logging for %s: %s', uart,
                              err)
+
+    @property
+    def logs_dir(self):
+        """Return the directory to save UART logs."""
+        return self._logs_dir
+
+    @logs_dir.setter
+    def logs_dir(self, a_dir):
+        """Set directory to save UART logs.
+
+        @param a_dir  String of logs directory name."""
+        self._logs_dir = a_dir
 
 
 class Servo(object):
