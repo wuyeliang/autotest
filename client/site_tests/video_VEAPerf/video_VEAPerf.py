@@ -259,8 +259,7 @@ class video_VEAPerf(chrome_binary_test.ChromeBinaryTest):
         vea_args = [
             '--test_stream_data=%s' % test_stream_data,
             '--output_log="%s"' % test_log_file,
-            '--ozone-platform=gbm',
-            helper_logger.chrome_vmodule_flag()]
+            '--ozone-platform=gbm']
         return vea_args
 
 
@@ -308,7 +307,6 @@ class video_VEAPerf(chrome_binary_test.ChromeBinaryTest):
         self._analyze_frame_stats(test_name, frame_stats_file)
 
 
-    @helper_logger.video_log_wrapper
     @chrome_binary_test.nuke_chrome
     def run_once(self, test_cases, required_cap):
         """

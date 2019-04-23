@@ -138,7 +138,6 @@ class video_WebRtcPerf(test.test):
         return tab
 
 
-    @helper_logger.video_log_wrapper
     def run_once(self, decode_time_test=False, cpu_test=False,
                  power_test=False, arc_mode=None):
         """
@@ -192,8 +191,7 @@ class video_WebRtcPerf(test.test):
         keyvals = {}
         EXTRA_BROWSER_ARGS.append(FAKE_FILE_ARG % local_path)
 
-        with chrome.Chrome(extra_browser_args=EXTRA_BROWSER_ARGS +\
-                           [helper_logger.chrome_vmodule_flag()],
+        with chrome.Chrome(extra_browser_args=EXTRA_BROWSER_ARGS,
                            arc_mode=self.arc_mode,
                            init_network_controller=True) as cr:
             # On daisy, Chrome freezes about 30 seconds after login because of

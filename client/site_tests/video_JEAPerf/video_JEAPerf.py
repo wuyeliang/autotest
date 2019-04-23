@@ -87,7 +87,6 @@ class video_JEAPerf(chrome_binary_test.ChromeBinaryTest):
             if e.errno != errno.ENOENT:  # no such file
                 raise
 
-    @helper_logger.video_log_wrapper
     @chrome_binary_test.nuke_chrome
     def run_once(self, test_cases, capability):
         """
@@ -106,7 +105,7 @@ class video_JEAPerf(chrome_binary_test.ChromeBinaryTest):
             test_name = ('%s_%dx%d' % (file_name, width, height))
             output_path = os.path.join(self.tmpdir, TEST_LOG)
 
-            cmd_line_list = [helper_logger.chrome_vmodule_flag()] + [
+            cmd_line_list = [
                 '--gtest_filter=JpegEncodeAcceleratorTest.SimpleEncode',
                 ('--output_log=%s' % output_path),
                 ('--repeat=%d' % REPEAT_TIMES),

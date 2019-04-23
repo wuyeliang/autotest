@@ -161,7 +161,6 @@ class video_MediaRecorderPerf(test.test):
                     elapsed_time)
         return (elapsed_time / mkv_listener.get_num_frames(), cpu_usage)
 
-    @helper_logger.video_log_wrapper
     def run_once(self, codec, fps, video_file, capability):
         """ Report cpu usage and frame processing time with HW and SW encode.
 
@@ -191,8 +190,7 @@ class video_MediaRecorderPerf(test.test):
         with chrome.Chrome(
                 extra_browser_args=EXTRA_BROWSER_ARGS +
                 [fake_file_arg, fake_stream_arg] +
-                DISABLE_HW_ENCODE_ARGS +
-                [helper_logger.chrome_vmodule_flag()],
+                DISABLE_HW_ENCODE_ARGS,
                 init_network_controller=True) as cr:
             (processing_time_sw, cpu_usage_sw) = self.get_record_performance(
                     cr, codec, False)
@@ -203,8 +201,7 @@ class video_MediaRecorderPerf(test.test):
 
         with chrome.Chrome(
                 extra_browser_args=EXTRA_BROWSER_ARGS +
-                [fake_file_arg, fake_stream_arg] +
-                [helper_logger.chrome_vmodule_flag()],
+                [fake_file_arg, fake_stream_arg],
                 init_network_controller=True) as cr:
             (processing_time_hw, cpu_usage_hw) = self.get_record_performance(
                     cr, codec, True)

@@ -148,8 +148,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         @param gtest_filter: gtest_filter argument.
         """
         logging.debug('Starting video_JpegDecodeAccelerator %s', gtest_filter)
-        cmd_line_list = [helper_logger.chrome_vmodule_flag()]
-        cmd_line_list.append('--gtest_filter="%s"' % gtest_filter)
+        cmd_line_list = ['--gtest_filter="%s"' % gtest_filter]
         cmd_line_list.append('--perf_decode_times=%d' %
                              self.perf_jpeg_decode_times)
 

@@ -235,7 +235,6 @@ class video_VDAPerf(chrome_binary_test.ChromeBinaryTest):
             '--rendering_fps=0',
             '--output_log="%s"' % test_log_file,
             '--ozone-platform=gbm',
-            helper_logger.chrome_vmodule_flag(),
         ]
         cmd_line = ' '.join(cmd_line_list)
         self.run_chrome_test_binary(BINARY, cmd_line)
@@ -256,7 +255,6 @@ class video_VDAPerf(chrome_binary_test.ChromeBinaryTest):
             '--rendering_fps=%s' % rendering_fps,
             '--output_log="%s"' % test_log_file,
             '--ozone-platform=gbm',
-            helper_logger.chrome_vmodule_flag(),
         ]
         cmd_line = ' '.join(cmd_line_list)
         time_cmd = ('%s -f "%s" -o "%s" ' %
@@ -274,7 +272,6 @@ class video_VDAPerf(chrome_binary_test.ChromeBinaryTest):
             '--gtest_filter=*TestDecodeTimeMedian',
             '--output_log="%s"' % test_log_file,
             '--ozone-platform=gbm',
-            helper_logger.chrome_vmodule_flag(),
         ]
         cmd_line = ' '.join(cmd_line_list)
         self.run_chrome_test_binary(BINARY, cmd_line)
@@ -284,7 +281,6 @@ class video_VDAPerf(chrome_binary_test.ChromeBinaryTest):
         decode_time = int(m.group(1))
         self._logperf(name, KEY_DECODE_TIME_50, decode_time, UNIT_MICROSECOND)
 
-    @helper_logger.video_log_wrapper
     @chrome_binary_test.nuke_chrome
     def run_once(self, test_cases):
         self._perf_keyvals = {}
