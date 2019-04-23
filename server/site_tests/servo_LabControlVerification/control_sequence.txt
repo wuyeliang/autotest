@@ -1,8 +1,7 @@
 enter_key:tab
 lid_open
-power_state:off
-power_state:on
 power_state:rec
+power_state:off
 power_state:on
 cold_reset
 uart4_on_flex_en
