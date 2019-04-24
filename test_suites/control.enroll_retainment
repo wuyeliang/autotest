@@ -7,8 +7,8 @@ NAME = "enroll_retainment"
 PURPOSE = "Suite for automated enroll retainment tests."
 
 TIME = "LONG"
-TEST_CATEGORY = "Functional"
-TEST_CLASS = "suite"
+TEST_CATEGORY = "General"
+TEST_CLASS = "enterprise"
 TEST_TYPE = "server"
 
 DOC = """
