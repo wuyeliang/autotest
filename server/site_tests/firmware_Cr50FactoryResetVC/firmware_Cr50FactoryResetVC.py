@@ -82,11 +82,6 @@ class firmware_Cr50FactoryResetVC(Cr50Test):
                     ('set' if enable else 'clear'))
 
 
-    def has_ccd_password(self):
-        """Returns True if the ccd password is set."""
-        return 'set' in self.cr50.get_ccd_info()['Password']
-
-
     def setup_ccd_password(self, set_password):
         """Set the Cr50 CCD password.
 
@@ -98,7 +93,7 @@ class firmware_Cr50FactoryResetVC(Cr50Test):
             self.cr50.send_command('ccd testlab open')
             # Set the ccd password
             self.set_ccd_password('ccd_dummy_pw')
-        if self.has_ccd_password() != set_password:
+        if self.cr50.password_is_reset() == set_password:
             raise error.TestError('Could not %s password' %
                     ('set' if set_password else 'clear'))
 
@@ -111,15 +106,16 @@ class firmware_Cr50FactoryResetVC(Cr50Test):
 
 
     def get_relevant_state(self):
-        """Returns cr50 factory mode check state.
+        """Returns cr50 state that can lock out factory mode.
 
-        If any item in state is True, that means ccd factory mode should be
-        locked out.
+        FWMP, battery presence, or a password can all lock out enabling factory
+        mode using the vendor command. If any item in state is True, factory
+        mode should be locked out.
         """
         state = []
         state.append(self.fwmp_ccd_lockout())
         state.append(self.cr50.get_batt_pres_state()[1])
-        state.append(self.has_ccd_password())
+        state.append(not self.cr50.password_is_reset())
         return state
 
 

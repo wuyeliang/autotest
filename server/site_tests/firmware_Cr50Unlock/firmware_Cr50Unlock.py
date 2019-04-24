@@ -24,7 +24,7 @@ class firmware_Cr50Unlock(Cr50Test):
 
         # Set the password
         self.set_ccd_password(self.PASSWORD)
-        if self.cr50.get_ccd_info()['Password'] != 'set':
+        if self.cr50.password_is_reset():
             raise error.TestFail('Failed to set password')
 
         self.cr50.set_ccd_level('lock')
