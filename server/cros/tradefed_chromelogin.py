@@ -70,7 +70,7 @@ class ChromeLogin(object):
             # We used to call cheets_StartAndroid, but it is a little faster to
             # call a script on the DUT. This also saves CPU time on the server.
             self._host.run(
-                self._cmd_builder(),
+                self._cmd_builder(verbose=verbose),
                 ignore_status=False,
                 verbose=verbose,
                 timeout=timeout)
