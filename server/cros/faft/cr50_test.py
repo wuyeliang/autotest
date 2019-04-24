@@ -260,7 +260,7 @@ class Cr50Test(FirmwareTest):
         return self.rootfs_tool.is_enabled()
 
 
-    def _restore_original_state(self):
+    def _restore_original_image_and_board_id(self):
         """Restore the original cr50 related device state."""
         if not (self._saved_state & self.IMAGES):
             logging.warning('Did not save the original images. Cannot restore '
@@ -357,12 +357,17 @@ class Cr50Test(FirmwareTest):
 
     def _reset_ccd_settings(self):
         """Reset the ccd lock and capability states."""
-        # Clear the password if one was set.
-        if self.cr50.get_ccd_info()['Password'] != 'none':
-            self.servo.set_nocheck('cr50_testlab', 'open')
+        if not self.cr50.ccd_is_reset():
+            # Try to open cr50 and enable testlab mode if it isn't enabled.
+            try:
+                self.fast_open(True)
+            except:
+                # Even if we can't open cr50, do our best to reset the rest of
+                # the system state. Log a warning here.
+                logging.warning('Unable to Open cr50', exc_info=True)
             self.cr50.send_command('ccd reset')
-            if self.cr50.get_ccd_info()['Password'] != 'none':
-                raise error.TestFail('Could not clear password')
+            if not self.cr50.ccd_is_reset():
+                raise error.TestFail('Could not reset ccd')
 
         current_settings = self.cr50.get_cap_dict(info=self.cr50.CAP_SETTING)
         if self.original_ccd_settings != current_settings:
@@ -373,9 +378,9 @@ class Cr50Test(FirmwareTest):
             self.cr50.set_caps(self.original_ccd_settings)
 
         # First try using testlab open to open the device
-        if self.cr50.testlab_is_on() and self.original_ccd_level == 'open':
-            self.servo.set_nocheck('cr50_testlab', 'open')
-        if self.original_ccd_level != self.cr50.get_ccd_level():
+        if self.original_ccd_level == 'open':
+            self.fast_open(True)
+        elif self.original_ccd_level != self.cr50.get_ccd_level():
             self.cr50.set_ccd_level(self.original_ccd_level)
 
 
@@ -430,21 +435,15 @@ class Cr50Test(FirmwareTest):
         """Restore cr50 state, so the device can be used for further testing"""
         state_mismatch = self._check_original_state()
         if state_mismatch and not self._provision_update:
-            self._restore_original_state()
+            self._restore_original_image_and_board_id()
             if self._raise_error_on_mismatch:
                 raise error.TestError('Unexpected state mismatch during '
                                       'cleanup %s' % state_mismatch)
 
-        # Try to open cr50 and enable testlab mode if it isn't enabled.
-        try:
-            self.fast_open(True)
-        except:
-            # Even if we can't open cr50, do our best to reset the rest of the
-            # system state. Log a warning here.
-            logging.warning('Unable to Open cr50', exc_info=True)
         # Reset the password as the first thing in cleanup. It is important that
         # if some other part of cleanup fails, the password has at least been
         # reset.
+        self.cr50.send_command('ccd testlab open')
         self.cr50.send_command('rddkeepalive disable')
         self.cr50.send_command('ccd reset')
         self.cr50.send_command('wp follow_batt_pres atboot')
@@ -463,8 +462,7 @@ class Cr50Test(FirmwareTest):
         self.clear_fwmp()
 
         # Restore the ccd privilege level
-        if hasattr(self, 'original_ccd_level'):
-            self._reset_ccd_settings()
+        self._reset_ccd_settings()
 
 
     def find_cr50_gs_image(self, filename, image_type=None):

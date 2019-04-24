@@ -154,6 +154,22 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return in_factory_mode, is_reset
 
 
+    def password_is_reset(self):
+        """Returns True if the password is cleared"""
+        return self.get_ccd_info()['Password'] == 'none'
+
+
+    def ccd_is_reset(self):
+        """Returns True if the ccd is reset
+
+        The password must be cleared, write protect and battery presence must
+        follow battery presence, and all capabilities must be Always
+        """
+        return (self.password_is_reset() and self.wp_is_reset() and
+                self.batt_pres_is_reset() and
+                self.get_cap_overview(self.get_cap_dict())[1])
+
+
     def wp_is_reset(self):
         """Returns True if wp is reset to follow batt pres at all times"""
         follow_batt_pres, _, follow_batt_pres_atboot, _ = self.get_wp_state()
