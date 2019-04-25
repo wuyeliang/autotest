@@ -254,12 +254,11 @@ class Interface:
             logging.error('Device is unknown. Info: %r', infos)
             device_name = NAME_UNKNOWN
         module_name = self.module_name
-        if module_name is not None:
-            kernel_release = self._run('uname -r').stdout.strip()
-            module_path = self._run('find '
-                                    '/lib/modules/%s/kernel/drivers/net '
-                                    '-name %s.ko -printf %%P' %
-                                    (kernel_release, module_name)).stdout
+        kernel_release = self._run('uname -r').stdout.strip()
+        net_drivers_path = '/lib/modules/%s/kernel/drivers/net' % kernel_release
+        if module_name is not None and self.host.path_exists(net_drivers_path):
+            module_path = self._run('find %s -name %s.ko -printf %%P' % (
+                net_drivers_path, module_name)).stdout
         else:
             module_path = 'Unknown (kernel might have modules disabled)'
         return DeviceDescription(device_name, module_path)
