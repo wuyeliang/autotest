@@ -406,7 +406,7 @@ def get_test_views_from_tko(suite_job_id, tko):
 
     test_views = collections.defaultdict(list)
     for view in relevant_views:
-        test_views[view['test_name']].append(view['test_status'])
+        test_views[view['test_name']].append(view['status'])
     return test_views
 
 

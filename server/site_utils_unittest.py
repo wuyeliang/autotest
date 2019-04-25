@@ -73,7 +73,7 @@ class SiteUtilsUnittests(mox.MoxTestBase):
         self.mox.UnsetStubs()
         tko = self.mox.CreateMock(frontend.TKO)
         tko.run('get_detailed_test_views', afe_job_id=0).AndReturn(
-            [{'test_name':r[0], 'test_status':r[1]} for r in test_results])
+            [{'test_name':r[0], 'status':r[1]} for r in test_results])
 
         self.mox.ReplayAll()
         test_views = site_utils.get_test_views_from_tko(0, tko)
