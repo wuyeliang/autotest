@@ -41,7 +41,7 @@ def main():
     if 'stage-usb' in opts.actions:
       preparedut.download_image_to_servo_usb(host, repair_image)
     if 'install-firmware' in opts.actions:
-      preparedut.install_firmware(host, opts.force_firmware)
+      preparedut.install_firmware(host)
     if 'install-test-image' in opts.actions:
       preparedut.install_test_image(host)
 
@@ -82,12 +82,6 @@ def _parse_args():
       required=True,
       help=('Full path to HostInfo file.'
             ' DUT inventory information is read from the HostInfo file.'),
-  )
-
-  parser.add_argument(
-      '--force-firmware',
-      action='store_true',
-      help='Force firmware isntallation via chromeos-installfirmware.',
   )
 
   return parser.parse_args()

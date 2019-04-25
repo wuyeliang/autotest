@@ -110,7 +110,7 @@ def flash_firmware_using_servo(host, build):
     host.firmware_install(build)
 
 
-def install_firmware(host, force):
+def install_firmware(host):
     """Install dev-signed firmware after removing write-protect.
 
     At start, it's assumed that hardware write-protect is disabled,
@@ -124,7 +124,6 @@ def install_firmware(host, force):
     mode, and shut down.
 
     @param host   Host instance to use for servo and ssh operations.
-    @param force  Boolean value determining if firmware install is forced.
     """
     servo = host.servo
     # First power on.  We sleep to allow the firmware plenty of time
@@ -147,7 +146,7 @@ def install_firmware(host, force):
                  ignore_status=True)
 
     fw_update_log = '/mnt/stateful_partition/home/root/cros-fw-update.log'
-    pid = _start_firmware_update(host, force, fw_update_log)
+    pid = _start_firmware_update(host, fw_update_log)
     _wait_firmware_update_process(host, pid)
     _check_firmware_update_result(host, fw_update_log)
 
@@ -160,7 +159,7 @@ def install_firmware(host, force):
     host.halt()
 
 
-def _start_firmware_update(host, force, result_file):
+def _start_firmware_update(host, result_file):
     """Run `chromeos-firmwareupdate` in background.
 
     In scenario servo v4 type C, some boards of DUT may lose ethernet
@@ -168,13 +167,11 @@ def _start_firmware_update(host, force, result_file):
     rebooting the system.
 
     @param host         Host instance to use for servo and ssh operations.
-    @param force        Boolean value determining if firmware install is forced.
     @param result_file  Path on DUT to save operation logs.
 
     @returns The process id."""
-    fw_update_cmd = 'chromeos-firmwareupdate --mode=factory'
-    if force:
-        fw_update_cmd += ' --force'
+    # TODO(guocb): Use `make_dev_firmware` to re-sign from MP to test/dev.
+    fw_update_cmd = 'chromeos-firmwareupdate --mode=factory --force'
 
     cmd = [
         "date > %s" % result_file,
