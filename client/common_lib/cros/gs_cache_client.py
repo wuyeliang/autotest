@@ -240,9 +240,9 @@ class GsCacheClient(object):
         # default exception we can get when the code doesn't run in main
         # thread.
         except Exception as err:
-            logging.warn('GS Cache Error: %s', err)
-            logging.warn(
-                    'Falling back to devserver call of "list_suite_controls".')
+            logging.warn('Falling back to devserver call of '
+                         '"list_suite_controls" due to a GS Cache problem: %s',
+                         err)
             c = metrics.Counter(METRICS_PATH + '/fallback_to_devserver_2')
             error_type = ('other' if isinstance(err, NoGsCacheServerError) else
                           'gs_cache_error')
