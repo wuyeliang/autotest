@@ -397,6 +397,7 @@ class UserCrashTest(crash_test.CrashTest):
             return result
 
         crash_dir = self._get_crash_dir(username, self._force_user_crash_dir)
+        crash_dir = self._canonicalize_crash_dir(crash_dir)
 
         if not consent:
             if os.path.exists(crash_dir):
