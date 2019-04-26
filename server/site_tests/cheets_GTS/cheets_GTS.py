@@ -84,9 +84,7 @@ class cheets_GTS(tradefed_test.TradefedTest):
                     # Make sure to tee tradefed stdout/stderr to autotest logs
                     # continuously during the test run.
                     stdout_tee=utils.TEE_TO_LOGS,
-                    stderr_tee=utils.TEE_TO_LOGS,
-                    # Also send the output to the test_that console.
-                    stdout_level=logging.INFO)
+                    stderr_tee=utils.TEE_TO_LOGS)
                 logging.info('END: ./gts-tradefed %s\n', ' '.join(command))
         return output
 
