@@ -1071,8 +1071,12 @@ class TradefedTest(test.test):
                     # Bluetooth test failures, and then make the implementation
                     # more strict by first running complete restart and reboot
                     # retries and then perform power cycle.
+                    #
+                    # Currently, (steps + 1 == self._max_retry) means that
+                    # hard_reboot is attempted after "this" cycle failed. Then,
+                    # the last remaining 1 step will be run on the rebooted DUT.
                     hard_reboot_on_failure=(self._hard_reboot_on_failure
-                                     and steps == self._max_retry),
+                                     and steps + 1 == self._max_retry),
                     dont_override_profile=keep_media) as current_logins:
                 self._ready_arc()
                 self._calculate_timeout_factor(bundle)
