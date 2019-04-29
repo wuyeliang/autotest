@@ -171,11 +171,6 @@ class Container(object):
                 # container quite frequently, and emitting exceptions here would
                 # cause any invalid containers on a server to block all
                 # ContainerBucket.get_all calls (see crbug/783865).
-                # TODO(kenobi): Containers with invalid ID files are probably
-                # the result of an aborted or failed operation.  There is a
-                # non-zero chance that such containers would contain leftover
-                # state, or themselves be corrupted or invalid.  Should we
-                # provide APIs for checking if a container is in this state?
                 logging.warning('Unable to determine ID for container %s:',
                                 self.name)
                 self._id = None
