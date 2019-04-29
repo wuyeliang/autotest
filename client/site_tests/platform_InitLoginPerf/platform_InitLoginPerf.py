@@ -119,7 +119,7 @@ class platform_InitLoginPerf(test.test):
             raise error.TestFail('Timeout waiting for %r' % name)
 
     def wait_for_cryptohome_readiness(self):
-        """Wait until crptohome has started and initialized system salt."""
+        """Wait until cryptohome has started and initialized system salt."""
         self.wait_for_file('/home/.shadow/salt')
 
     def run_pre_login(self):

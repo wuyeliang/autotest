@@ -65,7 +65,7 @@ class firmware_IntegratedU2F(FirmwareTest):
         # Wait for cryptohome to show the TPM is ready before logging in.
         if not utils.wait_for_value(self.cryptohome_ready, True,
                                     timeout_sec=60):
-            raise error.TestError('Crytpohome did not start')
+            raise error.TestError('Cryptohome did not start')
 
 
         client_at = autotest.Autotest(self.host)

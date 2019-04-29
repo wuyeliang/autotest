@@ -236,7 +236,7 @@ class TPMStatusVerifier(hosts.Verifier):
                 raise hosts.AutoservVerifyError(
                         'Cannot load the TPM SRK public key')
         except KeyError:
-            logging.info('Cannot determine the Crytohome valid status - '
+            logging.info('Cannot determine the Cryptohome valid status - '
                          'skipping check.')
 
     @property
