@@ -173,6 +173,7 @@ suite:power_loadtest
 suite:power_loadtest_1hour
 suite:power_loadtest_fast
 suite:power_measurement_wrapper
+suite:power_monitoring
 suite:power_requirements
 suite:power_sanity
 suite:powerplay
