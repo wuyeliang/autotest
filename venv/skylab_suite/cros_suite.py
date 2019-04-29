@@ -446,7 +446,8 @@ class ProvisionSuite(Suite):
                     self.board, self.pool, available_bots_num, 1)
 
         tasks_to_create = min(self.MAX_TASKS_TO_CREATE, available_bots_num)
-        logging.info('Creating %d dummy tasks.', tasks_to_create)
+        logging.info('Provision suite consists of %d dummy tasks.',
+                     tasks_to_create)
         return [dummy_test] * tasks_to_create
 
     def _get_test_specs(self, tests, available_bots, keyvals):
