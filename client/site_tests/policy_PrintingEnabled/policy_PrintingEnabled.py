@@ -36,7 +36,7 @@ class policy_PrintingEnabled(
         @key: string of the key(s) to press"""
 
         self.keyboard.press_key(key)
-        time.sleep(2)
+        time.sleep(4)
 
     def _print_check(self, case):
         """
