@@ -4,6 +4,15 @@
 
 #include "media_v4l2_device.h"
 
+static bool IsCaptureDevice(uint32_t caps) {
+  const uint32_t kCaptureMask =
+      V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE;
+  // Old drivers use (CAPTURE | OUTPUT) for memory-to-memory video devices.
+  const uint32_t kOutputMask =
+      V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE;
+  const uint32_t kM2mMask = V4L2_CAP_VIDEO_M2M | V4L2_CAP_VIDEO_M2M_MPLANE;
+  return (caps & kCaptureMask) && !(caps & kOutputMask) && !(caps & kM2mMask);
+}
 
 // Checks whether /dev/videoX is a video capture device. Return value 0 means
 // it is a capture device. 1 otherwise.
@@ -24,9 +33,14 @@ int main(int argc, char** argv) {
   if (!v4l2_dev.ProbeCaps(&caps, false)) {
     printf("[Error] Can not probe caps on device '%s'\n", argv[1]);
   } else {
-    // mem2mem devices have V4L2_CAP_VIDEO_OUTPUT but real cameras do not.
-    is_capture_device = ((caps.capabilities & V4L2_CAP_VIDEO_CAPTURE) &&
-        !(caps.capabilities & V4L2_CAP_VIDEO_OUTPUT));
+    // Prefer to use available capabilities of that specific device node instead
+    // of the physical device as a whole, so we can properly ignore the metadata
+    // device node.
+    if (caps.capabilities & V4L2_CAP_DEVICE_CAPS) {
+      is_capture_device = IsCaptureDevice(caps.device_caps);
+    } else {
+      is_capture_device = IsCaptureDevice(caps.capabilities);
+    }
   }
   v4l2_dev.CloseDevice();
 
