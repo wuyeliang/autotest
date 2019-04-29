@@ -5,17 +5,39 @@
 """Helper class for managing charging the DUT with Servo v4."""
 
 import logging
+import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import retry
 
 # Base delay time in seconds for Servo role change and PD negotiation.
-_DELAY_SEC = .1
+_DELAY_SEC = 0.1
 # Total delay time in minutes for Servo role change and PD negotiation.
-_TIMEOUT_MIN = 1
+_TIMEOUT_MIN = 0.3
 # Exponential backoff for Servo role change and PD negotiation.
 _BACKOFF = 2
+# Number of attempts to recover Servo v4.
+_RETRYS = 3
+# Seconds to wait after resetting the role on a recovery attempt
+# before trying to set it to the intended role again.
+_RECOVERY_WAIT_SEC = 1
+# Delay to wait before polling whether the role as been changed successfully.
+_ROLE_SETTLING_DELAY_SEC = 1
 
+# Threshold (in millivolt) under which the test assumes that no charger
+# is attached on the v4 charger side.
+_CHG_ATTACHED_MIN_VOLTAGE_MV = 1000
+
+def _invert_role(role):
+    """Helper to invert the role.
+
+    @param role: role to invert
+
+    @returns:
+      'src' if |role| is 'snk'
+      'snk' if |role| is 'src'
+    """
+    return 'src' if role == 'snk' else 'snk'
 
 class ServoV4ChargeManager(object):
     """A helper class for managing charging the DUT with Servo v4."""
@@ -43,20 +65,71 @@ class ServoV4ChargeManager(object):
             self.stop_charging()
             self.start_charging()
         else:
-            raise error.TestNAError('Unrecognized Servo v4 power role: %s.',
+            raise error.TestNAError('Unrecognized Servo v4 power role: %s.' %
                                     self._original_role)
+        # Configure the INAs to read out power numbers later.
+        self._servo.set_nocheck('ppdut5_cfg_reg', 'regular_power')
+        self._servo.set_nocheck('ppchg5_cfg_reg', 'regular_power')
 
-    def stop_charging(self):
-        """Cut off AC power supply to DUT with Servo."""
-        self._change_role('snk')
+    # TODO(b/129882930): once both sides are stable, remove the _retry_wrapper
+    # wrappers as they aren't needed anymore. The current motivation for the
+    # retry loop in the autotest framework is to have a 'stable' library i.e.
+    # retries but also a mechanism and and easy to remove bridge once the bug
+    # is fixed, and we don't require the bandaid anymore.
 
-    def start_charging(self):
-        """Connect AC power supply to DUT with Servo."""
-        self._change_role('src')
+    def _retry_wrapper(self, role, verify):
+        """Try up to |_RETRYS| times to set the v4 to |role|.
 
-    def restore_original_setting(self):
-        """Restore Servo to original charging setting."""
-        self._change_role(self._original_role)
+        @param role: string 'src' or 'snk'. If 'src' connect DUT to AC power; if
+                     'snk' disconnect DUT from AC power.
+        @param verify: bool to verify that charging started/stopped.
+
+        @returns: number of retries needed for success
+        """
+        for retry in range(_RETRYS):
+            try:
+                self._change_role(role, verify)
+                return retry
+            except error.TestError as e:
+                if retry < _RETRYS - 1:
+                    # Ensure this retry loop and logging isn't run on the
+                    # last iteration.
+                    logging.warning('Failed to set to %s %d times. %s '
+                                    'Trying to cycle through %s to '
+                                    'recover.', role, retry + 1, str(e),
+                                    _invert_role(role))
+                    # Cycle through the other state before retrying. Do not
+                    # verify as this is strictly a recovery mechanism - sleep
+                    # instead.
+                    self._change_role(_invert_role(role), verify=False)
+                    time.sleep(_RECOVERY_WAIT_SEC)
+        logging.error('Giving up on %s.', role)
+        raise e
+
+    def stop_charging(self, verify=True):
+        """Cut off AC power supply to DUT with Servo.
+
+        @param verify: whether to verify that charging stopped.
+
+        @returns: number of retries needed for success
+        """
+        return self._retry_wrapper('snk', verify)
+
+    def start_charging(self, verify=True):
+        """Connect AC power supply to DUT with Servo.
+
+        @param verify: whether to verify that charging started.
+
+        @returns: number of retries needed for success
+        """
+        return self._retry_wrapper('src', verify)
+
+    def restore_original_setting(self, verify=True):
+        """Restore Servo to original charging setting.
+
+        @param verify: whether to verify that original role was restored.
+        """
+        self._retry_wrapper(self._original_role, verify)
 
     def _verify_v4(self):
         """Verify that Servo is Servo v4."""
@@ -66,15 +139,30 @@ class ServoV4ChargeManager(object):
         else:
             raise error.TestNAError('This test needs to run with Servo v4. '
                                     'Test skipped.')
+        if self._servo.get('servo_v4_type') != 'type-c':
+            raise error.TestNAError('Please use a type-c v4 to be able to '
+                                    'toggle PD.')
+        if self._servo.get('ppchg5_mv') < _CHG_ATTACHED_MIN_VOLTAGE_MV:
+            raise error.TestNAError('There seems to be no voltage on the '
+                                    'charger side. This test cannot run '
+                                    'without a PD charger attached to the v4.')
 
-    def _change_role(self, role):
+    def _change_role(self, role, verify=True):
         """Change Servo PD role and check if DUT responded accordingly.
 
         @param role: string 'src' or 'snk'. If 'src' connect DUT to AC power; if
                      'snk' disconnect DUT from AC power.
-        """
-        self._servo.set('servo_v4_role', role)
+        @param verify: bool to verify that charging started/stopped.
 
+        @raises error.TestError: if the role did not change successfully.
+        """
+        self._servo.set_nocheck('servo_v4_role', role)
+        # Sometimes the role reverts quickly. Add a short delay to let the new
+        # role stabilize.
+        time.sleep(_ROLE_SETTLING_DELAY_SEC)
+
+        if not verify:
+          return
         @retry.retry(error.TestError, timeout_min=_TIMEOUT_MIN,
                      delay_sec=_DELAY_SEC, backoff=_BACKOFF)
         def check_servo_role(role):
@@ -85,11 +173,40 @@ class ServoV4ChargeManager(object):
         check_servo_role(role)
 
         connected = True if role == 'src' else False
+
+        @retry.retry(error.TestError, timeout_min=_TIMEOUT_MIN,
+                     delay_sec=_DELAY_SEC, backoff=_BACKOFF)
+        def check_ac_connected(connected):
+            """Check if the EC believes an AC charger is connected."""
+            try:
+              ec_opinion = self._servo.get('charger_connected')
+            except error.TestFail as e:
+                # TODO(coconutruben): remove this check once labs have the
+                # latest hdctools with the required control.
+                if 'No control named' in str(e):
+                    # If the control is missing on the servod side this
+                    # verification is effectively a noop. Skip the rest.
+                    logging.debug('Could not verify %r control as the '
+                                  'control is not available on servod.',
+                                  'charger_connected')
+                    return
+                raise e
+            if ec_opinion != connected:
+                str_lookup = {True: 'connected', False: 'disconnected'}
+                msg = ('EC thinks charger is %s but it should be %s.'
+                       % (str_lookup[ec_opinion],
+                          str_lookup[connected]))
+                raise error.TestError(msg)
+
+        check_ac_connected(connected)
+
         @retry.retry(error.TestError, timeout_min=_TIMEOUT_MIN,
                      delay_sec=_DELAY_SEC, backoff=_BACKOFF)
         def check_host_ac(connected):
             """Check if DUT AC power is as expected, if not, retry."""
             if self._host.is_ac_connected() != connected:
-                raise error.TestError('DUT failed to %s AC power.' % (
-                        'connect' if connected else 'disconnect'))
-        check_host_ac(connected)
+                intent = 'connect' if connected else 'disconnect'
+                raise error.TestError('DUT failed to %s AC power.'% intent)
+        if self._servo.get('ec_system_powerstate') == 'S0':
+            # If the DUT has been charging in S3/S5/G3, cannot verify.
+            check_host_ac(connected)

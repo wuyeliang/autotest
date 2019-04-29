@@ -332,8 +332,8 @@ class ServodTelemetryLogger(PowerTelemetryLogger):
         """
         super(ServodTelemetryLogger, self).__init__(config, resultsdir, host)
 
-        self._servo_host = config['servo_host']
-        self._servo_port = config['servo_port']
+        self._servo_host = host.servo._servo_host.hostname
+        self._servo_port = host.servo._servo_host.servo_port
         self._ina_rate = float(config.get('ina_rate', self.DEFAULT_INA_RATE))
         self._vbat_rate = float(config.get('vbat_rate', self.DEFAULT_VBAT_RATE))
         self._pm = measure_power.PowerMeasurement(host=self._servo_host,
