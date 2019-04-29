@@ -318,6 +318,16 @@ class Servo(object):
             self._power_state.reset()
         logging.debug('Servo initialized, version is %s',
                       self._server.get_version())
+        try:
+            self.set('init_keyboard','on')
+        except error.TestFail as err:
+            if 'No control named' in str(err):
+                # This indicates the servod version does not
+                # have explicit keyboard initialization yet.
+                # Ignore this.
+                pass
+            else:
+                raise err
 
 
     def is_localhost(self):
