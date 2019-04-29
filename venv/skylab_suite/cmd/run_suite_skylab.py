@@ -16,7 +16,7 @@ import logging
 from lucifer import autotest
 from skylab_suite import cros_suite
 from skylab_suite import suite_parser
-from skylab_suite import suite_runner
+from skylab_suite import suite_utils
 from skylab_suite import suite_tracking
 from skylab_suite import swarming_lib
 
@@ -82,7 +82,7 @@ def _run_suite(options):
 
     suite_handler_spec = _parse_suite_handler_spec(options)
     suite_handler = cros_suite.SuiteHandler(suite_handler_spec, swarming_client)
-    suite_runner.run(swarming_client,
+    suite_utils.run(swarming_client,
                      suite_job.test_specs,
                      suite_handler,
                      options.dry_run)
