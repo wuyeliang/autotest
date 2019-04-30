@@ -116,6 +116,7 @@ suite:faft_ec_au_3
 suite:faft_ec_ryu
 suite:faft_ec_tot
 suite:faft_ec_wp
+suite:faft_infra
 suite:faft_lab
 suite:faft_lv1
 suite:faft_lv2
