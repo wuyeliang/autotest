@@ -34,6 +34,22 @@ class autoupdate_Rollback(test.test):
                                  "file on the stateful partition.")
 
 
+    def cleanup(self):
+        """Clean up states."""
+        # Delete rollback-version and rollback-happened pref which are
+        # generated during Rollback and Enterprise Rollback.
+        # rollback-version is written when update_engine Rollback D-Bus API is
+        # called. The existence of rollback-version prevents update_engine to
+        # apply payload whose version is the same as rollback-version.
+        # rollback-happened is written when update_engine finished Enterprise
+        # Rollback operation.
+        self.host.run('rm /var/lib/update_engine/prefs/rollback-version'
+                      ' /var/lib/update_engine/prefs/rollback-happened',
+                      ignore_status=True)
+        # Restart update-engine to pick up new prefs.
+        self.host.run('restart update-engine', ignore_status=True)
+
+
     def run_once(self, host, job_repo_url=None,
                  powerwash_before_rollback=False):
         """Runs the test.
@@ -45,6 +61,8 @@ class autoupdate_Rollback(test.test):
                error.TestFail if any part of the test has failed.
 
         """
+        self.host = host
+
         updater = autoupdate_utils.get_updater_from_repo_url(host, job_repo_url)
 
         initial_kernel, updated_kernel = updater.get_kernel_state()
