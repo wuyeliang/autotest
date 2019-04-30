@@ -1735,7 +1735,7 @@ def wait_for_cool_machine():
     temperature = get_current_temperature_max()
     # We got here with a cold machine, return immediately. This should be the
     # most common case.
-    if temperature < 50:
+    if temperature < 45:
         return True
     logging.info('Got a hot machine of %dC. Sleeping 1 minute.', temperature)
     # A modest wait should cool the machine.
