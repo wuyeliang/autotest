@@ -2217,8 +2217,14 @@ def _run_with_skylab(options, override_pool, override_qs_account):
             return run_suite_common.SuiteResult(
                     run_suite_common.RETURN_CODES.INFRA_FAILURE)
 
-        child_tasks = json.loads(res.output)[taskID]['child-results']
-        task_stdout = json.loads(res.output)[taskID]['stdout']
+        output = json.loads(res.output)
+        # TODO(crbug.com/958142): Eliminate this if block one schema is updated
+        # in accordance with crbug.com/958142
+        if taskID in output:
+            output = output[taskID]
+        child_tasks = output['child-results']
+        task_stdout = output['stdout']
+
         return_code = _get_skylab_suite_result(child_tasks)
         _log_skylab_for_buildbot(task_stdout)
         return run_suite_common.SuiteResult(return_code)
