@@ -9,6 +9,7 @@ import os
 import time
 
 from autotest_lib.client.common_lib.cros import arc
+
 from autotest_lib.client.common_lib.cros.arc import is_android_container_alive
 
 from autotest_lib.client.bin import test
@@ -20,6 +21,7 @@ from autotest_lib.client.cros import cryptohome
 from autotest_lib.client.cros import httpd
 from autotest_lib.client.cros.input_playback import keyboard
 from autotest_lib.client.cros.enterprise import enterprise_fake_dmserver
+from autotest_lib.client.cros.enterprise import ui_utils
 from py_utils import TimeoutException
 
 from telemetry.core import exceptions
@@ -964,6 +966,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                                         disable_gaia_services=False,
                                         disable_arc_opt_in=False,
                                         enterprise_arc_test=True,
+                                        autotest_ext=True,
                                         extra_browser_args=extra_flags)
 
             else:
@@ -986,6 +989,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                     autotest_ext=True,
                     expect_policy_fetch=True)
 
+        self.ui = ui_utils.UI_Handler()
         # Used by arc.py to determine the state of the chrome obj
         self.initialized = True
         if auto_login:
