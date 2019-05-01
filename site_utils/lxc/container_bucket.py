@@ -10,7 +10,6 @@ import common
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib.global_config import global_config
 from autotest_lib.site_utils.lxc import config as lxc_config
 from autotest_lib.site_utils.lxc import constants
 from autotest_lib.site_utils.lxc import lxc
@@ -29,12 +28,6 @@ except ImportError:
     metrics = utils.metrics_mock
     ts_mon = mock.Mock()
 
-
-# Timeout (in seconds) for container pool operations.
-_CONTAINER_POOL_TIMEOUT = 3
-
-_USE_LXC_POOL = global_config.get_config_value('LXC_POOL', 'use_lxc_pool',
-                                               type=bool)
 
 class ContainerBucket(object):
     """A wrapper class to interact with containers in a specific container path.
