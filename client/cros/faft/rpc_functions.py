@@ -208,6 +208,15 @@ class RPCFunctions(object):
         """
         return self._os_if.run_shell_command_get_output(command)
 
+    def _system_run_shell_command_get_status(self, command):
+        """Run shell command and get its console status.
+
+        @param command: A shell command to be run.
+        @return: The returncode of the process
+        @rtype: int
+        """
+        return self._os_if.run_shell_command_get_status(command)
+
     def _host_run_shell_command(self, command):
         """Run shell command on the host.
 
