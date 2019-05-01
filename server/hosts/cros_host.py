@@ -329,11 +329,24 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
 
     def get_cros_repair_image_name(self):
-        info = self.host_info_store.get()
-        if not info.board:
-            raise error.AutoservError('Cannot obtain repair image name. '
-                                      'No board label value found')
-        return afe_utils.get_stable_cros_image_name(info.board)
+        """Get latest stable cros image name from AFE.
+
+        Use the board name from the info store. Should that fail, try to
+        retrieve the board name from the host's installed image itself.
+
+        @returns: current stable cros image name for this host.
+        """
+        board = self.host_info_store.get().board
+        if not board:
+            logging.warn('No board label value found. Trying to infer '
+                         'from the host itself.')
+            try:
+                board = self.get_board().split(':')[1]
+            except (error.AutoservRunError, error.AutoservSSHTimeout) as e:
+                logging.error('Also failed to get the board name from the DUT '
+                              'itself. %s.', str(e))
+                raise error.AutoservError('Cannot obtain repair image name.')
+        return afe_utils.get_stable_cros_image_name(board)
 
 
     def host_version_prefix(self, image):
