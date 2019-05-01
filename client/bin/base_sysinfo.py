@@ -131,7 +131,9 @@ class command(loggable):
             logf = cmd.replace(" ", "_")
         super(command, self).__init__(logf, log_in_keyval)
         self.cmd = cmd
-        self._compress_log = compress_log
+        if compress_log:
+            self.cmd += ' | gzip -9'
+            self.logf += '.gz'
 
 
     def __repr__(self):
@@ -182,8 +184,6 @@ class command(loggable):
         finally:
             for f in (stdin, stdout, stderr):
                 f.close()
-            if self._compress_log and os.path.exists(logf_path):
-                utils.system('gzip -9 "%s"' % logf_path, ignore_status=True)
 
 
 class base_sysinfo(object):
