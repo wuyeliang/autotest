@@ -5,8 +5,8 @@
 from autotest_lib.server import utils
 
 AUTHOR = 'chromeos-chameleon'
-NAME = 'bluetooth_AdapterLEHIDSanity'
-PURPOSE = ('package of Bluetooth LE HID sanity tests')
+NAME = 'bluetooth_AdapterLESanity'
+PURPOSE = ('Batch of Bluetooth LE sanity tests')
 CRITERIA = 'Pass all sanity test'
 ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity'
 TIME = 'MEDIUM'
@@ -16,17 +16,14 @@ TEST_TYPE = 'server'
 DEPENDENCIES = 'bluetooth, chameleon:ble, nRF52'
 
 DOC = """
-    A package of Bluetooth LE HID sanity tests
+    A Batch of Bluetooth LE sanity tests. This test is written as a batch
+    of tests in order to reduce test time, since auto-test ramp up time is
+    costy. The batch is using BluetoothAdapterQuickTests wrapper methods to
+    start and end a test and a batch of tests.
 
-    This test is written as a package of tests in order to reduce test time,
-    since auto-test ramp up time is costy.
-    Between each two test, the method _cleanup_and_restart is called to
-    restart both peer and DUT. The HID device type can be selected per test
-    using this method.
-    At the end of each test, the method _update_test_result is called to track
-    test results.
-    At the end of the package, _print_test_results is called to print a summary
-    of the test results.
+    This class can be called to run the entire test batch or to run a
+    specific test only - todo http://b/132199238 [autotest BT quick sanity]
+    add support for running a single test in quick test
     """
 
 args_dict = utils.args_to_dict(args)
@@ -34,7 +31,7 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
-    job.run_test('bluetooth_AdapterLEHIDSanity', host=host,
+    job.run_test('bluetooth_AdapterLESanity', host=host,
                   num_iterations=1)
 
 parallel_simple(run, machines)
