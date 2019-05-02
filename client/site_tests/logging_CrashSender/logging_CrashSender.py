@@ -65,14 +65,12 @@ class logging_CrashSender(crash_test.CrashTest):
                                  'got "%s"', exec_name, result['exec_name'])
 
 
-    def _check_simple_minidump_send(self, report, log_path=None):
+    def _check_simple_minidump_send(self, report):
         result = self._call_sender_one_crash(report=report)
         self._check_send_result(result, 'minidump',
                                 '%s.dmp' % self._FAKE_TEST_BASENAME, 'fake')
         if (not 'Version: my_ver' in result['output']):
             raise error.TestFail('Simple minidump send failed')
-        if log_path and not ('log: @%s' % log_path) in result['output']:
-            raise error.TestFail('Minidump send missing log')
         self._check_hardware_info(result)
         # Also test "Image type" field.  Note that it will not be "dev" even
         # on a dev build because crash-test-in-progress will exist.
@@ -89,18 +87,6 @@ class logging_CrashSender(crash_test.CrashTest):
     def _test_sender_simple_minidump(self):
         """Test sending a single minidump crash report."""
         self._check_simple_minidump_send(None)
-
-
-    def _test_sender_simple_minidump_with_log(self):
-        """Test that a minidump report with an auxiliary log is sent."""
-        dmp_path = self.write_crash_dir_entry(
-            '%s.dmp' % self._FAKE_TEST_BASENAME, '')
-        log_path = self.write_crash_dir_entry(
-            '%s.log' % self._FAKE_TEST_BASENAME, '')
-        meta_path = self.write_fake_meta(
-            '%s.meta' % self._FAKE_TEST_BASENAME, 'fake', dmp_path,
-            log=log_path)
-        self._check_simple_minidump_send(meta_path, log_path)
 
 
     def _shift_file_mtime(self, path, delta):
@@ -308,7 +294,6 @@ class logging_CrashSender(crash_test.CrashTest):
         self.run_crash_tests([
             'sender_simple_minidump',
             'sender_simple_old_minidump',
-            'sender_simple_minidump_with_log',
             'sender_simple_kernel_crash',
             'sender_pausing',
             'sender_reports_disabled',
