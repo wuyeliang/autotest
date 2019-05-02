@@ -2218,10 +2218,6 @@ def _run_with_skylab(options, override_pool, override_qs_account):
                     run_suite_common.RETURN_CODES.INFRA_FAILURE)
 
         output = json.loads(res.output)
-        # TODO(crbug.com/958142): Eliminate this if block one schema is updated
-        # in accordance with crbug.com/958142
-        if taskID in output:
-            output = output[taskID]
         child_tasks = output['child-results']
         task_stdout = output['stdout']
 
