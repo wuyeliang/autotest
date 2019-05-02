@@ -2206,7 +2206,7 @@ def _run_with_skylab(options, override_pool, override_qs_account):
     pool = override_pool or options.pool
     if options.mock_job_id:
         taskID = options.mock_job_id
-        cmd = [skylab_tool, 'wait-suite',
+        cmd = [skylab_tool, 'wait-task',
                '-timeout-mins', str(options.timeout_mins),
                '-service-account-json', _SKYLAB_SERVICE_ACCOUNT,
                taskID]
