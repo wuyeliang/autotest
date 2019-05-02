@@ -173,6 +173,8 @@ def _create_test_task(test_spec, suite_id=None, dry_run=False):
         cmd += ['-qs-account', test_spec.quota_account]
     if test_spec.test.test_type.lower() == 'client':
         cmd += ['-client-test']
+    if suite_id is not None:
+        cmd += ['-parent-task-run-id', suite_id]
 
 
     tags = _compute_tags(test_spec.build, suite_id)
