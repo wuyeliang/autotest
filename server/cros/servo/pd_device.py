@@ -448,8 +448,8 @@ class PDPlanktonDevice(PDConsoleDevice):
         @param disc_time_sec: Time in seconds for disconnect period.
         """
         DISC_DELAY = 100
-        disc_cmd = 'fake_disconnect %d  %d' % (DISC_DELAY,
-                                               disc_time_sec * 1000)
+        disc_cmd = 'fakedisconnect %d  %d' % (DISC_DELAY,
+                                              disc_time_sec * 1000)
         self.utils.send_pd_command(disc_cmd)
 
     def drp_disconnect_connect(self, disc_time_sec):

@@ -103,7 +103,7 @@ class firmware_PDTrySrc(FirmwareTest):
 
         # TODO Device pair must have Plankton so that the disconnect/connect
         # sequence does not affect the SRC/SNK connection. Plankton provides
-        # a 'fake_disconnect' feature which more closely resembles unplugging
+        # a 'fakedisconnect' feature which more closely resembles unplugging
         # and replugging a Type C cable.
 
         # Both devices must support dualrole mode for this test. In addtion,

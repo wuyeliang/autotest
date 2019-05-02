@@ -367,7 +367,7 @@ class PDConnectionUtils(PDConsoleUtils):
         DISCONNECT_CHECK_TIME = 0.5
         DISCONNECT_TIME_SEC = 2
         # plankton console command to force PD disconnect
-        disc_cmd = 'fake_disconnect 100 %d' % (DISCONNECT_TIME_SEC * 1000)
+        disc_cmd = 'fakedisconnect 100 %d' % (DISCONNECT_TIME_SEC * 1000)
         # Only check for Plankton if DUT has active PD connection
         if self.dut_console.is_pd_connected(port):
             # Attempt to force PD disconnection
