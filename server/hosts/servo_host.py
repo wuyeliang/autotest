@@ -267,8 +267,8 @@ class ServoHost(ssh_host.SSHHost):
         """
         command = ('scp -rq %s -o BatchMode=yes -o StrictHostKeyChecking=no '
                    '-o UserKnownHostsFile=/dev/null -P %d %s "%s"')
-        return command % (self.master_ssh_option,
-                          self.port, ' '.join(sources), dest)
+        return command % (self._master_ssh.ssh_option,
+                          self.port, sources, dest)
 
 
     def run(self, command, timeout=3600, ignore_status=False,
