@@ -629,11 +629,11 @@ class CrashTest(test.test):
     def hold_crash_lock(self):
         """A context manager to hold the crash sender lock."""
         with open(self._CRASH_SENDER_LOCK_PATH, 'w+') as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            fcntl.lockf(f.fileno(), fcntl.LOCK_EX)
             try:
                 yield
             finally:
-                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                fcntl.lockf(f.fileno(), fcntl.LOCK_UN)
 
 
     def initialize(self):

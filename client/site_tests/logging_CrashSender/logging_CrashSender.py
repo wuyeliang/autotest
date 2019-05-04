@@ -189,9 +189,9 @@ class logging_CrashSender(crash_test.CrashTest):
         """Test the sender fails to start when another instance is running."""
         with self.hold_crash_lock():
             result = self._call_sender_one_crash(should_fail=True)
-            if (not 'Already running; quitting.' in result['output'] or
+            if (not 'Failed to acquire a lock' in result['output'] or
                 result['send_attempt'] or not result['report_exists']):
-                raise error.TestFail('Allowed multiple instances to run')
+                raise error.TestFail('Allowed instance to run while lock held')
 
 
     def _test_sender_send_fails(self):
