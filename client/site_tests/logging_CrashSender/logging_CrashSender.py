@@ -272,22 +272,12 @@ class logging_CrashSender(crash_test.CrashTest):
                                          complete=False)
         utils.write_keyval(meta_file, {"error_type": "system-issue"})
         utils.write_keyval(meta_file, {"done": "1"})
-        self._set_force_official(True)  # also test this
         result = self._call_sender_one_crash(report=meta_file)
         if not result['error_type']:
             raise error.TestFail('Missing error type')
         if result['error_type'] != 'system-issue':
             raise error.TestFail('Incorrect error type "%s"' %
                                  result['error_type'])
-
-        # Also test force-official override by checking the image type.  Note
-        # that it will not be "dev" even on a dev build because
-        # crash-test-in-progress will exist.
-        if not result['image_type']:
-            raise error.TestFail('Missing image type when forcing official')
-        if result['image_type'] != 'force-official':
-            raise error.TestFail('Incorrect image type ("%s" != '
-                                 '"force-official")' % result['image_type'])
 
 
     def run_once(self):

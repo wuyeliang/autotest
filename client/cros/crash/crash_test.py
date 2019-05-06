@@ -121,21 +121,6 @@ class CrashTest(test.test):
             del os.environ['OVERRIDE_PAUSE_SENDING']
 
 
-    def _set_force_official(self, is_enabled):
-        """Sets whether or not reports will upload for unofficial versions.
-
-        Normally, crash reports are only uploaded for official build
-        versions.  If the override is set, however, they will also be
-        uploaded for unofficial versions.
-
-        @param is_enabled: True to enable uploading for unofficial versions.
-        """
-        if is_enabled:
-            os.environ['FORCE_OFFICIAL'] = "1"
-        elif os.environ.get('FORCE_OFFICIAL'):
-            del os.environ['FORCE_OFFICIAL']
-
-
     def _reset_rate_limiting(self):
         """Reset the count of crash reports sent today.
 
@@ -399,7 +384,7 @@ class CrashTest(test.test):
         @returns A dictionary with these values:
             error_type: an error type, if given
             exec_name: name of executable which crashed
-            image_type: type of image ("dev","force-official",...), if given
+            image_type: type of image ("dev","test",...), if given
             boot_mode: current boot mode ("dev",...), if given
             meta_path: path to the report metadata file
             output: the output from the script, copied
@@ -719,8 +704,6 @@ class CrashTest(test.test):
             self._set_child_sending(True)
             self._kill_running_sender()
             self._reset_rate_limiting()
-            # Default to not overriding for unofficial versions.
-            self._set_force_official(False)
             if clear_spool_first:
                 self._clear_spooled_crashes()
 
