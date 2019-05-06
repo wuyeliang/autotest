@@ -48,6 +48,7 @@ class UI_Handler(object):
         @param isRegex: bool, if the item is a regex. If item is str leave this
             as default.
         @param flip: Flips the return status.
+        @param role: the role attribute of the element.
 
         @returns:
             True if object is present and flip is False.
@@ -63,7 +64,7 @@ class UI_Handler(object):
             return False if not flip else True
         return True if not flip else False
 
-    def wait_for_ui_obj(self, element, isRegex=False, remove=False):
+    def wait_for_ui_obj(self, element, isRegex=False, remove=False, role=None):
         """
         Waits for the UI object specified.
 
@@ -71,14 +72,15 @@ class UI_Handler(object):
         @param isRegex: bool, if the item is a regex. If item is str leave this
             as default.
         @param remove: bool, if wait for the item to be removed.
-
+        @param role: the role attribute of the element.
         @raises error.TestError if the element is not loaded (or removed).
 
         """
         utils.poll_for_condition(
             condition=lambda: self.item_present(element=element,
                                                 isRegex=isRegex,
-                                                flip=remove),
+                                                flip=remove,
+                                                role=role),
             timeout=10,
             exception=error.TestError('{} did not load'.format(element)))
 
