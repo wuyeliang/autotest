@@ -287,7 +287,6 @@ class logging_CrashSender(crash_test.CrashTest):
         utils.write_keyval(meta_file, {"error_type": "system-issue"})
         utils.write_keyval(meta_file, {"done": "1"})
         self._set_force_official(True)  # also test this
-        self._set_mock_developer_mode(True)  # also test "boot_mode" field
         result = self._call_sender_one_crash(report=meta_file)
         if not result['error_type']:
             raise error.TestFail('Missing error type')
@@ -303,14 +302,6 @@ class logging_CrashSender(crash_test.CrashTest):
         if result['image_type'] != 'force-official':
             raise error.TestFail('Incorrect image type ("%s" != '
                                  '"force-official")' % result['image_type'])
-
-        # Also test "Boot mode" field.  For testing purposes, it should
-        # have been set to "dev" mode.
-        if not result['boot_mode']:
-            raise error.TestFail('Missing boot mode when mocking dev mode')
-        if result['boot_mode'] != 'dev':
-            raise error.TestFail('Incorrect boot mode when mocking dev mode '
-                                 '("%s" != "dev")' % result['boot_mode'])
 
 
     def run_once(self):

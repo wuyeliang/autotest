@@ -136,17 +136,6 @@ class CrashTest(test.test):
             del os.environ['FORCE_OFFICIAL']
 
 
-    def _set_mock_developer_mode(self, is_enabled):
-        """Sets whether or not we should pretend we booted in developer mode.
-
-        @param is_enabled: True to pretend we are in developer mode.
-        """
-        if is_enabled:
-            os.environ['MOCK_DEVELOPER_MODE'] = "1"
-        elif os.environ.get('MOCK_DEVELOPER_MODE'):
-            del os.environ['MOCK_DEVELOPER_MODE']
-
-
     def _reset_rate_limiting(self):
         """Reset the count of crash reports sent today.
 
@@ -732,8 +721,6 @@ class CrashTest(test.test):
             self._reset_rate_limiting()
             # Default to not overriding for unofficial versions.
             self._set_force_official(False)
-            # Default to not pretending we're in developer mode.
-            self._set_mock_developer_mode(False)
             if clear_spool_first:
                 self._clear_spooled_crashes()
 
