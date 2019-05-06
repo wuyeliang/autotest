@@ -72,8 +72,6 @@ class FirmwareTest(FAFTBase):
     # UARTs that may be captured
     UARTS = ('cpu', 'cr50', 'ec', 'servo_micro', 'servo_v4', 'usbpd')
 
-    _SERVOD_LOG = '/var/log/servod.log'
-
     _ROOTFS_PARTITION_NUMBER = 3
 
     _backup_firmware_identity = dict()
@@ -848,26 +846,24 @@ class FirmwareTest(FAFTBase):
         self.faft_client.System.RunShellCommand(cmd)
         time.sleep(self.EC_SUSPEND_DELAY)
 
-    def _fetch_servo_log(self):
-        """Fetch the servo log."""
-        cmd = '[ -e %s ] && cat %s || echo NOTFOUND' % ((self._SERVOD_LOG,) * 2)
-        servo_log = self.servo.system_output(cmd)
-        return None if servo_log == 'NOTFOUND' else servo_log
-
     def _setup_servo_log(self):
-        """Setup the servo log capturing."""
-        self.servo_log_original_len = -1
+        """Set up the servo log capturing."""
+        self.servo_log_original_size = 0
+        self.servo_log_original_inode = None
         if self.servo.is_localhost():
             # No servo log recorded when servod runs locally.
             return
 
-        servo_log = self._fetch_servo_log()
-        if servo_log:
-            self.servo_log_original_len = len(servo_log)
-        else:
-            logging.warn('Servo log file not found.')
+        self.servo.fetch_servod_log(None, skip_old=False)
 
     def _record_servo_log(self):
+        """Record the new portion of the servo log to the results directory."""
+        if self.servo.is_localhost():
+            # No servo log recorded when servod runs locally.
+            return
+
+        results_servod_log = os.path.join(self.resultsdir, 'servod.log')
+        self.servo.fetch_servod_log(results_servod_log, skip_old=True)
         """Record the servo log to the results directory."""
         if hasattr(self, 'servo_log_original_len'):
             if self.servo_log_original_len != -1:

@@ -274,13 +274,24 @@ class Servo(object):
         self._uart = _Uart(self)
         self._usb_state = None
         self._programmer = None
-
+        self._prev_log_inode = None
+        self._prev_log_size = 0
 
     @property
     def servo_serial(self):
         """Returns the serial number of the servo board."""
         return self._servo_serial
 
+    def fetch_servod_log(self, filename=None, skip_old=False):
+        """Save the servod log into the given local file.
+
+        @param filename: save the contents into a file with the given name.
+        @param skip_old: if True, skip past the old data in the log file.
+        @type filename: str
+        @type skip_old: bool
+        @rtype: None
+        """
+        return self._servo_host.fetch_servod_log(filename, skip_old)
 
     def get_power_state_controller(self):
         """Return the power state controller for this Servo.

@@ -720,6 +720,7 @@ def run(command, timeout=None, ignore_status=False, stdout_tee=None,
 
     @return a CmdResult object or None if the command timed out and
             ignore_timeout is True
+    @rtype: CmdResult
 
     @raise CmdError: the exit code of the command execution was not 0
     @raise CmdTimeoutError: the command timed out and ignore_timeout is False.
