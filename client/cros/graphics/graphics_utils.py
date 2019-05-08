@@ -116,8 +116,12 @@ class GraphicsTest(test.test):
         """
         # Assume failed at the beginning
         self.add_failures(name, subtest=subtest)
-        yield {}
-        self.remove_failures(name, subtest=subtest)
+        try:
+            yield {}
+            self.remove_failures(name, subtest=subtest)
+        except (error.TestWarn, error.TestNAError) as e:
+            self.remove_failures(name, subtest=subtest)
+            raise e
 
     @classmethod
     def failure_report_decorator(cls, name, subtest=None):
