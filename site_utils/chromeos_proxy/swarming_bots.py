@@ -37,6 +37,7 @@ Manage swarming bots.
     ** Restart a bot given a bot id.
 """
 import argparse
+import json
 import logging
 import logging.handlers
 import os
@@ -53,6 +54,7 @@ import urllib
 import common
 
 from autotest_lib.client.common_lib import global_config
+from chromite.lib import cros_build_lib
 
 
 LOGGING_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
@@ -63,6 +65,10 @@ DEFAULT_SWARMING_PROXY = global_config.global_config.get_config_value(
 ID_RANGE_FMT = r'(\d+)-(\d+)'
 KILL_PROC_TIMEOUT_SECS = 3600 * 3 # 3 hours
 MAX_KILL_PROC_SLEEP_SECS = 60
+
+SWARMING_SCRIPT = os.path.join(
+    os.path.expanduser('~'),
+    'chromiumos/chromite/third_party/swarming.client/swarming.py')
 
 
 class BotManagementError(Exception):
@@ -265,18 +271,45 @@ class BotManager(object):
     CHECK_BOTS_PATTERN = '{executable} {working_dir}.*{bot_cmd_pattern}'
 
 
-    def __init__(self, bot_ids, working_dir, swarming_proxy):
+    def __init__(self, bot_ids, working_dir, swarming_proxy, auth_json_path):
         """Initialize.
 
         @param bot_ids: a set of integers.
         @param working_dir: Working directory of the bots.
                             Store temporary files.
         @param swarming_proxy: The swarming instance to talk to.
+        @param auth_json_path: The string path of an auth json file.
         """
         self.bot_ids = bot_ids
         self.working_dir = os.path.abspath(os.path.expanduser(working_dir))
+        self.auth_json_path = auth_json_path
+        self.swarming_proxy = swarming_proxy
         self.bots = [SwarmingBot(bid, self.working_dir, swarming_proxy)
                      for bid in bot_ids]
+
+    def _kill_dead_bots(self):
+        """Check swarming proxy to get dead bots and kill them."""
+        cmd = [SWARMING_SCRIPT, 'query',
+               '--swarming', self.swarming_proxy,
+               '--auth-service-account-json', self.auth_json_path,
+               'bots/list?is_dead=TRUE']
+        try:
+            bots = cros_build_lib.RunCommand(cmd, capture_output=True)
+            server_name = get_hostname()
+            bot_info = json.loads(bots.output)
+            dead_bot_ids = {item['bot_id'] for item in bot_info['items']
+                            if server_name in item['bot_id']}
+            for b in self.bots:
+                if b.bot_dir not in dead_bot_ids:
+                    continue
+
+                logging.info('Killing dead bot %s', b.bot_id)
+                b.kill()
+        except Exception as e:
+            # Don't stop bot manager due to dead bots detection error.
+            # TODO (xixuan): Add metrics.
+            logging.warning(str(e))
+
 
     def launch(self):
         """Launch bots."""
@@ -318,6 +351,7 @@ class BotManager(object):
 
     def check(self):
         """Check running bots, start it if not running."""
+        self._kill_dead_bots()
         pattern =  self.CHECK_BOTS_PATTERN.format(
                 executable=sys.executable, working_dir=self.working_dir,
                 bot_cmd_pattern=SwarmingBot.BOT_CMD_PATTERN)
