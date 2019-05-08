@@ -111,8 +111,7 @@ class ChromeLogin(object):
         """Logs into Chrome with retry."""
         timeout = self._timeout
         logging.info('Ensure Android is running (timeout=%d)...', timeout)
-        # TODO(kinaba): remove the temporary verbosity for debugging b/129382439
-        if not self.login(timeout=timeout, verbose=True):
+        if not self.login(timeout=timeout):
             timeout *= 2
             # The DUT reboots after unsuccessful login, try with more time.
             logging.info('Retrying failed login (timeout=%d)...', timeout)
