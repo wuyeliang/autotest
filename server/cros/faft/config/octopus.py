@@ -9,7 +9,7 @@ class Values(object):
     chrome_ec = True
     ec_boot_to_console = 0.3
     ec_capability = ['battery', 'charging', 'keyboard', 'lid', 'x86',
-                     'usb', 'smart_usb_charge']
+                     'usb', 'smart_usb_charge', 'cbi']
     firmware_screen = 25 # Time from deasserting cold_reset to firmware_screen being shown
     usb_plug = 45
     spi_voltage = 'pp1800'
