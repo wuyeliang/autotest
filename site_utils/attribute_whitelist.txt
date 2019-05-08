@@ -127,6 +127,7 @@ suite:faft_normal_ryu
 suite:faft_setup
 suite:faft_smoke
 suite:faft_stress
+suite:faft_wilco
 suite:fingerprint
 suite:gpu_hang
 suite:graphics
