@@ -58,6 +58,8 @@ def _parse_args(args):
     parser.add_argument(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='Verbose mode')
+    # TODO (xixuan): To be deprecated.
+    # Will remove it later after cleaning its callers.
     parser.add_argument(
             '--specify_bot_id', action='store_true',
             help='Specify bot id in retrieving bot codes & staring bots')
@@ -143,8 +145,7 @@ def main(args):
     bot_manager = swarming_bots.BotManager(
             swarming_bots.parse_range(args.id_range),
             args.working_dir,
-            args.swarming_proxy,
-            specify_bot_id=args.specify_bot_id)
+            args.swarming_proxy)
     is_prod = False
     retryable = True
     with ts_mon_config.SetupTsMonGlobalState('swarming_bots', indirect=True):

@@ -106,8 +106,7 @@ class SwarmingBot(object):
     BOT_CMD_PATTERN = 'swarming_bot.*zip start_bot'
 
 
-    def __init__(self, bot_id, parent_dir, swarming_proxy,
-                 specify_bot_id=False):
+    def __init__(self, bot_id, parent_dir, swarming_proxy):
         """Initialize.
 
         @param bot_id: An integer.
@@ -117,10 +116,7 @@ class SwarmingBot(object):
                         at run time.
         @param swarming_proxy: URL to the swarming instance.
         """
-        self.bot_id = bot_id
-        self.specify_bot_id = specify_bot_id
-        if specify_bot_id:
-            self.bot_id = '%s-%s' % (get_hostname(), str(self.bot_id))
+        self.bot_id = '%s-%s' % (get_hostname(), str(bot_id))
 
         self.swarming_proxy = swarming_proxy
         self.parent_dir = os.path.abspath(os.path.expanduser(parent_dir))
@@ -216,11 +212,8 @@ class SwarmingBot(object):
         new_env['SWARMING_EXTERNAL_BOT_SETUP'] = '1'
         logging.debug('[Bot %s] Getting bot code from: %s/bot_code',
                       self.bot_id, self.swarming_proxy)
-        if self.specify_bot_id:
-            url = '%s/bot_code?bot_id=%s' % (self.swarming_proxy, self.bot_id)
-            new_env['SWARMING_BOT_ID'] = self.bot_id
-        else:
-            url = '%s/bot_code' % self.swarming_proxy
+        url = '%s/bot_code?bot_id=%s' % (self.swarming_proxy, self.bot_id)
+        new_env['SWARMING_BOT_ID'] = self.bot_id
 
         logging.info('Download bot code from %s', url)
         urllib.urlretrieve(url, dest)
@@ -272,8 +265,7 @@ class BotManager(object):
     CHECK_BOTS_PATTERN = '{executable} {working_dir}.*{bot_cmd_pattern}'
 
 
-    def __init__(self, bot_ids, working_dir, swarming_proxy,
-                 specify_bot_id=False):
+    def __init__(self, bot_ids, working_dir, swarming_proxy):
         """Initialize.
 
         @param bot_ids: a set of integers.
@@ -283,8 +275,7 @@ class BotManager(object):
         """
         self.bot_ids = bot_ids
         self.working_dir = os.path.abspath(os.path.expanduser(working_dir))
-        self.bots = [SwarmingBot(bid, self.working_dir, swarming_proxy,
-                                 specify_bot_id)
+        self.bots = [SwarmingBot(bid, self.working_dir, swarming_proxy)
                      for bid in bot_ids]
 
     def launch(self):
