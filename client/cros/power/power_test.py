@@ -184,6 +184,8 @@ class power_Test(test.test):
     def postprocess_iteration(self):
         """Write keyval and send data to dashboard."""
         power_telemetry_utils.end_measurement()
+        for log in self._meas_logs:
+            log.done = True
         super(power_Test, self).postprocess_iteration()
         self._publish_dashboard()
         self._save_results()
