@@ -14,3 +14,4 @@ class Values(object):
     firmware_screen = 7
     spi_voltage = 'pp1800'
     smm_store = False
+    delay_reboot_to_ping = 60
