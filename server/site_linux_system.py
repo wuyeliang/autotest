@@ -42,6 +42,7 @@ class LinuxSystem(object):
     CAPABILITY_SUPPLICANT_ROAMING = "supplicant_roaming"
     BRIDGE_INTERFACE_NAME = 'br0'
     HOSTAP_BRIDGE_INTERFACE_PREFIX = 'hostapbr'
+    IFB_INTERFACE_PREFIX = 'ifb'
     MIN_SPATIAL_STREAMS = 2
     MAC_BIT_LOCAL = 0x2  # Locally administered.
     MAC_BIT_MULTICAST = 0x1
