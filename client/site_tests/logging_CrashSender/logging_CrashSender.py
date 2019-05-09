@@ -169,11 +169,15 @@ class logging_CrashSender(crash_test.CrashTest):
             result['rate_count'] != _DAILY_RATE_LIMIT):
             raise error.TestFail('Crash rate limiting did not take effect')
 
-        # Set one rate file a day earlier and verify can send
-        rate_files = os.listdir(self._CRASH_SENDER_RATE_DIR)
+        # Set one rate file a day earlier and verify can send, be sure to skip
+        # the 'state' directory.
+        rate_files = [
+            name for name in os.listdir(self._CRASH_SENDER_RATE_DIR)
+            if os.path.isfile(os.path.join(self._CRASH_SENDER_RATE_DIR, name))
+        ]
         rate_path = os.path.join(self._CRASH_SENDER_RATE_DIR, rate_files[0])
         self._shift_file_mtime(rate_path, _25_HOURS_AGO)
-        utils.system('ls -l ' + self._CRASH_SENDER_RATE_DIR)
+        utils.system('ls -la ' + self._CRASH_SENDER_RATE_DIR)
         result = self._call_sender_one_crash()
         if (not result['send_attempt'] or
             not result['send_success'] or
