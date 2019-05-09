@@ -117,8 +117,7 @@ class network_VPNConnect(test.test):
                 'Name': 'test-vpn-l2tp-psk',
                 'Provider.Host': self.SERVER_ADDRESS,
                 'Provider.Type': 'l2tpipsec',
-                'Type': 'vpn',
-                'VPN.Domain': 'test-vpn-psk-domain'
+                'Type': 'vpn'
             }
             if 'xauth' in self._vpn_type:
                 if 'incorrect_user' in self._vpn_type:
@@ -145,8 +144,7 @@ class network_VPNConnect(test.test):
                 'Name': 'test-vpn-l2tp-cert',
                 'Provider.Host': self.SERVER_ADDRESS,
                 'Provider.Type': 'l2tpipsec',
-                'Type': 'vpn',
-                'VPN.Domain': 'test-vpn-psk-domain'
+                'Type': 'vpn'
             }
         elif self._vpn_type.startswith('openvpn'):
             tpm.install_certificate(site_eap_certs.client_cert_1,
@@ -158,7 +156,6 @@ class network_VPNConnect(test.test):
                 'Provider.Host': self.SERVER_ADDRESS,
                 'Provider.Type': 'openvpn',
                 'Type': 'vpn',
-                'VPN.Domain': 'test-openvpn-domain',
                 'OpenVPN.CACertPEM': [ site_eap_certs.ca_cert_1 ],
                 'OpenVPN.Pkcs11.ID': site_eap_certs.cert_1_tpm_key_id,
                 'OpenVPN.Pkcs11.PIN': tpm.PIN,
