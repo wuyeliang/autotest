@@ -113,8 +113,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
 
         self._use_ec = True
         if not power_utils.charge_control_by_ectool(is_charge=False):
-            logging.warning('Can\'t stop charging')
-            return {}
+            raise error.TestFail('Can\'t stop charging')
 
         if not self._power_status.battery:
             raise error.TestFail('No valid battery')
