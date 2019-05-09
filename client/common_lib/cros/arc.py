@@ -231,15 +231,20 @@ def adb_shell(cmd, **kwargs):
     return output
 
 
-def adb_install(apk, auto_grant_permissions=True):
+def adb_install(apk, auto_grant_permissions=True, ignore_status=False):
     """Install an apk into container. You must connect first.
 
     @param apk: Package to install.
     @param auto_grant_permissions: Set to false to not automatically grant all
     permissions. Most tests should not care.
+    @param ignore_status: Set to true to allow the install command to fail,
+    for example if you are installing multiple architectures and only need
+    one to succeed.
     """
     flags = '-g' if auto_grant_permissions else ''
-    return adb_cmd('install -r -t %s %s' % (flags, apk), timeout=60*5)
+    return adb_cmd('install -r -t %s %s' % (flags, apk),
+                   timeout=60*5,
+                   ignore_status=ignore_status)
 
 
 def adb_uninstall(apk):
@@ -762,9 +767,11 @@ class ArcTest(test.test):
         if apks:
             for apk in apks:
                 logging.info('Installing %s', apk)
-                out = adb_install('%s/%s' % (apk_path, apk))
+                out = adb_install('%s/%s' % (apk_path, apk), ignore_status=True)
                 logging.info('Install apk output: %s', str(out))
-            # Verify if package(s) are installed correctly
+            # Verify if package(s) are installed correctly.  We ignored
+            # individual install statuses above because some tests list apks for
+            # all arches and only need one installed.
             if not full_pkg_names:
                 raise error.TestError('Package names of apks expected')
             for pkg in full_pkg_names:
