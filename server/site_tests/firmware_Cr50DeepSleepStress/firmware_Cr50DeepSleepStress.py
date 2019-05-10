@@ -132,9 +132,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         ccdstate will show what cr50 thinks the AP state is. If the AP is 'on'
         cr50 won't enter deep sleep.
         """
-        logging.info(self.cr50.send_command_get_output('sleepmask',
+        logging.info(self.cr50.send_safe_command_get_output('sleepmask',
                 ['sleepmask.*>'])[0])
-        logging.info(self.cr50.send_command_get_output('ccdstate',
+        logging.info(self.cr50.send_safe_command_get_output('ccdstate',
                 ['ccdstate.*>'])[0])
 
 
