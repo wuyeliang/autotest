@@ -77,6 +77,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # a type A servo v4 or any other servo version isn't harmful.
         self.cr50.ccd_disable()
 
+        original_mainfw_type = 'developer' if self.checkers.crossystem_checker(
+                {'mainfw_type': 'developer'}) else 'normal'
+
         for i in range(suspend_count):
             # Power off the device
             self.servo.get_power_state_controller().power_off()
@@ -87,9 +90,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             time.sleep(self.MIN_RESUME)
             self.log_basic_cr50_sleep_information()
 
-            # Make sure it booted into normal mode
+            # Make sure it didn't boot into a different mode
             self.check_state((self.checkers.crossystem_checker,
-                              {'mainfw_type': 'normal'}))
+                              {'mainfw_type': original_mainfw_type}))
 
 
     def run_suspend_resume(self, host, suspend_count):
