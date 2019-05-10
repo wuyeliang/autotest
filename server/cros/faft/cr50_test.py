@@ -94,6 +94,11 @@ class Cr50Test(FirmwareTest):
             self._save_original_images(full_args.get('release_path', ''))
             # We successfully saved the device images
             self._saved_state |= self.IMAGES
+        except error.CmdError, e:
+            if restore_cr50_state:
+                if 'One or more URLs matched no objects.' in str(e):
+                    raise error.TestNAError('Need DBG image to run test')
+                raise
         except:
             if restore_cr50_state:
                 raise
