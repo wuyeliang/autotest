@@ -1,0 +1,19 @@
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+AUTHOR = "dhaddock"
+NAME = "desktopui_FilesApp"
+PURPOSE = "Smoke test for Files app."
+TIME = "SHORT"
+TEST_CATEGORY = "Functional"
+TEST_CLASS = "desktopui"
+TEST_TYPE = "client"
+JOB_RETRIES = 0
+ATTRIBUTES = "suite:bvt-perbuild"
+
+DOC = """
+This tests the Files app can launch and some basic functionality.
+"""
+
+job.run_test('desktopui_FilesApp')
