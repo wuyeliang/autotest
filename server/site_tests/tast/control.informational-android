@@ -31,6 +31,6 @@ def run(machine):
                  host=hosts.create_host(machine),
                  test_exprs=['(!disabled && !"group:*" && informational && '
                              '("dep:android" || "dep:android_all"))'],
-                 ignore_test_failures=True)
+                 ignore_test_failures=True, command_args=args)
 
 parallel_simple(run, machines)
