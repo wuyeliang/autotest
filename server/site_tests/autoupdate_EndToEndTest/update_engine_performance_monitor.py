@@ -42,8 +42,13 @@ class UpdateEnginePerformanceMonitor(object):
 
         @return  a list of process identifiers.
         """
-        with open('/sys/fs/cgroup/cpu/update-engine/tasks') as f:
-            return [int(i) for i in f.read().split()]
+        try:
+            with open('/sys/fs/cgroup/cpu/update-engine/tasks') as f:
+                return [int(i) for i in f.read().split()]
+        except (IOError, OSError) as e:
+            sys.stderr.write('update-engine not running :%s', e)
+            return []
+
 
 
     @staticmethod
