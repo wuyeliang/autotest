@@ -78,7 +78,10 @@ class ContainerBucket(object):
         @return: A dictionary of all containers with detailed attributes,
                  indexed by container name.
         """
+        logging.debug("Fetching all extant LXC containers")
         info_collection = lxc.get_container_info(self.container_path)
+        if force_update:
+          logging.debug("Clearing cached container info")
         containers = {} if force_update else self.container_cache
         for info in info_collection:
             if info["name"] in containers:
@@ -100,10 +103,15 @@ class ContainerBucket(object):
         @return: A container object with matching name. Returns None if no
                  container matches the given name.
         """
+        logging.debug("Fetching LXC container with id %s", container_id)
         if container_id in self.container_cache:
+            logging.debug("Found container %s in cache", container_id)
             return self.container_cache[container_id]
 
-        return self.get_all().get(container_id, None)
+        container = self.get_all().get(container_id, None)
+        if None == container:
+          logging.debug("Could not find container %s", container_id)
+        return container
 
 
     def exist(self, container_id):
