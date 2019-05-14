@@ -150,6 +150,14 @@ class RPMFrontendServer(object):
         @raise RPMInfrastructureException: No dispatchers are available or can
                                            be reached.
         """
+        new_state = new_state.upper()
+        if new_state not in VALID_STATE_VALUES:
+            logging.error('Received request to set device %s to invalid '
+                          'state %s', device_hostname, new_state)
+            return False
+        logging.info('Received request to set device: %s to state: %s',
+                     device_hostname, new_state)
+
         powerunit_info = utils.PowerUnitInfo(
                 device_hostname=device_hostname,
                 powerunit_type=utils.PowerUnitInfo.POWERUNIT_TYPES.RPM,
