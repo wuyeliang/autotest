@@ -8,7 +8,8 @@ PURPOSE = "Run vm_sanity.py."
 CRITERIA = """
 Test will fail if vm_sanity fails.
 """
-ATTRIBUTES = "suite:bvt-inline, suite:smoke"
+# crbug.com/930157: This test is flaky and block CQ, disable it until fixed.
+ATTRIBUTES = "suite:bvt-perbuild" # "suite:bvt-inline, suite:smoke"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
