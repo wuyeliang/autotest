@@ -402,8 +402,8 @@ class Container(object):
         logging.debug('Destroying container %s/%s',
                       self.container_path,
                       self.name)
-        cmd = 'sudo lxc-destroy -P %s -n %s' % (self.container_path,
-                                                self.name)
+        cmd = constants.LXC_DESTROY_CMD % (self.container_path,
+                                           self.name)
         if force:
             cmd += ' -f'
         utils.run(cmd)

@@ -136,6 +136,26 @@ class ContainerBucket(object):
             container.destroy()
             del self.container_cache[key]
 
+    def scrub_container_location(self, name):
+        """Destroy a possibly-nonexistent, possibly-malformed container.
+
+        This exists to clean up an unreachable container which may or may not
+        exist and is probably but not definitely malformed if it does exist. It
+        is accordingly scorched-earth and force-destroys the container with all
+        associated snapshots. Also accordingly, this will not raise an
+        exception if the destruction fails.
+
+        @param name: ID of the container.
+
+        @return: CmdResult object from the shell command
+        """
+        cmd = constants.LXC_DESTROY_CMD % (self.container_path, name)
+        cmd += ' -f -s'
+        logging.debug("Force-destroying container %s if it exists", name)
+        result = utils.run(cmd, ignore_status=True)
+        logging.debug("Force-destruction exit code %s", result.exit_status)
+        return result
+
 
 
     @metrics.SecondsTimerDecorator(
