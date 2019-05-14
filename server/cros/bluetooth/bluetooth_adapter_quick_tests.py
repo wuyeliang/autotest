@@ -7,12 +7,14 @@ This class provides wrapper functions for Bluetooth quick sanity test
 batches or packages
 """
 
+import functools
 import logging
 import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_tests
 from autotest_lib.server.cros.multimedia import remote_facade_factory
+
 
 class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
     """This class provide wrapper function for Bluetooth quick sanity test
@@ -83,6 +85,32 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.pkg_is_running = False
 
 
+    @staticmethod
+    def quick_test_test_decorator(test_name):
+        """A decorator providing a wrapper to a quick test.
+           Using the decorator a test method can implement only the core
+           test and let the decorator handle the quick test wrapper methods
+           (test_start and test_end).
+
+           @param test_name: the name of the test to log
+        """
+
+        def decorator(test_method):
+            """A decorator wrapper of the decorated test_method.
+               @param test_method: the test method being decorated.
+               @returns the wrapper of the test method.
+            """
+
+            @functools.wraps(test_method)
+            def wrapper(self):
+                self.quick_test_test_start(test_name)
+                test_method(self)
+                self.quick_test_test_end()
+            return wrapper
+
+        return decorator
+
+
     def quick_test_test_start(self, test_name=None):
         """Start a quick test. The method clears and restarts adapter on DUT
            as well as peer devices. In addition the methods prints test start
@@ -136,6 +164,45 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self._print_delimiter()
         self.bat_tests_results.append(result_msg)
         self.pkg_tests_results.append(result_msg)
+
+    @staticmethod
+    def quick_test_batch_decorator(batch_name):
+        """A decorator providing a wrapper to a batch.
+           Using the decorator a test batch method can implement only its
+           core tests invocations and let the decorator handle the wrapper,
+           which is taking care for whether to run a specific test or the
+           batch as a whole and and running the batch in iterations
+
+           @param batch_name: the name of the batch to log
+        """
+
+        def decorator(batch_method):
+            """A decorator wrapper of the decorated test_method.
+               @param test_method: the test method being decorated.
+               @returns the wrapper of the test method.
+            """
+
+            @functools.wraps(batch_method)
+            def wrapper(self, num_iterations=1, test_name=None):
+                """A wrapper of the decorated method.
+                  @param num_iterations: how many interations to run
+                  @param test_name: specifc test to run otherwise None to run
+                                    the whole batch
+                """
+                if test_name is not None:
+                    """todo http://b/132199238 [autotest BT quick sanity] add
+                       support for running a single test in quick test
+                    """
+                    single_test_method = getattr(self,  test_name)
+                    # single_test_method()
+                else:
+                    for iter in xrange(num_iterations):
+                        self.quick_test_batch_start(batch_name, iter)
+                        batch_method(self, num_iterations, test_name)
+                        self.quick_test_batch_end()
+            return wrapper
+
+        return decorator
 
 
     def quick_test_batch_start(self, bat_name, iteration=1):

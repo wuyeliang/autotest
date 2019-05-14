@@ -8,9 +8,10 @@ import logging
 import time
 
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_quick_tests
+from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
+     BluetoothAdapterQuickTests
 
-class bluetooth_AdapterLESanity(
-        bluetooth_adapter_quick_tests.BluetoothAdapterQuickTests):
+class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests):
     """A Batch of Bluetooth LE sanity tests. This test is written as a batch
        of tests in order to reduce test time, since auto-test ramp up time is
        costly. The batch is using BluetoothAdapterQuickTests wrapper methods to
@@ -20,7 +21,10 @@ class bluetooth_AdapterLESanity(
        specific test only (todo http://b/132199238)
     """
 
+    test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
+    batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
 
+    @test_wrapper('Connect Disconnect Loop')
     def le_connect_disconnect_loop(self):
         """Run connect/disconnect loop initiated by DUT.
            The test also checks that there are no undesired
@@ -28,8 +32,6 @@ class bluetooth_AdapterLESanity(
            TODO(ysahvit) - add connection creation attempts
                            initiated by HID device
         """
-        self.quick_test_test_start('Connect Disconnect Loop')
-
         # First pair and disconnect, to emulate real life scenario
         self.test_discover_device(self.device.address)
         # self.bluetooth_facade.is_discovering() doesn't work as expected:s
@@ -71,13 +73,9 @@ class bluetooth_AdapterLESanity(
             logging.info('Average duration (by adapter) %f sec',
                          total_duration_by_adapter/loop_cnt)
 
-        self.quick_test_test_end()
-
-
+    @test_wrapper('Mouse Reports')
     def le_mouse_reports(self):
         """Run all bluetooth mouse reports tests"""
-
-        self.quick_test_test_start('Mouse Reports')
 
          # Let the adapter pair, and connect to the target device.
         self.test_discover_device(self.device.address)
@@ -99,13 +97,10 @@ class bluetooth_AdapterLESanity(
         self.test_mouse_scroll_up(self.device, 40)
         self.test_mouse_click_and_drag(self.device, 90, 30)
 
-        self.quick_test_test_end()
 
-
+    @test_wrapper('Auto Reconnect')
     def le_auto_reconnect(self):
         """LE reconnection loop by reseting HID and check reconnection"""
-
-        self.quick_test_test_start('Auto Reconnect')
 
         # Let the adapter pair, and connect to the target device first
         self.test_discover_device(self.device.address)
@@ -142,24 +137,22 @@ class bluetooth_AdapterLESanity(
             logging.info('Average Reconnection duration %f sec',
                          total_reconnection_duration/loop_cnt)
 
-        self.quick_test_test_end()
-
-
+    @batch_wrapper('LE Sanity')
     def le_sanity_batch_run(self, num_iterations=1, test_name=None):
-        """Run the LE sanity test batch or a specific given test"""
-        if test_name is not None:
-            """todo http://b/132199238 [autotest BT quick sanity] add
-               support for running a single test in quick test
-            """
-            test_method = getattr(self,  test_name)
-            # test_method()
-        else:
-            for iter in xrange(num_iterations):
-                self.quick_test_batch_start('LE Sanity', iter)
-                self.le_connect_disconnect_loop()
-                self.le_mouse_reports()
-                self.le_auto_reconnect()
-                self.quick_test_batch_end()
+        """Run the LE sanity test batch or a specific given test.
+           The wrapper of this method is implemented in batch_decorator.
+           Using the decorator a test batch method can implement the only its
+           core tests invocations and let the decorator handle the wrapper,
+           which is taking care for whether to run a specific test or the
+           batch as a whole, and running the batch in iterations
+
+           @param num_iterations: how many interations to run
+           @param test_name: specifc test to run otherwise None to run the
+                             whole batch
+        """
+        self.le_connect_disconnect_loop()
+        self.le_mouse_reports()
+        self.le_auto_reconnect()
 
 
     def run_once(self, host, num_iterations=1, test_name=None):

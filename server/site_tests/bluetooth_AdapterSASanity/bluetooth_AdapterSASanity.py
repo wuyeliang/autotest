@@ -5,9 +5,10 @@
 """A Batch of of Bluetooth stand alone sanity tests"""
 
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_quick_tests
+from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
+     BluetoothAdapterQuickTests
 
-class bluetooth_AdapterSASanity(
-        bluetooth_adapter_quick_tests.BluetoothAdapterQuickTests):
+class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
     """A Batch of Bluetooth stand alone sanity tests. This test is written as
        a batch of tests in order to reduce test time, since auto-test ramp up
        time is costy. The batch is using BluetoothAdapterQuickTests wrapper
@@ -17,10 +18,13 @@ class bluetooth_AdapterSASanity(
        specific test only (todo http://b/132199238)
     """
 
+    test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
+    batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
+
+
+    @test_wrapper('Stand Alone basic test')
     def sa_basic_test(self):
         """Set of basic stand alone test"""
-
-        self.quick_test_test_start('Stand Alone basic test')
 
         # The bluetoothd must be running in the beginning.
         self.test_bluetoothd_running()
@@ -66,23 +70,20 @@ class bluetooth_AdapterSASanity(
         self.test_nonpairable()
         self.test_pairable()
 
-        self.quick_test_test_end()
-
-
+    @batch_wrapper('Stand Alone Sanity')
     def sa_sanity_batch_run(self, num_iterations=1, test_name=None):
-        """Run the stand alone sanity test batch or a specific given test"""
+        """Run the stand alone sanity test batch or a specific given test.
+           The wrapper of this method is implemented in batch_decorator.
+           Using the decorator a test batch method can implement the only its
+           core tests invocations and let the decorator handle the wrapper,
+           which is taking care for whether to run a specific test or the
+           batch as a whole, and running the batch in iterations
 
-        if test_name is not None:
-            """todo http://b/132199238 [autotest BT quick sanity] add
-               support for running a single test in quick test
-            """
-            test_method = getattr(self,  test_name)
-            # test_method()
-        else:
-            for iter in xrange(num_iterations):
-                self.quick_test_batch_start('Stand Alone Sanity', iter)
-                self.sa_basic_test()
-                self.quick_test_batch_end()
+           @param num_iterations: how many interations to run
+           @param test_name: specifc test to run otherwise None to run the
+                             whole batch
+        """
+        self.sa_basic_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None):
