@@ -427,6 +427,14 @@ class Cr50Test(FirmwareTest):
     def _confirm_dut_is_pingable(self):
         """Reset the DUT if it doesn't respond to ping"""
         logging.info('checking dut state')
+
+        self.servo.set('cold_reset', 'off')
+        self.servo.set('warm_reset', 'off')
+        time.sleep(self.cr50.SHORT_WAIT)
+        if not self.cr50.ap_is_on():
+            logging.info('Pressing power button to turn on AP')
+            self.servo.power_short_press()
+
         end_time = time.time() + self.RESPONSE_TIMEOUT
         while not self.host.ping_wait_up(
                 self.faft_config.delay_reboot_to_ping):
