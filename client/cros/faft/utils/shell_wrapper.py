@@ -12,6 +12,11 @@ class ShellError(Exception):
     pass
 
 
+class UnsupportedSuccessToken(Exception):
+    """Unsupported character found."""
+    pass
+
+
 class LocalShell(object):
     """An object to wrap the local shell environment."""
 
@@ -56,6 +61,28 @@ class LocalShell(object):
             self._os_if.log(text)
             raise ShellError(
                     'command %s failed (code: %d)' % (cmd, process.returncode))
+
+    def run_command_check_output(self, cmd, success_token):
+        """Run a command and check whether standard output contains some string.
+
+        The sucess token is assumed to not contain newlines.
+
+        @param cmd: A string of the command to make a blocking call with.
+        @param success_token: A string to search the standard output of the
+                command for.
+
+        @returns a Boolean indicating whthere the success_token was in the
+                stdout of the cmd.
+
+        @raises UnsupportedSuccessToken if a newline is found in the
+                success_token.
+        """
+        # The run_command_get_outuput method strips newlines from stdout.
+        if '\n' in success_token:
+            raise UnsupportedSuccessToken()
+        cmd_stdout = ''.join(self.run_command_get_output(cmd))
+        self._os_if.log('Checking for %s in %s' % (success_token, cmd_stdout))
+        return success_token in cmd_stdout
 
     def run_command_get_status(self, cmd):
         """Run a shell command and return its return code.

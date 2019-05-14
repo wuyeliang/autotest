@@ -226,6 +226,17 @@ class RPCFunctions(object):
         """
         self._os_if.run_shell_command(command)
 
+    def _system_run_shell_command_check_output(self, command, success_token):
+        """Run shell command and check its stdout for a string.
+
+        @param command: A shell command to be run.
+        @param success_token: A string to search the output for.
+        @return: A Boolean indicating whether the success_token was found in
+                the command output.
+        """
+        return self._os_if.run_shell_command_check_output(
+                command, success_token)
+
     def _system_run_shell_command_get_output(self, command,
                                              include_stderr=False):
         """Run shell command and get its console output.

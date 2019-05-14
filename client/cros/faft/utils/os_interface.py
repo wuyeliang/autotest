@@ -106,6 +106,10 @@ class OSInterface(object):
         """Run a shell command."""
         self.shell.run_command(cmd)
 
+    def run_shell_command_check_output(self, cmd, success_token):
+        """Run shell command and check its stdout for a string."""
+        return self.shell.run_command_check_output(cmd, success_token)
+
     def run_shell_command_get_status(self, cmd):
         """Run shell command and return its return code."""
         return self.shell.run_command_get_status(cmd)
