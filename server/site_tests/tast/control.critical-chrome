@@ -33,6 +33,6 @@ def run(machine):
                  test_exprs=['(!disabled && !"group:*" && !informational && '
                              '("dep:chrome" || "dep:chrome_login") && '
                              '!"dep:android" && !"dep:android_all")'],
-                 ignore_test_failures=False, max_run_sec=1200)
+                 ignore_test_failures=False, max_run_sec=3600)
 
 parallel_simple(run, machines)
