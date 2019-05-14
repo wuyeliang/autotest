@@ -5,9 +5,11 @@
 from autotest_lib.server import utils
 
 AUTHOR = 'chromeos-chameleon'
-NAME = 'audio_AudioPinnedStream'
-PURPOSE = 'Verify audio pinned stream works correctly'
-CRITERIA = "This test will fail if pinned stream doesn't work as expected."
+NAME = 'audio_AudioPinnedStream.recording'
+PURPOSE = 'Verify audio pinned stream recording works correctly'
+CRITERIA = """
+This test will fail if pinned stream recording doesn't work as expected.
+"""
 TIME='FAST'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = "audio"
@@ -24,6 +26,6 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
-    job.run_test("audio_AudioPinnedStream", host=host)
+    job.run_test("audio_AudioPinnedStream", host=host, playback=False)
 
 parallel_simple(run, machines)
