@@ -18,42 +18,7 @@ class policy_SecondaryGoogleAccountSigninAllowed(
 
     """
     version = 1
-
-    def _find_add_account_button(self, ext):
-        add_account_button = ext.EvaluateJavaScript("""
-        var root;
-        chrome.automation.getDesktop(r => root = r);
-        root.findAll({attributes: {
-            role: "link", name: /Add account/}}).map(node => node.name);
-        """)
-        return add_account_button
-
-    def _click_google_account_button(self, ext):
-        # Click the Google account button in gmail.
-        ext.ExecuteJavaScript("""
-        var root;
-        chrome.automation.getDesktop(r => root = r);
-        """)
-        # This sleep is needed for the all available buttons to load.
-        time.sleep(1)
-        ext.ExecuteJavaScript("""
-        var launcher = root.find({
-            attributes: {role: "button", name: /Google Account:/}});
-        launcher.doDefault()
-        """)
-
-    def _check_for_google_account_button(self, ext):
-        try:
-            g_account_button = ext.EvaluateJavaScript("""
-            var root;
-            chrome.automation.getDesktop(r => root = r);
-            g_account = root.find({
-                attributes: {role: "button", name: /Google Account:/}});
-            g_account;
-            """)
-            return True
-        except:
-            return False
+    ACC_REGEX = '/Google Account/'
 
     def _check_secondary_login(self, case):
         """
@@ -62,20 +27,27 @@ class policy_SecondaryGoogleAccountSigninAllowed(
         @param case: policy value.
 
         """
-        ext = self.cr.autotest_ext
         self.cr.browser.tabs[0].Navigate('https://www.gmail.com/')
 
         utils.poll_for_condition(
-            lambda: self._check_for_google_account_button(ext),
+            lambda: self.ui.item_present(role='button',
+                                         element=self.ACC_REGEX,
+                                         isRegex=True),
             exception=error.TestError('Test page is not ready.'),
             timeout=30,
             sleep_interval=3)
 
-        self._click_google_account_button(ext)
+        # It takes another few ms to make the button clickable.
+        time.sleep(1)
+        self.ui.doDefault_on_obj(role='button',
+                                 obj=self.ACC_REGEX,
+                                 isRegex=True)
 
         # This sleep is needed for the all available buttons to load.
         time.sleep(1)
-        add_account_button = self._find_add_account_button(ext)
+        add_account_button = self.ui.item_present(role='link',
+                                                  element='/Add account/',
+                                                  isRegex=True)
 
         if case is False:
             if add_account_button:
@@ -95,5 +67,6 @@ class policy_SecondaryGoogleAccountSigninAllowed(
 
         """
         POLICIES = {'SecondaryGoogleAccountSigninAllowed': case}
-        self.setup_case(user_policies=POLICIES)
+        self.setup_case(user_policies=POLICIES, real_gaia=True)
+        self.ui.start_ui_root(self.cr)
         self._check_secondary_login(case)
