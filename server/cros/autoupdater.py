@@ -866,12 +866,7 @@ class ChromiumOSUpdater(object):
         """
         if not self._use_quick_provision:
             return None
-        build_re = global_config.global_config.get_config_value(
-                'CROS', 'quick_provision_build_regex', type=str, default='')
         image_name = url_to_image_name(self.update_url)
-        if not build_re or re.match(build_re, image_name) is None:
-            logging.info('Not eligible for quick-provision.')
-            return None
         logging.info('Installing image using quick-provision.')
         provision_command = self._get_remote_script(_QUICK_PROVISION_SCRIPT)
         server_name = urlparse.urlparse(self.update_url)[1]

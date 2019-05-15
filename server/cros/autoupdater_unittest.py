@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import mock
 import mox
 import time
 import unittest
@@ -340,5 +341,30 @@ class TestAutoUpdater(mox.MoxTestBase):
         self.mox.VerifyAll()
 
 
+class TestAutoUpdater2(unittest.TestCase):
+    """Another test for autoupdater module that using mock."""
+
+    def testAlwaysRunQuickProvision(self):
+        """Tests that we call quick provsion for all kinds of builds."""
+        image = 'foo-whatever/R65-1234.5.6'
+        devserver = 'http://mock_devserver'
+        autoupdater.dev_server = mock.MagicMock()
+        autoupdater.metrics = mock.MagicMock()
+        host = mock.MagicMock()
+        update_url = '%s/update/%s' % (devserver, image)
+        updater = autoupdater.ChromiumOSUpdater(update_url, host,
+                                                use_quick_provision=True)
+        updater.check_update_status = mock.MagicMock()
+        updater.check_update_status.return_value = autoupdater.UPDATER_IDLE
+        updater._verify_kernel_state = mock.MagicMock()
+        updater._verify_kernel_state.return_value = 3
+        updater.verify_boot_expectations = mock.MagicMock()
+
+        updater.run_update()
+        host.run.assert_any_call(
+                '/usr/local/bin/quick-provision --noreboot %s %s/static' %
+                (image, devserver))
+
+
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()
