@@ -56,12 +56,12 @@ GOOG_MAX_DECODE_MS = 'googMaxDecodeMs'
 # The decode time of the last frame.
 GOOG_DECODE_MS = 'googDecodeMs'
 
-# Javascript function to get the decode time. addStats is a function called by
-# Chrome to pass WebRTC statistics every second.
+# Javascript function to get the decode time. addLegacyStats is a function
+# called by Chrome to pass WebRTC statistics every second.
 ADD_STATS_JAVASCRIPT = (
         'var googMaxDecodeMs = new Array();'
         'var googDecodeMs = new Array();'
-        'addStats = function(data) {'
+        'addLegacyStats = function(data) {'
         '  reports = data.reports;'
         '  for (var i=0; i < reports.length; i++) {'
         '    if (reports[i].type == "ssrc") {'
@@ -76,8 +76,8 @@ ADD_STATS_JAVASCRIPT = (
         '  }'
         '}')
 
-# Measure the stats until getting 10 samples or exceeding 30 seconds. addStats
-# is called once per second for now.
+# Measure the stats until getting 10 samples or exceeding 30 seconds.
+# addLegacyStats is called once per second for now.
 NUM_DECODE_TIME_SAMPLES = 10
 TIMEOUT = 60
 
@@ -92,12 +92,14 @@ class video_WebRtcPerf(test.test):
 
 
     def initialize(self):
+        """Initializes the test."""
         self._service_stopper = None
         self._original_governors = None
         self._backlight = None
 
 
     def cleanup(self):
+        """Restores device setting for performance test."""
         if self._backlight:
             self._backlight.restore()
         if self._service_stopper:
@@ -133,6 +135,9 @@ class video_WebRtcPerf(test.test):
         tab = cr.browser.tabs.New()
         tab.Navigate(WEBRTC_INTERNALS_URL)
         tab.WaitForDocumentReadyStateToBeComplete()
+        # Switch to legacy mode to get googDecodeMs and googMaxDecodeMs, refer
+        # crbug.com/803014.
+        tab.EvaluateJavaScript("currentGetStatsMethod = OPTION_GETSTATS_LEGACY")
         # Inject stats callback function.
         tab.EvaluateJavaScript(ADD_STATS_JAVASCRIPT)
         return tab
