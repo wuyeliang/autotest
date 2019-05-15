@@ -24,13 +24,19 @@ class CrosInputWidgetARCHandler(audio_widget.CrosInputWidgetHandler):
                           channel=1,
                           rate=8000)
 
-    def start_recording(self):
-        """Starts recording audio through ARC."""
+    def start_recording(self, **kargs):
+        """Starts recording audio through ARC.
+
+        @param kargs: Other arguments that ARC doesn't support.
+
+        """
         self._audio_facade.start_arc_recording()
 
 
-    def stop_recording(self):
+    def stop_recording(self, **kargs):
         """Stops recording audio through ARC.
+
+        @param kargs: Other arguments that ARC doesn't support.
 
         @returns:
             A tuple (remote_path, format).

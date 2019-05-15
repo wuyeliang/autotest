@@ -71,11 +71,12 @@ def playback_cmd(playback_file, block_size=None, duration=None,
     return args
 
 
-def capture_cmd(
-        capture_file, block_size=None, duration=10, channels=1, rate=48000):
+def capture_cmd(capture_file, block_size=None, duration=10,
+                pin_device=None, channels=1, rate=48000):
     """Gets a command to capture the audio into the file with given settings.
 
     @param capture_file: the name of file the audio to be stored in.
+    @param pin_device: the device id to record from.
     @param block_size: the number of frames per callback(dictates latency).
     @param duration: seconds to record. If it is None, duration is not set,
                      and command will keep capturing audio until it is
@@ -88,6 +89,8 @@ def capture_cmd(
     """
     args = [_CRAS_TEST_CLIENT]
     args += ['--capture_file', capture_file]
+    if pin_device is not None:
+        args += ['--pin_device', str(pin_device)]
     if block_size is not None:
         args += ['--block_size', str(block_size)]
     if duration is not None:
@@ -377,6 +380,18 @@ def get_selected_input_device_name():
     for node in nodes:
         if node['Active'] and node['IsInput']:
             return node['DeviceName']
+    return None
+
+
+def get_selected_input_device_type():
+    """Returns the device type of the active input node.
+
+    @returns: device type string. E.g. INTERNAL_MICROPHONE
+    """
+    nodes = get_cras_nodes()
+    for node in nodes:
+        if node['Active'] and node['IsInput']:
+            return node['Type']
     return None
 
 

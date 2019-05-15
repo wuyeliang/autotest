@@ -83,17 +83,37 @@ class AudioInputWidget(AudioWidget):
         self._init_channel_map_without_link()
 
 
-    def start_recording(self):
-        """Starts recording."""
+    def start_recording(self, pinned=False):
+        """Starts recording.
+
+        @param pinned: Pins the audio to the input device.
+
+        """
         self._remote_rec_path = None
         self._rec_binary = None
         self._rec_format = None
-        self.handler.start_recording()
+        node_type = None
+        if pinned:
+            node_type = audio_test_utils.cros_port_id_to_cras_node_type(
+                    self.port_id)
+
+        self.handler.start_recording(node_type=node_type)
 
 
-    def stop_recording(self):
-        """Stops recording."""
-        self._remote_rec_path, self._rec_format = self.handler.stop_recording()
+    def stop_recording(self, pinned=False):
+        """Stops recording.
+
+        @param pinned: Stop the recording on the pinned input device.
+                       False means to stop the active selected one.
+
+        """
+        node_type = None
+        if pinned:
+            node_type = audio_test_utils.cros_port_id_to_cras_node_type(
+                    self.port_id)
+
+        self._remote_rec_path, self._rec_format = self.handler.stop_recording(
+                node_type=node_type)
 
 
     def start_listening(self):
@@ -391,16 +411,22 @@ class ChameleonInputWidgetHandler(ChameleonWidgetHandler):
     This class abstracts a Chameleon audio input widget handler.
 
     """
-    def start_recording(self):
-        """Starts recording."""
+    def start_recording(self, **kargs):
+        """Starts recording.
+
+        @param kargs: Other arguments that Chameleon doesn't support.
+
+        """
         self._port.start_capturing_audio()
 
 
-    def stop_recording(self):
+    def stop_recording(self, **kargs):
         """Stops recording.
 
         Gets remote recorded path and format from Chameleon. The format can
         then be used in get_recorded_binary()
+
+        @param kargs: Other arguments that Chameleon doesn't support.
 
         @returns: A tuple (remote_path, data_format) for recorded data.
                   Refer to stop_capturing_audio call of ChameleonAudioInput.
@@ -730,14 +756,29 @@ class CrosInputWidgetHandler(CrosWidgetHandler):
                                 sample_format='S16_LE',
                                 channel=1,
                                 rate=48000)
+    _recording_on = None
+    _SELECTED = "Selected"
 
-    def start_recording(self):
-        """Starts recording audio."""
-        self._audio_facade.start_recording(self._DEFAULT_DATA_FORMAT)
+    def start_recording(self, node_type=None):
+        """Starts recording audio.
+
+        @param node_type: A Cras node type defined in cras_utils.CRAS_NODE_TYPES
+
+        @raises: CrosInputWidgetHandlerError if a recording was already started.
+        """
+        if self._recording_on:
+            raise CrosInputWidgetHandlerError(
+                    "A recording was already started on %s." %
+                    self._recording_on)
+
+        self._recording_on = node_type if node_type else self._SELECTED
+        self._audio_facade.start_recording(self._DEFAULT_DATA_FORMAT, node_type)
 
 
-    def stop_recording(self):
+    def stop_recording(self, node_type=None):
         """Stops recording audio.
+
+        @param node_type: A Cras node type defined in cras_utils.CRAS_NODE_TYPES
 
         @returns:
             A tuple (remote_path, format).
@@ -749,8 +790,23 @@ class CrosInputWidgetHandler(CrosWidgetHandler):
                     channel: channel number.
                     rate: sampling rate.
 
+        @raises: CrosInputWidgetHandlerError if no corresponding responding
+        device could be stopped.
         """
-        return self._audio_facade.stop_recording(), self._DEFAULT_DATA_FORMAT
+        if self._recording_on is None:
+            raise CrosInputWidgetHandlerError("No recording was started.")
+
+        if node_type is None and self._recording_on != self._SELECTED:
+            raise CrosInputWidgetHandlerError(
+                    "No recording on selected device.")
+
+        if node_type and node_type != self._recording_on:
+            raise CrosInputWidgetHandlerError(
+                    "No recording was started on %s." % node_type)
+
+        self._recording_on = None
+        return (self._audio_facade.stop_recording(node_type=node_type),
+                self._DEFAULT_DATA_FORMAT)
 
 
     def get_recorded_binary(self, remote_path, record_format):
@@ -832,10 +888,10 @@ class CrosIntMicInputWidgetHandler(CrosInputWidgetHandler):
         self._audio_facade.set_input_gain(proper_gain)
 
 
-    def start_recording(self):
+    def start_recording(self, node_type=None):
         """Starts recording audio with proper gain."""
         self.set_proper_gain()
-        self._audio_facade.start_recording(self._DEFAULT_DATA_FORMAT)
+        super(CrosIntMicInputWidgetHandler, self).start_recording(node_type)
 
 
 class CrosHotwordingWidgetHandler(CrosInputWidgetHandler):
