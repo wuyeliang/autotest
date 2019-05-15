@@ -5,6 +5,8 @@ from autotest_lib.client.common_lib import utils
 
 class UI_Handler(object):
 
+    REGEX_ALL = '/(.*?)/'
+
     def start_ui_root(self, cr):
         """Starts the UI root object for testing."""
         self.ext = cr.autotest_ext
@@ -120,6 +122,57 @@ class UI_Handler(object):
         self._set_obj_var(obj, isRegex, role)
         return self.ext.EvaluateJavaScript("tempVar.{};".format(cmd))
 
+    def list_screen_items(self,
+                          role=None,
+                          obj=None,
+                          isRegex=False,
+                          attr='name'):
+
+        """
+        Lists all the items currently visable on the screen.
+
+        If no paramters are given, it will return the name of each item,
+        including items with empty names.
+
+        @param role: The role of the items to use (ie button).
+        @param obj: The name or regex of the item(s) to list.
+        @param isRegex: bool, if the obj is a regex. If obj is str leave this
+            as default.
+        @param attr: Str, the attribute you want returned in the list
+            (ie name).
+
+        """
+
+        if isRegex:
+            if obj is None:
+                raise error.TestError('If regex is True obj must be given')
+            obj = self.format_obj(obj, isRegex)
+        obj = self.REGEX_ALL if obj is None else obj
+        role = self.REGEX_ALL if role is None else self.format_obj(role, False)
+
+        return self.ext.EvaluateJavaScript('''
+                root.findAll({attributes:
+                    {name: %s, role: %s}}).map(node => node.%s);'''
+                % (obj, role, attr))
+
+    def get_name_role_list(self):
+        """
+        Returns a list of dicts containing the name/role of everything
+        on the screen.
+
+        """
+        combined = []
+        names = self.list_screen_items(attr='name')
+        roles = self.list_screen_items(attr='role')
+
+        if len(names) != len(roles):
+            raise error.TestError('Number of items in names and roles !=')
+
+        for name, role in zip(names, roles):
+            temp_d = {'name': name, 'role': role}
+            combined.append(temp_d)
+        return combined
+
     def format_obj(self, obj, isRegex):
         """
         Formats the object for use in the javascript name attribute.
@@ -141,7 +194,7 @@ class UI_Handler(object):
     def _set_obj_var(self, obj, isRegex, role):
         obj = self.format_obj(obj, isRegex)
         if role is None:
-            role = '/(.*?)/'
+            role = self.REGEX_ALL
         else:
             role = self.format_obj(role, False)
 
