@@ -104,7 +104,13 @@ class _PowerStateController(object):
         Generally, this causes the board to restart.
 
         """
-        self._servo.set_get_all(['warm_reset:on',
+        # TODO: warm_reset support has added to power_state.py. Once it
+        # available to labstation remove fallback method.
+        try:
+            self._servo.set_nocheck('power_state', 'warm_reset')
+        except error.TestFail as err:
+            logging.info("Fallback to warm_reset control method")
+            self._servo.set_get_all(['warm_reset:on',
                                  'sleep:%.4f' % self._RESET_HOLD_TIME,
                                  'warm_reset:off'])
 
