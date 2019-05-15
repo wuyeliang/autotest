@@ -26,8 +26,9 @@ _ANDROID_CONTAINER_ROOT_PATH = '/opt/google/containers/android/rootfs'
 _SCREENSHOT_DIR_PATH = '/var/log/arc-screenshots'
 _SCREENSHOT_BASENAME = 'arc-screenshot'
 _MAX_SCREENSHOT_NUM = 10
-# This address should match the one present in
-# https://chromium.googlesource.com/chromiumos/overlays/chromiumos-overlay/+/master/chromeos-base/arc-sslh-init/files/sslh.conf
+# This should only be used for verifying that adbd is up and listening in the
+# container. All connectivity and interaction with adb should flow through
+# localhost:5550.
 _ADBD_ADDRESS = ('100.115.92.2', 5555)
 _ADBD_PID_PATH = '/run/arc/adbd.pid'
 _SDCARD_PID_PATH = '/run/arc/sdcard.pid'
@@ -69,7 +70,7 @@ def adb_connect(attempts=1):
     if attempts % 2 == 1:
         utils.system('adb kill-server', ignore_status=True)
 
-    if utils.system('adb connect localhost:22', ignore_status=True) != 0:
+    if utils.system('adb connect localhost:5550', ignore_status=True) != 0:
         return False
     return is_adb_connected()
 
