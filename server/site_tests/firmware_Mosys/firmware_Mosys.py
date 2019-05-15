@@ -46,6 +46,20 @@ class firmware_Mosys(FirmwareTest):
                 cmdlist_start = True
         logging.info('Available commands: %s', ' '.join(self.command_list))
 
+    def check_for_errors(self, output, command):
+        """
+        Check for known errors.
+        1.  Bad system call (core dumped)
+            We see this a lot now that mosys is in a minijail.  Even if we see
+            this error, mosys will return success, so we need to check stderr.
+        """
+        for line in output:
+            if "Bad system call" in line:
+                logging.info("ERROR: Bad system call detected when calling mosys!")
+                self._tag_failure(command)
+                return 1
+        return 0
+
     def run_cmd(self, command):
         """
         Log and execute command and return the output.
@@ -55,7 +69,7 @@ class firmware_Mosys(FirmwareTest):
 
         """
         logging.info('Execute %s', command)
-        output = self.faft_client.system.run_shell_command_get_output(command)
+        output = self.faft_client.system.run_shell_command_get_output(command, True)
         logging.info('Output %s', output)
         return output
 
@@ -178,10 +192,11 @@ class firmware_Mosys(FirmwareTest):
         # a. mosys -k smbios info bios
         command = 'mosys -k smbios info bios'
         if 'smbios' in self.command_list:
-            output = self.run_cmd(command)[0]
+            output = self.run_cmd(command)
+            self.check_for_errors(output, command)
             p = re.compile('vendor="coreboot" version="(.*)"'
                            ' release_date="[/0-9]+" size="[0-9]+ KB"')
-            v = p.match(output)
+            v = p.match(output[0])
             if not v:
               self._tag_failure(command)
             version = v.group(1)
@@ -193,10 +208,11 @@ class firmware_Mosys(FirmwareTest):
         # b. mosys -k ec info
         command = 'mosys -k ec info'
         if self.faft_config.chrome_ec:
-          output = self.run_cmd(command)[0]
+          output = self.run_cmd(command)
+          self.check_for_errors(output, command)
           p = re.compile(
             'vendor="[A-Z]?[a-z]+" name="[ -~]+" fw_version="(.*)"')
-          v = p.match(output)
+          v = p.match(output[0])
           if v:
              version = v.group(1)
              self.check_ec_version(command, version)
@@ -207,21 +223,26 @@ class firmware_Mosys(FirmwareTest):
 
         # c. mosys platform name
         command = 'mosys platform name'
-        output = self.run_cmd(command)[0]
+        output = self.run_cmd(command)
+        self.check_for_errors(output, command)
         if self.faft_client.system.has_host():
-            self.check_adb_devices(command, 'product', output)
+            self.check_adb_devices(command, 'product', output[0])
         else:
-            self.check_lsb_info(command, 'CHROMEOS_RELEASE_BOARD', output)
+            self.check_lsb_info(command, 'CHROMEOS_RELEASE_BOARD', output[0])
 
         # d. mosys eeprom map
         command = 'mosys eeprom map|egrep "RW_SHARED|RW_SECTION_[AB]"'
         lines = self.run_cmd(command)
+        self.check_for_errors(lines, command)
         if len(lines) != 3:
           logging.error('Expect RW_SHARED|RW_SECTION_[AB] got "%s"', lines)
           self._tag_failure(command)
         emap = {'RW_SECTION_A': 0, 'RW_SECTION_B': 0, 'RW_SHARED': 0}
         for line in lines:
             row = line.split(' | ')
+            # no need to check if we don't have enough items in the list
+            if len(row) != 4:
+                 continue
             if row[1] in emap:
                 emap[row[1]] += 1
             if row[2] == '0x00000000':
@@ -240,9 +261,10 @@ class firmware_Mosys(FirmwareTest):
         # e. mosys platform vendor
         # Output will be GOOGLE until launch, see crosbug/p/29755
         command = 'mosys platform vendor'
-        output = self.run_cmd(command)[0]
+        output = self.run_cmd(command)
+        self.check_for_errors(output, command)
         p = re.compile('^[-\w\s]+$')
-        if not p.match(output):
+        if not p.match(output[0]):
             logging.error('output is not a string Expect GOOGLE'
                           'or name of maker.')
             self._tag_failure(command)
@@ -250,9 +272,10 @@ class firmware_Mosys(FirmwareTest):
         # f. mosys -k pd info
         command = 'mosys -k pd info'
         if self.faft_config.chrome_usbpd and 'pd' in self.command_list:
-          output = self.run_cmd(command)[0]
+          output = self.run_cmd(command)
+          self.check_for_errors(output, command)
           p = re.compile('vendor="[a-z]+" name="[ -~]+" fw_version="(.*)"')
-          v = p.match(output)
+          v = p.match(output[0])
           if v:
              version = v.group(1)
              self.check_pd_version(command, version)
@@ -264,6 +287,7 @@ class firmware_Mosys(FirmwareTest):
         # g. mosys -k memory spd print all (check no error output)
         command = 'mosys -k memory spd print all'
         output = self.run_cmd(command)
+        self.check_for_errors(output, command)
         p = re.compile('^dimm=".*$')
         # Each line should start with "dimm=".
         for i in output:

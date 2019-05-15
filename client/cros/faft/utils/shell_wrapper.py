@@ -62,14 +62,17 @@ class LocalShell(object):
         process = self._run_command(cmd)
         return process.returncode
 
-    def run_command_get_output(self, cmd):
-        """Run shell command and return its console output to the caller.
+    def run_command_get_output(self, cmd, include_stderr=False):
+        """Run shell command and return stdout (and possibly stderr) to the caller.
 
         The output is returned as a list of strings stripped of the newline
         characters.
         """
         process = self._run_command(cmd)
-        return [x.rstrip() for x in process.stdout.readlines()]
+        text = [x.rstrip() for x in process.stdout.readlines()]
+        if include_stderr:
+            text.extend([x.rstrip() for x in process.stderr.readlines()])
+        return text
 
     def read_file(self, path):
         """Read the content of the file."""

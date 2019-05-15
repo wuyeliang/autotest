@@ -111,9 +111,9 @@ class OSInterface(object):
         """Run shell command and return its return code."""
         return self.shell.run_command_get_status(cmd)
 
-    def run_shell_command_get_output(self, cmd):
+    def run_shell_command_get_output(self, cmd, include_stderr=False):
         """Run shell command and return its console output."""
-        return self.shell.run_command_get_output(cmd)
+        return self.shell.run_command_get_output(cmd, include_stderr)
 
     def run_host_shell_command(self, cmd, block=True):
         """Run a shell command on the host."""

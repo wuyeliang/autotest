@@ -228,13 +228,15 @@ class RPCFunctions(object):
         """
         self._os_if.run_shell_command(command)
 
-    def _system_run_shell_command_get_output(self, command):
+    def _system_run_shell_command_get_output(self, command,
+                                             include_stderr=False):
         """Run shell command and get its console output.
 
         @param command: A shell command to be run.
         @return: A list of strings stripped of the newline characters.
         """
-        return self._os_if.run_shell_command_get_output(command)
+        return self._os_if.run_shell_command_get_output(command,
+                                                        include_stderr)
 
     def _system_run_shell_command_get_status(self, command):
         """Run shell command and get its console status.
