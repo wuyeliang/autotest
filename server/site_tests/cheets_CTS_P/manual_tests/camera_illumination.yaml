@@ -1,0 +1,6 @@
+android.hardware.camera2.cts.CaptureRequestTest#testEdgeModeControl: [nautilus]
+android.hardware.camera2.cts.CaptureRequestTest#testNoiseReductionModeControl: [nautilus]
+android.hardware.camera2.cts.ImageReaderTest#testYuvAndJpeg: [coral]
+android.hardware.camera2.cts.RobustnessTest#testMandatoryOutputCombinations: [coral]
+android.hardware.cts.CameraGLTest#testCameraToSurfaceTextureMetadata: [all]
+android.hardware.cts.CameraTest#testPreviewFpsRange: [all]
