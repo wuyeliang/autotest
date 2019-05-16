@@ -6,14 +6,17 @@ ONE_STR_ARG = ("foo", )
 RPC_CATEGORIES = [
     {
         "category_name": "system",
-        "rpc_methods": [
+        "test_cases": [
             {
-                "method_name": "is_available",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-            },
-            {
-                "method_name": "has_host",
+                "method_names": [
+                    "is_available",
+                    "has_host",
+                    "software_reboot",
+                    "get_platform_name",
+                    "dev_tpm_present",
+                    "get_root_dev",
+                    "get_root_part",
+                ],
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
             },
@@ -31,64 +34,39 @@ RPC_CATEGORIES = [
                 "allow_error_msg":
                     "'LocalShell' object has no attribute 'wait_for_no_device'",
             },
-            {
-                "method_name": "software_reboot",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-            },
-            {
-                "method_name": "get_platform_name",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-            },
-            {
-                "method_name": "dev_tpm_present",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-            },
-            {
-                "method_name": "get_root_dev",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-            },
-            {
-                "method_name": "get_root_part",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-            },
         ]
     },
     {
         "category_name": "host",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "bios",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "ec",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "kernel",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "tpm",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "cgpt",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "updater",
-        "rpc_methods": []
+        "test_cases": []
     },
     {
         "category_name": "rootfs",
-        "rpc_methods": [
+        "test_cases": [
             {
                 "method_name": "verify_rootfs",
                 "passing_args": [

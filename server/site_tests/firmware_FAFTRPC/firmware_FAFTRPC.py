@@ -18,6 +18,29 @@ def get_rpc_category_by_name(name):
     raise ValueError("No RPC category defined with category_name=%s" % name)
 
 
+def get_rpc_method_names_from_test_case(test_case):
+    """
+    Extract the method_name or method_names from a test case configuration.
+@param test_case: An element from a test_cases array,
+                      like those in config.RPC_CATEGORIES
+
+    @return: A list of names of RPC methods in that test case.
+
+    """
+    if (("method_name" in test_case) ^ ("method_names" in test_case)):
+        if "method_name" in test_case:
+            return [test_case["method_name"]]
+        elif "method_names" in test_case:
+            return test_case["method_names"]
+        else:
+            err_msg = "Something strange happened while parsing RPC methods"
+            raise ValueError(err_msg)
+    else:
+        err_msg = "test_case must contain EITHER method_name OR method_names"
+        raise ValueError(err_msg)
+
+
+
 class firmware_FAFTRPC(FirmwareTest):
     """
     This test checks that all RPC commands work as intended.
@@ -179,17 +202,19 @@ class firmware_FAFTRPC(FirmwareTest):
             logging.info("Testing RPC category '%s'", category_under_test)
         for rpc_category in rpc_categories_to_test:
             category_name = rpc_category["category_name"]
-            rpc_methods = rpc_category["rpc_methods"]
-            logging.info("Testing %d methods for RPC category '%s'",
-                         len(rpc_methods), category_name)
-            for rpc_method in rpc_methods:
-                method_name = rpc_method["method_name"]
-                passing_args = rpc_method.get("passing_args", [])
-                failing_args = rpc_method.get("failing_args", [])
-                allow_error_msg = rpc_method.get("allow_error_msg", None)
-                for passing_arg_tuple in passing_args:
-                    self._assert_passes(category_name, method_name,
-                                        passing_arg_tuple, allow_error_msg)
-                for failing_arg_tuple in failing_args:
-                    self._assert_fails(category_name, method_name,
-                                       failing_arg_tuple)
+            test_cases = rpc_category["test_cases"]
+            logging.info("Testing %d cases for RPC category '%s'",
+                         len(test_cases), category_name)
+            for test_case in test_cases:
+                method_names = get_rpc_method_names_from_test_case(test_case)
+                passing_args = test_case.get("passing_args", [])
+                failing_args = test_case.get("failing_args", [])
+                allow_error_msg = test_case.get("allow_error_msg", None)
+                for method_name in method_names:
+                    for passing_arg_tuple in passing_args:
+                        result = self._assert_passes(category_name, method_name,
+                                                     passing_arg_tuple,
+                                                     allow_error_msg)
+                    for failing_arg_tuple in failing_args:
+                        self._assert_fails(category_name, method_name,
+                                           failing_arg_tuple)
