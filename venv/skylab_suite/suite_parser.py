@@ -89,10 +89,6 @@ def make_parser():
         action='store', help="Path to swarming service account json creds. "
         "Specify '' to omit. Otherwise, defaults to bot's default creds.")
 
-    # TODO(ayatane): Make sure no callers pass --use_fallback before removing.
-    parser.add_argument(
-            "--use_fallback", action="store_true", help='Deprecated')
-
     # Swarming-related parameters.
     parser.add_argument(
         '--execution_timeout_seconds', type=int, default=30,
@@ -114,9 +110,6 @@ def make_parser():
     parser.add_argument(
         '--timeout_mins', default=90, type=int, action='store',
         help='Maximum minutes to wait for a suite to finish.')
-    parser.add_argument(
-        '--passed_mins', default=0, type=int, action='store',
-        help='The minutes that this suite already runs for.')
     parser.add_argument(
         '--run_prod_code', action='store_true', default=False,
         help='Run the test code that lives in prod aka the test '
@@ -141,6 +134,12 @@ def make_parser():
     parser.add_argument(
         '--suite_task_ids', nargs='*', default=[],
         help=('Specify the parent swarming task id to abort.'))
+
+    # Deprecated arguments.
+    # TODO(akeshet): Remove these after verifying that no callers use them.
+    parser.add_argument('--passed_mins', action='store', help=argparse.SUPPRESS)
+    parser.add_argument('--use_fallback', action="store_true",
+                        help=argparse.SUPPRESS)
 
     return parser
 
