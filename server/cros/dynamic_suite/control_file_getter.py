@@ -132,6 +132,7 @@ class CacheingAndFilteringControlFileGetter(ControlFileGetter):
             regexp = re.compile(test_name + '$')
         candidates = filter(regexp.search, self._files)
         if not candidates:
+            logging.debug('Cannot find %s in %r', regexp.pattern, self._files)
             raise error.ControlFileNotFound('No control file for ' + test_name)
         if len(candidates) > 1:
             raise error.ControlFileNotFound(test_name + ' is not unique.')
