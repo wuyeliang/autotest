@@ -320,14 +320,12 @@ class CrashTest(test.test):
         return entry
 
 
-    def write_fake_meta(self, name, exec_name, payload, log=None,
-                        complete=True):
+    def write_fake_meta(self, name, exec_name, payload, complete=True):
         """Writes a fake meta entry to the system crash directory.
 
         @param name: Name of file to write.
         @param exec_name: Value for exec_name item.
         @param payload: Value for payload item.
-        @param log: Value for log item.
         @param complete: True to close off the record, otherwise leave it
                 incomplete.
         """
@@ -339,8 +337,6 @@ class CrashTest(test.test):
                     'payload=%s\n'
                     '%s' % (exec_name, payload,
                             last_line))
-        if log:
-            contents = ('log=%s\n' % log) + contents
         return self.write_crash_dir_entry(name, contents)
 
 
@@ -382,7 +378,6 @@ class CrashTest(test.test):
         @param output: output from the script
 
         @returns A dictionary with these values:
-            error_type: an error type, if given
             exec_name: name of executable which crashed
             image_type: type of image ("dev","test",...), if given
             boot_mode: current boot mode ("dev",...), if given
@@ -466,12 +461,6 @@ class CrashTest(test.test):
         else:
             sig = None
 
-        error_type_match = crash_sender_search('Error type: (\S+)', output)
-        if error_type_match:
-            error_type = error_type_match.group(1)
-        else:
-            error_type = None
-
         image_type_match = crash_sender_search('Image type: (\S+)', output)
         if image_type_match:
             image_type = image_type_match.group(1)
@@ -492,7 +481,6 @@ class CrashTest(test.test):
                 'send_attempt': send_attempt,
                 'send_success': send_success,
                 'sig': sig,
-                'error_type': error_type,
                 'image_type': image_type,
                 'boot_mode': boot_mode,
                 'sleep_time': sleep_time,

@@ -217,73 +217,6 @@ class logging_CrashSender(crash_test.CrashTest):
                                  result['image_type'])
 
 
-    def _test_sender_orphaned_files(self):
-        """Test that payload and unknown files that are old are removed."""
-        core_file = self.write_crash_dir_entry('random1.core', '')
-        unknown_file = self.write_crash_dir_entry('.unknown', '')
-        # As new files, we expect crash_sender to leave these alone.
-        results = self._call_sender_one_crash()
-        if ('Removing old orphaned file' in results['output'] or
-            not os.path.exists(core_file) or
-            not os.path.exists(unknown_file)):
-            raise error.TestFail('New orphaned files were removed')
-        self._shift_file_mtime(core_file, _25_HOURS_AGO)
-        self._shift_file_mtime(unknown_file, _25_HOURS_AGO)
-        results = self._call_sender_one_crash()
-        if (not 'Removing old orphaned file' in results['output'] or
-            os.path.exists(core_file) or os.path.exists(unknown_file)):
-            raise error.TestFail(
-                'Old orphaned files were not removed')
-
-
-    def _test_sender_incomplete_metadata(self):
-        """Test that incomplete metadata file is removed once old."""
-        dmp_file = self.write_crash_dir_entry('incomplete.1.2.3.dmp', '')
-        meta_file = self.write_fake_meta('incomplete.1.2.3.meta',
-                                         'unknown',
-                                         dmp_file,
-                                         complete=False)
-        # As new files, we expect crash_sender to leave these alone.
-        results = self._call_sender_one_crash()
-        if ('Removing recent incomplete report' in results['output'] or
-            not os.path.exists(meta_file) or
-            not os.path.exists(dmp_file)):
-            raise error.TestFail('New unknown files were removed')
-        self._shift_file_mtime(meta_file, _25_HOURS_AGO)
-        results = self._call_sender_one_crash()
-        if (not 'Removing old incomplete metadata' in results['output'] or
-            os.path.exists(meta_file) or os.path.exists(dmp_file)):
-            raise error.TestFail(
-                'Old unknown/incomplete files were not removed')
-
-
-    def _test_sender_missing_payload(self):
-        meta_file = self.write_fake_meta('bad.meta',
-                                         'unknown',
-                                         'bad.dmp')
-        other_file = self.write_crash_dir_entry('bad.other', '')
-        results = self._call_sender_one_crash(report=meta_file)
-        # Should remove this file.
-        if (not 'Missing payload' in results['output'] or
-            os.path.exists(meta_file) or
-            os.path.exists(other_file)):
-            raise error.TestFail('Missing payload case handled wrong')
-
-
-    def _test_sender_error_type(self):
-        dmp_file = self.write_crash_dir_entry('error_type.dmp', '')
-        meta_file = self.write_fake_meta('error_type.meta', 'fake', dmp_file,
-                                         complete=False)
-        utils.write_keyval(meta_file, {"error_type": "system-issue"})
-        utils.write_keyval(meta_file, {"done": "1"})
-        result = self._call_sender_one_crash(report=meta_file)
-        if not result['error_type']:
-            raise error.TestFail('Missing error type')
-        if result['error_type'] != 'system-issue':
-            raise error.TestFail('Incorrect error type "%s"' %
-                                 result['error_type'])
-
-
     def run_once(self):
         self.run_crash_tests([
             'sender_simple_minidump',
@@ -293,8 +226,4 @@ class logging_CrashSender(crash_test.CrashTest):
             'sender_reports_disabled',
             'sender_rate_limiting',
             'sender_single_instance',
-            'sender_send_fails',
-            'sender_orphaned_files',
-            'sender_incomplete_metadata',
-            'sender_missing_payload',
-            'sender_error_type']);
+            'sender_send_fails']);
