@@ -389,7 +389,7 @@ class PDPlanktonDevice(PDConsoleDevice):
         @param port: USB PD port number
         """
         # Instantiate the PD console object
-        super(PDPlanktonDevice, self).__init__(console, 0)
+        super(PDPlanktonDevice, self).__init__(console, port)
         # Indicate this is Plankton device
         self.is_plankton = True
 
