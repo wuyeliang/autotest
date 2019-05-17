@@ -10,7 +10,6 @@ from __future__ import print_function
 
 import argparse
 import ast
-import sys
 
 from lucifer import autotest
 from skylab_suite import cros_suite
@@ -125,15 +124,6 @@ def make_parser():
         '--do_nothing', action='store_true',
         help=('Used for monitoring purposes, to measure no-op swarming proxy '
               'latency or create a dummy run_suite_skylab run.'))
-
-    # Abort-related parameters.
-    parser.add_argument(
-        '--abort_limit', default=sys.maxint, type=int, action='store',
-        help=('Only abort first N parent tasks which fulfill the search '
-              'requirements.'))
-    parser.add_argument(
-        '--suite_task_ids', nargs='*', default=[],
-        help=('Specify the parent swarming task id to abort.'))
 
     # Deprecated arguments.
     # TODO(akeshet): Remove these after verifying that no callers use them.

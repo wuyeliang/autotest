@@ -17,11 +17,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import argparse
 import logging
 import sys
 
 from lucifer import autotest
-from skylab_suite import suite_parser
 from skylab_suite import suite_tracking
 from skylab_suite import swarming_lib
 
@@ -65,28 +65,52 @@ def _abort_suite(options):
     'RUNNING' jobs.
     """
     client = swarming_lib.Client(options.swarming_auth_json)
-    suite_spec = suite_parser.parse_suite_spec(options)
     if options.suite_task_ids:
         parent_tasks = _get_suite_tasks_by_suite_ids(client,
                                                      options.suite_task_ids)
     else:
         parent_tasks = _get_suite_tasks_by_specs(
-                client, suite_spec.board, suite_spec.build, suite_spec.suite)
+                client, options.board, options.build, options.suite_name)
 
     _abort_suite_tasks(client, parent_tasks[:min(options.abort_limit,
                                             len(parent_tasks))])
-    logging.info('Suite %s/%s has been aborted.', suite_spec.test_source_build,
-                 suite_spec.suite_name)
+    logging.info('Suite %s/%s has been aborted.', options.build,
+                 options.suite_name)
 
 
 def parse_args():
-    """Parse and validate skylab suite args."""
+    """Parse and validate abort_suite_skylab args."""
+    parser = argparse.ArgumentParser(
+            prog='abort_suite_skylab',
+            description="Abort a test suite in Skylab.")
+    parser.add_argument(
+        '--suite_name', help='Suite to abort.')
+    parser.add_argument(
+        '--build', help='Build to abort.')
+    parser.add_argument(
+        '--board', help='Board to abort.')
+    parser.add_argument(
+        '--abort_limit', default=sys.maxint, type=int, action='store',
+        help=('Only abort first N parent tasks which fulfill the search '
+              'requirements.'))
+    parser.add_argument(
+        '--suite_task_ids', nargs='*', default=[],
+        help=('Specify the parent swarming task id to abort.'))
 
-    parser = suite_parser.make_parser()
+    parser.add_argument(
+        '--swarming_auth_json', default=swarming_lib.DEFAULT_SERVICE_ACCOUNT,
+        action='store', help="Path to swarming service account json creds. "
+        "Specify '' to omit. Otherwise, defaults to bot's default creds.")
+
+    # Deprecated arguments to be deleted once callers are updated.
+    parser.add_argument('--pool', help=argparse.SUPPRESS)
+
     options = parser.parse_args()
-    if not suite_parser.verify_and_clean_options(options):
-        parser.print_help()
-        sys.exit(1)
+
+    if not options.suite_task_ids:
+        if not (options.board and options.suite_name and options.build):
+            raise ValueError('Either a suite id, or all of board build and '
+                             'suite name must be specified.')
 
     return options
 
