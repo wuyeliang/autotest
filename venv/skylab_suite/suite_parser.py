@@ -116,10 +116,7 @@ def make_parser():
     parser.add_argument(
         '--dry_run', action='store_true',
         help=('Used for kicking off a run of suite with fake commands.'))
-    parser.add_argument(
-        '--pre_check', action='store_true',
-        help=('Used for checking whether a same suite is already kicked off'
-              'to Skylab.'))
+
     parser.add_argument(
         '--do_nothing', action='store_true',
         help=('Used for monitoring purposes, to measure no-op swarming proxy '
@@ -127,9 +124,11 @@ def make_parser():
 
     # Deprecated arguments.
     # TODO(akeshet): Remove these after verifying that no callers use them.
-    parser.add_argument('--passed_mins', action='store', help=argparse.SUPPRESS)
-    parser.add_argument('--use_fallback', action="store_true",
-                        help=argparse.SUPPRESS)
+    parser.add_argument('--passed_mins', help=argparse.SUPPRESS)
+    parser.add_argument('--use_fallback', help=argparse.SUPPRESS)
+    # TODO(akeshet): suite_scheduler uses this argument. Remove it from that
+    # client prior to removing it here.
+    parser.add_argument('--pre_check', help=argparse.SUPPRESS)
 
     return parser
 
