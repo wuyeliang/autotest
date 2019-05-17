@@ -10,6 +10,7 @@ from autotest_lib.server.cros.servo import chrome_ec
 
 
 class PlanktonError(Exception):
+    """Error object for Plankton"""
     pass
 
 
@@ -54,7 +55,13 @@ class Plankton(chrome_ec.ChromeEC):
         @param servo: A Servo object
         @param servod_proxy: Servod proxy for plankton host
         """
-        super(Plankton, self).__init__(servo)
+        self.servo_type = servo.get_servo_version()
+        if 'servo_v4' in self.servo_type:
+            uart_prefix = 'servo_v4_uart'
+        else:
+            uart_prefix = 'ec_uart'
+
+        super(Plankton, self).__init__(servo, uart_prefix)
         # save servod proxy for methods that access Plankton servod
         self._server = servod_proxy
         self.init_io_expander()
@@ -62,12 +69,13 @@ class Plankton(chrome_ec.ChromeEC):
 
     def init_io_expander(self):
         """Initializes Plankton IO expander register settings."""
-        if not int(self.get('debug_usb_sel')):
-            raise PlanktonError('debug_usb_sel (SW3) should be ON!! '
-                                'Please use CN15 to connect Plankton.')
-        self.set('typec_to_hub_sw', '0')
-        self.set('usb2_mux_sw', '1')
-        self.set('usb_dn_pwren', 'on')
+        if self.servo_type == 'plankton':
+            if not int(self.get('debug_usb_sel')):
+                raise PlanktonError('debug_usb_sel (SW3) should be ON!! '
+                                    'Please use CN15 to connect Plankton.')
+            self.set('typec_to_hub_sw', '0')
+            self.set('usb2_mux_sw', '1')
+            self.set('usb_dn_pwren', 'on')
 
 
     def set(self, control_name, value):
