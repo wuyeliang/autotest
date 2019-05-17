@@ -224,6 +224,13 @@ RPC_CATEGORIES = [
         "category_name": "bios",
         "test_cases": [
             {
+                "method_names": [
+                    "reload",
+                ],
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG]
+            },
+            {
                 "method_name": "get_gbb_flags",
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
@@ -234,6 +241,75 @@ RPC_CATEGORIES = [
                 "method_name": "set_gbb_flags",
                 "passing_args": [
                     (operator.itemgetter("gbb_flags"), ),
+                ],
+                "failing_args": [NO_ARGS],
+            },
+            {
+                "method_name": "get_preamble_flags",
+                "passing_args": [
+                    ("a", ),
+                ],
+                "failing_args": [NO_ARGS, ONE_INT_ARG],
+                "store_result_as": "preamble_flags",
+            },
+            {
+                "method_name": "set_preamble_flags",
+                "passing_args": [
+                    ("a", operator.itemgetter("preamble_flags"), ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                    ONE_STR_ARG,
+                    ("c", operator.itemgetter("preamble_flags"), ),
+                ],
+            },
+            {
+                "method_names": [
+                    "get_body_sha",
+                    "get_sig_sha",
+                    "get_version",
+                    "get_datakey_version",
+                    "get_kernel_subkey_version",
+                ],
+                "passing_args": [
+                    ("a", ),
+                    ("b", ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                    (("a", "b"), ),
+                    ("c", ),
+                ]
+            },
+            {
+                "method_names": [
+                    "corrupt_sig",
+                    "restore_sig",
+                    "corrupt_body",
+                    "restore_body",
+                    "move_version_backward",
+                    "move_version_forward",
+                ],
+                "passing_args": [
+                    ("a", ),
+                    ("b", ),
+                    ( ("a", "b"), ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                    ("c", ),
+                ]
+            },
+            {
+                "method_names": [
+                    "dump_whole",
+                    "write_whole",
+                ],
+                "passing_args": [
+                    (SAMPLE_FILE, ),
                 ],
                 "failing_args": [NO_ARGS],
             },
