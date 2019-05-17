@@ -2016,9 +2016,14 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @return POWER_CONTROL_RPM or POWER_CONTROL_CCD
         """
         if not self._default_power_method:
+            self._default_power_method = self.POWER_CONTROL_RPM
             info = self.host_info_store.get()
             if info.attributes.get('servo_type') == self.CCD_SERVO:
-                self._default_power_method = self.POWER_CONTROL_CCD
-            else:
-                self._default_power_method = self.POWER_CONTROL_RPM
+                if self.servo:
+                    self._default_power_method = self.POWER_CONTROL_CCD
+                else:
+                    logging.warn('CCD servo detected but failed to apply CCD'
+                                 ' servo RPM method due to servo instance'
+                                 ' was not initialized, fall back to normal'
+                                 ' RPM method.')
         return self._default_power_method
