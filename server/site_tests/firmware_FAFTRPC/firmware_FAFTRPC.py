@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import logging
+import operator
 import sys
 
 from autotest_lib.client.common_lib import error
@@ -21,7 +22,8 @@ def get_rpc_category_by_name(name):
 def get_rpc_method_names_from_test_case(test_case):
     """
     Extract the method_name or method_names from a test case configuration.
-@param test_case: An element from a test_cases array,
+
+    @param test_case: An element from a test_cases array,
                       like those in config.RPC_CATEGORIES
 
     @return: A list of names of RPC methods in that test case.
@@ -54,6 +56,7 @@ class firmware_FAFTRPC(FirmwareTest):
 
     """
     version = 1
+    _stored_values = {}
 
 
     def _log_success(self, rpc_name, params, success_message):
@@ -66,6 +69,28 @@ class firmware_FAFTRPC(FirmwareTest):
         """Raise a TestFail error explaining why a test failed."""
         raise error.TestFail("RPC function %s%s had an unexpected result: %s"
                              % (rpc_name, params, error_msg))
+
+
+    def _retrieve_stored_values(self, params):
+        """
+        Replace any operator.itemgetter params with corresponding stored values.
+
+        @param params: A tuple of args that might be passed into an RPC method,
+                       some of which might be operator.itemgetter objects.
+
+        @return: A tuple of pargs to be passed into an RPC method,
+                 with stored values swapped in for operator.itemgetters.
+
+        """
+        new_params = []
+        for old_param in params:
+            if isinstance(old_param, operator.itemgetter):
+                retrieved_value = old_param(self._stored_values)
+                new_params.append(retrieved_value)
+            else:
+                new_params.append(old_param)
+        new_params = tuple(new_params)
+        return new_params
 
 
     def _assert_passes(self, category, method, params, allow_error_msg=None):
@@ -210,11 +235,18 @@ class firmware_FAFTRPC(FirmwareTest):
                 passing_args = test_case.get("passing_args", [])
                 failing_args = test_case.get("failing_args", [])
                 allow_error_msg = test_case.get("allow_error_msg", None)
+                store_result_as = test_case.get("store_result_as", None)
                 for method_name in method_names:
                     for passing_arg_tuple in passing_args:
+                        passing_arg_tuple = self._retrieve_stored_values(
+                                passing_arg_tuple)
                         result = self._assert_passes(category_name, method_name,
                                                      passing_arg_tuple,
                                                      allow_error_msg)
+                        if store_result_as is not None:
+                            self._stored_values[store_result_as] = result
                     for failing_arg_tuple in failing_args:
+                        failing_arg_tuple = self._retrieve_stored_values(
+                                failing_arg_tuple)
                         self._assert_fails(category_name, method_name,
                                            failing_arg_tuple)
