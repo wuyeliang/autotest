@@ -195,7 +195,7 @@ class PDConsoleUtils(object):
         """
         cmd = 'pd dualrole'
         dual_list = self.send_pd_command_get_output(cmd,
-                                ['dual-role toggling:\s+([\w ]+)'])
+                ['dual-role toggling:\s+([\w ]+)[\r\n]'])
         return dual_list[0][1]
 
     def set_pd_dualrole(self, value):
