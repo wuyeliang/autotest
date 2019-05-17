@@ -187,7 +187,8 @@ class PDConsoleDevice(PDDevice):
         """
         state = self.utils.get_pd_state(self.port)
         return bool(state == self.utils.SRC_DISC or
-                    state == self.utils.SNK_DISC)
+                    state == self.utils.SNK_DISC or
+                    state == self.utils.DRP_AUTO_TOGGLE)
 
     def is_drp(self):
         """Checks if dual role mode is supported
