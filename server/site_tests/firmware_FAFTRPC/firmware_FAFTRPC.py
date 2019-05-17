@@ -93,10 +93,14 @@ class firmware_FAFTRPC(FirmwareTest):
         return new_params
 
 
-    def _assert_passes(self, category, method, params, allow_error_msg=None):
+    def _assert_passes(self, category, method, params, allow_error_msg=None,
+                       expected_return_type=None):
         """
         Check whether an RPC function with given input passes,
         and fail if it does not.
+
+        If an expected_return_type is passed in, then require the RPC function
+        to return a value matching that type, or else fail.
 
         @param category: The RPC subsystem category; ex. kernel, bios
         @param method: The name of the RPC function within the subsystem
@@ -104,9 +108,13 @@ class firmware_FAFTRPC(FirmwareTest):
         @param allow_error_msg: If a string is passed in, and the RPC call
                                 returns an RPC error containing this string,
                                 then the test will pass instead of failing.
+        @param expected_return_type: If not None, then the RPC return value
+                                     must be this type, else the test fails.
 
         @raise error.TestFail: If the RPC raises any error (unless handled by
                                allow_error_msg).
+        @raise error.TestFail: If expected_return_type is not None, and the RPC
+                               return value is not expected_return_type.
 
         @return: Not meaningful.
 
@@ -126,8 +134,20 @@ class firmware_FAFTRPC(FirmwareTest):
             error_msg = "Unexpected misc error: %s" % sys.exc_info()[0]
             self._fail(rpc_name, params, error_msg)
         else:
-            self._log_success(rpc_name, params, "passed")
-            return result
+            if expected_return_type is None:
+                success_msg = "passed with result %s" % result
+                self._log_success(rpc_name, params, success_msg)
+                return result
+            elif isinstance(result, expected_return_type):
+                success_msg = "passed with result %s of expected type %s" % (
+                        result, type(result))
+                self._log_success(rpc_name, params, success_msg)
+                return result
+            else:
+                error_msg = ("Expected a result of type %s, but got %s " +
+                                "of type %s)") \
+                            % (expected_return_type, result, type(result))
+                self._fail(rpc_name, params, error_msg)
 
 
     def _assert_fails(self, category, method, params):
@@ -235,6 +255,8 @@ class firmware_FAFTRPC(FirmwareTest):
                 passing_args = test_case.get("passing_args", [])
                 failing_args = test_case.get("failing_args", [])
                 allow_error_msg = test_case.get("allow_error_msg", None)
+                expected_return_type = test_case.get("expected_return_type",
+                                                     None)
                 store_result_as = test_case.get("store_result_as", None)
                 for method_name in method_names:
                     for passing_arg_tuple in passing_args:
@@ -242,7 +264,8 @@ class firmware_FAFTRPC(FirmwareTest):
                                 passing_arg_tuple)
                         result = self._assert_passes(category_name, method_name,
                                                      passing_arg_tuple,
-                                                     allow_error_msg)
+                                                     allow_error_msg,
+                                                     expected_return_type)
                         if store_result_as is not None:
                             self._stored_values[store_result_as] = result
                     for failing_arg_tuple in failing_args:

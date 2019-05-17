@@ -89,6 +89,7 @@ RPC_CATEGORIES = [
                 "method_name": "get_gbb_flags",
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
+                "expected_return_type": int,
                 "store_result_as": "gbb_flags",
             },
             {
