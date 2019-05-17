@@ -47,6 +47,7 @@ class PlanktonHost(servo_host.ServoHost):
         """
         super(PlanktonHost, self)._initialize(plankton_host, plankton_port,
                                               False, None, *args, **dargs)
+        self.connect_servo()
 
 
 def create_plankton_host(plankton_args):
