@@ -21,7 +21,9 @@ from __future__ import print_function
 
 import argparse
 import collections
+import json
 import logging
+import os
 import sys
 import time
 
@@ -29,6 +31,13 @@ from lucifer import autotest
 from lucifer import loglib
 from skylab_staging import errors
 from skylab_staging import swarming
+
+# Hacky late imports that must run after autotest.monkeypatch()
+autotest.monkeypatch()
+cros_build_lib = autotest.chromite_load('cros_build_lib')
+metrics = autotest.chromite_load('metrics')
+ts_mon_config = autotest.chromite_load('ts_mon_config')
+
 
 _METRICS_PREFIX = 'chromeos/autotest/test_push/skylab'
 _POLLING_INTERVAL_S = 10
@@ -62,10 +71,6 @@ _logger = logging.getLogger(__name__)
 
 def main():
   """Entry point of test_push."""
-  autotest.monkeypatch()
-  metrics = autotest.chromite_load('metrics')
-  ts_mon_config = autotest.chromite_load('ts_mon_config')
-
   parser = _get_parser()
   loglib.add_logging_options(parser)
   args = parser.parse_args()
@@ -129,17 +134,20 @@ def _get_parser():
   )
   parser.add_argument(
       '--service-account-json',
-      default=None,
+      required=True,
       help='(Optional) Path to the service account credentials file to'
            ' authenticate with Swarming service.',
   )
   return parser
 
 
+def _skylab_tool():
+  """Return path to skylab tool."""
+  return os.environ.get('SKYLAB_TOOL', '/opt/infra-tools/skylab')
+
+
 def _run_test_push(args):
   """Meat of the test_push flow."""
-  metrics = autotest.chromite_load('metrics')
-
   deadline = time.time() + (args.timeout_mins * 60)
   swclient = swarming.Client(args.swarming_cli, args.swarming_url,
                              args.service_account_json)
@@ -156,56 +164,61 @@ def _run_test_push(args):
   # DUTs, then run the actual suite.
   with metrics.SecondsTimer(_METRICS_PREFIX + '/durations/provision_suite',
                             add_exception_field=True):
-    task_id = swclient.trigger_suite(
-        args.dut_board,
-        args.dut_pool,
-        args.build,
-        'provision',
-        deadline - time.time(),
-    )
-    _logger.info('Triggered provision suite. Task id: %s', task_id)
-    swclient.wait_for_suite(
-        task_id,
-        args.dut_board,
-        args.dut_pool,
-        args.build,
-        'provision',
-        deadline - time.time(),
-    )
-    _logger.info('Finished provision suite.')
+    _create_suite_and_wait(
+        args.dut_board, args.dut_pool, args.build, deadline,
+        args.service_account_json, 'provision')
 
   with metrics.SecondsTimer(_METRICS_PREFIX + '/durations/push_to_prod_suite',
                             add_exception_field=True):
-    task_id = swclient.trigger_suite(
-        args.dut_board,
-        args.dut_pool,
-        args.build,
-        'skylab_staging_test',
-        deadline - time.time(),
-    )
-    _logger.info('Triggered skylab_staging_test suite. Task id: %s', task_id)
-    _verify_suite_creation(swclient, task_id)
-    _logger.info('Check push_to_prod suite on: \n    %s',
-                 swclient.task_url(task_id))
-    swclient.wait_for_suite(
-        task_id,
-        args.dut_board,
-        args.dut_pool,
-        args.build,
-        'skylab_staging_test',
-        deadline - time.time(),
-    )
-    _logger.info('Finished skylab_staging_test suite.')
+    task_id = _create_suite_and_wait(
+        args.dut_board, args.dut_pool, args.build, deadline,
+        args.service_account_json, 'skylab_staging_test',
+        require_success=False)
 
   _verify_test_results(task_id, _EXPECTED_TEST_RESULTS)
 
 
-def _verify_suite_creation(swclient, task_id):
-  """Verify the suite is created successfully."""
-  result = swclient.query('task/%s/result' % task_id, [])
-  if result['state'] != 'COMPLETED' or result['failure']:
-    raise errors.TestPushError('Suite task %s is not successfully created.'
-                               % task_id)
+def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
+                           service_account_json, suite, require_success=True):
+  """Create and wait for a skylab suite (in staging).
+
+  Returns: string task id of the completed suite.
+
+  Raises: errors.TestPushError if the suite failed.
+  """
+  mins_remaining = int((deadline - time.time())/60)
+  cmd = [
+    _skylab_tool(), 'create-suite',
+    # test_push always runs in dev instance of skylab
+    '-dev',
+    '-board', dut_board,
+    '-pool', dut_pool,
+    '-image', build,
+    '-timeout-mins', str(mins_remaining),
+    '-service-account-json', service_account_json,
+    '-json',
+    suite,
+  ]
+
+  cmd_result = cros_build_lib.RunCommand(cmd, redirect_stdout=True)
+  task_id = json.loads(cmd_result.output)['task_id']
+  _logger.info('Triggered suite %s. Task id: %s', suite, task_id)
+
+  cmd = [
+    _skylab_tool(), 'wait-task',
+    '-dev',
+    '-service-account-json', service_account_json,
+    task_id
+  ]
+  cmd_result = cros_build_lib.RunCommand(cmd, redirect_stdout=True)
+
+  _logger.info(
+      'Finished suite %s with output: \n%s', suite,
+      json.loads(cmd_result.output)['stdout']
+  )
+  if (require_success and
+      not json.loads(cmd_result.output)['task-result']['success']):
+    raise errors.TestPushError('Suite %s did not succeed.' % suite)
 
 
 def _verify_test_results(task_id, expected_results):

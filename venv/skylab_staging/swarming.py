@@ -27,6 +27,8 @@ _TEST_PUSH_SUITE_PRIORITY = 50
 
 
 
+# TODO(akeshet): Delete the majority of this class's methods, as they are
+# unused.
 class Client(object):
   """A domain specific client for Swarming service."""
 
@@ -72,49 +74,6 @@ class Client(object):
 
     result = cros_build_lib.RunCommand(cmd, capture_output=True)
     return json.loads(result.output)
-
-  def trigger_suite(self, board, pool, build, suite_name, timeout_s):
-    """Trigger an autotest suite. Use wait_for_suite to wait for results.
-
-    @param board: The board autotest label of the DUTs.
-    @param pool: The pool autotest label of the DUTs.
-    @param build: The build to test, e.g. link-paladin/R70-10915.0.0-rc1.
-    @param suite_name: The name of the suite to run, e.g. provision.
-    @param timeout_s: Timeout for the suite, in seconds.
-    @returns: The task ID of the kicked off suite.
-    """
-    raw_cmd = self._suite_cmd_common(board, pool, build, suite_name, timeout_s)
-    raw_cmd += ['--create_and_return']
-    return self._run(board, pool, build, suite_name, timeout_s, raw_cmd)
-
-  def wait_for_suite(self, task_id, board, pool, build, suite_name, timeout_s):
-    """Wait for a suite previously kicked off via trigger_suite().
-
-    @param task_id: Task ID of the suite, as returned by trigger_suite().
-    @param board: The board autotest label of the DUTs.
-    @param pool: The pool autotest label of the DUTs.
-    @param build: The build to test, e.g. link-paladin/R70-10915.0.0-rc1.
-    @param suite_name: The name of the suite to run, e.g. provision.
-    @param timeout_s: Timeout for the suite, in seconds.
-    @returns: The task ID of the kicked off suite.
-    """
-    raw_cmd = self._suite_cmd_common(board, pool, build, suite_name, timeout_s)
-    raw_cmd += ['--suite_id', task_id]
-    return self._run(board, pool, build, suite_name, timeout_s, raw_cmd)
-
-  def _suite_cmd_common(self, board, pool, build, suite_name, timeout_s):
-    return [
-        _SKYLAB_RUN_SUITE_PATH,
-        '--board', board,
-        '--build', build,
-        '--max_retries', '5',
-        '--pool', _old_style_pool_label(pool),
-        '--priority', str(_TEST_PUSH_SUITE_PRIORITY),
-        '--suite_args', json.dumps({'num_required': 1}),
-        '--suite_name', suite_name,
-        '--test_retry',
-        '--timeout_mins', str(int(timeout_s / 60)),
-    ]
 
   def _run(self, board, pool, build, suite_name, timeout_s, raw_cmd):
     timeout_s = str(int(timeout_s))
