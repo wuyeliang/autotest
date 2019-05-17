@@ -41,7 +41,7 @@ class firmware_PDResetHard(FirmwareTest):
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         # Turn off console prints, except for USBPD.
-        self.usbpd.send_command('chan 0x08000000')
+        self.usbpd.enable_console_channel('usbpd')
 
     def cleanup(self):
         self.usbpd.send_command('chan 0xffffffff')
