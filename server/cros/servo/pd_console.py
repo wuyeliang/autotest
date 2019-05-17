@@ -89,7 +89,11 @@ class PDConsoleUtils(object):
         @param cmd: pd command string
         @param regexp: regular expression for desired output
         """
-        return self.console.send_command_get_output(cmd, regexp)
+        # Enable PD console debug mode to show control messages
+        self.enable_pd_console_debug()
+        output = self.console.send_command_get_output(cmd, regexp)
+        self.disable_pd_console_debug()
+        return output
 
     def send_pd_command_get_reply_msg(self, cmd):
         """Send PD protocol msg, get PD control msg reply
@@ -103,11 +107,8 @@ class PDConsoleUtils(object):
 
         @returns: PD control header message
         """
-        # Enable PD console debug mode to show control messages
-        self.enable_pd_console_debug()
-        m = self.send_pd_command_get_output(cmd, ['RECV\s([\w]+)'])
+        m = self.send_pd_command_get_output(cmd, ['RECV\s([\w]+)\W'])
         ctrl_msg = int(m[0][1], 16) & self.PD_CONTROL_MSG_MASK
-        self.disable_pd_console_debug()
         return ctrl_msg
 
     def verify_pd_console(self):
@@ -296,7 +297,7 @@ class PDConsoleUtils(object):
         """Enable PD console debug level 1
 
         """
-        cmd = 'pd dump 1'
+        cmd = 'pd dump 2'
         self.send_pd_command(cmd)
 
     def is_pd_flag_set(self, port, key):
