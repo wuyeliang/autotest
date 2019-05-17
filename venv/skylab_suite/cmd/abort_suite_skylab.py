@@ -49,12 +49,12 @@ def _get_suite_tasks_by_suite_ids(client, suite_task_ids):
     return suite_tasks
 
 
-def _get_suite_tasks_by_specs(client, suite_spec):
-    """Return a list of tasks with given suite_spec."""
+def _get_suite_tasks_by_specs(client, board, build, suite):
+    """Return a list of tasks with given board/build/suite."""
     tags = {'pool': swarming_lib.SKYLAB_SUITE_POOL,
-            'board': suite_spec.board,
-            'build': suite_spec.test_source_build,
-            'suite': suite_spec.suite_name}
+            'board': board,
+            'build': build,
+            'suite': suite}
     return client.query_task_by_tags(tags)
 
 
@@ -70,7 +70,8 @@ def _abort_suite(options):
         parent_tasks = _get_suite_tasks_by_suite_ids(client,
                                                      options.suite_task_ids)
     else:
-        parent_tasks = _get_suite_tasks_by_specs(client, suite_spec)
+        parent_tasks = _get_suite_tasks_by_specs(
+                client, suite_spec.board, suite_spec.build, suite_spec.suite)
 
     _abort_suite_tasks(client, parent_tasks[:min(options.abort_limit,
                                             len(parent_tasks))])
@@ -80,6 +81,7 @@ def _abort_suite(options):
 
 def parse_args():
     """Parse and validate skylab suite args."""
+
     parser = suite_parser.make_parser()
     options = parser.parse_args()
     if not suite_parser.verify_and_clean_options(options):
