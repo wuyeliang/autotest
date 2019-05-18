@@ -42,15 +42,6 @@ def make_parser():
         '--build', required=True,
         help='Specify the build to run the suite with.')
     parser.add_argument(
-        '--cheets_build', default=None,
-        help='ChromeOS Android build to be installed on dut.')
-    parser.add_argument(
-        '--firmware_rw_build', default=None,
-        help='Firmware build to be installed in dut RW firmware.')
-    parser.add_argument(
-        '--firmware_ro_build', default=None,
-        help='Firmware build to be installed in dut RO firmware.')
-    parser.add_argument(
         '--test_source_build', default=None,
         help=('Build that contains the test code. It can be the value '
               'of arguments "--build", "--firmware_rw_build" or '
@@ -88,11 +79,6 @@ def make_parser():
         action='store', help="Path to swarming service account json creds. "
         "Specify '' to omit. Otherwise, defaults to bot's default creds.")
 
-    # Swarming-related parameters.
-    parser.add_argument(
-        '--execution_timeout_seconds', type=int, default=30,
-        help='Seconds to allow a task to complete, once execution beings.')
-
     # logic-related parameters.
     parser.add_argument(
         '--create_and_return', action='store_true',
@@ -110,13 +96,8 @@ def make_parser():
         '--timeout_mins', default=90, type=int, action='store',
         help='Maximum minutes to wait for a suite to finish.')
     parser.add_argument(
-        '--run_prod_code', action='store_true', default=False,
-        help='Run the test code that lives in prod aka the test '
-        'code currently on the lab servers.')
-    parser.add_argument(
         '--dry_run', action='store_true',
         help=('Used for kicking off a run of suite with fake commands.'))
-
     parser.add_argument(
         '--do_nothing', action='store_true',
         help=('Used for monitoring purposes, to measure no-op swarming proxy '
@@ -126,6 +107,11 @@ def make_parser():
     # TODO(akeshet): Remove these after verifying that no callers use them.
     parser.add_argument('--passed_mins', help=argparse.SUPPRESS)
     parser.add_argument('--use_fallback', help=argparse.SUPPRESS)
+    parser.add_argument('--cheets_build', help=argparse.SUPPRESS)
+    parser.add_argument('--firmware_rw_build', help=argparse.SUPPRESS)
+    parser.add_argument('--firmware_ro_build', help=argparse.SUPPRESS)
+    parser.add_argument('--run_prod_code', help=argparse.SUPPRESS)
+    parser.add_argument('--execution_timeout_seconds', help=argparse.SUPPRESS)
     # TODO(akeshet): suite_scheduler uses this argument. Remove it from that
     # client prior to removing it here.
     parser.add_argument('--pre_check', help=argparse.SUPPRESS)
