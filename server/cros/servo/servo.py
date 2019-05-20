@@ -319,7 +319,10 @@ class Servo(object):
         logging.debug('Servo initialized, version is %s',
                       self._server.get_version())
         try:
-            self.set('init_keyboard','on')
+            # TODO(coconutruben): change this back to set() about a month
+            # after crrev.com/c/1586239 has been merged (or whenever that
+            # logic is in the labstation images).
+            self.set_nocheck('init_keyboard','on')
         except error.TestFail as err:
             if 'No control named' in str(err):
                 # This indicates the servod version does not
