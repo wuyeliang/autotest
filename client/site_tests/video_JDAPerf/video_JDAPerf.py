@@ -13,13 +13,9 @@ from autotest_lib.client.cros import service_stopper
 from autotest_lib.client.cros.power import power_status
 from autotest_lib.client.cros.power import power_utils
 from autotest_lib.client.cros.video import device_capability
-from autotest_lib.client.cros.video import helper_logger
 
 DECODE_WITH_HW_ACCELERATION = 'jpeg_decode_with_hw'
 DECODE_WITHOUT_HW_ACCELERATION = 'jpeg_decode_with_sw'
-
-# Measurement duration in seconds.
-MEASUREMENT_DURATION = 10
 
 # Time in seconds to wait for cpu idle until giveup.
 WAIT_FOR_IDLE_CPU_TIMEOUT = 60.0
@@ -38,11 +34,11 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
     version = 1
 
     # Decoding times for performance measurement
-    perf_jpeg_decode_times = 600
+    perf_jpeg_decode_times = 6000
 
     binary = 'jpeg_decode_accelerator_unittest'
-    jda_filter = 'JpegDecodeAcceleratorTest.PerfJDA'
-    sw_filter = 'JpegDecodeAcceleratorTest.PerfSW'
+    jda_filter = 'MjpegDecodeAcceleratorTest.PerfJDA'
+    sw_filter = 'MjpegDecodeAcceleratorTest.PerfSW'
 
     def initialize(self):
         """Initialize this test."""
@@ -51,6 +47,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         self._original_governors = None
         self._backlight = None
         self._use_ec = False
+        self._is_done = False
 
     @chrome_binary_test.nuke_chrome
     def run_once(self, capability, power_test=False):
@@ -78,7 +75,8 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         """
         def get_cpu_usage():
             cpu_usage_start = utils.get_cpu_usage()
-            time.sleep(MEASUREMENT_DURATION)
+            while not self._is_done:
+                time.sleep(1)
             cpu_usage_end = utils.get_cpu_usage()
             return utils.compute_active_cpu_time(cpu_usage_start,
                                                  cpu_usage_end) * 100
@@ -133,7 +131,8 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
             power_logger = power_status.PowerLogger(measurements)
             power_logger.start()
             start_time = time.time()
-            time.sleep(MEASUREMENT_DURATION)
+            while not self._is_done:
+                time.sleep(1)
             power_logger.checkpoint('result', start_time)
             keyval = power_logger.calc()
             return keyval['result_' + measurements[0].domain + '_pwr_avg']
@@ -153,6 +152,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
 
         cmd_line = ' '.join(cmd_line_list)
         self.run_chrome_test_binary(self.binary, cmd_line)
+        self._is_done = True
 
     def test_decode(self, gather_result):
         """
@@ -164,6 +164,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         """
         keyvals = {}
 
+        self._is_done = False
         thread = threading.Thread(target=self.start_decode,
                                   kwargs={'gtest_filter': self.jda_filter})
         thread.start()
@@ -171,6 +172,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         thread.join()
         keyvals[DECODE_WITH_HW_ACCELERATION] = result
 
+        self._is_done = False
         thread = threading.Thread(target=self.start_decode,
                                   kwargs={'gtest_filter': self.sw_filter})
         thread.start()
