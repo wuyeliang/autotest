@@ -31,9 +31,9 @@ This is a wrapper test for Chrome video_encode_accelerator_unittest.
 # requested_frame_rate, requested_subsequent_bit_rate and
 # requested_subsequent_frame_rate may be None, which means to set the default
 # value.
-streams = [('media/test/data/bear_320x192_40frames.yuv',
+streams = [('bear_320x192_40frames.yuv',
             320, 192, 200000, None, None, None, 1),
-            ('media/test/data/bear_320x192_40frames.nv12.yuv',
+            ('bear_320x192_40frames.nv12.yuv',
             320, 192, 200000, None, None, None, 6)]
 
 job.run_test('video_VideoEncodeAccelerator', in_cloud=False, streams=streams,

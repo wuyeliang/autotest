@@ -14,6 +14,7 @@ from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import file_utils
 from autotest_lib.client.cros import chrome_binary_test
+from autotest_lib.client.cros.video import constants
 from autotest_lib.client.cros.video import device_capability
 from autotest_lib.client.cros.video import helper_logger
 
@@ -221,7 +222,8 @@ class video_VideoEncodeAccelerator(chrome_binary_test.ChromeBinaryTest):
                 input_path = os.path.join(self.tmpdir, path.split('/')[-1])
                 _download_video(path, input_path)
             else:
-                input_path = os.path.join(self.cr_source_dir, path)
+                input_path = os.path.join(constants.CROS_VIDEO_DIR, 'files',
+                                          path)
 
             output_path = os.path.join(self.tmpdir,
                     '%s.out' % input_path.split('/')[-1])
