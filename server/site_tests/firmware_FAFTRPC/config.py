@@ -253,7 +253,24 @@ RPC_CATEGORIES = [
     },
     {
         "category_name": "cgpt",
-        "test_cases": []
+        "test_cases": [
+            {
+                "method_name": "get_attributes",
+                "passing_args": [NO_ARGS],
+                "failing_args": [
+                    ONE_INT_ARG,
+                    ONE_STR_ARG,
+                ],
+                "store_result_as": "cgpt_attributes",
+            },
+            {
+                "method_name": "set_attributes",
+                "passing_args": [
+                    (operator.itemgetter("cgpt_attributes"), ),
+                ],
+                "failing_args": [NO_ARGS],
+            }
+        ]
     },
     {
         "category_name": "updater",
