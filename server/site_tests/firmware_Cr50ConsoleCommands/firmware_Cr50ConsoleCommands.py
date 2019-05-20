@@ -185,6 +185,10 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         for command, regexp, split_str, sort in self.TESTS:
             self.check_command(command, regexp, split_str, sort)
 
+        if (not self.past_matches.get('ccd_has_been_enabled', 0) and
+            self.past_matches.get('ccd_enabled', 0)):
+            err.append('Inconsistent ccd settings')
+
         if len(self.missing):
             err.append('MISSING OUTPUT: ' + ', '.join(self.missing))
         if len(self.extra):
