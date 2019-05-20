@@ -8,6 +8,7 @@ import logging
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chrome
+from autotest_lib.client.cros.graphics import graphics_utils
 
 
 class desktopui_FilesApp(test.test):
@@ -16,9 +17,16 @@ class desktopui_FilesApp(test.test):
 
     _FILES_APP_ID = 'hhaomjibdihmijegdhdafkllkbggdgoj'
     _DOWNLOADS_PATH = '/home/chronos/user/Downloads'
-    _TEXT_FILE = 'text.txt'
+
+    # chrome.automation roles
     _BUTTON = 'button'
     _STATIC_TEXT = 'staticText'
+
+    # On screen elements
+    _TEXT_FILE = 'text.txt'
+    _DOWNLOADS = 'Downloads'
+    _MY_FILES = 'My files'
+    _NEW_FOLDER = 'New folder'
 
 
     def _wait_for_element_to_be_visible(self, cr, role, name, timeout=10,
@@ -90,11 +98,14 @@ class desktopui_FilesApp(test.test):
         @param cr: The browser instance that is running.
 
         """
+        self._wait_for_element_to_be_visible(cr, self._STATIC_TEXT,
+                                             self._DOWNLOADS,
+                                             err_str='Downloads to appear')
         cr.autotest_ext.EvaluateJavaScript("""
-            downloads = root.find({attributes: {role: 'staticText',
-                                                name: 'Downloads'}});
+            downloads = root.find({attributes: {role: '%s',
+                                                name: '%s'}});
             downloads.doDefault();
-            """)
+            """ % (self._STATIC_TEXT, self._DOWNLOADS))
 
 
     def _find_all_by_role(self, cr, role):
@@ -108,7 +119,7 @@ class desktopui_FilesApp(test.test):
         roles = cr.autotest_ext.EvaluateJavaScript("""
             var root;
             chrome.automation.getDesktop(r => root = r);
-            root.findAll({attributes: {role: "%s"}}).map(node => node.name);
+            root.findAll({attributes: {role: '%s'}}).map(node => node.name);
             """ % role)
         logging.info(roles)
         return roles
@@ -122,10 +133,20 @@ class desktopui_FilesApp(test.test):
 
         """
         cr.autotest_ext.EvaluateJavaScript("""
-            more = root.find({attributes: {role: 'button',
+            more = root.find({attributes: {role: '%s',
                                            name: 'More\u2026'}});
             more.doDefault();
-            """)
+            """ % self._BUTTON)
+
+
+    def cleanup(self):
+        """Remove temporary files created during test."""
+        text_file = os.path.join(self._DOWNLOADS_PATH, self._TEXT_FILE)
+        try:
+            if os.path.exists(text_file):
+                os.remove(text_file)
+        except OSError:
+            logging.info('Failed to delete files in cleanup. Ignoring.')
 
 
     def run_once(self):
@@ -137,19 +158,28 @@ class desktopui_FilesApp(test.test):
                                               self._TEXT_FILE), 'blahblah')
             self._load_automation_root(cr)
 
-            # Files app testing
-            self._launch_app(cr, self._FILES_APP_ID)
-            self._wait_for_element_to_be_visible(cr, self._BUTTON, 'My files',
-                                                 err_str='Files app to load')
-            self._open_downloads(cr)
-            self._wait_for_element_to_be_visible(cr, self._STATIC_TEXT,
-                                                 self._TEXT_FILE,
-                                                 err_str='Text file to appear')
-            self._open_more_options(cr)
-            self._wait_for_element_to_be_visible(cr, self._STATIC_TEXT,
-                                                 'New folder',
-                                                 err_str='New folder menu item')
-
-            # Extra logging for debugging
-            self._find_all_by_role(cr, self._BUTTON)
-            self._find_all_by_role(cr, self._STATIC_TEXT)
+            try:
+                # Files app testing
+                self._launch_app(cr, self._FILES_APP_ID)
+                self._wait_for_element_to_be_visible(cr, self._BUTTON,
+                                                     self._MY_FILES,
+                                                     err_str='Files to load')
+                self._open_downloads(cr)
+                self._wait_for_element_to_be_visible(cr, self._STATIC_TEXT,
+                                                     self._TEXT_FILE,
+                                                     err_str='.txt to show')
+                self._open_more_options(cr)
+                self._wait_for_element_to_be_visible(cr, self._STATIC_TEXT,
+                                                     self._NEW_FOLDER,
+                                                     err_str='New folder item')
+            except (ValueError, utils.TimeoutError):
+                logging.exception('Failed to verify Files app is available.')
+                try:
+                    graphics_utils.take_screenshot(self.resultsdir, 'failure')
+                except:
+                    logging.info('Failed to take screenshot')
+                raise
+            finally:
+                logging.info('Extra logging for debugging')
+                self._find_all_by_role(cr, self._BUTTON)
+                self._find_all_by_role(cr, self._STATIC_TEXT)
