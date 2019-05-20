@@ -265,8 +265,19 @@ class ChameleonPeripheralsLabel(base_label.StringPrefixLabel):
 
 
     def generate_labels(self, host):
+        labels = []
         bt_hid_device = host.chameleon.get_bluetooth_hid_mouse()
-        return ['bt_hid'] if bt_hid_device.CheckSerialConnection() else []
+        if bt_hid_device.CheckSerialConnection():
+            labels.append('bt_hid')
+        ble_hid_device = host.chameleon.get_ble_mouse()
+        if ble_hid_device.CheckSerialConnection():
+            labels.append('bt_ble_hid')
+        bt_a2dp_sink = host.chameleon.get_bluetooth_a2dp_sink()
+        if bt_a2dp_sink.CheckSerialConnection():
+            labels.append('bt_a2dp_sink')
+        return labels
+
+
 
 
 class AudioLoopbackDongleLabel(base_label.BaseLabel):
