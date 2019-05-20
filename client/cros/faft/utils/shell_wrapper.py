@@ -1,7 +1,6 @@
 # Copyright 2015 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-
 """A module to abstract the shell execution environment on DUT."""
 
 import subprocess
@@ -17,6 +16,7 @@ class LocalShell(object):
     """An object to wrap the local shell environment."""
 
     def init(self, os_if):
+        """Initialize the LocalShell object."""
         self._os_if = os_if
 
     def _run_command(self, cmd, block=True):
@@ -27,8 +27,11 @@ class LocalShell(object):
         process to return before returning.
         """
         self._os_if.log('Executing %s' % cmd)
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
         if block:
             process.wait()
         return process
@@ -51,8 +54,8 @@ class LocalShell(object):
             err.append(process.stderr.read())
             text = '\n'.join(err)
             self._os_if.log(text)
-            raise ShellError('command %s failed (code: %d)' %
-                             (cmd, process.returncode))
+            raise ShellError(
+                    'command %s failed (code: %d)' % (cmd, process.returncode))
 
     def run_command_get_status(self, cmd):
         """Run a shell command and return its return code.
@@ -98,6 +101,7 @@ class AdbShell(object):
     """
 
     def init(self, os_if):
+        """Initialize the AdbShell object."""
         self._os_if = os_if
         self._host_shell = LocalShell()
         self._host_shell.init(os_if)
@@ -111,11 +115,12 @@ class AdbShell(object):
         """
         if not self._root_granted:
             if (self._host_shell.run_command_get_output('adb shell whoami')[0]
-                != 'root'):
+                        != 'root'):
                 # Get the root access first as some commands need it.
                 self._host_shell.run_command('adb root')
             self._root_granted = True
-        cmd = "adb shell 'export TMPDIR=/data/local/tmp; %s'" % cmd.replace("'", "\\'")
+        cmd = "adb shell 'export TMPDIR=/data/local/tmp; %s'" % cmd.replace(
+                "'", "\\'")
         return self._host_shell._run_command(cmd)
 
     def run_command(self, cmd):
@@ -136,8 +141,8 @@ class AdbShell(object):
             err.append(process.stderr.read())
             text = '\n'.join(err)
             self._os_if.log(text)
-            raise ShellError('command %s failed (code: %d)' %
-                             (cmd, process.returncode))
+            raise ShellError(
+                    'command %s failed (code: %d)' % (cmd, process.returncode))
 
     def run_command_get_status(self, cmd):
         """Run a shell command and return its return code.

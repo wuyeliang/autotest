@@ -1,7 +1,6 @@
 # Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-
 """A module to provide interface to OS services."""
 
 import datetime
@@ -15,6 +14,7 @@ import shell_wrapper
 class OSInterfaceError(Exception):
     """OS interface specific exception."""
     pass
+
 
 class Crossystem(object):
     """A wrapper for the crossystem utility."""
@@ -34,10 +34,10 @@ class Crossystem(object):
         and return the stdout as the value.
         """
         return self.os_if.run_shell_command_get_output(
-            'crossystem %s' % name)[0]
+                'crossystem %s' % name)[0]
 
     def __setattr__(self, name, value):
-        if name in ('os_if',):
+        if name in ('os_if', ):
             self.__dict__[name] = value
         else:
             self.os_if.run_shell_command('crossystem "%s=%s"' % (name, value))
@@ -65,7 +65,6 @@ class OSInterface(object):
         else:
             self.shell = shell_wrapper.LocalShell()
             self.host_shell = None
-
 
     def init(self, state_dir=None, log_file=None):
         """Initialize the OS interface object.
@@ -226,8 +225,8 @@ class OSInterface(object):
             # Called before environment was initialized, ignore.
             return
 
-        timestamp = datetime.datetime.strftime(
-            datetime.datetime.now(), '%I:%M:%S %p:')
+        timestamp = datetime.datetime.strftime(datetime.datetime.now(),
+                                               '%I:%M:%S %p:')
 
         with open(self.log_file, 'a') as log_f:
             log_f.write('%s %s\n' % (timestamp, text))
@@ -324,7 +323,7 @@ class OSInterface(object):
         header_format = '<8s96sQ'
         magic, _, version = struct.unpack_from(header_format, blob)
         if magic != 'CHROMEOS':
-            return -1 # This could be a corrupted version case.
+            return -1  # This could be a corrupted version case.
         return version
 
     def retrieve_kernel_subkey_version(self, blob):
@@ -367,8 +366,8 @@ class OSInterface(object):
     def read_partition(self, partition, size):
         """Read the requested partition, up to size bytes."""
         tmp_file = self.state_dir_file('part.tmp')
-        self.run_shell_command('dd if=%s of=%s bs=1 count=%d' % (
-                partition, tmp_file, size))
+        self.run_shell_command(
+                'dd if=%s of=%s bs=1 count=%d' % (partition, tmp_file, size))
         data = self.read_file(tmp_file)
         self.remove_file(tmp_file)
         return data

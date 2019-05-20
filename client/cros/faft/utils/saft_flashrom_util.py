@@ -1,7 +1,6 @@
 # Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-
 """ This module provides convenience routines to access Flash ROM (EEPROM)
 
 saft_flashrom_util is based on utility 'flashrom'.
@@ -21,6 +20,7 @@ In the saft_flashrom_util, we provide read and partial write abilities.
 For more information, see help(saft_flashrom_util.flashrom_util).
 """
 
+
 class TestError(Exception):
     """Represents an internal error, such as invalid arguments."""
     pass
@@ -31,38 +31,38 @@ class LayoutScraper(object):
 
     # The default conversion table for mosys.
     DEFAULT_CHROMEOS_FMAP_CONVERSION = {
-        "Boot Stub": "FV_BSTUB",
-        "GBB Area": "FV_GBB",
-        "Recovery Firmware": "FVDEV",
-        "RO VPD": "RO_VPD",
-        "Firmware A Key": "VBOOTA",
-        "Firmware A Data": "FVMAIN",
-        "Firmware B Key": "VBOOTB",
-        "Firmware B Data": "FVMAINB",
-        "Log Volume": "FV_LOG",
-        # New layout in Chrome OS Main Processor Firmware Specification,
-        # used by all newer (>2011) platforms except Mario.
-        "BOOT_STUB": "FV_BSTUB",
-        "RO_FRID": "RO_FRID",
-        "GBB": "FV_GBB",
-        "RECOVERY": "FVDEV",
-        "VBLOCK_A": "VBOOTA",
-        "VBLOCK_B": "VBOOTB",
-        "FW_MAIN_A": "FVMAIN",
-        "FW_MAIN_B": "FVMAINB",
-        "RW_FWID_A": "RW_FWID_A",
-        "RW_FWID_B": "RW_FWID_B",
-        # Memory Training data cache for recovery boots
-        # Added on Nov 09, 2016
-        "RECOVERY_MRC_CACHE": "RECOVERY_MRC_CACHE",
-        # New sections in Depthcharge.
-        "EC_MAIN_A": "ECMAINA",
-        "EC_MAIN_B": "ECMAINB",
-        # EC firmware layout
-        "EC_RW": "EC_RW",
-        "EC_RW_B": "EC_RW_B",
-        "RW_FWID": "RW_FWID",
-        }
+            "Boot Stub": "FV_BSTUB",
+            "GBB Area": "FV_GBB",
+            "Recovery Firmware": "FVDEV",
+            "RO VPD": "RO_VPD",
+            "Firmware A Key": "VBOOTA",
+            "Firmware A Data": "FVMAIN",
+            "Firmware B Key": "VBOOTB",
+            "Firmware B Data": "FVMAINB",
+            "Log Volume": "FV_LOG",
+            # New layout in Chrome OS Main Processor Firmware Specification,
+            # used by all newer (>2011) platforms except Mario.
+            "BOOT_STUB": "FV_BSTUB",
+            "RO_FRID": "RO_FRID",
+            "GBB": "FV_GBB",
+            "RECOVERY": "FVDEV",
+            "VBLOCK_A": "VBOOTA",
+            "VBLOCK_B": "VBOOTB",
+            "FW_MAIN_A": "FVMAIN",
+            "FW_MAIN_B": "FVMAINB",
+            "RW_FWID_A": "RW_FWID_A",
+            "RW_FWID_B": "RW_FWID_B",
+            # Memory Training data cache for recovery boots
+            # Added on Nov 09, 2016
+            "RECOVERY_MRC_CACHE": "RECOVERY_MRC_CACHE",
+            # New sections in Depthcharge.
+            "EC_MAIN_A": "ECMAINA",
+            "EC_MAIN_B": "ECMAINB",
+            # EC firmware layout
+            "EC_RW": "EC_RW",
+            "EC_RW_B": "EC_RW_B",
+            "RW_FWID": "RW_FWID",
+    }
 
     def __init__(self, os_if):
         self.image = None
@@ -125,12 +125,12 @@ class LayoutScraper(object):
             if section_base <= base or section_end + 1 < section_base:
                 # Overlapped section is possible, like the fwid which is
                 # inside the main fw section.
-                self.os_if.log('overlapped section at 0x%x..0x%x' % (
-                        section_base, section_end))
+                self.os_if.log('overlapped section at 0x%x..0x%x' %
+                               (section_base, section_end))
             base = section_end
         if base > file_size:
-            raise TestError('Section end 0x%x exceeds file size %x' % (
-                    base, file_size))
+            raise TestError('Section end 0x%x exceeds file size %x' %
+                            (base, file_size))
 
     def get_layout(self, file_name):
         """Generate layout for a firmware file.
@@ -146,8 +146,8 @@ class LayoutScraper(object):
         caller.
         """
 
-        layout_data = {} # keyed by the section name, elements - tuples of
-                         # (<section start addr>, <section end addr>)
+        layout_data = {}  # keyed by the section name, elements - tuples of
+        # (<section start addr>, <section end addr>)
 
         for line in self._get_text_layout(file_name):
             d = self._line_to_dictionary(line)
@@ -165,6 +165,7 @@ class LayoutScraper(object):
 
         self.check_layout(layout_data, self.os_if.get_file_size(file_name))
         return layout_data
+
 
 # flashrom utility wrapper
 class flashrom_util(object):
@@ -211,8 +212,7 @@ class flashrom_util(object):
           flashrom.write_partial(new_image, layout_map_all, ('all',))
     """
 
-    def __init__(self, os_if, keep_temp_files=False,
-                 target_is_ec=False):
+    def __init__(self, os_if, keep_temp_files=False, target_is_ec=False):
         """ constructor of flashrom_util. help(flashrom_util) for more info
 
         @param os_if: an object providing interface to OS services
@@ -259,8 +259,10 @@ class flashrom_util(object):
 
         Returns the file name containing layout information.
         """
-        layout_text = ['0x%08lX:0x%08lX %s' % (v[0], v[1], k)
-            for k, v in layout_map.items()]
+        layout_text = [
+                '0x%08lX:0x%08lX %s' % (v[0], v[1], k)
+                for k, v in layout_map.items()
+        ]
         layout_text.sort()  # XXX unstable if range exceeds 2^32
         tmpfn = self._get_temp_filename('lay_')
         self.os_if.write_file(tmpfn, '\n'.join(layout_text) + '\n')
@@ -280,9 +282,9 @@ class flashrom_util(object):
             return ''
         pos = self.firmware_layout[section_name]
         if pos[0] >= pos[1] or pos[1] >= len(base_image):
-            raise TestError('INTERNAL ERROR: invalid layout map: %s.' %
-                            section_name)
-        blob = base_image[pos[0] : pos[1] + 1]
+            raise TestError(
+                    'INTERNAL ERROR: invalid layout map: %s.' % section_name)
+        blob = base_image[pos[0]:pos[1] + 1]
         # Trim down the main firmware body to its actual size since the
         # signing utility uses the size of the input file as the size of
         # the data to sign. Make it the same way as firmware creation.
@@ -304,14 +306,14 @@ class flashrom_util(object):
             raise TestError('INTERNAL ERROR: invalid layout map.')
         if len(data) != pos[1] - pos[0] + 1:
             # Pad the main firmware body since we trimed it down before.
-            if (len(data) < pos[1] - pos[0] + 1 and section_name in
-                    ('FVMAIN', 'FVMAINB', 'ECMAINA', 'ECMAINB',
-                     'RW_FWID')):
+            if (len(data) < pos[1] - pos[0] + 1
+                        and section_name in ('FVMAIN', 'FVMAINB', 'ECMAINA',
+                                             'ECMAINB', 'RW_FWID')):
                 pad = base_image[pos[1]]
                 data = data + pad * (pos[1] - pos[0] + 1 - len(data))
             else:
                 raise TestError('INTERNAL ERROR: unmatched data size.')
-        return base_image[0 : pos[0]] + data + base_image[pos[1] + 1 :]
+        return base_image[0:pos[0]] + data + base_image[pos[1] + 1:]
 
     def get_size(self):
         """ Gets size of current flash ROM """
@@ -369,7 +371,8 @@ class flashrom_util(object):
         layout_fn = self._create_layout_file(layout_map)
 
         cmd = 'flashrom %s -l "%s" -i %s -w "%s"' % (
-                self._target_command, layout_fn, ' -i '.join(write_list), tmpfn)
+                self._target_command, layout_fn, ' -i '.join(write_list),
+                tmpfn)
         self.os_if.log('flashrom.write_partial(): %s' % cmd)
         self.os_if.run_shell_command(cmd)
 
@@ -385,5 +388,5 @@ class flashrom_util(object):
 
     def write_whole(self, base_image):
         """Write the whole base image. """
-        layout_map = { 'all': (0, len(base_image) - 1) }
-        self.write_partial(base_image, ('all',), layout_map)
+        layout_map = {'all': (0, len(base_image) - 1)}
+        self.write_partial(base_image, ('all', ), layout_map)

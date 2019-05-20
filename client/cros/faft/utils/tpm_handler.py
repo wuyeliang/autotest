@@ -1,7 +1,6 @@
 # Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-
 """A module containing TPM handler class used by SAFT."""
 
 FW_NV_ADDRESS = 0x1007
@@ -47,19 +46,18 @@ class TpmNvRam(object):
         if self.pattern:
             pattern_offset = self.pattern[0]
             pattern_data = self.pattern[1]
-            contents_pattern = self.contents[pattern_offset:
-                                             pattern_offset + len(pattern_data)]
+            contents_pattern = self.contents[pattern_offset:pattern_offset +
+                                             len(pattern_data)]
             if contents_pattern != pattern_data:
                 raise TpmError('Nvram pattern does not match')
 
     def get_body_version(self):
-        return self.contents[
-            self.version_offset + 1] * 256 + self.contents[self.version_offset]
+        return self.contents[self.version_offset + 1] * 256 + self.contents[
+                self.version_offset]
 
     def get_key_version(self):
-        return self.contents[
-            self.version_offset + 3] * 256 + self.contents[
-            self.version_offset + 2]
+        return self.contents[self.version_offset + 3] * 256 + self.contents[
+                self.version_offset + 2]
 
 
 class TpmHandler(object):
@@ -75,15 +73,19 @@ class TpmHandler(object):
     def __init__(self, os_if):
         self.os_if = os_if
         self.nvrams = {
-            'kernel': TpmNvRam(self.os_if,
-                               addr=KERNEL_NV_ADDRESS,
-                               size=13,
-                               version_offset=5,
-                               data_pattern=(1, [0x4c, 0x57, 0x52, 0x47])),
-            'bios': TpmNvRam(self.os_if,
-                             addr=FW_NV_ADDRESS,
-                             size=10,
-                             version_offset=2)
+                'kernel':
+                TpmNvRam(
+                        self.os_if,
+                        addr=KERNEL_NV_ADDRESS,
+                        size=13,
+                        version_offset=5,
+                        data_pattern=(1, [0x4c, 0x57, 0x52, 0x47])),
+                'bios':
+                TpmNvRam(
+                        self.os_if,
+                        addr=FW_NV_ADDRESS,
+                        size=10,
+                        version_offset=2)
         }
         self.trunksd_started = False
         self.tcsd_started = False

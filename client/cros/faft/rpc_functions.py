@@ -1,7 +1,6 @@
 # Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-
 """Code to provide functions for FAFT tests.
 
 These can be exposed via a xmlrpci server running on the DUT.
@@ -10,15 +9,16 @@ These can be exposed via a xmlrpci server running on the DUT.
 import functools, os, tempfile
 import traceback
 
-from autotest_lib.client.cros.faft.utils import (cgpt_handler,
-                                                 os_interface,
-                                                 firmware_check_keys,
-                                                 firmware_updater,
-                                                 flashrom_handler,
-                                                 kernel_handler,
-                                                 rootfs_handler,
-                                                 tpm_handler,
-                                                 )
+from autotest_lib.client.cros.faft.utils import (
+        cgpt_handler,
+        os_interface,
+        firmware_check_keys,
+        firmware_updater,
+        flashrom_handler,
+        kernel_handler,
+        rootfs_handler,
+        tpm_handler,
+)
 
 
 def allow_multiple_section_input(image_operator):
@@ -26,6 +26,7 @@ def allow_multiple_section_input(image_operator):
 
     @param image_operator: Method accepting one section as its argument.
     """
+
     @functools.wraps(image_operator)
     def wrapper(self, section, *args, **dargs):
         """Wrapper method to support multiple sections.
@@ -37,6 +38,7 @@ def allow_multiple_section_input(image_operator):
                 image_operator(self, sec, *args, **dargs)
         else:
             image_operator(self, section, *args, **dargs)
+
     return wrapper
 
 
@@ -77,28 +79,24 @@ class RPCFunctions(object):
         # These attributes are accessed via properties, so they can load only
         # when actually used by the test.
         self._real_bios_handler = flashrom_handler.FlashromHandler(
-            self._os_if,
-            None,
-            '/usr/share/vboot/devkeys',
-            'bios')
+                self._os_if, None, '/usr/share/vboot/devkeys', 'bios')
         self._real_ec_handler = None
         self._real_tpm_handler = tpm_handler.TpmHandler(self._os_if)
 
         ec_status = self._os_if.run_shell_command_get_status('mosys ec info')
         if ec_status == 0:
             self._real_ec_handler = flashrom_handler.FlashromHandler(
-                self._os_if,
-                'ec_root_key.vpubk',
-                '/usr/share/vboot/devkeys',
-                'ec')
+                    self._os_if, 'ec_root_key.vpubk',
+                    '/usr/share/vboot/devkeys', 'ec')
 
         else:
             self._os_if.log('No EC is reported by mosys (rc=%s).' % ec_status)
 
         self._kernel_handler = kernel_handler.KernelHandler()
-        self._kernel_handler.init(self._os_if,
-                                  dev_key_path='/usr/share/vboot/devkeys',
-                                  internal_disk=True)
+        self._kernel_handler.init(
+                self._os_if,
+                dev_key_path='/usr/share/vboot/devkeys',
+                internal_disk=True)
 
         self._cgpt_handler = cgpt_handler.CgptHandler(self._os_if)
 
@@ -158,12 +156,13 @@ class RPCFunctions(object):
         if is_str:
             method = method.rsplit('.', 1)[0]
 
-        categories = ('system', 'host', 'bios', 'ec', 'kernel',
-                      'tpm', 'cgpt', 'updater', 'rootfs')
+        categories = ('system', 'host', 'bios', 'ec', 'kernel', 'tpm', 'cgpt',
+                      'updater', 'rootfs')
         try:
             if method.split('.', 1)[0] in categories:
-                func = getattr(self, '_%s_%s' % (method.split('.', 1)[0],
-                                                 method.split('.', 1)[1]))
+                func = getattr(
+                        self, '_%s_%s' % (method.split('.', 1)[0],
+                                          method.split('.', 1)[1]))
             else:
                 func = getattr(self, method)
         except AttributeError:
@@ -174,12 +173,11 @@ class RPCFunctions(object):
         else:
             try:
                 self._os_if.log('Dispatching method %s with args %r' %
-                    (func.__name__, params))
+                                (func.__name__, params))
                 return func(*params)
             except:
-                self._os_if.log(
-                    'Dispatching of method %s failed: %s' %
-                    (func.__name__, traceback.format_exc()))
+                self._os_if.log('Dispatching of method %s failed: %s' %
+                                (func.__name__, traceback.format_exc()))
                 raise
 
     def _system_is_available(self):
@@ -283,7 +281,8 @@ class RPCFunctions(object):
         lines = self._os_if.run_shell_command_get_output(
                 '(mosys -vvv platform name 2>&1) || echo Failed')
         if lines[-1].strip() == 'Failed':
-            raise Exception('Failed getting platform name: ' + '\n'.join(lines))
+            raise Exception('Failed getting platform name: ' +
+                            '\n'.join(lines))
         return lines[-1]
 
     def _system_dev_tpm_present(self):
@@ -417,8 +416,8 @@ class RPCFunctions(object):
         @param flags: An integer of preamble flags.
         """
         version = self._bios_get_version(section)
-        self._bios_handler.set_section_version(section, version, flags,
-                                               write_through=True)
+        self._bios_handler.set_section_version(
+                section, version, flags, write_through=True)
 
     def _bios_get_body_sha(self, section):
         """Get SHA1 hash of BIOS RW firmware section.
@@ -473,11 +472,10 @@ class RPCFunctions(object):
         original_version = self._bios_get_version(section)
         new_version = original_version + delta
         flags = self._bios_handler.get_section_flags(section)
-        self._os_if.log(
-                'Setting firmware section %s version from %d to %d' % (
-                section, original_version, new_version))
-        self._bios_handler.set_section_version(section, new_version, flags,
-                                               write_through=True)
+        self._os_if.log('Setting firmware section %s version from %d to %d' %
+                        (section, original_version, new_version))
+        self._bios_handler.set_section_version(
+                section, new_version, flags, write_through=True)
 
     @allow_multiple_section_input
     def _bios_move_version_backward(self, section):
@@ -611,8 +609,7 @@ class RPCFunctions(object):
 
     def _ec_reboot_to_switch_slot(self):
         """Reboot EC to switch the active RW slot."""
-        self._os_if.run_shell_command(
-                'ectool reboot_ec cold switch-slot')
+        self._os_if.run_shell_command('ectool reboot_ec cold switch-slot')
 
     @allow_multiple_section_input
     def _kernel_corrupt_sig(self, section):
@@ -638,9 +635,8 @@ class RPCFunctions(object):
         """
         original_version = self._kernel_handler.get_version(section)
         new_version = original_version + delta
-        self._os_if.log(
-                'Setting kernel section %s version from %d to %d' % (
-                section, original_version, new_version))
+        self._os_if.log('Setting kernel section %s version from %d to %d' %
+                        (section, original_version, new_version))
         self._kernel_handler.set_version(section, new_version)
 
     @allow_multiple_section_input
@@ -731,8 +727,10 @@ class RPCFunctions(object):
         """Get kernel attributes."""
         rootdev = self._system_get_root_dev()
         self._cgpt_handler.read_device_info(rootdev)
-        return {'A': self._cgpt_handler.get_partition(rootdev, 'KERN-A'),
-                'B': self._cgpt_handler.get_partition(rootdev, 'KERN-B')}
+        return {
+                'A': self._cgpt_handler.get_partition(rootdev, 'KERN-A'),
+                'B': self._cgpt_handler.get_partition(rootdev, 'KERN-B')
+        }
 
     def _cgpt_set_attributes(self, attributes):
         """Set kernel attributes."""
@@ -807,26 +805,23 @@ class RPCFunctions(object):
     def _updater_run_autoupdate(self, append):
         """Run chromeos-firmwareupdate with autoupdate mode."""
         options = ['--noupdate_ec', '--wp=1']
-        self._updater.run_firmwareupdate(mode='autoupdate',
-                                         updater_append=append,
-                                         options=options)
+        self._updater.run_firmwareupdate(
+                mode='autoupdate', updater_append=append, options=options)
 
     def _updater_run_factory_install(self):
         """Run chromeos-firmwareupdate with factory_install mode."""
         options = ['--noupdate_ec', '--wp=0']
-        self._updater.run_firmwareupdate(mode='factory_install',
-                                         options=options)
+        self._updater.run_firmwareupdate(
+                mode='factory_install', options=options)
 
     def _updater_run_bootok(self, append):
         """Run chromeos-firmwareupdate with bootok mode."""
-        self._updater.run_firmwareupdate(mode='bootok',
-                                         updater_append=append)
+        self._updater.run_firmwareupdate(mode='bootok', updater_append=append)
 
     def _updater_run_recovery(self):
         """Run chromeos-firmwareupdate with recovery mode."""
         options = ['--noupdate_ec', '--nocheck_keys', '--force', '--wp=1']
-        self._updater.run_firmwareupdate(mode='recovery',
-                                         options=options)
+        self._updater.run_firmwareupdate(mode='recovery', options=options)
 
     def _updater_cbfs_setup_work_dir(self):
         """Sets up cbfstool work directory."""

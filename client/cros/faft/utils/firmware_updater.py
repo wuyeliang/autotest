@@ -41,16 +41,17 @@ class FirmwareUpdater(object):
 
         pubkey_path = os.path.join(self._keys_path, 'root_key.vbpubk')
         self._real_bios_handler = flashrom_handler.FlashromHandler(
-            self.os_if,
-            pubkey_path,
-            self._keys_path,
-            'bios',
+                self.os_if,
+                pubkey_path,
+                self._keys_path,
+                'bios',
         )
         self._real_ec_handler = flashrom_handler.FlashromHandler(
-            self.os_if,
-            pubkey_path,
-            self._keys_path,
-            'ec', )
+                self.os_if,
+                pubkey_path,
+                self._keys_path,
+                'ec',
+        )
 
         # _detect_image_paths always needs to run during initialization
         # or after extract_shellball is called.
@@ -95,9 +96,9 @@ class FirmwareUpdater(object):
             if os.path.exists(ec_file):
                 self._real_ec_handler.init(ec_file)
             else:
-                self.os_if.log("Shellball EC image missing: %s\n"
-                               "Trying current flash contents instead."
-                               % ec_file)
+                self.os_if.log(
+                        "Shellball EC image missing: %s\n"
+                        "Trying current flash contents instead." % ec_file)
                 self._real_ec_handler.init()
 
         return self._real_ec_handler
@@ -228,19 +229,19 @@ class FirmwareUpdater(object):
             work_path = self._work_path
         self.os_if.run_shell_command(
                 '/usr/share/vboot/bin/resign_firmwarefd.sh '
-                '%s %s %s %s %s %s %s %s' % (
-                    os.path.join(work_path, self._bios_path),
-                    os.path.join(self._temp_path, 'output.bin'),
-                    os.path.join(self._keys_path, 'firmware_data_key.vbprivk'),
-                    os.path.join(self._keys_path, 'firmware.keyblock'),
-                    os.path.join(self._keys_path,
-                                 'dev_firmware_data_key.vbprivk'),
-                    os.path.join(self._keys_path, 'dev_firmware.keyblock'),
-                    os.path.join(self._keys_path, 'kernel_subkey.vbpubk'),
-                    ('%d' % version) if version is not None else ''))
-        self.os_if.copy_file('%s' % os.path.join(self._temp_path, 'output.bin'),
-                             '%s' % os.path.join(
-                                 work_path, self._bios_path))
+                '%s %s %s %s %s %s %s %s' %
+                (os.path.join(work_path, self._bios_path),
+                 os.path.join(self._temp_path, 'output.bin'),
+                 os.path.join(self._keys_path, 'firmware_data_key.vbprivk'),
+                 os.path.join(self._keys_path, 'firmware.keyblock'),
+                 os.path.join(self._keys_path,
+                              'dev_firmware_data_key.vbprivk'),
+                 os.path.join(self._keys_path, 'dev_firmware.keyblock'),
+                 os.path.join(self._keys_path, 'kernel_subkey.vbpubk'),
+                 ('%d' % version) if version is not None else ''))
+        self.os_if.copy_file(
+                '%s' % os.path.join(self._temp_path, 'output.bin'),
+                '%s' % os.path.join(work_path, self._bios_path))
 
     def _read_manifest(self, shellball=None):
         """This gets the manifest from the shellball or the extracted directory.
@@ -317,8 +318,8 @@ class FirmwareUpdater(object):
         if append:
             working_shellball = working_shellball + '-%s' % append
 
-        self.os_if.run_shell_command('sh %s --sb_extract %s' % (
-                working_shellball, self._work_path))
+        self.os_if.run_shell_command(
+                'sh %s --sb_extract %s' % (working_shellball, self._work_path))
 
         self._detect_image_paths(working_shellball)
         return working_shellball
@@ -343,8 +344,8 @@ class FirmwareUpdater(object):
             self.os_if.copy_file(working_shellball, new_shellball)
             working_shellball = new_shellball
 
-        self.os_if.run_shell_command('sh %s --sb_repack %s' % (
-                working_shellball, self._work_path))
+        self.os_if.run_shell_command(
+                'sh %s --sb_repack %s' % (working_shellball, self._work_path))
 
         self._detect_image_paths(working_shellball)
         return working_shellball
@@ -362,10 +363,12 @@ class FirmwareUpdater(object):
         """
         if updater_append:
             updater = os.path.join(
-                self._temp_path, 'chromeos-firmwareupdate-%s' % updater_append)
+                    self._temp_path,
+                    'chromeos-firmwareupdate-%s' % updater_append)
         else:
             updater = os.path.join(self._temp_path, 'chromeos-firmwareupdate')
-        command = '/bin/sh %s --mode %s %s' % (updater, mode, ' '.join(options))
+        command = '/bin/sh %s --mode %s %s' % (updater, mode,
+                                               ' '.join(options))
 
         if mode == 'bootok':
             # Since CL:459837, bootok is moved to chromeos-setgoodfirmware.
@@ -412,10 +415,8 @@ class FirmwareUpdater(object):
         bios = os.path.join(self._cbfs_work_path, self._bios_path)
         fw = fw_name
         cbfs_extract = '%s %s extract -r FW_MAIN_A -n %s%%s -f %s%%s' % (
-            self.CBFSTOOL,
-            bios,
-            fw,
-            os.path.join(self._cbfs_work_path, fw))
+                self.CBFSTOOL, bios, fw, os.path.join(self._cbfs_work_path,
+                                                      fw))
 
         cmd = cbfs_extract % (extension, extension)
         if self.os_if.run_shell_command_get_status(cmd) != 0:
@@ -448,8 +449,7 @@ class FirmwareUpdater(object):
         """
 
         hexdump_cmd = '%s %s.hash' % (
-            self.HEXDUMP,
-            os.path.join(self._cbfs_work_path, fw_name))
+                self.HEXDUMP, os.path.join(self._cbfs_work_path, fw_name))
         hashblob = self.os_if.run_shell_command_get_output(hexdump_cmd)
         return hashblob
 
@@ -474,45 +474,41 @@ class FirmwareUpdater(object):
 
         bios = os.path.join(self._cbfs_work_path, self._bios_path)
         rm_hash_cmd = '%s %s remove -r FW_MAIN_A,FW_MAIN_B -n %s.hash' % (
-            self.CBFSTOOL, bios, fw_name)
+                self.CBFSTOOL, bios, fw_name)
         rm_bin_cmd = '%s %s remove -r FW_MAIN_A,FW_MAIN_B -n %s%s' % (
-            self.CBFSTOOL, bios, fw_name, extension)
-        expand_cmd = '%s %s expand -r FW_MAIN_A,FW_MAIN_B' % (
-            self.CBFSTOOL, bios)
+                self.CBFSTOOL, bios, fw_name, extension)
+        expand_cmd = '%s %s expand -r FW_MAIN_A,FW_MAIN_B' % (self.CBFSTOOL,
+                                                              bios)
         add_hash_cmd = ('%s %s add -r FW_MAIN_A,FW_MAIN_B -t raw -c none '
                         '-f %s.hash -n %s.hash') % (
-                            self.CBFSTOOL,
-                            bios,
-                            os.path.join(self._cbfs_work_path, fw_name),
-                            fw_name)
+                                self.CBFSTOOL, bios,
+                                os.path.join(self._cbfs_work_path,
+                                             fw_name), fw_name)
         add_bin_cmd = ('%s %s add -r FW_MAIN_A,FW_MAIN_B -t raw -c lzma '
                        '-f %s%s -n %s%s') % (
-                           self.CBFSTOOL,
-                           bios,
-                           os.path.join(self._cbfs_work_path, fw_name),
-                           extension,
-                           fw_name,
-                           extension)
+                               self.CBFSTOOL, bios,
+                               os.path.join(self._cbfs_work_path, fw_name),
+                               extension, fw_name, extension)
         truncate_cmd = '%s %s truncate -r FW_MAIN_A,FW_MAIN_B' % (
-            self.CBFSTOOL, bios)
+                self.CBFSTOOL, bios)
 
         self.os_if.run_shell_command(rm_hash_cmd)
         self.os_if.run_shell_command(rm_bin_cmd)
         try:
             self.os_if.run_shell_command(expand_cmd)
         except shell_wrapper.ShellError:
-            self.os_if.log(('%s may be too old, '
-                            'continuing without "expand" support') %
-                           self.CBFSTOOL)
+            self.os_if.log(
+                    ('%s may be too old, '
+                     'continuing without "expand" support') % self.CBFSTOOL)
 
         self.os_if.run_shell_command(add_hash_cmd)
         self.os_if.run_shell_command(add_bin_cmd)
         try:
             self.os_if.run_shell_command(truncate_cmd)
         except shell_wrapper.ShellError:
-            self.os_if.log(('%s may be too old, '
-                            'continuing without "truncate" support') %
-                           self.CBFSTOOL)
+            self.os_if.log(
+                    ('%s may be too old, '
+                     'continuing without "truncate" support') % self.CBFSTOOL)
 
         return True
 
