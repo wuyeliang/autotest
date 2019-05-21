@@ -21,7 +21,7 @@ from autotest_lib.client.cros import cryptohome
 from autotest_lib.client.cros import httpd
 from autotest_lib.client.cros.input_playback import keyboard
 from autotest_lib.client.cros.enterprise import enterprise_fake_dmserver
-from autotest_lib.client.cros.enterprise import ui_utils
+from autotest_lib.client.common_lib import ui_utils
 from py_utils import TimeoutException
 
 from telemetry.core import exceptions
