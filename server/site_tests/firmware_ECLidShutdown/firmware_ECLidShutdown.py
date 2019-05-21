@@ -17,8 +17,9 @@ class firmware_ECLidShutdown(FirmwareTest):
     """
     version = 1
 
-    # Delay between closing and opening the lid.
-    LID_DELAY = 2
+    # Delay to allow for a power state change after closing or opening the lid.
+    # This value is determined experimentally.
+    LID_POWER_STATE_DELAY = 5
     POWER_STATE_CHECK_TRIES = 1
     IGNORE_LID_IN_USERSPACE_CMD = 'echo 0 > /var/lib/power_manager/use_lid'
     CHECK_POWER_MANAGER_CFG_DEFAULT = '[ ! -f /var/lib/power_manager/use_lid ]'
@@ -35,7 +36,7 @@ class firmware_ECLidShutdown(FirmwareTest):
             self._reset_ec_regexp()
             logging.info('The screen should turn back on now, during cleanup.')
             self.servo.set('lid_open', 'yes')
-            time.sleep(self.LID_DELAY)
+            time.sleep(self.LID_POWER_STATE_DELAY)
             self.switcher.simple_reboot(sync_before_boot=False)
             self.switcher.wait_for_client()
             self.clear_set_gbb_flags(vboot.GBB_FLAG_DISABLE_LID_SHUTDOWN, 0)
@@ -68,14 +69,14 @@ class firmware_ECLidShutdown(FirmwareTest):
         # TODO(kmshelton): Simplify to not use recovery mode.
         self.faft_client.system.request_recovery_boot()
         self.servo.set('lid_open', 'no')
-        time.sleep(self.LID_DELAY)
+        time.sleep(self.LID_POWER_STATE_DELAY)
         self.switcher.simple_reboot(sync_before_boot=False)
         time.sleep(self.faft_config.firmware_screen)
         if not self.wait_power_state('G3', self.POWER_STATE_CHECK_TRIES):
             raise error.TestFail('The device did not stay in a mechanical off '
                                  'state after a lid close and a warm reboot.')
         self.servo.set('lid_open', 'yes')
-        time.sleep(self.LID_DELAY)
+        time.sleep(self.LID_POWER_STATE_DELAY)
         time.sleep(self.faft_config.firmware_screen)
         self.switcher.simple_reboot(sync_before_boot=False)
         self._reset_ec_regexp()
