@@ -5,7 +5,7 @@ import xmlrpclib
 NO_ARGS = tuple()
 ONE_INT_ARG = (1, )
 ONE_STR_ARG = ("foo", )
-SAMPLE_FILE = "/tmp/foo",
+SAMPLE_FILE = "/tmp/foo"
 
 """
 RPC_CATEGORIES contains all the test cases for our RPC tests.
@@ -245,7 +245,82 @@ RPC_CATEGORIES = [
     },
     {
         "category_name": "kernel",
-        "test_cases": []
+        "test_cases": [
+            {
+                "method_names": [
+                    "corrupt_sig",
+                    "restore_sig",
+                    "move_version_backward",
+                    "move_version_forward",
+                ],
+                "passing_args": [
+                    ("a", ),
+                    ("b", ),
+                    (("a", "b"), )
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                    ("c", ),
+                ],
+            },
+            {
+                "method_names": [
+                    "get_version",
+                    "get_datakey_version",
+                    "get_sha",
+                ],
+                "passing_args": [
+                    ("a", ),
+                    ("b", ),
+                ],
+                "failing_args": [
+                    (("a", "b"), ),
+                    ("c", ),
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                ],
+            },
+            {
+                "method_name": "diff_a_b",
+                "passing_args": [NO_ARGS],
+                "failing_args": [
+                    ONE_INT_ARG,
+                    ONE_STR_ARG,
+                ],
+                "expected_return_type": bool,
+            },
+            {
+                "method_name": "resign_with_keys",
+                "passing_args": [
+                    ("a", ),
+                    ("b", ),
+                    ("b", SAMPLE_FILE),
+                ],
+                "failing_args": [
+                    (("a", "b"), ),
+                    ("c", ),
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                ],
+            },
+            {
+                "method_names": [
+                    "dump",
+                    "write",
+                ],
+                "passing_args": [
+                    ("a", SAMPLE_FILE),
+                    ("b", SAMPLE_FILE),
+                ],
+                "failing_args": [
+                    (("a", "b"), SAMPLE_FILE),
+                    ("c", SAMPLE_FILE),
+                    ("a", ),
+                    NO_ARGS,
+                ]
+            }
+        ],
     },
     {
         "category_name": "tpm",
