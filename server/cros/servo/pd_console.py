@@ -33,6 +33,12 @@ class PDConsoleUtils(object):
     dualrole_cmd = ['on', 'off', 'sink', 'source']
     dualrole_resp = ['on', 'off', 'force sink', 'force source']
 
+    # Some old firmware uses a single dualrole setting for all ports; while
+    # some new firmware uses a per port dualrole settting. This flag will be
+    # initialized to True or False.
+    # TODO: Remove this flag when the old setting phases out
+    per_port_dualrole_setting = None
+
     # Dictionary for 'pd 0/1 state' parsing
     PD_STATE_DICT = {
         'port': 'Port\s+([\w]+)',
@@ -190,17 +196,33 @@ class PDConsoleUtils(object):
         pd_dict = self.execute_pd_state_cmd(port)
         return pd_dict['flags']
 
-    def get_pd_dualrole(self):
+    def get_pd_dualrole(self, port):
         """Get the current PD dualrole setting
 
+        @param port: Type C PD port 0/1
         @returns: current PD dualrole setting
         """
-        cmd = 'pd dualrole'
+        if self.per_port_dualrole_setting is True:
+            cmd = 'pd %d dualrole' % port
+        elif self.per_port_dualrole_setting is False:
+            cmd = 'pd dualrole'
+        else:
+            try:
+                logging.info('The per_port_dualrole_setting is unknown; '
+                             'try the True case')
+                self.per_port_dualrole_setting = True
+                return self.get_pd_dualrole(port)
+            except:
+                logging.info('The per_port_dualrole_setting=True failed; '
+                             'try the False case')
+                self.per_port_dualrole_setting = False
+                return self.get_pd_dualrole(port)
+
         dual_list = self.send_pd_command_get_output(cmd,
                 ['dual-role toggling:\s+([\w ]+)[\r\n]'])
         return dual_list[0][1]
 
-    def set_pd_dualrole(self, value):
+    def set_pd_dualrole(self, port, value):
         """Set pd dualrole
 
         It can be set to either:
@@ -211,16 +233,22 @@ class PDConsoleUtils(object):
         After setting, the current value is read to confirm that it
         was set properly.
 
+        @param port: Type C PD port 0/1
         @param value: One of the 4 options listed
         """
+        # If the dualrole setting is not initialized, call the get method to
+        # initialize it.
+        if self.per_port_dualrole_setting is None:
+            self.get_pd_dualrole(port)
+
         # Get string required for console command
         dual_index = self.dual_index[value]
         # Create console command
-        cmd = 'pd dualrole ' + self.dualrole_cmd[dual_index]
+        cmd = 'pd %d dualrole %s' % (port, self.dualrole_cmd[dual_index])
         self.console.send_command(cmd)
         time.sleep(self.DUALROLE_QUERY_DELAY)
         # Get current setting to verify that command was successful
-        dual = self.get_pd_dualrole()
+        dual = self.get_pd_dualrole(port)
         # If it doesn't match, then raise error
         if dual != self.dualrole_resp[dual_index]:
             raise error.TestFail("dualrole error: " +
@@ -270,7 +298,7 @@ class PDConsoleUtils(object):
         @returns: True if power swap is successful, False otherwise.
         """
         # Get starting state
-        if self.is_pd_dual_role_enabled() == False:
+        if self.is_pd_dual_role_enabled(port) == False:
             logging.info('Dualrole Mode not enabled!')
             return False
         if self.is_pd_connected(port) == False:
@@ -324,12 +352,12 @@ class PDConsoleUtils(object):
         state = self.get_pd_state(port)
         return bool(state == self.SRC_CONNECT or state == self.SNK_CONNECT)
 
-    def is_pd_dual_role_enabled(self):
+    def is_pd_dual_role_enabled(self, port):
         """Check if a PD device is in dualrole mode
 
         @returns True is dualrole mode is active, false otherwise
         """
-        drp = self.get_pd_dualrole()
+        drp = self.get_pd_dualrole(port)
         return bool(drp == self.dualrole_resp[self.dual_index['on']])
 
 

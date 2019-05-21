@@ -156,7 +156,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         logging.info('Initial DUT connect state = %s', dut_connect_state)
 
         # Get DUT dualrole status
-        if self.dut_pd_utils.is_pd_dual_role_enabled() == False:
+        if self.dut_pd_utils.is_pd_dual_role_enabled(pd_port) == False:
             # DUT does not support dualrole mode, power swap
             # requests to the DUT should be rejected.
             logging.info('Power Swap support not advertised by DUT')
@@ -189,14 +189,14 @@ class firmware_PDPowerSwap(FirmwareTest):
             else:
                 dual_mode = 'snk'
             logging.info('Setting dualrole mode to %s', dual_mode)
-            self.dut_pd_utils.set_pd_dualrole(dual_mode)
+            self.dut_pd_utils.set_pd_dualrole(pd_port, dual_mode)
             time.sleep(self.PD_ROLE_DELAY)
             # Expect behavior now is that DUT will reject power swap
             self._test_power_swap_reject(pd_port)
             logging.info('Power Swap request rejected by DUT as expected')
             # Restore DUT dual role operation
-            self.dut_pd_utils.set_pd_dualrole('on')
+            self.dut_pd_utils.set_pd_dualrole(pd_port, 'on')
             # Set connection back to default arrangement
-            self.pdtester_pd_utils.set_pd_dualrole('off')
+            self.pdtester_pd_utils.set_pd_dualrole(pd_port, 'off')
             self.pdtester_pd_utils.send_pd_command('fake disconnect 100 1000')
 

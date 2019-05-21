@@ -87,7 +87,7 @@ class firmware_PDVbusRequest(FirmwareTest):
             raise error.TestFail("pd connection not found")
         if dut_state['role'] != pd_dut_utils.SNK_CONNECT:
             # DUT needs to be in SINK Mode, attempt to force change
-            pd_dut_utils.set_pd_dualrole('snk')
+            pd_dut_utils.set_pd_dualrole(dut_state['port'], 'snk')
             time.sleep(self.PD_SETTLE_DELAY)
             if (pd_dut_utils.get_pd_state(dut_state['port']) !=
                 pd_dut_utils.SNK_CONNECT):
@@ -116,7 +116,7 @@ class firmware_PDVbusRequest(FirmwareTest):
         cmd = 'pd %d dev %d' % (dut_state['port'], self.USBC_MAX_VOLTAGE)
         time.sleep(self.PD_SETTLE_DELAY)
         # The next group of tests need DUT to connect in SNK and SRC modes
-        pd_dut_utils.set_pd_dualrole('on')
+        pd_dut_utils.set_pd_dualrole(dut_state['port'], 'on')
 
         pdtester_failures = []
         logging.info('Start PDTester initiated tests')

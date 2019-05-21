@@ -195,7 +195,7 @@ class PDConsoleDevice(PDDevice):
 
         @returns True if dual role mode is 'on', False otherwise
         """
-        return self.utils.is_pd_dual_role_enabled()
+        return self.utils.is_pd_dual_role_enabled(self.port)
 
     def drp_disconnect_connect(self, disc_time_sec):
         """Disconnect/reconnect using drp mode settings
@@ -262,11 +262,11 @@ class PDConsoleDevice(PDDevice):
         @returns True is set was successful, False otherwise
         """
         # Set desired dualrole mode
-        self.utils.set_pd_dualrole(mode)
+        self.utils.set_pd_dualrole(self.port, mode)
         # Get the expected output
         resp = self.utils.dualrole_resp[self.utils.dual_index[mode]]
         # Get current setting
-        current = self.utils.get_pd_dualrole()
+        current = self.utils.get_pd_dualrole(self.port)
         # Verify that setting is correct
         return bool(resp == current)
 
@@ -482,7 +482,7 @@ class PDTesterDevice(PDConsoleDevice):
         # Get correct dualrole console response
         resp = self.utils.dualrole_resp[self.utils.dual_index[mode]]
         # Get current value of dualrole
-        drp = self.utils.get_pd_dualrole()
+        drp = self.utils.get_pd_dualrole(self.port)
         if drp == resp:
             return True
 
@@ -496,7 +496,7 @@ class PDTesterDevice(PDConsoleDevice):
                 # This will turn off drp_enable flag and set dualmode to 'off'
                 return self._toggle_pdtester_drp()
             # With drp_enable flag off, can set to desired setting
-            return self.utils.set_pd_dualrole(mode)
+            return self.utils.set_pd_dualrole(self.port, mode)
 
     def _reset(self, cmd, states_list):
         """Initates a PD reset sequence
