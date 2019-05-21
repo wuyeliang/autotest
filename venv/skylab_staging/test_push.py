@@ -32,11 +32,10 @@ from lucifer import loglib
 from skylab_staging import errors
 from skylab_staging import swarming
 
-# Hacky late imports that must run after autotest.monkeypatch()
-autotest.monkeypatch()
-cros_build_lib = autotest.chromite_load('cros_build_lib')
-metrics = autotest.chromite_load('metrics')
-ts_mon_config = autotest.chromite_load('ts_mon_config')
+
+cros_build_lib = autotest.deferred_chromite_load('cros_build_lib')
+metrics = autotest.deferred_chromite_load('metrics')
+ts_mon_config = autotest.deferred_chromite_load('ts_mon_config')
 
 
 _METRICS_PREFIX = 'chromeos/autotest/test_push/skylab'
@@ -282,4 +281,5 @@ def _ensure_duts_ready(swclient, board, pool, min_duts, timeout_s):
 
 
 if __name__ == '__main__':
+  autotest.monkeypatch()
   sys.exit(main())
