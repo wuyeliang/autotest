@@ -279,9 +279,22 @@ class firmware_Cr50DeviceState(Cr50Test):
             self.run_errors.update(errors)
 
 
+    def ap_is_on_after_power_button_press(self):
+        """Returns True if the AP is on after pressing the power button"""
+        self.servo.power_short_press()
+        # Give the AP some time to turn on
+        time.sleep(self.cr50.SHORT_WAIT)
+        return self.cr50.ap_is_on()
+
+
     def trigger_s0(self):
         """Press the power button so the DUT will wake up."""
-        self.servo.power_short_press()
+        if self.ap_is_on_after_power_button_press():
+            return
+        # Try a second time to see if the AP comes up.
+        if not self.ap_is_on_after_power_button_press():
+            raise error.TestError('Could not wake the AP using power button')
+        logging.warning('Had to press power button twice to wake the AP')
 
 
     def enter_state(self, state):
