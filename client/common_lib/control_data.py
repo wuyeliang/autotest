@@ -95,7 +95,7 @@ class ControlData(object):
         self.test_parameters = set()
         self.test_category = ''
         self.test_class = ''
-        self.job_retries = 1
+        self.job_retries = 0
         # Default to require server-side package. Unless require_ssp is
         # explicitly set to False, server-side package will be used for the
         # job. This can be overridden by global config
