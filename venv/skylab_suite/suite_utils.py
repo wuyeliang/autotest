@@ -41,61 +41,13 @@ def run(client, test_specs, suite_handler, dry_run=False):
     @param dry_run: Whether to kick off dry runs of the tests.
     """
     assert isinstance(client, swarming_lib.Client)
+    # TODO(akeshet): Delete this field from SuiteHandler.
     if suite_handler.suite_id:
-        # Resume an existing suite.
-        _resume_suite(client, test_specs, suite_handler, dry_run)
+        raise NotImplementedError('Resuming an existing suite is no longer '
+                                  'implemented.')
     else:
         # Make a new suite.
         _run_suite(test_specs, suite_handler, dry_run)
-
-
-def _resume_suite(client, test_specs, suite_handler, dry_run=False):
-    """Resume a suite and its child tasks by given suite id."""
-    assert isinstance(client, swarming_lib.Client)
-    suite_id = suite_handler.suite_id
-    all_tasks = client.get_child_tasks(suite_id)
-    not_yet_scheduled = _get_unscheduled_test_specs(
-            test_specs, suite_handler, all_tasks)
-
-    logging.info('Not yet scheduled test_specs: %r', not_yet_scheduled)
-    _create_test_tasks(not_yet_scheduled, suite_handler, suite_id, dry_run)
-
-    if suite_id is not None and suite_handler.should_wait():
-        _wait_for_results(suite_handler, dry_run=dry_run)
-
-
-def _get_unscheduled_test_specs(test_specs, suite_handler, all_tasks):
-    not_yet_scheduled = []
-    for test_spec in test_specs:
-        tasks = [t for t in all_tasks if t['name']==test_spec.test.name]
-
-        if not tasks:
-            not_yet_scheduled.append(test_spec)
-            continue
-
-        # If there are multiple running tasks for a given test name, arbitrarily
-        # pick the first one as the representative "current one".
-        current_task = None
-        for t in tasks:
-            if t['state'] not in swarming_lib.TASK_FINISHED_STATUS:
-                current_task = t
-                break
-
-        test_task_id = (current_task['task_id'] if current_task
-                        else tasks[0]['task_id'])
-
-        # The first run is not counted against JOB_RETRIES, hence +1.
-        remaining_retries = test_spec.test.job_retries - len(tasks) + 1
-        previous_retried_ids = [t['task_id'] for t in tasks
-                                if t['task_id'] != test_task_id]
-        suite_handler.add_test_by_task_id(
-                test_task_id,
-                cros_suite.TestHandlerSpec(
-                        test_spec=test_spec,
-                        remaining_retries=remaining_retries,
-                        previous_retried_ids=previous_retried_ids))
-
-    return not_yet_scheduled
 
 
 def _run_suite(test_specs, suite_handler, dry_run=False):
