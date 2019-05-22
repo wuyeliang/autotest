@@ -32,26 +32,8 @@ _NOT_SUPPORTED_DEPENDENCIES = ['skip_provision', 'cleanup-reboot', 'rpm',
                                'modem_repair']
 
 
-def run(client, test_specs, suite_handler, dry_run=False):
-    """Run a CrOS dynamic test suite.
-
-    @param client: A swarming_lib.Client instance.
-    @param test_specs: A list of cros_suite.TestSpec objects.
-    @param suite_handler: A cros_suite.SuiteHandler object.
-    @param dry_run: Whether to kick off dry runs of the tests.
-    """
-    assert isinstance(client, swarming_lib.Client)
-    # TODO(akeshet): Delete this field from SuiteHandler.
-    if suite_handler.suite_id:
-        raise NotImplementedError('Resuming an existing suite is no longer '
-                                  'implemented.')
-    else:
-        # Make a new suite.
-        _run_suite(test_specs, suite_handler, dry_run)
-
-
-def _run_suite(test_specs, suite_handler, dry_run=False):
-    """Make a new suite."""
+def run_suite(test_specs, suite_handler, dry_run=False):
+    """Run a suite and wait for child results (if necessary)."""
     suite_id = os.environ.get('SWARMING_TASK_ID')
     if not suite_id:
         raise ValueError("Unable to determine suite's task id from env var "

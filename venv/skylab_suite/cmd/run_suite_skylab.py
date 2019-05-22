@@ -56,10 +56,9 @@ def _run_suite(options):
 
     suite_handler_spec = _parse_suite_handler_spec(options)
     suite_handler = cros_suite.SuiteHandler(suite_handler_spec, swarming_client)
-    suite_utils.run(swarming_client,
-                     suite_job.test_specs,
-                     suite_handler,
-                     options.dry_run)
+    suite_utils.run_suite(suite_job.test_specs,
+                          suite_handler,
+                          options.dry_run)
 
     if options.create_and_return:
         suite_tracking.log_create_task(suite_job.suite_name,
