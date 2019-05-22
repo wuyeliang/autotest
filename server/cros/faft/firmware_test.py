@@ -1545,3 +1545,125 @@ class FirmwareTest(FAFTBase):
                 count = count + 1
             self.faft_client.system.set_try_fw_b(count)
 
+    def identify_shellball(self, include_ec=True):
+        """Get the FWIDs of all targets and sections in the shellball
+
+        @return: the dict of versions in the shellball
+        """
+        fwids = dict()
+        fwids['bios'] = self.faft_client.updater.get_fwid(
+                'bios', ('ro', 'a', 'b'))
+
+        if include_ec:
+            fwids['ec'] = self.faft_client.updater.get_fwid(
+                    'ec', ('ro', 'rw'))
+        return fwids
+
+    def modify_shellball(self, append, modify_ro=True, modify_ec=False):
+        """Modify the FWIDs of targets and sections in the shellball
+
+        @return: the full path of the shellball
+        """
+
+        if modify_ro:
+            self.faft_client.updater.modify_fwid('bios', ('ro', 'a', 'b'))
+        else:
+            self.faft_client.updater.modify_fwid('bios', ('a', 'b'))
+
+        if modify_ec:
+            if modify_ro:
+                self.faft_client.updater.modify_fwid('ec', ('ro', 'rw'))
+            else:
+                self.faft_client.updater.modify_fwid('ec', 'rw')
+
+        modded_shellball = self.faft_client.updater.repack_shellball(append)
+
+        return modded_shellball
+
+    @staticmethod
+    def check_fwids_written(before_fwids, image_fwids, after_fwids,
+                            expected_written):
+        """Check the dicts of fwids for correctness after an update is applied.
+
+        The targets checked come from the keys of expected_written.
+        The sections checked come from the inner dicts of the fwids parameters.
+
+        The fwids should be keyed by target (flash type), then by section:
+        {'bios': {'ro': '<fwid>', 'a': '<fwid>', 'b': '<fwid>'},
+         'ec': {'ro': '<fwid>', 'rw': '<fwid>'}
+
+        For expected_written, the dict should be keyed by flash type only:
+        {'bios': ['ro'], 'ec': ['ro', 'rw']}
+
+        @param before_fwids: dict of versions from before the update
+        @param image_fwids: dict of versions in the update
+        @param after_fwids: dict of actual versions after the update
+        @param expected_written: dict indicating which ones should have changed
+        @return: list of error lines for mismatches
+
+        @type before_fwids: dict
+        @type image_fwids: dict
+        @type after_fwids: dict
+        @type expected_written: dict
+        @rtype: list
+        """
+        errors = []
+
+        for target in sorted(expected_written.keys()):
+            # target is BIOS or EC
+
+            before_missing = (target not in before_fwids)
+            after_missing = (target not in after_fwids)
+            if before_missing or after_missing:
+                if before_missing:
+                    errors.append("...no before_fwids[%s]" % target)
+                if after_missing:
+                    errors.append("...no after_fwids[%s]" % target)
+                continue
+
+            written_sections = expected_written.get(target) or list()
+            written_sections = set(written_sections)
+
+            before_sections = set(before_fwids.get(target) or dict())
+            image_sections = set(image_fwids.get(target) or dict())
+            after_sections = set(after_fwids.get(target) or dict())
+
+            for section in before_sections | image_sections | after_sections:
+                # section is RO, RW, A, or B
+
+                before_fwid = before_fwids[target][section]
+                image_fwid = image_fwids[target][section]
+                actual_fwid = after_fwids[target][section]
+
+                if section in written_sections:
+                    expected_fwid = image_fwid
+                    expected_desc = 'rewritten fwid (%s)' % expected_fwid
+                    if image_fwid == before_fwid:
+                        expected_desc = ('rewritten (no changes) fwid (%s)' %
+                                         expected_fwid)
+                else:
+                    expected_fwid = before_fwid
+                    expected_desc = 'original fwid (%s)' % expected_fwid
+
+                if actual_fwid == expected_fwid:
+                    actual_desc = 'correct value'
+
+                elif actual_fwid == image_fwid:
+                    actual_desc = 'rewritten fwid (%s)' % actual_fwid
+                    if image_fwid == before_fwid:
+                        # The flash could have been rewritten with the same fwid
+                        actual_desc = 'possibly written fwid (%s)' % actual_fwid
+
+                elif actual_fwid == before_fwid:
+                    actual_desc = 'original fwid (%s)' % actual_fwid
+
+                else:
+                    actual_desc = 'unknown fwid (%s)' % actual_fwid
+
+                msg = ("...FWID (%s %s): expected %s, got %s" %
+                       (target.upper(), section.upper(),
+                        expected_desc, actual_desc))
+
+                if actual_fwid != expected_fwid:
+                    errors.append(msg)
+        return errors
