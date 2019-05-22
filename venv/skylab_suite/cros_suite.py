@@ -51,7 +51,6 @@ SuiteHandlerSpec = collections.namedtuple(
         [
                 'suite_name',
                 'wait',
-                'suite_id',
                 'timeout_mins',
                 'test_retry',
                 'max_retries',
@@ -99,8 +98,9 @@ class SuiteHandler(object):
         self._test_retry = specs.test_retry
         self._max_retries = specs.max_retries
 
-        # The swarming task id of the suite that this suite_handler is handling.
-        self._suite_id = specs.suite_id
+        # The swarming task id of the suite that this suite_handler is handling,
+        # which is not yet known at SuiteHandler creation time.
+        self._suite_id = None
         # The swarming task id of current run_suite_skylab process. It could be
         # different from self._suite_id if a suite_id is passed in.
         self._task_id = os.environ.get('SWARMING_TASK_ID')

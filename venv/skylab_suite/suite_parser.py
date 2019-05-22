@@ -109,7 +109,6 @@ def make_parser():
     parser.add_argument('--firmware_ro_build', help=argparse.SUPPRESS)
     parser.add_argument('--run_prod_code', help=argparse.SUPPRESS)
     parser.add_argument('--execution_timeout_seconds', help=argparse.SUPPRESS)
-    parser.add_argument('--suite_id', help=argparse.SUPPRESS)
     # TODO(akeshet): suite_scheduler uses this argument. Remove it from that
     # client prior to removing it here.
     parser.add_argument('--pre_check', help=argparse.SUPPRESS)

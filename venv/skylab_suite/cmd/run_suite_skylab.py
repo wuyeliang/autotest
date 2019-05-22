@@ -30,7 +30,6 @@ def _parse_suite_handler_spec(options):
     return cros_suite.SuiteHandlerSpec(
             suite_name=options.suite_name,
             wait=not options.create_and_return,
-            suite_id=options.suite_id,
             timeout_mins=options.timeout_mins,
             test_retry=options.test_retry,
             max_retries=options.max_retries,
