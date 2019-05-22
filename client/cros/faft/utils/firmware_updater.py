@@ -528,10 +528,6 @@ class FirmwareUpdater(object):
         """Get keys directory path."""
         return self._keys_path
 
-    def get_cbfs_work_path(self):
-        """Get cbfs work directory path."""
-        return self._cbfs_work_path
-
     def get_work_path(self):
         """Get work directory path."""
         return self._work_path

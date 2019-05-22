@@ -260,18 +260,6 @@ class RPCFunctions(object):
         """
         return self._os_if.run_host_shell_command_get_output(command)
 
-    def _host_run_nonblock_shell_command(self, command):
-        """Run non-blocking shell command.
-
-        @param command: A shell command to be run.
-        @return: none
-        """
-        return self._os_if.run_host_shell_command(command, False)
-
-    def _system_software_reboot(self):
-        """Request software reboot."""
-        self._os_if.run_shell_command('reboot')
-
     def _system_get_platform_name(self):
         """Get the platform name of the current system.
 
@@ -526,10 +514,6 @@ class RPCFunctions(object):
         return self._os_if.run_shell_command_get_output(
                 'mosys ec info | sed "s/.*| //"')[0]
 
-    def _ec_get_firmware_sha(self):
-        """Get SHA1 hash of EC RW firmware section."""
-        return self._ec_handler.get_section_sha('rw')
-
     def _ec_get_active_hash(self):
         """Get hash of active EC RW firmware."""
         return self._os_if.run_shell_command_get_output(
@@ -551,36 +535,12 @@ class RPCFunctions(object):
         self._ec_handler.write_whole()
 
     @allow_multiple_section_input
-    def _ec_corrupt_sig(self, section):
-        """Corrupt the requested EC section signature.
-
-        @param section: A EC section, either 'a' or 'b'.
-        """
-        self._ec_handler.corrupt_firmware(section, corrupt_all=True)
-
-    @allow_multiple_section_input
-    def _ec_restore_sig(self, section):
-        """Restore the previously corrupted EC section signature.
-
-        @param section: An EC section, either 'a' or 'b'.
-        """
-        self._ec_handler.restore_firmware(section, restore_all=True)
-
-    @allow_multiple_section_input
     def _ec_corrupt_body(self, section):
         """Corrupt the requested EC section body.
 
         @param section: An EC section, either 'a' or 'b'.
         """
         self._ec_handler.corrupt_firmware_body(section, corrupt_all=True)
-
-    @allow_multiple_section_input
-    def _ec_restore_body(self, section):
-        """Restore the previously corrupted EC section body.
-
-        @param section: An EC section, either 'a' or 'b'.
-        """
-        self._ec_handler.restore_firmware_body(section, restore_all=True)
 
     def _ec_dump_firmware(self, ec_path):
         """Dump the current EC firmware to a file, specified by ec_path.
@@ -764,13 +724,6 @@ class RPCFunctions(object):
         """
         return self._updater.retrieve_fwid()[1]
 
-    def _updater_get_ecid(self):
-        """Retrieve shellball's ecid.
-
-        @return: Shellball's ecid.
-        """
-        return self._updater.retrieve_ecid()
-
     def _updater_modify_ecid_and_flash_to_bios(self):
         """Modify ecid, put it to AP firmware, and flash it to the system."""
         self._updater.modify_ecid_and_flash_to_bios()
@@ -862,10 +815,6 @@ class RPCFunctions(object):
     def _updater_get_temp_path(self):
         """Get updater's temp directory path."""
         return self._updater.get_temp_path()
-
-    def _updater_get_cbfs_work_path(self):
-        """Get updater's cbfs work directory path."""
-        return self._updater.get_cbfs_work_path()
 
     def _updater_get_keys_path(self):
         """Get updater's keys directory path."""

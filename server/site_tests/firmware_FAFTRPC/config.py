@@ -53,7 +53,6 @@ RPC_CATEGORIES = [
                 "method_names": [
                     "is_available",
                     "has_host",
-                    "software_reboot",
                     "get_platform_name",
                     "dev_tpm_present",
                     "get_root_dev",
