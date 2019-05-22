@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import logging
+import os
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server import test
@@ -43,8 +44,11 @@ class autoupdate_Rollback(test.test):
         # apply payload whose version is the same as rollback-version.
         # rollback-happened is written when update_engine finished Enterprise
         # Rollback operation.
-        self.host.run('rm /var/lib/update_engine/prefs/rollback-version'
-                      ' /var/lib/update_engine/prefs/rollback-happened',
+        preserved_prefs_path = ('/mnt/stateful_partition/unencrypted/preserve'
+                                '/update_engine/prefs/')
+        self.host.run('rm %s %s' %
+                      (os.path.join(preserved_prefs_path, 'rollback-version'),
+                       os.path.join(preserved_prefs_path, 'rollback-happened')),
                       ignore_status=True)
         # Restart update-engine to pick up new prefs.
         self.host.run('restart update-engine', ignore_status=True)
