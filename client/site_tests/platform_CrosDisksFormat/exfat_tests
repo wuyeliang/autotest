@@ -1,0 +1,7 @@
+[
+  {
+    "description": "exFAT filesystem",
+    "filesystem_type": "exfat",
+    "expected_format_status": 0
+  }
+]
