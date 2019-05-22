@@ -3,12 +3,12 @@
 # found in the LICENSE file.
 
 AUTHOR = "Chrome OS Team"
-NAME = "login_VMSanity"
-PURPOSE = "Run vm_sanity.py."
+NAME = "telemetry_Sanity"
+PURPOSE = "Run telemetry_sanity.py."
 CRITERIA = """
-Test will fail if vm_sanity fails.
+Test will fail if telemetry_sanity fails.
 """
-# crbug.com/930157: This test is flaky and block CQ, disable it until fixed.
+# crbug.com/930157: This test is flaky and blocks CQ, disable it until fixed.
 ATTRIBUTES = "suite:bvt-perbuild" # "suite:bvt-inline, suite:smoke"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
@@ -16,7 +16,7 @@ TEST_CLASS = "login"
 TEST_TYPE = "client"
 
 DOC = """
-This test runs vm_sanity.py
+This test runs telemetry_sanity.py
 """
 
-job.run_test('login_VMSanity')
+job.run_test('telemetry_Sanity')

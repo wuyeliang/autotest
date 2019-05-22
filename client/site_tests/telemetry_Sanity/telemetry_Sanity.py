@@ -2,12 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from autotest_lib.client.bin import test, vm_sanity
+from autotest_lib.client.bin import test, telemetry_sanity
 
 
-class login_VMSanity(test.test):
-    """Run vm_sanity."""
+class telemetry_Sanity(test.test):
+    """Run telemetry_sanity."""
     version = 1
 
     def run_once(self):
-        vm_sanity.VMSanity().Run()
+        telemetry_sanity.TelemetrySanity().Run()
