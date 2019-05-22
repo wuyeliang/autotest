@@ -59,6 +59,25 @@ class firmware_FAFTRPC(FirmwareTest):
     _stored_values = {}
 
 
+    def initialize(self, host, cmdline_args, dev_mode=False):
+        """Runs before test begins."""
+        super(firmware_FAFTRPC, self).initialize(host, cmdline_args)
+        self.backup_firmware()
+
+
+    def cleanup(self):
+        """Runs after test completion."""
+        try:
+            if self.is_firmware_saved():
+                self.restore_firmware()
+            if self.reboot_after_completion:
+                logging.info("Rebooting DUT, as specified in control file")
+                self.switcher.mode_aware_reboot()
+        except Exception as e:
+            logging.error("Caught exception: %s", str(e))
+        super(firmware_FAFTRPC, self).cleanup()
+
+
     def _log_success(self, rpc_name, params, success_message):
         """Report on an info level that a test passed."""
         logging.info("RPC test for %s%s successfully %s",
@@ -234,7 +253,7 @@ class firmware_FAFTRPC(FirmwareTest):
         return rpc_function
 
 
-    def run_once(self, category_under_test="*"):
+    def run_once(self, category_under_test="*", reboot_after_completion=False):
         """
         Main test logic.
 
@@ -254,8 +273,12 @@ class firmware_FAFTRPC(FirmwareTest):
             rpc_categories_to_test = [
                     get_rpc_category_by_name(category_under_test)]
             logging.info("Testing RPC category '%s'", category_under_test)
+        self.reboot_after_completion = reboot_after_completion
         for rpc_category in rpc_categories_to_test:
             category_name = rpc_category["category_name"]
+            if category_name == "ec" and not self.check_ec_capability():
+                logging.info("No EC found on DUT. Skipping EC category.")
+                continue
             test_cases = rpc_category["test_cases"]
             logging.info("Testing %d cases for RPC category '%s'",
                          len(test_cases), category_name)

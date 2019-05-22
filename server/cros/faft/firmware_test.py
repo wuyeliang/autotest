@@ -1405,7 +1405,7 @@ class FirmwareTest(FAFTBase):
                 os.path.join(remote_temp_dir, 'ec'))
 
         self.switcher.mode_aware_reboot()
-        logging.info('Successfully restore firmware.')
+        logging.info('Successfully restored firmware.')
 
     def setup_firmwareupdate_shellball(self, shellball=None):
         """Setup a shellball to use in firmware update test.

@@ -317,7 +317,70 @@ RPC_CATEGORIES = [
     },
     {
         "category_name": "ec",
-        "test_cases": []
+        "test_cases": [
+            {
+                "method_names": [
+                    "reload",
+                    "get_version",
+                    "get_active_hash",
+                    "is_efs",
+                ],
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
+                "allow_error_msg": "list index out of range",
+            },
+            {
+                "method_names": [
+                    "dump_whole",
+                    "write_whole",
+                    "dump_firmware"
+                ],
+                "passing_args": [
+                    (SAMPLE_FILE, ),
+                ],
+                "failing_args": [NO_ARGS],
+            },
+            {
+                "method_name": "corrupt_body",
+                "passing_args": [
+                    ("rw", ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                    ("ro", ),
+                ],
+            },
+            {
+                "method_name": "set_write_protect",
+                "passing_args": [
+                    (True, ),
+                    (False, ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    (True, False),
+                ]
+            },
+            {
+                "method_name": "copy_rw",
+                "passing_args": [
+                    ("rw", "rw"),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ("rw", "ro"),
+                    ("ro", "rw"),
+                    ("rw", ),
+                ],
+            },
+            {
+                "method_name": "reboot_to_switch_slot",
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
+                "allow_error_msg": "ShellError",
+            },
+        ],
     },
     {
         "category_name": "kernel",
