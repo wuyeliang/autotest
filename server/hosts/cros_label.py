@@ -126,6 +126,14 @@ class BluetoothLabel(base_label.BaseLabel):
     _NAME = 'bluetooth'
 
     def exists(self, host):
+        # Based on crbug.com/966219, the label is flipping sometimes.
+        # Potentially this is caused by testing itself.
+        # Making this label permanently sticky.
+        info = host.host_info_store.get()
+        for label in info.labels:
+            if label.startswith(self._NAME):
+                return True
+
         result = host.run('test -d /sys/class/bluetooth/hci0',
                           ignore_status=True)
 
