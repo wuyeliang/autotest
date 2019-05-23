@@ -89,12 +89,12 @@ class DictFilteringTestCase(unittest.TestCase):
         })
         self.assertEqual(got, {'chameleon_host': 'host'})
 
-    def test_get_plankton_arguments(self):
-        got = cros_host.CrosHost.get_plankton_arguments({
-            'plankton_host': 'host',
+    def test_get_pdtester_arguments(self):
+        got = cros_host.CrosHost.get_pdtester_arguments({
+            'pdtester_host': 'host',
             'spam': 'eggs',
         })
-        self.assertEqual(got, {'plankton_host': 'host'})
+        self.assertEqual(got, {'pdtester_host': 'host'})
 
     def test_get_servo_arguments(self):
         got = cros_host.CrosHost.get_servo_arguments({

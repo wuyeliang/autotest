@@ -23,25 +23,25 @@ class firmware_PDPowerSwap(FirmwareTest):
 
     PD_ROLE_DELAY = 0.5
     PD_CONNECT_DELAY = 4
-    PLANKTON_PORT = 0
+    PDTESTER_PORT = 0
     POWER_SWAP_ITERATIONS = 5
     # Source power role
     SRC ='SRC_READY'
     # Sink power role
     SNK = 'SNK_READY'
 
-    def _set_plankton_power_role_to_src(self):
-        """Force Plankton to act as a source
+    def _set_pdtester_power_role_to_src(self):
+        """Force PDTester to act as a source
 
-        @returns True if Plankton power role is source, false otherwise
+        @returns True if PDTester power role is source, false otherwise
         """
-        PLANKTON_SRC_VOLTAGE = 20
-        self.plankton.charge(PLANKTON_SRC_VOLTAGE)
+        PDTESTER_SRC_VOLTAGE = 20
+        self.pdtester.charge(PDTESTER_SRC_VOLTAGE)
         # Wait for change to take place
         time.sleep(self.PD_CONNECT_DELAY)
-        plankton_state = self.plankton_pd_utils.get_pd_state(self.PLANKTON_PORT)
-        # Current Plankton power role should be source
-        return bool(plankton_state == self.SRC)
+        pdtester_state = self.pdtester_pd_utils.get_pd_state(self.PDTESTER_PORT)
+        # Current PDTester power role should be source
+        return bool(pdtester_state == self.SRC)
 
     def _send_power_swap_get_reply(self, console, port):
         """Send power swap request, get PD control msg reply
@@ -67,7 +67,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         """Perform a power role swap request
 
         Initiate a power role swap request on either the DUT or
-        Plankton depending on the direction parameter. The power
+        PDTester depending on the direction parameter. The power
         role swap is then verified to have taken place.
 
         @param pd_port: DUT pd port value 0/1
@@ -78,23 +78,23 @@ class firmware_PDPowerSwap(FirmwareTest):
         # Get DUT current power role
         dut_pr = self.dut_pd_utils.get_pd_state(pd_port)
         if direction == 'rx':
-            console = self.plankton_pd_utils
-            port = self.PLANKTON_PORT
+            console = self.pdtester_pd_utils
+            port = self.PDTESTER_PORT
         else:
             console = self.dut_pd_utils
             port = pd_port
         # Send power swap request
         self._send_power_swap_get_reply(console, port)
         time.sleep(self.PD_CONNECT_DELAY)
-        # Get Plankton power role
-        plankton_pr = self.plankton_pd_utils.get_pd_state(self.PLANKTON_PORT)
-        return bool(dut_pr == plankton_pr)
+        # Get PDTester power role
+        pdtester_pr = self.pdtester_pd_utils.get_pd_state(self.PDTESTER_PORT)
+        return bool(dut_pr == pdtester_pr)
 
     def _test_power_swap_reject(self, pd_port):
         """Verify that a power swap request is rejected
 
         This tests the case where the DUT isn't in dualrole mode.
-        A power swap request is sent by Plankton, and then
+        A power swap request is sent by PDTester, and then
         the control message checked to ensure the request was rejected.
         In addition, the connection state is verified to not have
         changed.
@@ -103,9 +103,9 @@ class firmware_PDPowerSwap(FirmwareTest):
         """
         # Get current DUT power role
         dut_power_role = self.dut_pd_utils.get_pd_state(pd_port)
-        # Send swap command from Plankton and get reply
-        ctrl_msg = self._send_power_swap_get_reply(self.plankton_pd_utils,
-                                                   self.PLANKTON_PORT)
+        # Send swap command from PDTester and get reply
+        ctrl_msg = self._send_power_swap_get_reply(self.pdtester_pd_utils,
+                                                   self.PDTESTER_PORT)
         if ctrl_msg != self.dut_pd_utils.PD_CONTROL_MSG_DICT['Reject']:
             raise error.TestFail('Power Swap Req not rejected, returned %r' %
                                  ctrl_msg)
@@ -130,7 +130,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         """Execute Power Role swap test.
 
         1. Verify that pd console is accessible
-        2. Verify that DUT has a valid PD contract and connected to Plankton
+        2. Verify that DUT has a valid PD contract and connected to PDTester
         3. Determine if DUT is in dualrole mode
         4. If not dualrole mode, verify DUT rejects power swap request
            Else test power swap (tx/rx), then Force DUT to be sink or
@@ -139,19 +139,19 @@ class firmware_PDPowerSwap(FirmwareTest):
         """
         # create objects for pd utilities
         self.dut_pd_utils = pd_console.PDConsoleUtils(self.usbpd)
-        self.plankton_pd_utils = pd_console.PDConsoleUtils(self.plankton)
-        self.connect_utils = pd_console.PDConnectionUtils(self.dut_pd_utils,
-                                                          self.plankton_pd_utils)
+        self.pdtester_pd_utils = pd_console.PDConsoleUtils(self.pdtester)
+        self.connect_utils = pd_console.PDConnectionUtils(
+                self.dut_pd_utils, self.pdtester_pd_utils)
 
         # Make sure PD support exists in the UART console
         if self.dut_pd_utils.verify_pd_console() == False:
             raise error.TestFail("pd command not present on console!")
 
         # Type C connection (PD contract) should exist at this point
-        # For this test, the DUT must be connected to a Plankton.
-        pd_port = self.connect_utils.find_dut_to_plankton_connection()
+        # For this test, the DUT must be connected to a PDTester.
+        pd_port = self.connect_utils.find_dut_to_pdtester_connection()
         if pd_port is None:
-            raise error.TestFail("DUT to Plankton PD connection not found")
+            raise error.TestFail("DUT to PDTester PD connection not found")
         dut_connect_state = self.dut_pd_utils.get_pd_state(pd_port)
         logging.info('Initial DUT connect state = %s', dut_connect_state)
 
@@ -163,11 +163,11 @@ class firmware_PDPowerSwap(FirmwareTest):
             self._test_power_swap_reject(pd_port)
             logging.info('Power Swap request rejected by DUT as expected')
         else:
-            # Start with Plankton as source
-            if self._set_plankton_power_role_to_src() == False:
-                raise error.TestFail('Plankton not set to source')
+            # Start with PDTester as source
+            if self._set_pdtester_power_role_to_src() == False:
+                raise error.TestFail('PDTester not set to source')
             # DUT is dualrole in dual role mode. Test power role swap
-            # operation intiated both by the DUT and Plankton.
+            # operation intiated both by the DUT and PDTester.
             success = 0
             for attempt in xrange(self.POWER_SWAP_ITERATIONS):
                 if attempt & 1:
@@ -197,6 +197,6 @@ class firmware_PDPowerSwap(FirmwareTest):
             # Restore DUT dual role operation
             self.dut_pd_utils.set_pd_dualrole('on')
             # Set connection back to default arrangement
-            self.plankton_pd_utils.set_pd_dualrole('off')
-            self.plankton_pd_utils.send_pd_command('fake disconnect 100 1000')
+            self.pdtester_pd_utils.set_pd_dualrole('off')
+            self.pdtester_pd_utils.send_pd_command('fake disconnect 100 1000')
 

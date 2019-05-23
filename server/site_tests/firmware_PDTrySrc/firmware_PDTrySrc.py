@@ -65,7 +65,7 @@ class firmware_PDTrySrc(FirmwareTest):
                     stats[self.SRC] += 1;
                     logging.info('Power Role = SRC')
             except NotImplementedError:
-                raise error.TestFail('TrySRC disconnect requires Plankton')
+                raise error.TestFail('TrySRC disconnect requires PDTester')
         logging.info('SNK = %d: SRC = %d: Total = %d',
                      stats[0], stats[1], self.CONNECT_ITERATIONS)
         return stats
@@ -84,7 +84,7 @@ class firmware_PDTrySrc(FirmwareTest):
     def run_once(self):
         """Execute Try.SRC PD protocol test
 
-        1. Verify that DUT <-> Plankton device pair exists
+        1. Verify that DUT <-> PDTester device pair exists
         2. Verify that DUT supports dualrole
         3. Verify that DUT supports Try.SRC mode
         4. Enable Try.SRC mode, execute disc/connect sequences
@@ -94,15 +94,15 @@ class firmware_PDTrySrc(FirmwareTest):
         """
 
         # Create list of available UART consoles
-        consoles = [self.usbpd, self.plankton]
+        consoles = [self.usbpd, self.pdtester]
         port_partner = pd_device.PDPortPartner(consoles)
-        # Identify Plankton <-> DUT PD device pair
+        # Identify PDTester <-> DUT PD device pair
         port_pair = port_partner.identify_pd_devices()
         if not port_pair:
-            raise error.TestFail('No DUT to Plankton connection found!')
+            raise error.TestFail('No DUT to PDTester connection found!')
 
-        # TODO Device pair must have Plankton so that the disconnect/connect
-        # sequence does not affect the SRC/SNK connection. Plankton provides
+        # TODO Device pair must have PDTester so that the disconnect/connect
+        # sequence does not affect the SRC/SNK connection. PDTester provides
         # a 'fakedisconnect' feature which more closely resembles unplugging
         # and replugging a Type C cable.
 
@@ -114,8 +114,8 @@ class firmware_PDTrySrc(FirmwareTest):
                     raise error.TestFail('Could not enable DRP')
             except NotImplementedError:
                 raise error.TestFail('Both devices must support DRP')
-            if port_pair[side].is_plankton:
-                # Identify Plankton and DUT device
+            if port_pair[side].is_pdtester:
+                # Identify PDTester and DUT device
                 p_idx = side
                 d_idx = side ^ 1
 

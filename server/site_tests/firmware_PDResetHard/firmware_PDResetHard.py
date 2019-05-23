@@ -60,7 +60,7 @@ class firmware_PDResetHard(FirmwareTest):
 
         """
         # Create list of available UART consoles
-        consoles = [self.usbpd, self.plankton]
+        consoles = [self.usbpd, self.pdtester]
         port_partner = pd_device.PDPortPartner(consoles)
         # Identify a valid test port pair
         port_pair = port_partner.identify_pd_devices()

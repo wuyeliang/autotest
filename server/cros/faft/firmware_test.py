@@ -151,9 +151,9 @@ class FirmwareTest(FAFTBase):
         elif self.faft_config.chrome_ec:
             # If no separate USBPD console, then PD exists on EC console
             self.usbpd = self.ec
-        # Get plankton console
-        self.plankton = host.plankton
-        self.plankton_host = host._plankton_host
+        # Get pdtester console
+        self.pdtester = host.pdtester
+        self.pdtester_host = host._pdtester_host
 
         # Create the BaseEC object. None if not available.
         self.base_ec = chrome_base_ec.create_base_ec(self.servo)

@@ -9,21 +9,20 @@ from autotest_lib.client.bin import utils
 from autotest_lib.server.cros.servo import chrome_ec
 
 
-class PlanktonError(Exception):
-    """Error object for Plankton"""
+class PDTesterError(Exception):
+    """Error object for PDTester"""
     pass
 
 
-class Plankton(chrome_ec.ChromeEC):
-    """Manages control of a Plankton PD console.
+class PDTester(chrome_ec.ChromeEC):
+    """Manages control of a PDTester hardware.
 
-    Plankton is a testing board developed to aid in USB type C debug and
-    control of various type C host devices. Plankton's features include the
-    simulation of charger, USB 2.0 pass through, USB 3.0 hub, and display port
-    pass through.
+    PDTester is a general term for hardware developed to aid in USB type-C
+    debug and control of various type C host devices. It can be either a
+    Plankton board or a Servo v4 board.
 
-    We control the PD console via the UART of a Servo board. Plankton
-    provides many interfaces that access the servo directly. It can
+    We control the PDTester board via the UART and the Servod interfaces.
+    PDTester provides many interfaces that access the hardware. It can
     also be passed into the PDConsoleUtils as a console which then
     provides methods to access the pd console.
 
@@ -31,7 +30,7 @@ class Plankton(chrome_ec.ChromeEC):
     """
     # USB charging command delays in seconds.
     USBC_COMMAND_DELAY = 0.5
-    # Plankton USBC commands.
+    # PDTester USBC commands.
     USBC_ROLE = 'usbc_role'
     USBC_MUX = 'usbc_mux'
     RE_USBC_ROLE_VOLTAGE = r'src(\d+)v'
@@ -53,7 +52,7 @@ class Plankton(chrome_ec.ChromeEC):
         """Initialize and keep the servo object.
 
         @param servo: A Servo object
-        @param servod_proxy: Servod proxy for plankton host
+        @param servod_proxy: Servod proxy for pdtester host
         """
         self.servo_type = servo.get_servo_version()
         if 'servo_v4' in self.servo_type:
@@ -61,17 +60,17 @@ class Plankton(chrome_ec.ChromeEC):
         else:
             uart_prefix = 'ec_uart'
 
-        super(Plankton, self).__init__(servo, uart_prefix)
-        # save servod proxy for methods that access Plankton servod
+        super(PDTester, self).__init__(servo, uart_prefix)
+        # save servod proxy for methods that access PDTester servod
         self._server = servod_proxy
-        self.init_io_expander()
+        self.init_hardware()
 
 
-    def init_io_expander(self):
-        """Initializes Plankton IO expander register settings."""
+    def init_hardware(self):
+        """Initializes PDTester hardware."""
         if self.servo_type == 'plankton':
             if not int(self.get('debug_usb_sel')):
-                raise PlanktonError('debug_usb_sel (SW3) should be ON!! '
+                raise PDTesterError('debug_usb_sel (SW3) should be ON!! '
                                     'Please use CN15 to connect Plankton.')
             self.set('typec_to_hub_sw', '0')
             self.set('usb2_mux_sw', '1')
@@ -81,8 +80,8 @@ class Plankton(chrome_ec.ChromeEC):
     def set(self, control_name, value):
         """Sets the value of a control using servod.
 
-        @param control_name: plankton servo control item
-        @param value: value to set plankton servo control item
+        @param control_name: pdtester servo control item
+        @param value: value to set pdtester servo control item
         """
         assert control_name
         self._server.set(control_name, value)
@@ -91,7 +90,7 @@ class Plankton(chrome_ec.ChromeEC):
     def get(self, control_name):
         """Gets the value of a control from servod.
 
-        @param control_name: plankton servo control item
+        @param control_name: pdtester servo control item
         """
         assert control_name
         return self._server.get(control_name)
@@ -99,19 +98,19 @@ class Plankton(chrome_ec.ChromeEC):
 
     @property
     def vbus_voltage(self):
-        """Gets Plankton VBUS voltage in volts."""
+        """Gets PDTester VBUS voltage in volts."""
         return float(self.get(self.VBUS_VOLTAGE_MV)) / 1000.0
 
 
     @property
     def vbus_current(self):
-        """Gets Plankton VBUS current in amps."""
+        """Gets PDTester VBUS current in amps."""
         return float(self.get(self.VBUS_CURRENT_MA)) / 1000.0
 
 
     @property
     def vbus_power(self):
-        """Gets Plankton charging power in watts."""
+        """Gets PDTester charging power in watts."""
         return float(self.get(self.VBUS_POWER_MW)) / 1000.0
 
 
@@ -121,12 +120,12 @@ class Plankton(chrome_ec.ChromeEC):
 
 
     def charge(self, voltage):
-        """Sets Plankton to provide power at specific voltage.
+        """Sets PDTester to provide power at specific voltage.
 
         @param voltage: Specified charging voltage in volts.
         """
         if voltage not in self.USBC_CHARGING_VOLTAGES:
-            raise PlanktonError('Invalid charging voltage: %s' % voltage)
+            raise PDTesterError('Invalid charging voltage: %s' % voltage)
 
         self.set(self.USBC_ROLE, self.USBC_CHARGING_VOLTAGES[voltage])
         time.sleep(self.USBC_COMMAND_DELAY)
@@ -143,19 +142,19 @@ class Plankton(chrome_ec.ChromeEC):
         if usbc_role == self.USBC_CHARGING_VOLTAGES[0]:
             return 0
 
-        raise PlanktonError('Invalid USBC role: %s' % usbc_role)
+        raise PDTesterError('Invalid USBC role: %s' % usbc_role)
 
 
     def poll_pd_state(self, state):
-        """Polls until Plankton pd goes to the specific state.
+        """Polls until PDTester pd goes to the specific state.
 
         @param state: Specified pd state name.
         """
         if state not in self.USBC_PD_STATES:
-            raise PlanktonError('Invalid state name: %s' % state)
+            raise PDTesterError('Invalid state name: %s' % state)
         utils.poll_for_condition(
             lambda: self.get('pd_state') == self.USBC_PD_STATES[state],
-            exception=utils.TimeoutError('Plankton not in %s state '
+            exception=utils.TimeoutError('PDTester not in %s state '
                                          'after %s seconds.' %
                                          (self.USBC_PD_STATES[state],
                                           self.POLL_STATE_SECS)),
@@ -163,12 +162,12 @@ class Plankton(chrome_ec.ChromeEC):
 
 
     def set_usbc_mux(self, mux):
-        """Sets Plankton usbc_mux.
+        """Sets PDTester usbc_mux.
 
         @param mux: Specified mux state name.
         """
         if mux not in ['dp', 'usb']:
-            raise PlanktonError('Invalid mux name: %s, '
+            raise PDTesterError('Invalid mux name: %s, '
                                 'should be either \'dp\' or \'usb\'.' % mux)
         self.set(self.USBC_MUX, mux)
         time.sleep(self.USBC_COMMAND_DELAY)

@@ -25,13 +25,13 @@ from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros import provision
 from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
 from autotest_lib.server.cros.dynamic_suite import tools, frontend_wrappers
-from autotest_lib.server.cros.servo import plankton
+from autotest_lib.server.cros.servo import pdtester
 from autotest_lib.server.hosts import abstract_ssh
 from autotest_lib.server.hosts import base_label
 from autotest_lib.server.hosts import chameleon_host
 from autotest_lib.server.hosts import cros_label
 from autotest_lib.server.hosts import cros_repair
-from autotest_lib.server.hosts import plankton_host
+from autotest_lib.server.hosts import pdtester_host
 from autotest_lib.server.hosts import servo_host
 from autotest_lib.site_utils.rpm_control_system import rpm_client
 
@@ -213,21 +213,21 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
 
     @staticmethod
-    def get_plankton_arguments(args_dict):
+    def get_pdtester_arguments(args_dict):
         """Extract chameleon options from `args_dict` and return the result.
 
         Recommended usage:
         ~~~~~~~~
             args_dict = utils.args_to_dict(args)
-            plankton_args = hosts.CrosHost.get_plankton_arguments(args_dict)
-            host = hosts.create_host(machine, plankton_args=plankton_args)
+            pdtester_args = hosts.CrosHost.get_pdtester_arguments(args_dict)
+            host = hosts.create_host(machine, pdtester_args=pdtester_args)
         ~~~~~~~~
 
-        @param args_dict Dictionary from which to extract the plankton
+        @param args_dict Dictionary from which to extract the pdtester
           arguments.
         """
         return {key: args_dict[key]
-                for key in ('plankton_host', 'plankton_port')
+                for key in ('pdtester_host', 'pdtester_port')
                 if key in args_dict}
 
 
@@ -260,7 +260,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
 
     def _initialize(self, hostname, chameleon_args=None, servo_args=None,
-                    plankton_args=None, try_lab_servo=False,
+                    pdtester_args=None, try_lab_servo=False,
                     try_servo_repair=False,
                     ssh_verbosity_flag='', ssh_options='',
                     *args, **dargs):
@@ -309,22 +309,22 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         # TODO(waihong): Do the simplication on Chameleon too.
         self._chameleon_host = chameleon_host.create_chameleon_host(
                 dut=self.hostname, chameleon_args=chameleon_args)
-        # Add plankton host if plankton args were added on command line
-        self._plankton_host = plankton_host.create_plankton_host(plankton_args)
+        # Add pdtester host if pdtester args were added on command line
+        self._pdtester_host = pdtester_host.create_pdtester_host(pdtester_args)
 
         if self._chameleon_host:
             self.chameleon = self._chameleon_host.create_chameleon_board()
         else:
             self.chameleon = None
 
-        if self._plankton_host:
-            self.plankton_servo = self._plankton_host.get_servo()
-            logging.info('plankton_servo: %r', self.plankton_servo)
-            # Create the plankton object used to access the ec uart
-            self.plankton = plankton.Plankton(self.plankton_servo,
-                    self._plankton_host.get_servod_server_proxy())
+        if self._pdtester_host:
+            self.pdtester_servo = self._pdtester_host.get_servo()
+            logging.info('pdtester_servo: %r', self.pdtester_servo)
+            # Create the pdtester object used to access the ec uart
+            self.pdtester = pdtester.PDTester(self.pdtester_servo,
+                    self._pdtester_host.get_servod_server_proxy())
         else:
-            self.plankton = None
+            self.pdtester = None
 
 
     def get_cros_repair_image_name(self):

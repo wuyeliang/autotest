@@ -11,7 +11,7 @@ from autotest_lib.server.cros.servo import pd_device
 
 class firmware_PDConnect(FirmwareTest):
     """
-    Servo based USB PD connect/disconnect test. If Plankton is not one
+    Servo based USB PD connect/disconnect test. If PDTester is not one
     of the device pair elements, then this test requires that at least
     one of the devices support dual role mode in order to force a disconnect
     to connect sequence. The test does not depend on the DUT acting as source
@@ -56,7 +56,7 @@ class firmware_PDConnect(FirmwareTest):
         """
 
         # Create list of available UART consoles
-        consoles = [self.usbpd, self.plankton]
+        consoles = [self.usbpd, self.pdtester]
         port_partner = pd_device.PDPortPartner(consoles)
         # Identify a valid test port pair
         port_pair = port_partner.identify_pd_devices()
