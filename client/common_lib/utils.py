@@ -2518,19 +2518,27 @@ def is_in_same_subnet(ip_1, ip_2, mask_bits=24):
     return ip_1_num & mask == ip_2_num & mask
 
 
-def get_ip_address(hostname):
-    """Get the IP address of given hostname.
+def get_ip_address(hostname=None):
+    """Get the IP address of given hostname or current machine.
 
-    @param hostname: Hostname of a DUT.
+    @param hostname: Hostname of a DUT, default value is None.
 
-    @return: The IP address of given hostname. None if failed to resolve
-             hostname.
+    @return: The IP address of given hostname. If hostname is not given then
+             we'll try to query the IP address of the current machine and
+             return.
     """
-    try:
-        if hostname:
+    if hostname:
+        try:
             return socket.gethostbyname(hostname)
-    except socket.gaierror as e:
-        logging.error('Failed to get IP address of %s, error: %s.', hostname, e)
+        except socket.gaierror as e:
+            logging.error(
+                'Failed to get IP address of %s, error: %s.', hostname, e)
+    else:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
 
 
 def get_servers_in_same_subnet(host_ip, mask_bits, servers=None,

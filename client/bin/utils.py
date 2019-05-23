@@ -2054,6 +2054,15 @@ def get_board_type():
     return get_board_property('DEVICETYPE')
 
 
+def get_chromeos_version():
+    """
+    Get the ChromeOS build version from /etc/lsb-release.
+
+    @return chromeos release version.
+    """
+    return get_board_property('CHROMEOS_RELEASE_VERSION')
+
+
 def get_platform():
     """
     Get the ChromeOS platform name.
