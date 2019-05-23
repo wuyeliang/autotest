@@ -181,9 +181,9 @@ def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
                            service_account_json, suite, require_success=True):
   """Create and wait for a skylab suite (in staging).
 
-  Returns: string task request id of the completed suite.
+  Returns: string task run id of the completed suite.
 
-  Raises: errors.TestPushError if the suite failed.
+  Raises: errors.TestPushError if the suite failed and require_success is True.
   """
   mins_remaining = int((deadline - time.time())/60)
   cmd = [
@@ -219,7 +219,7 @@ def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
       not json.loads(cmd_result.output)['task-result']['success']):
     raise errors.TestPushError('Suite %s did not succeed.' % suite)
 
-  return task_id
+  return json.loads(cmd_result.output)['task-result']['task-run-id']
 
 
 def _verify_test_results(task_id, expected_results):
