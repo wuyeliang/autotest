@@ -28,9 +28,9 @@ class policy_UserNativePrintersAllowed(
 
         """
         self.navigate_to_url('chrome://settings/cupsPrinters')
-        self.ui.wait_for_ui_obj(element='Add Printer', role='button')
+        self.ui.wait_for_ui_obj(name='Add Printer', role='button')
 
-        res = self.ui.is_obj_restricted(obj='Add Printer', role='button')
+        res = self.ui.is_obj_restricted(name='Add Printer', role='button')
 
         if case is False and not res:
             raise error.TestError(

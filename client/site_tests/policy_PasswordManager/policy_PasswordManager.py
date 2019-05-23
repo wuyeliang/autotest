@@ -45,7 +45,7 @@ class policy_PasswordManager(
         self.cr.browser.tabs[0].Navigate('chrome://settings/passwords')
         self._wait_for_page()
 
-        icon_present = self.ui.item_present(element=self.TEST_OBJ,
+        icon_present = self.ui.item_present(name=self.TEST_OBJ,
                                             isRegex=True,
                                             role='genericContainer')
         button_restricted = self.ui.is_obj_restricted(

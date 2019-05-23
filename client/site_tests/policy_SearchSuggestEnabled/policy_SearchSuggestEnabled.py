@@ -29,7 +29,7 @@ class policy_SearchSuggestEnabled(
         self.keyboard.press_key('s')
         self.keyboard.press_key('w')
 
-        search_sugg = self.ui.item_present(element='/search suggestion/',
+        search_sugg = self.ui.item_present(name='/search suggestion/',
                                            isRegex=True)
 
         if policy_value is False and search_sugg:

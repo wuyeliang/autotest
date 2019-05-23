@@ -31,7 +31,7 @@ class policy_SecondaryGoogleAccountSigninAllowed(
 
         utils.poll_for_condition(
             lambda: self.ui.item_present(role='button',
-                                         element=self.ACC_REGEX,
+                                         name=self.ACC_REGEX,
                                          isRegex=True),
             exception=error.TestError('Test page is not ready.'),
             timeout=30,
@@ -40,13 +40,13 @@ class policy_SecondaryGoogleAccountSigninAllowed(
         # It takes another few ms to make the button clickable.
         time.sleep(1)
         self.ui.doDefault_on_obj(role='button',
-                                 obj=self.ACC_REGEX,
+                                 name=self.ACC_REGEX,
                                  isRegex=True)
 
         # This sleep is needed for the all available buttons to load.
         time.sleep(1)
         add_account_button = self.ui.item_present(role='link',
-                                                  element='/Add account/',
+                                                  name='/Add account/',
                                                   isRegex=True)
 
         if case is False:
