@@ -850,6 +850,8 @@ class db_sql(object):
         rows = self.select('tko_job_idx', 'tko_task_references',
                            {'parent_task_id': parent_task_id})
         tko_job_ids = [str(r[0]) for r in rows]
+        if not tko_job_ids:
+            return []
         fields = ['test_name', 'status']
         where = 'job_idx in (%s)' % ', '.join(tko_job_ids)
         rows = self.select(', '.join(fields), 'tko_test_view_2', where)
