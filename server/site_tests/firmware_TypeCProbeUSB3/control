@@ -8,11 +8,9 @@ AUTHOR = "chromeos-plankton"
 NAME = "firmware_TypeCProbeUSB3"
 PURPOSE = "Remotely controlled USB type C super speed device probing test."
 CRITERIA = "This test will fail if DUT can't probe USB3 device on type C port."
-ATTRIBUTES = "suite:plankton_basic"
 TIME = "FAST"
 TEST_CATEGORY = "Functional"
 TEST_TYPE = "server"
-DEPENDENCIES = "plankton"
 
 DOC = """
 This test remotely switches type C port to USB3 device mode. It fails if
