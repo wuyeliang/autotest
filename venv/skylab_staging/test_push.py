@@ -223,7 +223,7 @@ def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
 
 def _verify_test_results(task_id, expected_results):
   """Verify if test results are expected."""
-  _logger.info('Comparing test results...')
+  _logger.info('Comparing test results for suite task %s...', task_id)
   test_views = _get_test_views(task_id)
   available_views = [v for v in test_views if _view_is_preserved(v)]
   logging.debug('Test results:')
