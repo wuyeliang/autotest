@@ -196,8 +196,8 @@ class ShillProxy(object):
         SERVICE_PROPERTY_L2TP_XAUTH_USER: dbus.String
     }
 
-    SERVICE_CONNECTED_STATES = ['portal', 'online']
-
+    SERVICE_CONNECTED_STATES = ['portal', 'no-connectivity', 'redirect-found',
+                                'portal-suspected', 'online', 'ready']
     SUPPORTED_WIFI_STATION_TYPES = {'managed': 'managed',
                                     'ibss': 'adhoc',
                                     None: 'managed'}

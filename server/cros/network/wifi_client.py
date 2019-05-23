@@ -118,7 +118,9 @@ class WiFiClient(site_linux_system.LinuxSystem):
     MAC_ADDRESS_RANDOMIZATION_SUPPORTED = 'MACAddressRandomizationSupported'
     MAC_ADDRESS_RANDOMIZATION_ENABLED = 'MACAddressRandomizationEnabled'
 
-    CONNECTED_STATES = ['ready', 'portal', 'online']
+    CONNECTED_STATES = ['portal', 'no-connectivity', 'redirect-found',
+                        'portal-suspected', 'online', 'ready']
+
 
 
     @property

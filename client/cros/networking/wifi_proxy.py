@@ -211,7 +211,7 @@ class WifiProxy(shill_proxy.ShillProxy):
         result = self.wait_for_property_in(
                 service_object,
                 self.SERVICE_PROPERTY_STATE,
-                ('configuration', 'ready', 'portal', 'online'),
+                self.SERVICE_CONNECTED_STATES + ['configuration'],
                 association_timeout_seconds)
         (successful, _, association_time) = result
         if not successful:
@@ -224,7 +224,7 @@ class WifiProxy(shill_proxy.ShillProxy):
         result = self.wait_for_property_in(
                 service_object,
                 self.SERVICE_PROPERTY_STATE,
-                ('ready', 'portal', 'online'),
+                self.SERVICE_CONNECTED_STATES,
                 configuration_timeout_seconds)
         (successful, _, configuration_time) = result
         if not successful:

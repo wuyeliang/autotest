@@ -139,7 +139,7 @@ class network_DhcpStaticIP(dhcp_test_base.DhcpTestBase):
         connect_result = self.shill_proxy.wait_for_property_in(
                 service,
                 self.shill_proxy.SERVICE_PROPERTY_STATE,
-                ('ready', 'portal', 'online'),
+                self.shill_proxy.SERVICE_CONNECTED_STATES,
                 self.DHCP_SETUP_TIMEOUT_SECONDS)
         (successful, _, association_time) = connect_result
         if not successful:

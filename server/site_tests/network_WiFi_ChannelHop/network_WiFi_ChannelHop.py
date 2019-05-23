@@ -61,7 +61,7 @@ class network_WiFi_ChannelHop(wifi_cell_test_base.WiFiCellTestBase):
             success, state, elapsed_seconds = \
                     self.context.client.wait_for_service_states(
                             network_WiFi_ChannelHop.TEST_SSID,
-                            ['ready', 'portal', 'online'], 30)
+                            self.context.client.CONNECTED_STATES, 30)
             if not success:
                 raise error.TestFail(
                         'Failed to connect to "%s" in %f seconds (state=%s)' %
