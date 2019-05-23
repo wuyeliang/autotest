@@ -845,6 +845,8 @@ class db_sql(object):
         @param parent_task_id: A string parent task id in tko_task_references.
         @return: A list of view dicts, which has key 'test_name' and 'status'.
         """
+        if not parent_task_id:
+            raise ValueError('no parent_task_id supplied')
         rows = self.select('tko_job_idx', 'tko_task_references',
                            {'parent_task_id': parent_task_id})
         tko_job_ids = [str(r[0]) for r in rows]
