@@ -8,6 +8,15 @@
 import errno, glob, os
 
 
+def get_rtc_devices():
+    """
+    Return a list of all RTC device names on the system.
+
+    The RTC device node will be found at /dev/$NAME.
+    """
+    return [os.path.basename(rtc) for rtc in glob.glob('/sys/class/rtc/*')]
+
+
 def get_seconds(utc=True, rtc_device='rtc0'):
     """
     Read the current time out of the RTC
