@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import os
 import time
 from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error
@@ -13,7 +12,7 @@ from autotest_lib.client.cros.power import sys_power
 
 def read_rtc_wakeup(rtc_device):
     """
-    Read the wakeup setting for the RTC device.
+    Read the wakeup setting for for the RTC device.
     """
     sysfs_path = '/sys/class/rtc/%s/device/power/wakeup' % rtc_device
     return file(sysfs_path).read().strip()
@@ -41,15 +40,9 @@ class power_WakeupRTC(test.test):
     version = 1
 
     def run_once(self):
-        """
-        Tests that RTC device generates wakeup events.
-        /dev/rtc device should be adequate for anything that wants
-        to schedule a wakeup.
-        """
-        dev_rtc = "/dev/rtc"
-        if not os.path.exists(dev_rtc):
-            raise error.TestFail('RTC device %s does not exist' % dev_rtc)
-        self.run_once_rtc(os.readlink(dev_rtc))
+        """Tests that RTC devices generate wakeup events."""
+        for rtc_device in rtc.get_rtc_devices():
+            self.run_once_rtc(rtc_device)
 
     def run_once_rtc(self, rtc_device):
         """Tests that a RTC device generate wakeup events.
