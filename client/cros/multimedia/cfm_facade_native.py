@@ -221,7 +221,7 @@ class CFMFacadeNative(object):
         # handle available and up-to-date.
         self.restart_chrome_for_cfm()
         self.check_hangout_extension_context()
-        self.wait_for_hangouts_telemetry_commands()
+        self.wait_for_telemetry_commands()
         self.wait_for_oobe_start_page()
         self.skip_oobe_screen()
 
@@ -246,37 +246,25 @@ class CFMFacadeNative(object):
                              self._webview_context.GetUrl())
 
 
-    #TODO: This is a legacy api. Deprecate this api and update existing hotrod
-    #      tests to use the new wait_for_hangouts_telemetry_commands api.
     def wait_for_telemetry_commands(self):
         """Wait for telemetry commands."""
         logging.info('Wait for Hangouts telemetry commands')
-        self.wait_for_hangouts_telemetry_commands()
-
-
-    def wait_for_hangouts_telemetry_commands(self):
-        """Wait for Hangouts App telemetry commands."""
         self._webview_context.WaitForJavaScriptCondition(
-                "typeof window.hrOobIsStartPageForTest == 'function'",
-                timeout=self._DEFAULT_TIMEOUT)
-
-
-    def wait_for_meetings_telemetry_commands(self):
-        """Wait for Meet App telemetry commands """
-        self._webview_context.WaitForJavaScriptCondition(
-                'window.hasOwnProperty("hrTelemetryApi")',
-                timeout=self._DEFAULT_TIMEOUT)
+            """typeof window.hrOobIsStartPageForTest == 'function'
+               || typeof window.hrTelemetryApi != 'undefined'
+            """,
+            timeout=self._DEFAULT_TIMEOUT)
 
 
     def wait_for_meetings_in_call_page(self):
         """Waits for the in-call page to launch."""
-        self.wait_for_meetings_telemetry_commands()
+        self.wait_for_telemetry_commands()
         self._cfmApi.wait_for_meetings_in_call_page()
 
 
     def wait_for_meetings_landing_page(self):
         """Waits for the landing page screen."""
-        self.wait_for_meetings_telemetry_commands()
+        self.wait_for_telemetry_commands()
         self._cfmApi.wait_for_meetings_landing_page()
 
 
