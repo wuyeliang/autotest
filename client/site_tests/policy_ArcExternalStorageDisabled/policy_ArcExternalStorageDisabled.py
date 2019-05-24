@@ -45,7 +45,7 @@ class policy_ArcExternalStorageDisabled(
             raise error.TestFail('External storage enabled but external '
                                  'storage not found')
 
-    def run_once(self, case='False_Allow'):
+    def run_once(self, case):
         """
         Setup and run the test configured for the specified test case.
 

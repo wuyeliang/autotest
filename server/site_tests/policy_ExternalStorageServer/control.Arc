@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 
 AUTHOR = 'dbeckett'
-NAME = 'policy_ArcExternalStorageDisabled.ReadOnly'
+NAME = 'policy_ArcExternalStorageDisabled.Arc'
 TIME = 'SHORT'
 TEST_CATEGORY = 'General'
 TEST_CLASS = 'enterprise'
