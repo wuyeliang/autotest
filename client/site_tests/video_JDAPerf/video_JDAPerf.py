@@ -107,11 +107,15 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         self._backlight = power_utils.Backlight()
         self._backlight.set_level(0)
 
-        self._power_status = power_status.get_status()
+        try:
+            power_utils.charge_control_by_ectool(is_charge=False,
+                                                 ignore_status=False)
+        except error.CmdError as e:
+            raise error.TestNAError("ectool does not support discharging")
 
         self._use_ec = True
-        if not power_utils.charge_control_by_ectool(is_charge=False):
-            raise error.TestFail('Can\'t stop charging')
+
+        self._power_status = power_status.get_status()
 
         if not self._power_status.battery:
             raise error.TestFail('No valid battery')
@@ -119,10 +123,8 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
         # Verify that the battery is sufficiently charged.
         percent_initial_charge = self._power_status.percent_current_charge()
         if percent_initial_charge < BATTERY_INITIAL_CHARGED_MIN:
-            logging.warning('Initial charge (%f) less than min (%f)',
-                            (percent_initial_charge,
-                             BATTERY_INITIAL_CHARGED_MIN))
-            return {}
+            raise error.TestError('Initial charge (%f) less than min (%f)'
+                      % (percent_initial_charge, BATTERY_INITIAL_CHARGED_MIN))
 
         measurements = [power_status.SystemPower(
                 self._power_status.battery_path)]
