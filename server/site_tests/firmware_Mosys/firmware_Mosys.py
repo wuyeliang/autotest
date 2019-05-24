@@ -263,7 +263,7 @@ class firmware_Mosys(FirmwareTest):
         command = 'mosys platform vendor'
         output = self.run_cmd(command)
         self.check_for_errors(output, command)
-        p = re.compile('^[-\w\s]+$')
+        p = re.compile('^[-\w\s,.]+$')
         if not p.match(output[0]):
             logging.error('output is not a string Expect GOOGLE'
                           'or name of maker.')
