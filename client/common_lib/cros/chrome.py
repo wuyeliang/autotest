@@ -263,6 +263,9 @@ class Chrome(object):
 
 
     def __exit__(self, *args):
+        # Turn off collection of Chrome coredumps turned on in init.
+        if os.path.exists(constants.CHROME_CORE_MAGIC_FILE):
+          os.remove(constants.CHROME_CORE_MAGIC_FILE)
         self.close()
 
 
