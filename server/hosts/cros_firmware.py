@@ -279,7 +279,13 @@ class FirmwareVersionVerifier(hosts.Verifier):
                     'Can not verify firmware version. '
                     'No model label value found')
 
-        stable_firmware = afe_utils.get_stable_firmware_version(info.model)
+        stable_firmware = None
+        try:
+            stable_firmware = afe_utils.get_stable_firmware_version(info.model)
+        except Exception as e:
+            logging.exception('Failed lookup to AFE for stable fw version '
+                              ' with exception: %s', e)
+
         if stable_firmware is None:
             # This DUT doesn't have a firmware update target
             return
