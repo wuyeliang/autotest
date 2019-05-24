@@ -50,13 +50,11 @@ _EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         ['GOOD'],
                           'dummy_Pass.bluetooth$':        ['GOOD'],
                           # ssp and nossp.
                           'dummy_PassServer$':            ['GOOD', 'GOOD'],
-                          # The entire dummy_Fail test is retried.
-                          'dummy_Fail.Fail$':             ['FAIL', 'FAIL'],
-                          'dummy_Fail.Error$':            ['ERROR', 'ERROR'],
-                          'dummy_Fail.Warn$':             ['WARN', 'WARN'],
-                          'dummy_Fail.NAError$':          ['TEST_NA',
-                                                           'TEST_NA'],
-                          'dummy_Fail.Crash$':            ['GOOD', 'GOOD'],
+                          'dummy_Fail.Fail$':             ['FAIL'],
+                          'dummy_Fail.Error$':            ['ERROR'],
+                          'dummy_Fail.Warn$':             ['WARN'],
+                          'dummy_Fail.NAError$':          ['TEST_NA'],
+                          'dummy_Fail.Crash$':            ['GOOD'],
                           'tast.*':                       ['GOOD'],
                           }
 
