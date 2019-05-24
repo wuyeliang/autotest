@@ -20,17 +20,6 @@ class policy_SystemTimezone(
     version = 1
     POLICY_NAME = 'SystemTimezone'
 
-    def _start_ui_root(self):
-        """Starts the UI root object for testing."""
-        self.ext = self.cr.autotest_ext
-        self.ext.ExecuteJavaScript("""
-                var root;
-                chrome.automation.getDesktop(r => root = r);
-            """)
-
-        # Currently need to wait a second to let the root object finish setup
-        time.sleep(1)
-
     def _is_timezone_selectable(self):
         """
         Check if the timezone is selectable via the UI. If the timezone
@@ -42,33 +31,20 @@ class policy_SystemTimezone(
         SETTINGS_URL = "chrome://settings/dateTime/timeZone"
         tab = self.navigate_to_url(SETTINGS_URL)
         tab.WaitForDocumentReadyStateToBeComplete()
-        self._start_ui_root()
 
-        self.ext.EvaluateJavaScript("""
-            root.find({attributes:
-                {name: "Choose from list"}
-            }).doDefault();
-            """)
+        self.ui.wait_for_ui_obj('Choose from list')
+        self.ui.doDefault_on_obj('Choose from list')
 
         # Give the dropdown a second to load.
         time.sleep(1)
-        drop_restriction = self.ext.EvaluateJavaScript("""
-            root.find({attributes:
-                {name: "Time zone", role: "popUpButton"}
-            }).restriction;
-            """)
 
-        if drop_restriction is None:
-            return True
-        return False
+        return not self.ui.is_obj_restricted('Time zone', role='popUpButton')
 
     def _set_timezone(self):
         """Sets the timezone to the first option in the list."""
-        self.ext.EvaluateJavaScript("""
-            root.findAll({attributes:
-                {role: "menuListOption"}
-            })[0].doDefault()
-            """)
+        self.ui.doDefault_on_obj('/(UTC-10:00)/',
+                                 isRegex=True,
+                                 role='menuListOption')
 
     def _test_timezone(self, expected):
         """
@@ -107,6 +83,7 @@ class policy_SystemTimezone(
             policies = {self.POLICY_NAME: policy_value}
             self.setup_case(device_policies=policies, enroll=True)
 
+            self.ui.start_ui_root(self.cr)
             # Logout so the policy can take effect
             if self._is_timezone_selectable():
                 raise error.TestError(
@@ -130,16 +107,17 @@ class policy_SystemTimezone(
 
         policies = {self.POLICY_NAME: ''}
         self.setup_case(device_policies=policies, enroll=True)
+        self.ui.start_ui_root(self.cr)
 
         # Check if the Timezone is changable in the settings.
         if not self._is_timezone_selectable():
             raise error.TestError('User cannot change timezone')
         self._set_timezone()
 
-        self._test_timezone('-1100')
+        self._test_timezone('-1000')
 
         self.log_out_via_keyboard()
-        self._test_timezone('-1100')
+        self._test_timezone('-1000')
 
     def run_once(self, case):
         """
