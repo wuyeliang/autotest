@@ -135,6 +135,7 @@ _CTS_TIMEOUT = {
     'CtsSensorTestCases':                3.0,  # TODO(ihf): Remove once Nocturne stable.
     'CtsShortcutHostTestCases':          1.5,
     'CtsThemeHostTestCases':             6.0,
+    'CtsVideoTestCases':                 1.5,
     'CtsWidgetTestCases':                2.0,
     'vm-tests-tf':                       2.0,
     # Without media kevin runs 40h. :-(

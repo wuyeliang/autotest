@@ -29,6 +29,6 @@ def run_CTS(machine):
         target_plan=None,
         bundle='x86',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r8-linux_x86-x86.zip',
-        timeout=3600)
+        timeout=5400)
 
 parallel_simple(run_CTS, machines)
