@@ -327,6 +327,7 @@ _DISABLE_LOGCAT_ON_FAILURE = set([
     'CtsDeqpTestCases.dEQP-GLES3',
     'CtsDeqpTestCases.dEQP-GLES31',
     'CtsDeqpTestCases.dEQP-VK',
+    'CtsLibcoreTestCases',
 ])
 
 _EXTRA_MODULES = {
