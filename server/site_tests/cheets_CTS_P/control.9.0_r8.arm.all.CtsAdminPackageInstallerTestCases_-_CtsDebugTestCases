@@ -21,6 +21,7 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
+        enable_default_apps=True,
         needs_push_media=False,
         tag='9.0_r8.arm.all.CtsAdminPackageInstallerTestCases_-_CtsDebugTestCases',
         test_name='cheets_CTS_P.9.0_r8.arm.all.CtsAdminPackageInstallerTestCases_-_CtsDebugTestCases',
