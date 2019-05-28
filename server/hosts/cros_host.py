@@ -20,6 +20,7 @@ from autotest_lib.client.common_lib.cros import retry
 from autotest_lib.client.cros import constants as client_constants
 from autotest_lib.client.cros import cros_ui
 from autotest_lib.server import afe_utils
+from autotest_lib.server import crashcollect
 from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros import provision
 from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
@@ -154,6 +155,10 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
     _FW_IMAGE_URL_PATTERN = CONFIG.get_config_value(
             'CROS', 'firmware_url_pattern', type=str)
 
+    # DUT_LOG_LOCATION: the directory in the DUT that the log is saved
+    # after re-imaging using chromeos-install.
+    # The location is specified in chromeos-install script.
+    DUT_LOG_LOCATION = '/mnt/stateful_partition/unencrypted/prior_logs'
 
     @staticmethod
     def check_host(host, timeout=10):
@@ -675,7 +680,11 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         with metrics.SecondsTimer(
                 'chromeos/autotest/provision/servo_install/install_duration'):
             logging.info('Installing image through chromeos-install.')
-            self.run('chromeos-install --yes', timeout=install_timeout)
+            self.run(
+                'chromeos-install --yes '
+                '--lab_preserve_logs='
+                '"/usr/local/autotest/common_lib/logs_to_collect"',
+                timeout=install_timeout)
             self.halt()
 
         logging.info('Power cycling DUT through servo.')
@@ -696,6 +705,21 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             raise error.AutoservError('DUT failed to reboot installed '
                                       'test image after %d seconds' %
                                       self.BOOT_TIMEOUT)
+
+        # The log saved after re-imaging process is transferred to shard
+        # result directory when the job instance exists.
+        # When we run repair manually, the result directory is created
+        # within local host.
+        try:
+            local_dir = crashcollect.get_crashinfo_dir(
+                self,
+                self.hostname + '_log'
+            )
+
+            self.collect_logs(self.DUT_LOG_LOCATION, local_dir)
+        except OSError:
+            logging.exception('Fail to collect log. '
+                              'The destination log directory does not exist')
 
 
     def set_servo_host(self, host):
