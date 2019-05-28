@@ -12,7 +12,8 @@ class firmware_ECCbiEeprom(FirmwareTest):
     """Servo-based EC test for Cros Board Info EEPROM"""
     version = 1
 
-    CBI_EEPROM_LOOKUP_VALUE = 1
+    EEPROM_LOCATE_TYPE = 0
+    EEPROM_LOCATE_INDEX = 0   # Only one EEPROM ever
 
     # Test data to attempt to write to EEPROM
     TEST_EEPROM_DATA = ('0xaa ' * 16).strip()
@@ -30,16 +31,17 @@ class firmware_ECCbiEeprom(FirmwareTest):
         # Don't bother if CBI isn't on this device.
         if not self.check_ec_capability(['cbi']):
             raise error.TestNAError("Nothing needs to be tested on this device")
-        cmd_output = self.faft_client.system.run_shell_command_get_output(
-                     'ectool i2clookup %d' % self.CBI_EEPROM_LOOKUP_VALUE)
+        cmd_out = self.faft_client.system.run_shell_command_get_output(
+                     'ectool locatechip %d %d' %
+                     (self.EEPROM_LOCATE_TYPE, self.EEPROM_LOCATE_INDEX))
 
-        if len(cmd_output) > 0 and cmd_output[0].startswith('Usage'):
+        if len(cmd_out) > 0 and cmd_out[0].startswith('Usage'):
             raise error.TestNAError("I2C lookup not supported yet.")
 
-        if len(cmd_output) < 1:
-            cmd_output = ['']
+        if len(cmd_out) < 1:
+            cmd_out = ['']
 
-        match = re.search('Port: (\w+); Address: (\w+)', cmd_output[0])
+        match = re.search('Bus: I2C; Port: (\w+); Address: (\w+)', cmd_out[0])
         if match is None:
             raise error.TestFail("I2C lookup for EEPROM CBI Failed.")
 
@@ -52,13 +54,13 @@ class firmware_ECCbiEeprom(FirmwareTest):
                (self.i2c_port, self.i2c_addr, self.NO_READ, offset, data))
 
     def _read_eeprom(self, offset):
-        cmd_output = self.faft_client.system.run_shell_command_get_output(
-                     'ectool i2cxfer %d %d %d %d' %
-                     (self.i2c_port, self.i2c_addr, self.PAGE_SIZE, offset))
-        if len(cmd_output) < 1:
+        cmd_out = self.faft_client.system.run_shell_command_get_output(
+                  'ectool i2cxfer %d %d %d %d' %
+                  (self.i2c_port, self.i2c_addr, self.PAGE_SIZE, offset))
+        if len(cmd_out) < 1:
             raise error.TestFail(
                 "Could not read EEPROM data at offset %d" % (offset))
-        data = re.search('Read bytes: (.+)', cmd_output[0]).group(1)
+        data = re.search('Read bytes: (.+)', cmd_out[0]).group(1)
         if data == '':
             raise error.TestFail(
                 "Empty EEPROM read at offset %d" % (offset))
