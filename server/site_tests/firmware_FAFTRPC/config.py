@@ -324,7 +324,20 @@ RPC_CATEGORIES = [
     },
     {
         "category_name": "tpm",
-        "test_cases": []
+        "test_cases": [
+            {
+                "method_names": [
+                    "get_firmware_version",
+                    "get_firmware_datakey_version",
+                    "get_kernel_version",
+                    "get_kernel_datakey_version",
+                    "stop_daemon",
+                    "restart_daemon",
+                ],
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
+            },
+        ]
     },
     {
         "category_name": "cgpt",
