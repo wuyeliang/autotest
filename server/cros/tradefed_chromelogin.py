@@ -58,6 +58,9 @@ class ChromeLogin(object):
             cmd += ' --dont_override_profile'
         else:
             logging.info('Not using --dont_override_profile to start Chrome.')
+        if self._cts_helper_kwargs.get('enable_default_apps'):
+            logging.info('Using --enable_default_apps to start Chrome.')
+            cmd += ' --enable_default_apps'
         if not verbose:
             cmd += ' > /dev/null 2>&1'
         return cmd

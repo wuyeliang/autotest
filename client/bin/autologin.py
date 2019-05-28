@@ -29,6 +29,8 @@ def main(args):
                         help='Keep files from previous sessions.')
     parser.add_argument('-u', '--username',
                         help='Log in as provided username.')
+    parser.add_argument('--enable_default_apps', action='store_true',
+                        help='Enable default applications.')
     args = parser.parse_args(args)
 
     if args.username:
@@ -40,6 +42,7 @@ def main(args):
         username=args.username,
         password=(password if args.username else None),
         gaia_login=(args.username is not None),
+        disable_default_apps=(not args.enable_default_apps),
         dont_override_profile=args.dont_override_profile)
 
 

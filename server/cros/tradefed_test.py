@@ -1026,6 +1026,7 @@ class TradefedTest(test.test):
                                    retry_template,
                                    timeout,
                                    needs_push_media=False,
+                                   enable_default_apps=False,
                                    target_module=None,
                                    target_plan=None,
                                    bundle=None,
@@ -1077,7 +1078,8 @@ class TradefedTest(test.test):
                     # the last remaining 1 step will be run on the rebooted DUT.
                     hard_reboot_on_failure=(self._hard_reboot_on_failure
                                      and steps + 1 == self._max_retry),
-                    dont_override_profile=keep_media) as current_logins:
+                    dont_override_profile=keep_media,
+                    enable_default_apps=enable_default_apps) as current_logins:
                 self._ready_arc()
                 self._calculate_timeout_factor(bundle)
                 self._run_precondition_scripts(precondition_commands, steps)
