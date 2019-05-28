@@ -315,7 +315,7 @@ class RPCFunctions(object):
         return self._os_if.get_root_part()
 
     def _system_set_try_fw_b(self, count=1):
-        """Set 'Try Frimware B' flag in crossystem.
+        """Set 'Try Firmware B' flag in crossystem.
 
         @param count: # times to try booting into FW B
         """

@@ -5,6 +5,7 @@ import xmlrpclib
 NO_ARGS = tuple()
 ONE_INT_ARG = (1, )
 ONE_STR_ARG = ("foo", )
+SAMPLE_FILE = "/tmp/foo",
 
 """
 RPC_CATEGORIES contains all the test cases for our RPC tests.
@@ -32,6 +33,8 @@ Each element of RPC_CATEGORIES must be a dict containing the following keys:
                        will be replaced with values from
                        firmware_FAFTRPC._stored_values before being passed into
                        the RPC method.
+    @key silence_result: Normally, the RPC return value is logged. However, if
+                         this key is truthy, then the result is not logged.
     @key allow_error_msg (optional): String. If the RPC method is called with a
                                      passing_args tuple, but it yields an RPC
                                      error whose message contains this string,
@@ -57,6 +60,10 @@ RPC_CATEGORIES = [
                     "dev_tpm_present",
                     "get_root_dev",
                     "get_root_part",
+                    "get_fw_vboot2",
+                    "request_recovery_boot",
+                    "is_removable_device_boot",
+                    "get_internal_device",
                 ],
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
@@ -74,6 +81,123 @@ RPC_CATEGORIES = [
                 "failing_args": [NO_ARGS, ONE_STR_ARG],
                 "allow_error_msg":
                     "'LocalShell' object has no attribute 'wait_for_no_device'",
+            },
+            {
+                "method_name": "dump_log",
+                "passing_args": [
+                    NO_ARGS,
+                    (True, ),
+                    (False, ),
+                ],
+                "failing_args": [
+                    (True, False),
+                ],
+                "expected_return_type": str,
+                "silence_result": True,
+            },
+            {
+                "method_names": [
+                    "run_shell_command",
+                    "run_shell_command_get_output",
+                    "run_shell_command_get_status",
+                ],
+                "passing_args": [
+                    ("ls", ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ("ls", "-l"),
+                ],
+            },
+            {
+                "method_name": "get_crossystem_value",
+                "passing_args": [
+                    ("fwid", ),
+                ],
+                "failing_args": [NO_ARGS],
+            },
+            {
+                "method_name": "set_try_fw_b",
+                "passing_args": [
+                    NO_ARGS,
+                    (1, ),
+                ],
+                "failing_args": [
+                    (1, 1),
+                ],
+            },
+            {
+                "method_name": "set_fw_try_next",
+                "passing_args": [
+                    ("A", ),
+                    ("A", 1),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ("A", 1, "B"),
+                ],
+            },
+            {
+                "method_name": "get_dev_boot_usb",
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
+                "store_result_as": "dev_boot_usb",
+            },
+            {
+                "method_name": "set_dev_boot_usb",
+                "passing_args": [
+                    (operator.itemgetter("dev_boot_usb"), ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    (True, False),
+                ],
+            },
+            {
+                "method_name": "create_temp_dir",
+                "passing_args": [
+                    NO_ARGS,
+                    ONE_STR_ARG,
+                ],
+                "failing_args": [
+                    ONE_INT_ARG,
+                    ("foo", "bar"),
+                ],
+                "expected_return_type": str,
+                "store_result_as": "temp_dir",
+            },
+            {
+                "method_name": "remove_file",
+                "passing_args": [
+                    (SAMPLE_FILE, ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    (1, 2),
+                ],
+            },
+            {
+                "method_name": "remove_dir",
+                "passing_args":  [
+                    (operator.itemgetter("temp_dir"), ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    (1, 2),
+                ]
+            },
+            {
+                "method_name": "check_keys",
+                "passing_args": [
+                    ([], ),
+                    ([116], ),
+                    ([28, 29, 32], ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ([], [116]),
+                ],
+                "expected_return_type": int,
             },
         ]
     },

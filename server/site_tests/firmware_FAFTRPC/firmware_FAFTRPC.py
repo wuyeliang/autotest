@@ -94,7 +94,7 @@ class firmware_FAFTRPC(FirmwareTest):
 
 
     def _assert_passes(self, category, method, params, allow_error_msg=None,
-                       expected_return_type=None):
+                       expected_return_type=None, silence_result=False):
         """
         Check whether an RPC function with given input passes,
         and fail if it does not.
@@ -110,6 +110,8 @@ class firmware_FAFTRPC(FirmwareTest):
                                 then the test will pass instead of failing.
         @param expected_return_type: If not None, then the RPC return value
                                      must be this type, else the test fails.
+        @param silence_result: If True, then the RPC return value will not be
+                               logged.
 
         @raise error.TestFail: If the RPC raises any error (unless handled by
                                allow_error_msg).
@@ -135,12 +137,19 @@ class firmware_FAFTRPC(FirmwareTest):
             self._fail(rpc_name, params, error_msg)
         else:
             if expected_return_type is None:
-                success_msg = "passed with result %s" % result
+                if silence_result:
+                    success_msg = "passed with a silenced result"
+                else:
+                    success_msg = "passed with result %s" % result
                 self._log_success(rpc_name, params, success_msg)
                 return result
             elif isinstance(result, expected_return_type):
-                success_msg = "passed with result %s of expected type %s" % (
-                        result, type(result))
+                if silence_result:
+                    success_msg = "passed with a silenced result of " \
+                            "expected type %s" % type(result)
+                else:
+                    success_msg = "passed with result %s of expected type %s" \
+                            % (result, type(result))
                 self._log_success(rpc_name, params, success_msg)
                 return result
             else:
@@ -258,6 +267,7 @@ class firmware_FAFTRPC(FirmwareTest):
                 expected_return_type = test_case.get("expected_return_type",
                                                      None)
                 store_result_as = test_case.get("store_result_as", None)
+                silence_result = test_case.get("silence_result", False)
                 for method_name in method_names:
                     for passing_arg_tuple in passing_args:
                         passing_arg_tuple = self._retrieve_stored_values(
@@ -265,7 +275,8 @@ class firmware_FAFTRPC(FirmwareTest):
                         result = self._assert_passes(category_name, method_name,
                                                      passing_arg_tuple,
                                                      allow_error_msg,
-                                                     expected_return_type)
+                                                     expected_return_type,
+                                                     silence_result)
                         if store_result_as is not None:
                             self._stored_values[store_result_as] = result
                     for failing_arg_tuple in failing_args:
