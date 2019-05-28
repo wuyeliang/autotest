@@ -203,7 +203,22 @@ RPC_CATEGORIES = [
     },
     {
         "category_name": "host",
-        "test_cases": []
+        "test_cases": [
+            {
+                "method_names": [
+                    "run_shell_command",
+                    "run_shell_command_get_output",
+                ],
+                "passing_args": [
+                    ("ls", ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ("ls", "-l"),
+                ],
+                "allow_error_msg": "There is no host for DUT",
+            },
+        ]
     },
     {
         "category_name": "bios",
