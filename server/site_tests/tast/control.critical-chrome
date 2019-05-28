@@ -31,8 +31,8 @@ def run(machine):
     job.run_test('tast',
                  host=hosts.create_host(machine),
                  test_exprs=['(!disabled && !"group:*" && !informational && '
-                             '("dep:chrome" || "dep:chrome_login") && '
-                             '!"dep:android" && !"dep:android_all")'],
+                             '"dep:chrome" && !"dep:android" && '
+                             '!"dep:android_all")'],
                  ignore_test_failures=False, max_run_sec=3600,
                  command_args=args)
 
