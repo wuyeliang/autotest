@@ -140,26 +140,33 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             self._print_delimiter()
             logging.info('Starting test: %s', test_name)
 
-
     def quick_test_test_end(self):
         """Log and track the test results"""
-        pkg_iter_msg = ''
+        result_msgs = []
+
+        if self.bat_iter is not None:
+            result_msgs += ['Batch Iter: ' + str(self.bat_iter)]
+
         if self.pkg_is_running is True:
-            pkg_iter_msg = (', Package iter: ' + str(self.pkg_iter))
+            result_msgs += ['Package iter: ' + str(self.pkg_iter)]
+
+        if self.bat_name is not None:
+            result_msgs += ['Batch Name: ' + self.bat_name]
+
+        if self.test_name is not None:
+            result_msgs += ['Test Name: ' + self.test_name]
+
+        result_msg = ", ".join(result_msgs)
+
         if not bool(self.fails):
-            result_msg = ('PASSED | Batch iter: ' + str(self.bat_iter) +
-                          pkg_iter_msg +
-                          ', Batch Name: ' + self.bat_name +
-                          ', Test Name: ' + self.test_name)
+            result_msg = 'PASSED | ' + result_msg
             self.bat_pass_count += 1
             self.pkg_pass_count += 1
         else:
-            result_msg = ('FAIL   | Batch Iter: ' + str(self.iteration) +
-                          pkg_iter_msg +
-                          ', Batch Name: ' + self.bat_name +
-                          ' Test Name: ' + self.test_name)
+            result_msg = 'FAIL   | ' + result_msg
             self.bat_fail_count += 1
             self.pkg_fail_count += 1
+
         logging.info(result_msg)
         self._print_delimiter()
         self.bat_tests_results.append(result_msg)
@@ -190,13 +197,10 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                                     the whole batch
                 """
                 if test_name is not None:
-                    """todo http://b/132199238 [autotest BT quick sanity] add
-                       support for running a single test in quick test
-                    """
                     single_test_method = getattr(self,  test_name)
-                    # single_test_method()
+                    single_test_method()
                 else:
-                    for iter in xrange(num_iterations):
+                    for iter in xrange(1,num_iterations+1):
                         self.quick_test_batch_start(batch_name, iter)
                         batch_method(self, num_iterations, test_name)
                         self.quick_test_batch_end()
