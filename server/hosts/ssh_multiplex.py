@@ -172,7 +172,8 @@ def _short_tmpdir():
     # crbug/945523 Swarming does not like too many top-level directories in
     # /tmp.
     # So use a shared parent directory in /tmp
-    d = '/tmp/ssh-master'
+    user = os.environ.get("USER", "no_USER")[:8]
+    d = '/tmp/ssh-master_%s' % user
     if not os.path.exists(d):
         os.mkdir(d)
     return d
