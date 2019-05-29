@@ -29,8 +29,8 @@ class CrashTest(test.test):
     by creating _PAUSE_FILE. When crash sender sees this, it pauses operation.
 
     For testing purposes we sometimes want to run the crash sender manually.
-    In this case we can set 'OVERRIDE_PAUSE_SENDING=1' in the environment and
-    run the crash sender manually (as a child process).
+    In this case we can pass the --ignore_pause_file flag and run the crash
+    sender manually.
 
     Also for testing we sometimes want to mock out the crash sender, and just
     have it pretend to succeed or fail. The _MOCK_CRASH_SENDING file is used
@@ -93,8 +93,8 @@ class CrashTest(test.test):
 
         This is done by creating or removing _PAUSE_FILE.
 
-        crash_sender may still be allowed to run if _set_child_sending is
-        called with True and it is run as a child process.
+        crash_sender may still be allowed to run if _call_sender_one_crash is
+        called with 'ignore_pause=True'.
 
         @param is_enabled: True to enable crash_sender, False to disable it.
         """
@@ -103,22 +103,6 @@ class CrashTest(test.test):
                 os.remove(self._PAUSE_FILE)
         else:
             utils.system('touch ' + self._PAUSE_FILE)
-
-
-    def _set_child_sending(self, is_enabled):
-        """Overrides crash sending enabling for child processes.
-
-        When the system crash sender is disabled this test can manually run
-        the crash sender as a child process. Normally this would do nothing,
-        but this function sets up crash_sender to ignore its disabled status
-        and do its job.
-
-        @param is_enabled: True to enable crash sending for child processes.
-        """
-        if is_enabled:
-            os.environ['OVERRIDE_PAUSE_SENDING'] = "1"
-        else:
-            del os.environ['OVERRIDE_PAUSE_SENDING']
 
 
     def _reset_rate_limiting(self):
@@ -512,12 +496,15 @@ class CrashTest(test.test):
                                send_success=True,
                                reports_enabled=True,
                                report=None,
-                               should_fail=False):
+                               should_fail=False,
+                               ignore_pause=True):
         """Call the crash sender script to mock upload one crash.
 
         @param send_success: Mock a successful send if true
         @param reports_enabled: Has the user consented to sending crash reports.
         @param report: report to use for crash, if None we create one.
+        @param should_fail: expect the crash_sender program to fail
+        @param ignore_pause: crash_sender should ignore pause file existence
 
         @returns a dictionary describing the result with the keys
           from _parse_sender_output, as well as:
@@ -533,7 +520,8 @@ class CrashTest(test.test):
         script_output = ""
         try:
             script_output = utils.system_output(
-                '%s 2>&1' % self._CRASH_SENDER_PATH,
+                '%s %s2>&1' % (self._CRASH_SENDER_PATH,
+                               "--ignore_pause_file " if ignore_pause else ""),
                 ignore_status=should_fail)
         except error.CmdError as err:
             raise error.TestFail('"%s" returned an unexpected non-zero '
@@ -686,10 +674,10 @@ class CrashTest(test.test):
             logging.info(('=' * 20) + ('Running %s' % test_name) + ('=' * 20))
             if initialize_crash_reporter:
                 self._initialize_crash_reporter()
-            # Disable crash_sender from running, kill off any running ones, but
-            # set environment so crash_sender may run as a child process.
+            # Disable crash_sender from running, kill off any running ones.
+            # We set a flag to crash_sender when invoking it manually to avoid
+            # our invocations being paused.
             self._set_system_sending(False)
-            self._set_child_sending(True)
             self._kill_running_sender()
             self._reset_rate_limiting()
             if clear_spool_first:
