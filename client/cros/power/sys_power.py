@@ -19,7 +19,7 @@ SYSFS_POWER_STATE = '/sys/power/state'
 SYSFS_WAKEUP_COUNT = '/sys/power/wakeup_count'
 
 PAUSE_ETHERNET_HOOK_FILE = '/run/autotest_pause_ethernet_hook'
-pause_ethernet_fd = 0
+pause_ethernet_file = None
 
 
 class SuspendFailure(Exception):
@@ -144,18 +144,18 @@ def do_suspend(suspend_seconds, delay_seconds=0):
 
     """
 
-    # stop check_ethernet.hook from running until the test exits
-    global pause_ethernet_fd
-    if pause_ethernet_fd == 0:
-        # we don't write to the file - but we might need to create it.
-        pause_ethernet_fd = open(PAUSE_ETHERNET_HOOK_FILE,'a+')
-
-        if pause_ethernet_fd > 0:
-            try:
-                # this is a blocking call unless an error occurs.
-                fcntl.flock(pause_ethernet_fd, fcntl.LOCK_SH)
-            except IOError:
-                pass
+    # Stop check_ethernet.hook from running until the test exits. If this
+    # function is called multiple times, we intentionally re-assign this
+    # global, which closes out the old lock and grabs it anew.
+    # We intentionally "touch" the file to update its mtime, so we can judge
+    # how long locks are held
+    global pause_ethernet_file
+    pause_ethernet_file = open(PAUSE_ETHERNET_HOOK_FILE, 'w+')
+    try:
+        # This is a blocking call unless an error occurs.
+        fcntl.flock(pause_ethernet_file, fcntl.LOCK_SH)
+    except IOError:
+        pass
 
     estimated_alarm, wakeup_count = prepare_wakeup(suspend_seconds)
     upstart.ensure_running('powerd')
