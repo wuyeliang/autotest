@@ -28,6 +28,7 @@ def run_CTS(machine):
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='all.CtsShortcutHostTestCases_-_CtsVideoTestCases',
         target_plan=None,
+        executable_test_count=3829,
         bundle='x86',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r8-linux_x86-x86.zip',
         timeout=172800)

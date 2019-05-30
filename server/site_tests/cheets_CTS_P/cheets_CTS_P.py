@@ -159,6 +159,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
                  target_method=None,
                  needs_push_media=False,
                  enable_default_apps=False,
+                 executable_test_count=None,
                  bundle=None,
                  precondition_commands=[],
                  login_precondition_commands=[],
@@ -180,6 +181,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
         @param target_class: the name of the class to be tested.
         @param target_method: the name of the method to be tested.
         @param needs_push_media: need to push test media streams.
+        @param executable_test_count: the known number of tests in the run
         @param bundle: the type of the CTS bundle: 'arm' or 'x86'
         @param precondition_commands: a list of scripts to be run on the
         dut before the test is run, the scripts must already be installed.
@@ -196,6 +198,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
             target_plan=target_plan,
             needs_push_media=needs_push_media,
             enable_default_apps=enable_default_apps,
+            executable_test_count=executable_test_count,
             bundle=bundle,
             cts_uri=_CTS_URI,
             login_precondition_commands=login_precondition_commands,
