@@ -115,12 +115,12 @@ def is_adb_connected():
 
 def _is_android_data_mounted():
     """Return true if Android's /data is mounted with partial boot enabled."""
-    return _android_shell('getprop ro.data_mounted') == '1'
+    return _android_shell('getprop ro.data_mounted', ignore_status=True) == '1'
 
 
 def get_zygote_type():
     """Return zygote service type."""
-    return _android_shell('getprop ro.zygote')
+    return _android_shell('getprop ro.zygote', ignore_status=True)
 
 
 def get_sdk_version():
@@ -130,7 +130,7 @@ def get_sdk_version():
 
 def get_product():
     """Return the product string used for the Android build."""
-    return _android_shell('getprop ro.build.product')
+    return _android_shell('getprop ro.build.product', ignore_status=True)
 
 
 def _is_tcp_port_reachable(address):
@@ -468,7 +468,8 @@ def get_android_file_stats(filename):
         '%u': 'uid',
     }
     output = _android_shell(
-        'stat -c "%s" %s' % (' '.join(mapping.keys()), pipes.quote(filename)))
+        'stat -c "%s" %s' % (' '.join(mapping.keys()), pipes.quote(filename)),
+        ignore_status=True)
     stats = output.split(' ')
     if len(stats) != len(mapping):
       raise error.TestError('Unexpected output from stat: %s' % output)
@@ -595,7 +596,8 @@ def _after_iteration_hook(obj):
     if not obj.run_once_finished:
         if is_adb_connected():
             logging.debug('Recent activities dump:\n%s',
-                          adb_shell('dumpsys activity recents'))
+                          adb_shell('dumpsys activity recents',
+                                    ignore_status=True))
         if not os.path.exists(_SCREENSHOT_DIR_PATH):
             os.mkdir(_SCREENSHOT_DIR_PATH, 0755)
         obj.num_screenshots += 1
@@ -683,11 +685,12 @@ def wait_for_userspace_ready():
     system server is still starting services. By waiting for ActivityManager to
     respond, we automatically wait on more services to be ready.
     """
-    output = adb_shell('am start -W -a android.settings.SETTINGS')
+    output = adb_shell('am start -W -a android.settings.SETTINGS',
+                       ignore_status=True)
     if not output.endswith('Complete'):
         logging.debug('Output was: %s', output)
         raise error.TestError('Could not launch SETTINGS')
-    adb_shell('am force-stop com.android.settings')
+    adb_shell('am force-stop com.android.settings', ignore_status=True)
 
 
 class ArcTest(test.test):
