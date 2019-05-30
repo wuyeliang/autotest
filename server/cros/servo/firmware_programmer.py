@@ -260,16 +260,16 @@ class FlashECProgrammer(_BaseProgrammer):
         """
         super(FlashECProgrammer, self).__init__(servo, ['flash_ec'], host)
         self._servo_version = self._servo.get_servo_version()
-        if ec_chip is None:
-            self._ec_chip = servo.get('ec_chip')
-        else:
-            self._ec_chip = ec_chip
+        self._ec_chip = ec_chip
 
     def prepare_programmer(self, image):
         """Prepare programmer for programming.
 
         @param image: string with the location of the image file
         """
+        if self._ec_chip is None:
+            self._ec_chip = self._servo.get('ec_chip')
+
         # Get the port of servod. flash_ec may use it to talk to servod.
         port = self._servo._servo_host.servo_port
         self._program_cmd = ('flash_ec --chip=%s --image=%s --port=%d' %
