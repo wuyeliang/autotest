@@ -28,6 +28,7 @@ def run_CTS(machine):
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsTelephony',
         target_plan=None,
+        executable_test_count=150,
         bundle='arm',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r8-linux_x86-arm.zip',
         timeout=5400)
