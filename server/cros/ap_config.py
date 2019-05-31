@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import collections
 import ConfigParser
 import logging
 import os
@@ -53,6 +54,8 @@ class APSectionError(Exception):
     """ Exception raised when AP instance does not exist in the config. """
     pass
 
+RPMUnit = collections.namedtuple('RPMUnit', 'hostname outlet')
+
 class AP(object):
     """ An instance of an ap defined in the chaos config file.
 
@@ -69,6 +72,8 @@ class AP(object):
     CONF_WAN_MAC = 'wan mac'
     CONF_WAN_HOST = 'wan_hostname'
     CONF_RPM_MANAGED = 'rpm_managed'
+    CONF_RPM_HOSTNAME = 'rpm_hostname'
+    CONF_RPM_OUTLET = 'rpm_outlet'
     CONF_BSS = 'bss'
     CONF_BSS5 = 'bss5'
     CONF_BANDWIDTH = 'bandwidth'
@@ -124,6 +129,16 @@ class AP(object):
     def get_rpm_managed(self):
         """@return bool for AP power via rpm from config file"""
         return self.ap_config.getboolean(self.bss, self.CONF_RPM_MANAGED)
+
+
+    def get_rpm_unit(self):
+        """@return RPMUnit for this AP. None if AP is not managed via RPM."""
+        if not self.get_rpm_managed():
+            return None
+        return RPMUnit(
+            self.ap_config.get(self.bss, self.CONF_RPM_HOSTNAME),
+            self.ap_config.get(self.bss, self.CONF_RPM_OUTLET),
+        )
 
 
     def get_bss(self):
