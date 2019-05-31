@@ -1174,9 +1174,8 @@ def get_num_logical_cpus_per_socket(run_function=run):
     throw a CmdError exception.
     """
     siblings = run_function('grep "^siblings" /proc/cpuinfo').stdout.rstrip()
-    num_siblings = map(int,
-                       re.findall(r'^siblings\s*:\s*(\d+)\s*$',
-                                  siblings, re.M))
+    num_siblings = [int(x) for x in
+                    re.findall(r'^siblings\s*:\s*(\d+)\s*$', siblings, re.M)]
     if len(num_siblings) == 0:
         raise error.TestError('Unable to find siblings info in /proc/cpuinfo')
     if min(num_siblings) != max(num_siblings):
@@ -2283,8 +2282,8 @@ def compare_gs_uri_build_versions(x, y):
     """
     # Converts a gs uri 'gs://.../R75-<major>.<minor>.<sub>' to
     # [major, minor, sub]
-    split_version = lambda v: map(lambda s: int(s),
-                                  parse_gs_uri_version(v).split('.'))
+    split_version = lambda v: [int(x) for x in
+                               parse_gs_uri_version(v).split('.')]
 
     x_version = split_version(x)
     y_version = split_version(y)
