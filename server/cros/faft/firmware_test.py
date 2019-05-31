@@ -4,12 +4,14 @@
 
 import ast
 import ctypes
+import grpc
 import logging
 import os
 import pprint
 import re
 import time
 import uuid
+import xmlrpclib
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
@@ -72,6 +74,8 @@ class FirmwareTest(FAFTBase):
     _SERVOD_LOG = '/var/log/servod.log'
 
     _ROOTFS_PARTITION_NUMBER = 3
+
+    RPC_ERROR = (xmlrpclib.Fault, grpc.RpcError)
 
     _backup_firmware_sha = ()
     _backup_kernel_sha = dict()
