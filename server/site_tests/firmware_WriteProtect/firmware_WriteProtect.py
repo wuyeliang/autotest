@@ -15,11 +15,13 @@ class firmware_WriteProtect(FirmwareTest):
     version = 1
 
     def initialize(self, host, cmdline_args, dev_mode=False):
+        """Initialize the test"""
         super(firmware_WriteProtect, self).initialize(host, cmdline_args)
         self.switcher.setup_mode('dev' if dev_mode else 'normal')
-        self._original_wp = self.servo.get('fw_wp') == 'on'
+        self._original_wp = 'on' in self.servo.get('fw_wp_state')
 
     def cleanup(self):
+        """Cleanup the test"""
         try:
             if hasattr(self, '_original_wp'):
               self.set_hardware_write_protect(self._original_wp)
