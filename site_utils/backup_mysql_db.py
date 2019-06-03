@@ -75,7 +75,7 @@ _SERVER_DB = 'server_db'
 # is backed up to google storage.
 _ONLY_HOSTS = 'only_hosts'
 _ONLY_SHARDS = 'only_shards'
-_SCHEDULER_TYPES = [_SERVER_DB, _ONLY_HOSTS, _ONLY_SHARDS, _REPLICATION,
+_SCHEDULER_TYPES = [_SERVER_DB, _ONLY_HOSTS, _ONLY_SHARDS,
                     _DAILY, _WEEKLY, _MONTHLY]
 
 class BackupError(Exception):
