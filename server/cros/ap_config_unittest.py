@@ -33,6 +33,9 @@ rpm_outlet = .A15""")
         self.assertEqual('chromeos3-row2-rack3-rpm1', rpm_unit.hostname)
         self.assertEqual('.A15', rpm_unit.outlet)
 
+    def test_get_ap_list_returns_non_empty(self):
+        self.assertGreater(len(ap_config.get_ap_list()), 0)
+
 
 def _parse_config_from_string(conf):
     parser = ConfigParser.RawConfigParser()

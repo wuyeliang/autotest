@@ -11,14 +11,11 @@ import time
 from autotest_lib.client.common_lib.cros.network import ap_constants
 from autotest_lib.server.cros.ap_configurators import ap_spec
 
-# chaos_shadow_ap_list.conf is used for testing against local APs.
-AP_CONFIG_FILES = { ap_constants.AP_TEST_TYPE_CHAOS:
-                    ('chaos_ap_list.conf',
-                     'chaos_shadow_ap_list.conf'),}
 
 TIMEOUT = 100
 
-def get_ap_list(ap_test_type):
+
+def get_ap_list():
     """
     Returns the list of AP's from the corresponding configuration file.
 
@@ -28,8 +25,8 @@ def get_ap_list(ap_test_type):
 
     """
     aps = []
-    ap_config_files = AP_CONFIG_FILES.get(ap_test_type, None)
-    for filename in ap_config_files:
+    # chaos_shadow_ap_list.conf is used for testing against local APs.
+    for filename in ('chaos_ap_list.conf', 'chaos_shadow_ap_list.conf'):
         ap_config = ConfigParser.RawConfigParser(
                 {AP.CONF_RPM_MANAGED: 'False'})
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)),

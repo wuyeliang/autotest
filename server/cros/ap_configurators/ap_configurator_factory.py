@@ -47,7 +47,7 @@ class APConfiguratorFactory(object):
         webdriver_ready = False
         self.ap_list = []
         self.test_type = ap_test_type
-        for ap in ap_config.get_ap_list(ap_test_type):
+        for ap in ap_config.get_ap_list():
             module_name, configurator_class = \
                     self.CONFIGURATOR_MAP[ap.get_class()]
             module = __import__(module_name, fromlist=configurator_class)
