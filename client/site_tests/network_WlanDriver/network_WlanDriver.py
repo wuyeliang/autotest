@@ -31,7 +31,6 @@ class network_WlanDriver(test.test):
             },
             'Intel 7260': {
                     '3.8': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
-                    '3.10': 'wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko',
                     '3.14': 'wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko',
                     '4.4': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
                     '4.14': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
@@ -39,7 +38,6 @@ class network_WlanDriver(test.test):
             },
             'Intel 7265': {
                     '3.8': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
-                    '3.10': 'wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko',
                     '3.14': 'wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko',
                     '3.18': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
                     '4.4': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
