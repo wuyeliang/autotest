@@ -122,14 +122,9 @@ class AP(object):
         return self.ap_config.get(self.bss, self.CONF_WAN_HOST)
 
 
-    def get_rpm_managed(self):
-        """@return bool for AP power via rpm from config file"""
-        return self.ap_config.getboolean(self.bss, self.CONF_RPM_MANAGED)
-
-
     def get_rpm_unit(self):
         """@return RPMUnit for this AP. None if AP is not managed via RPM."""
-        if not self.get_rpm_managed():
+        if not self._get_rpm_managed():
             return None
         return RPMUnit(
             self.ap_config.get(self.bss, self.CONF_RPM_HOSTNAME),
@@ -199,6 +194,10 @@ class AP(object):
     def get_admin_ip(self):
         """@return admin IP for AP from config file"""
         return self.ap_config.get(self.bss, self.CONF_ADMIN_IP)
+
+
+    def _get_rpm_managed(self):
+        return self.ap_config.getboolean(self.bss, self.CONF_RPM_MANAGED)
 
 
     def __str__(self):
