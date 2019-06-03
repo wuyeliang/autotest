@@ -7,6 +7,7 @@
 import logging
 import requests
 
+import common
 from autotest_lib.client.common_lib.cros.network import ap_constants
 from autotest_lib.server import site_utils
 from autotest_lib.server.cros import ap_config
