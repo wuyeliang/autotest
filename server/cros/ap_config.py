@@ -9,7 +9,6 @@ import os
 import time
 
 from autotest_lib.client.common_lib.cros.network import ap_constants
-from autotest_lib.site_utils.rpm_control_system import rpm_client
 from autotest_lib.server.cros.ap_configurators import ap_spec
 
 # chaos_shadow_ap_list.conf is used for testing against local APs.
@@ -203,21 +202,6 @@ class AP(object):
     def get_admin_ip(self):
         """@return admin IP for AP from config file"""
         return self.ap_config.get(self.bss, self.CONF_ADMIN_IP)
-
-
-    def power_off(self):
-        """call rpm_client to power off AP"""
-        rpm_client.set_power_afe(self.get_wan_host(), 'OFF')
-
-
-    def power_on(self):
-        """call rpm_client to power on AP"""
-        rpm_client.set_power_afe(self.get_wan_host(), 'ON')
-
-        # Hard coded timer for now to wait for the AP to come alive
-        # before trying to use it.  We need scanning code
-        # to scan until the AP becomes available (crosbug.com/36710).
-        time.sleep(TIMEOUT)
 
 
     def __str__(self):
