@@ -12,7 +12,9 @@ def StartU2fd(client):
     client.run('stop u2fd', ignore_status=True)
     old_dev = client.run('ls /dev/hidraw*',
                           ignore_status=True).stdout.strip().split('\n')
-    client.run_background('u2fd --force_g2f')
+
+    client.run('touch /var/lib/u2f/force/u2f.force')
+    client.run('start u2fd')
 
     # TODO(louiscollard): Replace this with something less fragile.
     cr50_dev = set()
