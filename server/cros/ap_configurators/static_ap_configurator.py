@@ -15,6 +15,8 @@ from autotest_lib.server.cros.ap_configurators import ap_configurator
 from autotest_lib.server.cros.ap_configurators import ap_spec
 
 CartridgeCmd = collections.namedtuple('CartridgeCmd', ['method', 'args'])
+RPM_FRONTEND_SERVER = global_config.global_config.get_config_value(
+        'CROS', 'rpm_frontend_uri')
 
 # DHCP delayed devices.  Some APs need additional time for the DHCP
 # server to come on-line.  These are AP based, so the BSS is used
@@ -76,10 +78,7 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
             self._dhcp_delay = 60
 
         if self.rpm_managed:
-            rpm_frontend_server = global_config.global_config.get_config_value(
-                    'CROS', 'rpm_frontend_uri')
-            self.rpm_client = xmlrpclib.ServerProxy(
-                    rpm_frontend_server, verbose=False)
+            self.rpm_client = xmlrpclib.ServerProxy(RPM_FRONTEND_SERVER, False)
 
 
     def __str__(self):
