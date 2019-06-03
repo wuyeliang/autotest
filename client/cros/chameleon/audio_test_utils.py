@@ -222,7 +222,7 @@ def suspend_resume(host, suspend_time_secs, resume_network_timeout_secs=50):
     logging.info("Suspending...")
     proc.daemon = True
     proc.start()
-    host.test_wait_for_sleep(suspend_time_secs / 3)
+    host.test_wait_for_sleep(suspend_time_secs)
     logging.info("DUT suspended! Waiting to resume...")
     host.test_wait_for_resume(
             boot_id, suspend_time_secs + resume_network_timeout_secs)
