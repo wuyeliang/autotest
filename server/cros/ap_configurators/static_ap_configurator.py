@@ -59,7 +59,6 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
            self.security = [self.security]
         self.psk = ap_config.get_psk()
         self._ssid = ap_config.get_ssid()
-        self.rpm_managed = ap_config.get_rpm_managed()
         self.rpm_unit = ap_config.get_rpm_unit()
 
         self._configuration_success = ap_constants.CONFIG_SUCCESS
@@ -78,7 +77,7 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
             ap_config.get_bss5() in DHCP_DELAY_DEVICES):
             self._dhcp_delay = 60
 
-        if self.rpm_managed:
+        if self.rpm_unit is not None:
             self.rpm_client = xmlrpclib.ServerProxy(RPM_FRONTEND_SERVER, False)
 
 
@@ -134,7 +133,7 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
         @param set_ap_spec: APSpec object
 
         """
-        if power_up and self.rpm_managed:
+        if power_up:
             self.power_up_router()
 
 
