@@ -117,6 +117,8 @@ class PowerTelemetryLogger(object):
         logging.info('%s finishes.', self.__class__.__name__)
         start_ts, end_ts = self._get_client_test_ts(client_test_dir)
         loggers = self._load_and_trim_data(start_ts, end_ts)
+        # Call export after trimming to only export trimmed data.
+        self._export_data_locally(client_test_dir)
         checkpoint_logger = self._get_client_test_checkpoint_logger(
                 client_test_dir)
         self._upload_data(loggers, checkpoint_logger)
@@ -124,6 +126,11 @@ class PowerTelemetryLogger(object):
     def _end_measurement(self):
         """End power telemetry devices."""
         raise NotImplementedError('Subclasses must implement _end_measurement.')
+
+    def _export_data_locally(self, client_test_dir):
+        """Slot for the logger to export measurements locally."""
+        raise NotImplementedError('Subclasses must implement '
+                                  '_export_data_locally.')
 
     def _get_client_test_ts(self, client_test_dir):
         """Determine the start and end timestamp for the telemetry data.
@@ -368,6 +375,13 @@ class ServodTelemetryLogger(PowerTelemetryLogger):
         """End querying servod."""
         self._pm.FinishMeasurement()
 
+    def _export_data_locally(self, client_test_dir):
+        """Output formatted text summaries locally."""
+        # At this point the PowerMeasurement unit has been processed. Dump its
+        # formatted summaries into the results directory.
+        power_summaries_dir = os.path.join(self._resultsdir, 'power_summaries')
+        self._pm.SaveSummary(outdir=power_summaries_dir)
+
     def _load_and_trim_data(self, start_ts, end_ts):
         """Load data and trim data.
 
@@ -441,19 +455,6 @@ class ServodTelemetryLogger(PowerTelemetryLogger):
 
         return loggers
 
-    def end_measurement(self, client_test_dir):
-      """In addition to the common end_measurement flow dump summaries.
-
-      @param client_test_dir: directory of the client side test.
-      """
-      # Run the shared end_measurement logic first.
-      super(ServodTelemetryLogger, self).end_measurement(client_test_dir)
-      # At this point the PowerMeasurement unit has been processed. Dump its
-      # formatted summaries into the results directory.
-      power_summaries_dir = os.path.join(self._resultsdir, 'power_summaries')
-      if not os.path.exists(power_summaries_dir):
-        os.makedirs(power_summaries_dir)
-      self._pm.SaveSummary(outdir=power_summaries_dir)
 
 class PowerlogTelemetryLogger(PowerTelemetryLogger):
     """This logger class measures power with Sweetberry via powerlog tool.
@@ -502,6 +503,11 @@ class PowerlogTelemetryLogger(PowerTelemetryLogger):
     def _start_measurement(self):
         """Start power measurement with Sweetberry via powerlog tool."""
         self._sweetberry_thread.start()
+
+    def _export_data_locally(self, client_test_dir):
+        """Output formatted text summaries locally."""
+        #TODO(crbug.com/978665): implement this.
+        pass
 
     def _end_measurement(self):
         """End querying Sweetberry."""
