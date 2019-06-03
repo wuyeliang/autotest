@@ -5,10 +5,11 @@
 
 These can be exposed via a xmlrpci server running on the DUT.
 """
-import sys
 
-import functools, os, tempfile
 import httplib
+import os
+import sys
+import tempfile
 import traceback
 import xmlrpclib
 
@@ -22,27 +23,6 @@ from autotest_lib.client.cros.faft.utils import (
         rootfs_handler,
         tpm_handler,
 )
-
-
-def allow_multiple_section_input(image_operator):
-    """Decorate a method to support multiple sections.
-
-    @param image_operator: Method accepting one section as its argument.
-    """
-
-    @functools.wraps(image_operator)
-    def wrapper(self, section, *args, **dargs):
-        """Wrapper method to support multiple sections.
-
-        @param section: A list of sections of just a section.
-        """
-        if type(section) in (tuple, list):
-            for sec in section:
-                image_operator(self, sec, *args, **dargs)
-        else:
-            image_operator(self, section, *args, **dargs)
-
-    return wrapper
 
 
 class RPCRouter(object):
@@ -292,7 +272,6 @@ class BiosServicer(object):
         """Get SHA1 hash of firmware vblock in section."""
         return self._bios_handler.get_section_sig_sha(section)
 
-    @allow_multiple_section_input
     def corrupt_sig(self, section):
         """Corrupt the requested firmware section signature.
 
@@ -300,7 +279,6 @@ class BiosServicer(object):
         """
         self._bios_handler.corrupt_firmware(section)
 
-    @allow_multiple_section_input
     def restore_sig(self, section):
         """Restore the previously corrupted firmware section signature.
 
@@ -308,15 +286,15 @@ class BiosServicer(object):
         """
         self._bios_handler.restore_firmware(section)
 
-    @allow_multiple_section_input
     def corrupt_body(self, section, corrupt_all=False):
         """Corrupt the requested firmware section body.
 
         @param section: A firmware section, either 'a' or 'b'.
+        @param corrupt_all (optional): Corrupt all bytes of the fw section,
+                                       rather than just one byte.
         """
         self._bios_handler.corrupt_firmware_body(section, corrupt_all)
 
-    @allow_multiple_section_input
     def restore_body(self, section):
         """Restore the previously corrupted firmware section body.
 
@@ -338,12 +316,10 @@ class BiosServicer(object):
         self._bios_handler.set_section_version(
                 section, new_version, flags, write_through=True)
 
-    @allow_multiple_section_input
     def move_version_backward(self, section):
         """Decrement firmware version for the requested section."""
         self._modify_version(section, -1)
 
-    @allow_multiple_section_input
     def move_version_forward(self, section):
         """Increase firmware version for the requested section."""
         self._modify_version(section, 1)
@@ -481,7 +457,6 @@ class EcServicer(object):
         self._ec_handler.new_image(ec_path)
         self._ec_handler.write_whole()
 
-    @allow_multiple_section_input
     def corrupt_body(self, section):
         """Corrupt the requested EC section body.
 
@@ -558,7 +533,6 @@ class KernelServicer(object):
                 dev_key_path='/usr/share/vboot/devkeys',
                 internal_disk=True)
 
-    @allow_multiple_section_input
     def corrupt_sig(self, section):
         """Corrupt the requested kernel section.
 
@@ -566,7 +540,6 @@ class KernelServicer(object):
         """
         self._kernel_handler.corrupt_kernel(section)
 
-    @allow_multiple_section_input
     def restore_sig(self, section):
         """Restore the requested kernel section (previously corrupted).
 
@@ -586,12 +559,10 @@ class KernelServicer(object):
                         (section, original_version, new_version))
         self._kernel_handler.set_version(section, new_version)
 
-    @allow_multiple_section_input
     def move_version_backward(self, section):
         """Decrement kernel version for the requested section."""
         self._modify_version(section, -1)
 
-    @allow_multiple_section_input
     def move_version_forward(self, section):
         """Increase kernel version for the requested section."""
         self._modify_version(section, 1)

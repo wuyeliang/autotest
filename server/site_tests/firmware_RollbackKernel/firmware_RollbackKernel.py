@@ -86,7 +86,8 @@ class firmware_RollbackKernel(FirmwareTest):
                                   'mainfw_type': 'recovery',
                                   'recovery_reason': recovery_reason,
                                   }))
-            self.faft_client.kernel.move_version_forward(('a', 'b'))
+            self.faft_client.kernel.move_version_forward('a')
+            self.faft_client.kernel.move_version_forward('b')
             self.switcher.mode_aware_reboot()
 
             logging.info("Expected kernel A boot and done.")

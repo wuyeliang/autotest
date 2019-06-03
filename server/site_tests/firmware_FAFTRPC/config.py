@@ -315,7 +315,6 @@ RPC_CATEGORIES = [
                 "passing_args": [
                     ("a", ),
                     ("b", ),
-                    ( ("a", "b"), ),
                 ],
                 "failing_args": [
                     NO_ARGS,
@@ -369,6 +368,7 @@ RPC_CATEGORIES = [
                     NO_ARGS,
                     ONE_INT_ARG,
                     ("ro", ),
+                    ("rw", "rw"),
                 ],
             },
             {
@@ -415,12 +415,12 @@ RPC_CATEGORIES = [
                 "passing_args": [
                     ("a", ),
                     ("b", ),
-                    (("a", "b"), )
                 ],
                 "failing_args": [
                     NO_ARGS,
                     ONE_INT_ARG,
                     ("c", ),
+                    ("a", "b"),
                 ],
             },
             {
