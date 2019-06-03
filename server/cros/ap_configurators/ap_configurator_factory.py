@@ -12,6 +12,7 @@ from autotest_lib.server import site_utils
 from autotest_lib.server.cros import ap_config
 from autotest_lib.server.cros.ap_configurators import ap_cartridge
 from autotest_lib.server.cros.ap_configurators import ap_spec
+from autotest_lib.server.cros.ap_configurators import static_ap_configurator
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 
 CHAOS_URL = 'https://chaos-188802.appspot.com'
@@ -30,12 +31,6 @@ class APConfiguratorFactory(object):
     @attribute ap_config: an APConfiguratorConfig object.
     """
 
-    PREFIX='autotest_lib.server.cros.ap_configurators.'
-    CONFIGURATOR_MAP = {
-        'StaticAPConfigurator':
-            [PREFIX + 'static_ap_configurator',
-                'StaticAPConfigurator'],
-    }
 
     BANDS = 'bands'
     MODES = 'modes'
@@ -48,11 +43,7 @@ class APConfiguratorFactory(object):
         self.ap_list = []
         self.test_type = ap_test_type
         for ap in ap_config.get_ap_list():
-            module_name, configurator_class = \
-                    self.CONFIGURATOR_MAP[ap.get_class()]
-            module = __import__(module_name, fromlist=configurator_class)
-            configurator = module.__dict__[configurator_class]
-            self.ap_list.append(configurator(ap_config=ap))
+            self.ap_list.append(static_ap_configurator.StaticAPConfigurator(ap))
 
 
     def _get_aps_by_visibility(self, visible=True):
