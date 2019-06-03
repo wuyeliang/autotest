@@ -60,6 +60,7 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
         self.psk = ap_config.get_psk()
         self._ssid = ap_config.get_ssid()
         self.rpm_managed = ap_config.get_rpm_managed()
+        self.rpm_unit = ap_config.get_rpm_unit()
 
         self._configuration_success = ap_constants.CONFIG_SUCCESS
         self.config_data = ap_config
@@ -99,18 +100,28 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
 
     def power_down_router(self):
         """power down via rpm"""
-        if self.rpm_managed:
-            self._command_list.append(CartridgeCmd(
-                    self.rpm_client.queue_request,
-                    [self.host_name, 'OFF']))
+        self._append_rpm_command('OFF')
 
 
     def power_up_router(self):
         """power up via rpm"""
-        if self.rpm_managed:
-            self._command_list.append(CartridgeCmd(
-                    self.rpm_client.queue_request,
-                    [self.host_name, 'ON']))
+        self._append_rpm_command('ON')
+
+
+    def _append_rpm_command(self, command):
+        if self.rpm_unit is None:
+            return
+
+        self._command_list.append(CartridgeCmd(
+                self.rpm_client.set_power_via_rpm,
+                [
+                        self.host_name,
+                        self.rpm_unit.hostname,
+                        self.rpm_unit.outlet,
+                        None,
+                        command,
+                ],
+        ))
 
 
     def set_using_ap_spec(self, set_ap_spec, power_up=True):
