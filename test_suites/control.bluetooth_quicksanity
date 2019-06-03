@@ -1,0 +1,26 @@
+# Copyright (c) 2017 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+AUTHOR = "Chrome OS Team"
+NAME = "bluetooth_quicksanity"
+PURPOSE = "Stable bluetooth tests which use peer devices"
+
+TIME = "LONG"
+TEST_CATEGORY = "General"
+TEST_CLASS = "suite"
+TEST_TYPE = "Server"
+
+DOC = """
+This suite runs a series of tests nightly against our Bluetooth hardware
+and software using fizz chameleond host and RN42, RN52 and NRF-52 bluetooth dongles
+"""
+
+import common
+from autotest_lib.server.cros.dynamic_suite import dynamic_suite
+
+args_dict['add_experimental'] = True
+args_dict['name'] = 'bluetooth_quicksanity'
+args_dict['job'] = job
+
+dynamic_suite.reimage_and_run(**args_dict)
