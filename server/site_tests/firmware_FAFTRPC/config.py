@@ -1,11 +1,14 @@
 import operator
 import xmlrpclib
 
+from autotest_lib.client.common_lib.cros import chip_utils
+
 
 NO_ARGS = tuple()
 ONE_INT_ARG = (1, )
 ONE_STR_ARG = ("foo", )
 SAMPLE_FILE = "/tmp/foo"
+CHIP_FW_NAMES = (chip.fw_name for chip in chip_utils.chip_id_map.itervalues())
 
 """
 RPC_CATEGORIES contains all the test cases for our RPC tests.
@@ -502,6 +505,37 @@ RPC_CATEGORIES = [
     {
         "category_name": "updater",
         "test_cases": [
+            # TODO (gredelston/dgoyette):
+            # Uncomment the methods which write to flash memory,
+            # once we are able to set the firmware_updater to "emulate" mode.
+            {
+                "method_names": [
+                    "cleanup",
+                    "stop_daemon",
+                    "start_daemon",
+                    # "modify_ecid_and_flash_to_bios",
+                    "get_ec_hash",
+                    "reset_shellball",
+                    # "run_factory_install",
+                    # "run_recovery",
+                    "cbfs_setup_work_dir",
+                    # "cbfs_sign_and_flash",
+                    "get_temp_path",
+                    "get_keys_path",
+                    "get_work_path",
+                    "get_bios_relative_path",
+                    "get_ec_relative_path",
+                ],
+                "passing_args": [
+                    NO_ARGS,
+                ],
+                "failing_args": [
+                    ONE_INT_ARG,
+                    ONE_STR_ARG,
+                ],
+                "allow_error_msg": ("command cp -rf /var/tmp/faft/autest/work "
+                                    "/var/tmp/faft/autest/cbfs failed"),
+            },
             {
                 "method_names": [
                     "get_fwid",
@@ -542,6 +576,71 @@ RPC_CATEGORIES = [
                 "allow_error_msg": "is already modified",
             },
             {
+                "method_name": "resign_firmware",
+                "passing_args": [
+                    ONE_INT_ARG,
+                    (None, ),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_STR_ARG,
+                    (1, 1),
+                ],
+            },
+            {
+                "method_names": [
+                    "repack_shellball",
+                    "extract_shellball",
+                ],
+                "passing_args": [
+                    NO_ARGS,
+                    ("test", ),
+                    (None, ),
+                ],
+                "failing_args": [
+                    ("foo", "bar"),
+                ]
+            },
+            # {
+            #     "method_name": "run_firmwareupdate",
+            #     "passing_args": [
+            #         ("autoupdate", ),
+            #         ("recovery", ),
+            #         ("bootok", ),
+            #         ("factory_install", ),
+            #         ("bootok", None),
+            #         ("bootok", "foo"),
+            #         ("bootok", "foo", ()),
+            #         ("bootok", "foo", ("--noupdate_ec", "--wp=1")),
+            #     ],
+            #     "failing_args": [NO_ARGS],
+            # },
+            # {
+            #     "method_names": [
+            #         "run_autoupdate",
+            #         "run_bootok",
+            #     ],
+            #     "passing_args": [ONE_STR_ARG],
+            #     "failing_args": [
+            #         NO_ARGS,
+            #         ("foo", "bar"),
+            #     ],
+            # },
+            {
+                "method_names": [
+                    "cbfs_extract_chip",
+                    "cbfs_get_chip_hash",
+                    "cbfs_replace_chip",
+                ],
+                "passing_args": [
+                    (chip_fw_name, ) for chip_fw_name in CHIP_FW_NAMES
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ONE_INT_ARG,
+                ]
+            },
+            {
                 "method_name": "copy_bios",
                 "passing_args": [
                     ('/tmp/fake-bios.bin', )
@@ -552,11 +651,6 @@ RPC_CATEGORIES = [
                 ],
                 "expected_return_type": str
             },
-            {
-                "method_name": "reset_shellball",
-                "passing_args": [NO_ARGS],
-                "failing_args": [ONE_INT_ARG, ONE_STR_ARG]
-            }
         ]
     },
     {
