@@ -2025,12 +2025,6 @@ def get_job_history(**filter_data):
     return rpc_utils.prepare_for_serialization(job_info.get_history())
 
 
-def get_host_history(start_time, end_time, hosts=None, board=None, pool=None):
-    """Deprecated."""
-    raise ValueError('get_host_history rpc is deprecated '
-                     'and no longer implemented.')
-
-
 def shard_heartbeat(shard_hostname, jobs=(), hqes=(), known_job_ids=(),
                     known_host_ids=(), known_host_statuses=()):
     """Receive updates for job statuses from shards and assign hosts and jobs.
