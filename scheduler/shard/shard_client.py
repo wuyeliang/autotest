@@ -163,16 +163,19 @@ class ShardClient(object):
         jobs_serialized = heartbeat_response['jobs']
         suite_keyvals_serialized = heartbeat_response['suite_keyvals']
         incorrect_host_ids = heartbeat_response.get('incorrect_host_ids', [])
+        new_jobs_serialized = self._remove_known_jobs(jobs_serialized)
 
         metrics.Gauge('chromeos/autotest/shard_client/hosts_received'
                       ).set(len(hosts_serialized))
         metrics.Gauge('chromeos/autotest/shard_client/jobs_received'
                       ).set(len(jobs_serialized))
+        metrics.Gauge('chromeos/autotest/shard_client/new_jobs_received'
+                      ).set(len(new_jobs_serialized))
         metrics.Gauge('chromeos/autotest/shard_client/suite_keyvals_received'
                       ).set(len(suite_keyvals_serialized))
 
         self._deserialize_many(hosts_serialized, models.Host, 'host')
-        self._deserialize_many(jobs_serialized, models.Job, 'job')
+        self._deserialize_many(new_jobs_serialized, models.Job, 'job')
         self._deserialize_many(suite_keyvals_serialized, models.JobKeyval,
                                'jobkeyval')
 
@@ -219,6 +222,13 @@ class ShardClient(object):
         except MultipleObjectsReturned as e:
             logging.exception('Failed to remove incorrect hosts %s',
                               incorrect_host_ids)
+
+
+    def _remove_known_jobs(self, serialized_jobs):
+        job_ids = [j['id'] for j in serialized_jobs]
+        known_jobs = models.Job.objects.filter(id__in=job_ids)
+        known_job_ids = set([j.id for j in known_jobs])
+        return [j for j in serialized_jobs if j['id'] not in known_job_ids]
 
 
     @property

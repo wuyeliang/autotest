@@ -132,6 +132,42 @@ class ShardClientIntegrationTest(rdb_testing_utils.AbstractBaseRDBTester,
         models.User.objects.get(login='new_user')
 
 
+    def testProcessHeartbeatResponseIgnoresKnownJobs(self):
+        known_job = self.create_job(deps={'a'})
+        known_serialized_job = known_job.serialize()
+        self._set_job_deps(known_serialized_job, {'b'})
+
+        client = self.initialize_shard_client()
+        client.process_heartbeat_response(
+            _response_with_job(known_serialized_job))
+        self.assert_job_in_shard_database(known_job.id, deps={'a'})
+
+
+    def _set_job_deps(self, serialized_job, deps):
+        temp = self.create_job(deps=deps)
+        serialized_temp = temp.serialize()
+        serialized_job['dependency_labels'] = (
+            serialized_temp['dependency_labels']
+        )
+
+
+    def assert_job_in_shard_database(self, job_id, deps):
+        jobs = models.Job.objects.filter(id=job_id)
+        self.assertEqual(1, len(jobs))
+        job = jobs[0]
+        got = set([l.name for l in job.dependency_labels.all()])
+        self.assertEqual(got, deps)
+
+
+
+def _response_with_job(job):
+    return {
+        'hosts': [],
+        'jobs': [job],
+        'suite_keyvals': [],
+    }
+
+
 if __name__ == '__main__':
     unittest.main()
 
