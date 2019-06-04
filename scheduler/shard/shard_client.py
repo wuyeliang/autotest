@@ -240,7 +240,10 @@ class ShardClient(object):
         return self._shard
 
 
-    def _get_jobs_to_upload(self):
+    def _get_jobs_to_upload(self, limit):
+        """
+        @param limit: Maximum number of jobs to be returned.
+        """
         # The scheduler sets shard to None upon completion of the job.
         # For more information on the shard field's semantic see
         # models.Job.shard. We need to be careful to wait for both the
@@ -250,7 +253,13 @@ class ShardClient(object):
                 shard=None,
                 hostqueueentry__complete=True,
         ).values_list('pk', flat=True))
-        return list(models.Job.objects.filter(pk__in=job_ids).all())
+        jobs = list(models.Job.objects.filter(pk__in=job_ids).all())
+        if len(jobs) > limit:
+            logging.info('Throttling number of jobs to upload from %s to %s.',
+                         len(jobs), limit)
+            jobs = jobs[:limit]
+        return jobs
+
 
 
     def _mark_jobs_as_uploaded(self, job_ids):
@@ -310,11 +319,7 @@ class ShardClient(object):
                      known_job_ids[:max_print])
         logging.info('Total known jobs: %s', len(known_job_ids))
 
-        job_objs = self._get_jobs_to_upload()
-        if len(job_objs) > MAX_UPLOAD_JOBS:
-            logging.info('Throttling number of jobs to upload from %s to %s.',
-                         len(job_objs), MAX_UPLOAD_JOBS)
-            job_objs = job_objs[:MAX_UPLOAD_JOBS]
+        job_objs = self._get_jobs_to_upload(MAX_UPLOAD_JOBS)
 
         hqes = [hqe.serialize(include_dependencies=False)
                 for hqe in self._get_hqes_for_jobs(job_objs)]

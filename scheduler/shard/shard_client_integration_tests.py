@@ -53,7 +53,7 @@ class ShardClientIntegrationTest(rdb_testing_utils.AbstractBaseRDBTester,
 
         # Jobs that have successfully gone through a set_status should
         # be ready for upload.
-        jobs = client._get_jobs_to_upload()
+        jobs = client._get_jobs_to_upload(10)
         assert(job.id in [j.id for j in jobs])
 
 
@@ -94,7 +94,7 @@ class ShardClientIntegrationTest(rdb_testing_utils.AbstractBaseRDBTester,
 
         # Make sure the job with a shard but without complete is not
         # in uploaded jobs.
-        jobs = client._get_jobs_to_upload()
+        jobs = client._get_jobs_to_upload(10)
         assert(jobs == [])
 
 
