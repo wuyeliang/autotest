@@ -98,6 +98,7 @@ RPC_TIMEOUT_MIN = 30
 RPC_DELAY_SEC = 5
 
 MAX_UPLOAD_JOBS = 1000
+MAX_KNOWN_JOBS_TO_REPORT = 2000
 
 _heartbeat_client = None
 
@@ -286,10 +287,20 @@ class ShardClient(object):
         return hqes
 
 
-    def _get_incomplete_job_ids(self):
+    def _get_incomplete_job_ids(self, limit):
+        """
+        @param limit: Include no more than limit most recent incomplete jobs.
+        """
         jobs = models.Job.objects.filter(hostqueueentry__complete=False)
         self._report_job_time_distribution(jobs)
-        return list(jobs.values_list('id', flat=True))
+
+        ids = list(jobs.values_list('id', flat=True))
+        if _incomplete_job_throttling_enabled() and len(ids) > limit:
+            logging.info('Throttling number of incomplete jobs from %d to %d.',
+                         len(ids), limit)
+            ids = list(reversed(sorted(ids)))
+            ids = ids[:limit]
+        return ids
 
 
     def _get_known_hosts(self):
@@ -312,11 +323,7 @@ class ShardClient(object):
         @return: A heartbeat packet.
         """
         known_host_ids, known_host_statuses = self._get_known_hosts()
-        known_job_ids = self._get_incomplete_job_ids()
-        max_print = 100
-        logging.info('Known jobs (first %s): %s', max_print,
-                     known_job_ids[:max_print])
-        logging.info('Total known jobs: %s', len(known_job_ids))
+        known_job_ids = self._get_incomplete_job_ids(MAX_KNOWN_JOBS_TO_REPORT)
 
         job_objs = self._get_jobs_to_upload(MAX_UPLOAD_JOBS)
         hqes = [hqe.serialize(include_dependencies=False)
@@ -499,6 +506,19 @@ def get_shard_client():
     shard_hostname = _get_shard_hostname_and_ensure_running_on_shard()
     tick_pause_sec = _get_tick_pause_sec()
     return ShardClient(global_afe_hostname, shard_hostname, tick_pause_sec)
+
+
+def _incomplete_job_throttling_enabled():
+    """A temporary flag to safely roll out incomplete job upload throttling.
+
+    See crbug.com/966872.
+    """
+    return global_config.global_config.get_config_value(
+        'SHARD',
+        'throttle_incomplete_jobs_upload',
+        type=bool,
+        default=False,
+    )
 
 
 def main():

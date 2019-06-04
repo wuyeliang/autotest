@@ -35,6 +35,26 @@ class ShardClientIntegrationTest(rdb_testing_utils.AbstractBaseRDBTester,
         return shard_client.get_shard_client()
 
 
+    def testIncompleteJobThrottling(self):
+        client = self.initialize_shard_client()
+        job = self.create_job(deps=set(['a']), shard_hostname=client.hostname)
+        scheduler_models.initialize()
+        hqe = scheduler_models.HostQueueEntry.fetch(
+                where='job_id = %s' % job.id)[0]
+
+        global_config.global_config.override_config_value(
+                'SHARD', 'throttle_incomplete_jobs_upload', 'False')
+        job_ids = client._get_incomplete_job_ids(0)
+        assert(job_ids == [job.id])
+
+        global_config.global_config.override_config_value(
+                'SHARD', 'throttle_incomplete_jobs_upload', 'True')
+        job_ids = client._get_incomplete_job_ids(0)
+        assert(job_ids == [])
+        job_ids = client._get_incomplete_job_ids(1)
+        assert(job_ids == [job.id])
+
+
     def testCompleteStatusBasic(self):
         """Test that complete jobs are uploaded properly."""
 
@@ -48,7 +68,7 @@ class ShardClientIntegrationTest(rdb_testing_utils.AbstractBaseRDBTester,
         hqe.set_status('Completed')
 
         # Only incomplete jobs should be in known ids.
-        job_ids = client._get_incomplete_job_ids()
+        job_ids = client._get_incomplete_job_ids(10)
         assert(job_ids == [])
 
         # Jobs that have successfully gone through a set_status should
@@ -89,7 +109,7 @@ class ShardClientIntegrationTest(rdb_testing_utils.AbstractBaseRDBTester,
 
         # Make sure the job with a shard but without complete is still
         # in known_ids.
-        job_ids = client._get_incomplete_job_ids()
+        job_ids = client._get_incomplete_job_ids(10)
         assert(set(job_ids) == set([job.id]))
 
         # Make sure the job with a shard but without complete is not
