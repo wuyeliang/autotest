@@ -2,23 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib import utils
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
-
-COMMON_ELEMENTS_ONE = "['settings-ui', '#main', 'settings-basic-page', "
-COMMON_ELEMENTS_TWO = (
-    "'settings-privacy-page', 'settings-clear-browsing-data-dialog', ")
-ADVANCED_TAB = (
-    COMMON_ELEMENTS_ONE + COMMON_ELEMENTS_TWO + "'#advancedTabTitle']")
-BROWSER_HISTORY_CHECK = (
-    COMMON_ELEMENTS_ONE + COMMON_ELEMENTS_TWO + "'#browsingCheckbox'," +
-    " '#outerRow']")
-DOWNLOAD_HISTORY_CHECK = (
-    COMMON_ELEMENTS_ONE + COMMON_ELEMENTS_TWO + "'#downloadCheckbox'," +
-    " '#outerRow']")
-
-CHECKED = 'checked=""'
-DISABLED = 'disabled=""'
 
 
 class policy_AllowDeletingBrowserHistory(
@@ -33,42 +17,6 @@ class policy_AllowDeletingBrowserHistory(
     """
     version = 1
 
-    def _click_advanced_tab(self, active_tab):
-        advanced_tab_content = utils.shadowroot_query(
-            ADVANCED_TAB, "innerHTML")
-        utils.poll_for_condition(
-            lambda: self.check_page_readiness(
-                active_tab, advanced_tab_content),
-            exception=error.TestFail('Advanced tab is not ready.'),
-            timeout=5,
-            sleep_interval=1)
-
-        click_advanced_tab = utils.shadowroot_query(
-            ADVANCED_TAB, "click()")
-        active_tab.EvaluateJavaScript(click_advanced_tab)
-
-    def _get_browser_history_content(self, active_tab):
-        browser_history_content = utils.shadowroot_query(
-            BROWSER_HISTORY_CHECK, "innerHTML")
-        utils.poll_for_condition(
-            lambda: self.check_page_readiness(
-                active_tab, browser_history_content),
-            exception=error.TestFail(
-                'Browser history content not loaded.'),
-            timeout=5,
-            sleep_interval=1)
-
-        browsing_history = active_tab.EvaluateJavaScript(
-            browser_history_content)
-        return browsing_history
-
-    def _get_download_history_content(self, active_tab):
-        download_history_content = utils.shadowroot_query(
-            DOWNLOAD_HISTORY_CHECK, "innerHTML")
-        download_history = active_tab.EvaluateJavaScript(
-            download_history_content)
-        return download_history
-
     def _check_safety_browsing_page(self, case):
         """
         Opens a new chrome://settings/clearBrowserData page and checks
@@ -77,24 +25,21 @@ class policy_AllowDeletingBrowserHistory(
         @param case: policy value.
 
         """
-        active_tab = self.navigate_to_url("chrome://settings/clearBrowserData")
+        self.navigate_to_url("chrome://settings/clearBrowserData")
+        self.ui.start_ui_root(self.cr)
+        self.ui.doDefault_on_obj('Advanced')
+        self.ui.wait_for_ui_obj('/Browsing history/',
+                                isRegex=True,
+                                role='checkBox')
 
-        self._click_advanced_tab(active_tab)
-
-        browsing_history = self._get_browser_history_content(active_tab)
-
-        download_history = self._get_download_history_content(active_tab)
-
-        if case is False:
-            if (DISABLED not in browsing_history) and (
-                DISABLED not in download_history):
-                    raise error.TestFail('User is able to delete history.')
-
-        else:
-            if (CHECKED not in browsing_history) and (
-                CHECKED not in download_history):
-                    raise error.TestFail('User is unable to delete history.')
-
+        button_disabled = self.ui.is_obj_restricted(
+                '/Browsing history/',
+                isRegex=True,
+                role='checkBox')
+        if case is False and not button_disabled:
+            raise error.TestFail('User is able to delete history.')
+        elif case is not False and button_disabled:
+            raise error.TestFail('User is unable to delete history.')
 
     def run_once(self, case):
         """
