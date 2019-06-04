@@ -39,6 +39,9 @@ class ShardClientTest(mox.MoxTestBase,
 
     def tearDown(self):
         self.mox.UnsetStubs()
+        self._frontend_common_teardown()
+        # Without this global_config will keep state over test cases
+        global_config.global_config.reset_config_values()
 
 
     def setup_mocks(self):
@@ -46,6 +49,7 @@ class ShardClientTest(mox.MoxTestBase,
         self.afe = frontend_wrappers.RetryingAFE(server=mox.IgnoreArg(),
                                                  delay_sec=mox.IgnoreArg(),
                                                  timeout_min=mox.IgnoreArg())
+
 
     def setup_global_config(self):
         global_config.global_config.override_config_value(
@@ -75,13 +79,6 @@ class ShardClientTest(mox.MoxTestBase,
                 'suite_keyvals': return_suite_keyvals,
                 'incorrect_host_ids': return_incorrect_hosts,
             })
-
-
-    def tearDown(self):
-        self._frontend_common_teardown()
-
-        # Without this global_config will keep state over test cases
-        global_config.global_config.reset_config_values()
 
 
     def _get_sample_serialized_host(self):
