@@ -1627,7 +1627,9 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
 
         if options.get('keyvals'):
             for key, value in options['keyvals'].iteritems():
-                JobKeyval.objects.create(job=job, key=key, value=value)
+                # None (or NULL) is not acceptable by DB, so change it to an
+                # empty string in case.
+                JobKeyval.objects.create(job=job, key=key, value=value or '')
 
         return job
 

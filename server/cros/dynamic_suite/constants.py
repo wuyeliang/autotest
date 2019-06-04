@@ -61,7 +61,7 @@ PARENT_JOB_ID = 'parent_job_id'
 # Keys of keyvals inherited from a suite job to test jobs.
 KEYVAL_CIDB_BUILD_ID = 'cidb_build_id'
 KEYVAL_CIDB_BUILD_STAGE_ID = 'cidb_build_stage_id'
-KEYVAL_BRANCH = 'cidb_build_id'
+KEYVAL_BRANCH = 'branch'
 KEYVAL_BUILDER_NAME = 'build_config'
 KEYVAL_MASTER_BUILDER_NAME = 'master_build_config'
 INHERITED_KEYVALS = (
