@@ -27,16 +27,11 @@ from autotest_lib.scheduler import scheduler_lib
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.server import utils as server_utils
 from chromite.lib import timeout_util
+from chromite.lib import metrics
+from chromite.lib import ts_mon_config
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import transaction
-
-try:
-    from chromite.lib import metrics
-    from chromite.lib import ts_mon_config
-    from infra_libs import ts_mon
-except ImportError:
-    metrics = server_utils.metrics_mock
-    ts_mon_config = server_utils.metrics_mock
+from infra_libs import ts_mon
 
 
 """
