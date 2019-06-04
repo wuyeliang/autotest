@@ -241,19 +241,16 @@ class ShardClient(object):
 
 
     def _get_jobs_to_upload(self):
-        jobs = []
         # The scheduler sets shard to None upon completion of the job.
         # For more information on the shard field's semantic see
         # models.Job.shard. We need to be careful to wait for both the
         # shard_id and the complete bit here, or we will end up syncing
         # the job without ever setting the complete bit.
         job_ids = list(models.Job.objects.filter(
-            shard=None,
-            hostqueueentry__complete=True).values_list('pk', flat=True))
-
-        for job_to_upload in models.Job.objects.filter(pk__in=job_ids).all():
-            jobs.append(job_to_upload)
-        return jobs
+                shard=None,
+                hostqueueentry__complete=True,
+        ).values_list('pk', flat=True))
+        return list(models.Job.objects.filter(pk__in=job_ids).all())
 
 
     def _mark_jobs_as_uploaded(self, job_ids):
