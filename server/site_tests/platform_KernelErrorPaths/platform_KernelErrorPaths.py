@@ -5,6 +5,7 @@
 import logging, os, time
 
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib import utils
 from autotest_lib.client.cros import constants
 from autotest_lib.client.cros.crash.crash_test import CrashTest as CrashTestDefs
 from autotest_lib.server import test
@@ -13,6 +14,8 @@ class platform_KernelErrorPaths(test.test):
     """Performs various kernel crash tests and makes sure that the expected
        results are found in the crash report."""
     version = 1
+    POLLING_INTERVAL_SECONDS = 5
+    KCRASH_TIMEOUT_SECONDS = 120
 
     def _run_client_command(self, command):
         try:
@@ -107,18 +110,17 @@ class platform_KernelErrorPaths(test.test):
             self.client.run('ps alx')
             raise
 
-        # give the crash_reporter some time to log the crash
-        time.sleep(5)
-
-        # check if dir /var/spool/crash exists on client or not
-        if not self._exists_on_client(self._crash_log_dir):
-            raise error.TestFail(
-                '%s does not exists on client' % self._crash_log_dir)
-
-        # check if kernel.*.kcrash files are on the client or not
         kcrash_file_path = '%s/kernel.*.kcrash' % self._crash_log_dir
-        if not self.client.list_files_glob(kcrash_file_path):
-            raise error.TestFail('No kcrash files found on client')
+
+        # give the crash_reporter some time to log the crash
+        try:
+          utils.poll_for_condition(
+              condition=lambda: self.client.list_files_glob(kcrash_file_path),
+              timeout=self.KCRASH_TIMEOUT_SECONDS,
+              sleep_interval=self.POLLING_INTERVAL_SECONDS,
+              desc="crash_reporter logging crash")
+        except utils.TimeoutError:
+          raise error.TestFail('No kcrash files found on client')
 
         result = self.client.run('cat %s/kernel.*.kcrash' %
                                  self._crash_log_dir)
