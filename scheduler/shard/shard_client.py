@@ -276,33 +276,22 @@ class ShardClient(object):
         return hqes
 
 
-    def _get_known_jobs_and_hosts(self):
-        """Returns lists of host and job info to send in a heartbeat.
-
-        The host and job ids are ids of objects that are already present on the
-        shard and therefore don't need to be sent again.
-
-        For jobs, only incomplete jobs are sent, as the master won't send
-        already completed jobs anyway. This helps keeping the list of id's
-        considerably small.
-
-        For hosts, host status in addition to host id are sent to master
-        to sync the host status.
-
-        @returns: Tuple of three lists. The first one contains job ids, the
-                  second one host ids, and the third one host statuses.
-        """
+    def _get_incomplete_job_ids(self):
         jobs = models.Job.objects.filter(hostqueueentry__complete=False)
-        job_ids = list(jobs.values_list('id', flat=True))
         self._report_job_time_distribution(jobs)
+        return list(jobs.values_list('id', flat=True))
 
+
+    def _get_known_hosts(self):
+        """
+        @return: ([host_id], [host_status]) --  tuple of list of host IDs and
+                 their corresponding statuses.
+        """
         host_models = models.Host.objects.filter(invalid=0)
-        host_ids = []
-        host_statuses = []
-        for h in host_models:
-            host_ids.append(h.id)
-            host_statuses.append(h.status)
-        return job_ids, host_ids, host_statuses
+        return (
+            [h.id for h in host_models],
+            [h.status for h in host_models],
+        )
 
 
     def _heartbeat_packet(self):
@@ -312,15 +301,14 @@ class ShardClient(object):
 
         @return: A heartbeat packet.
         """
-        known_job_ids, known_host_ids, known_host_statuses = (
-                self._get_known_jobs_and_hosts())
+        known_host_ids, known_host_statuses = self._get_known_hosts()
+        known_job_ids = self._get_incomplete_job_ids()
         max_print = 100
         logging.info('Known jobs (first %s): %s', max_print,
                      known_job_ids[:max_print])
         logging.info('Total known jobs: %s', len(known_job_ids))
 
         job_objs = self._get_jobs_to_upload(MAX_UPLOAD_JOBS)
-
         hqes = [hqe.serialize(include_dependencies=False)
                 for hqe in self._get_hqes_for_jobs(job_objs)]
         jobs = [job.serialize(include_dependencies=False) for job in job_objs]
