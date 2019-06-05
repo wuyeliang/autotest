@@ -3,6 +3,7 @@
 import contextlib
 import logging
 from datetime import datetime
+from datetime import timedelta
 import django.core
 try:
     from django.db import models as dbmodels, connection
@@ -1397,6 +1398,8 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                  AND afe_jobs.id IN (%(known_ids)s))
     '''
 
+    EXCLUDE_OLD_JOBS_CLAUSE = 'AND (afe_jobs.created_on > "%(cutoff)s")'
+
     SQL_SHARD_JOBS = '''
         SELECT DISTINCT(afe_jobs.id) FROM afe_jobs
         INNER JOIN afe_host_queue_entries
@@ -1409,7 +1412,8 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         WHERE (afe_shards_labels.shard_id = %(shard_id)s
                AND afe_host_queue_entries.complete != 1
                AND afe_host_queue_entries.active != 1
-               %(exclude_known_jobs)s)
+               %(exclude_known_jobs)s
+               %(exclude_old_jobs)s)
     '''
 
     # Jobs can be created with assigned hosts and have no dependency
@@ -1431,7 +1435,8 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                AND afe_host_queue_entries.active != 1
                AND afe_host_queue_entries.meta_host IS NULL
                AND afe_host_queue_entries.host_id IS NOT NULL
-               %(exclude_known_jobs)s)
+               %(exclude_known_jobs)s
+               %(exclude_old_jobs)s)
     '''
 
     # Even if we had filters about complete, active and aborted
@@ -1497,6 +1502,9 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         'AUTOTEST_WEB', 'parse_failed_repair_default', type=bool, default=False)
     FETCH_READONLY_JOBS = global_config.global_config.get_config_value(
         'AUTOTEST_WEB','readonly_heartbeat', type=bool, default=False)
+    SKIP_JOBS_CREATED_BEFORE = global_config.global_config.get_config_value(
+        'SHARD', 'skip_jobs_created_before', type=int, default=0)
+
 
 
     owner = dbmodels.CharField(max_length=255)
@@ -1701,6 +1709,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
     def _get_jobs_without_hosts(cls, shard, known_ids):
         raw_sql = cls.SQL_SHARD_JOBS % {
             'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
+            'exclude_old_jobs': cls._exclude_old_jobs_clause(),
             'shard_id': shard.id
         }
         return set([j.id for j in Job.objects.raw(raw_sql)])
@@ -1715,6 +1724,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
             label_ids = [str(l.id) for l in static_labels]
             query = Job.objects.raw(cls.SQL_SHARD_JOBS_WITH_HOSTS % {
                 'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
+                'exclude_old_jobs': cls._exclude_old_jobs_clause(),
                 'host_label_table': 'afe_static_hosts_labels',
                 'host_label_column': 'staticlabel_id',
                 'label_ids': '(%s)' % ','.join(label_ids)})
@@ -1723,6 +1733,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
             label_ids = [str(l.id) for l in non_static_labels]
             query = Job.objects.raw(cls.SQL_SHARD_JOBS_WITH_HOSTS % {
                 'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
+                'exclude_old_jobs': cls._exclude_old_jobs_clause(),
                 'host_label_table': 'afe_hosts_labels',
                 'host_label_column': 'label_id',
                 'label_ids': '(%s)' % ','.join(label_ids)})
@@ -1736,6 +1747,23 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
             return ''
         return (cls.EXCLUDE_KNOWN_JOBS_CLAUSE %
                 {'known_ids': ','.join([str(i) for i in known_ids])})
+
+
+    @classmethod
+    def _exclude_old_jobs_clause(cls):
+        """Filter queried jobs to be created within a few hours in the past.
+
+        With this clause, any jobs older than a configurable number of hours are
+        skipped in the jobs query.
+        The job creation window affects the overall query performance. Longer
+        creation windows require a range query over more Job table rows using
+        the created_on column index. c.f. http://crbug.com/966872#c35
+        """
+        if cls.SKIP_JOBS_CREATED_BEFORE <= 0:
+            return ''
+        cutoff = datetime.now()- timedelta(hours=cls.SKIP_JOBS_CREATED_BEFORE)
+        return (cls.EXCLUDE_OLD_JOBS_CLAUSE %
+                {'cutoff': cutoff.strftime('%Y-%m-%d %H:%M:%S')})
 
 
     def queue(self, hosts, is_template=False):
