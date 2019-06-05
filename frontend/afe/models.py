@@ -1402,16 +1402,16 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
     #     - Jobs without host_queue_entries
     NON_ABORTED_KNOWN_JOBS = '(t2.aborted = 0 AND t1.id IN (%(known_ids)s))'
 
-    SQL_SHARD_JOBS = (
-        'SELECT DISTINCT(t1.id) FROM afe_jobs t1 '
-        'INNER JOIN afe_host_queue_entries t2  ON '
-        '  (t1.id = t2.job_id AND t2.complete != 1 AND t2.active != 1 '
-        '   %(check_known_jobs)s) '
-        'LEFT OUTER JOIN afe_jobs_dependency_labels t3 ON (t1.id = t3.job_id) '
-        'JOIN afe_shards_labels t4 '
-        '  ON (t4.label_id = t3.label_id OR t4.label_id = t2.meta_host) '
-        'WHERE t4.shard_id = %(shard_id)s'
-        )
+    SQL_SHARD_JOBS = '''
+        SELECT DISTINCT(t1.id) FROM afe_jobs t1
+        INNER JOIN afe_host_queue_entries t2  ON
+          (t1.id = t2.job_id AND t2.complete != 1 AND t2.active != 1
+           %(check_known_jobs)s)
+        LEFT OUTER JOIN afe_jobs_dependency_labels t3 ON (t1.id = t3.job_id)
+        JOIN afe_shards_labels t4
+          ON (t4.label_id = t3.label_id OR t4.label_id = t2.meta_host)
+        WHERE t4.shard_id = %(shard_id)s
+    '''
 
     # Jobs can be created with assigned hosts and have no dependency
     # labels nor meta_host.
@@ -1421,15 +1421,15 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
     #     - one of the host's labels matches the shard's label.
     # Non-aborted known jobs, completed jobs, active jobs, jobs
     # without hqe are exluded as we do with SQL_SHARD_JOBS.
-    SQL_SHARD_JOBS_WITH_HOSTS = (
-        'SELECT DISTINCT(t1.id) FROM afe_jobs t1 '
-        'INNER JOIN afe_host_queue_entries t2 ON '
-        '  (t1.id = t2.job_id AND t2.complete != 1 AND t2.active != 1 '
-        '   AND t2.meta_host IS NULL AND t2.host_id IS NOT NULL '
-        '   %(check_known_jobs)s) '
-        'LEFT OUTER JOIN %(host_label_table)s t3 ON (t2.host_id = t3.host_id) '
-        'WHERE (t3.%(host_label_column)s IN %(label_ids)s)'
-        )
+    SQL_SHARD_JOBS_WITH_HOSTS = '''
+        SELECT DISTINCT(t1.id) FROM afe_jobs t1
+        INNER JOIN afe_host_queue_entries t2 ON
+          (t1.id = t2.job_id AND t2.complete != 1 AND t2.active != 1
+           AND t2.meta_host IS NULL AND t2.host_id IS NOT NULL
+           %(check_known_jobs)s)
+        LEFT OUTER JOIN %(host_label_table)s t3 ON (t2.host_id = t3.host_id)
+        WHERE (t3.%(host_label_column)s IN %(label_ids)s)
+    '''
 
     # Even if we had filters about complete, active and aborted
     # bits in the above two SQLs, there is a chance that
@@ -1438,14 +1438,14 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
     # This happens when a job has two (or more) hqes and at least
     # one hqe has different bits than others.
     # We use a second sql to ensure we exclude all un-desired jobs.
-    SQL_JOBS_TO_EXCLUDE =(
-        'SELECT t1.id FROM afe_jobs t1 '
-        'INNER JOIN afe_host_queue_entries t2 ON '
-        '  (t1.id = t2.job_id) '
-        'WHERE (t1.id in (%(candidates)s) '
-        '  AND (t2.complete=1 OR t2.active=1 '
-        '  %(check_known_jobs)s))'
-        )
+    SQL_JOBS_TO_EXCLUDE = '''
+        SELECT t1.id FROM afe_jobs t1
+        INNER JOIN afe_host_queue_entries t2 ON
+          (t1.id = t2.job_id)
+        WHERE (t1.id in (%(candidates)s)
+          AND (t2.complete=1 OR t2.active=1
+          %(check_known_jobs)s))
+    '''
 
     def _deserialize_relation(self, link, data):
         if link in ['hostqueueentry_set', 'jobkeyval_set']:
