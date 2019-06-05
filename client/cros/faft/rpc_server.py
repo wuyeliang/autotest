@@ -12,7 +12,7 @@ from optparse import OptionParser
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 import common
-from autotest_lib.client.cros.faft.rpc_functions import RPCFunctions
+from autotest_lib.client.cros.faft.rpc_functions import RPCRouter
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
                                 allow_none=True,
                                 logRequests=True)
     server.register_introspection_functions()
-    server.register_instance(RPCFunctions())
+    server.register_instance(RPCRouter())
     print '[%s] XMLRPC Server: Serving FAFT functions on port %s' % (str(
             datetime.now()), options.port)
 
