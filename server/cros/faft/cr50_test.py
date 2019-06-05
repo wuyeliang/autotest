@@ -21,9 +21,10 @@ class Cr50Test(FirmwareTest):
     version = 1
 
     RESPONSE_TIMEOUT = 180
-    CR50_GS_URL = 'gs://chromeos-localmirror-private/distfiles/chromeos-cr50-%s/'
-    CR50_DEBUG_FILE = '*/cr50_dbg_%s.bin'
-    CR50_PROD_FILE = 'cr50.%s.bin.prod'
+    GS_PRIVATE = 'gs://chromeos-localmirror-private/distfiles/*/'
+    GS_PUBLIC = 'gs://chromeos-localmirror/distfiles/'
+    CR50_DEBUG_FILE =  '*/cr50_dbg_%s.bin%s'
+    CR50_PROD_FILE = 'cr50.r0.0.10.w%s%s.tbz2'
     NONE = 0
     # Saved the original device state during init.
     INITIAL_STATE = 1 << 0
@@ -94,9 +95,9 @@ class Cr50Test(FirmwareTest):
             self._save_original_images(full_args.get('release_path', ''))
             # We successfully saved the device images
             self._saved_state |= self.IMAGES
-        except error.CmdError, e:
+        except error.TestFail as e:
             if restore_cr50_state:
-                if 'One or more URLs matched no objects.' in str(e):
+                if 'Could not find' in str(e):
                     raise error.TestNAError('Need DBG image to run test')
                 raise
         except:
@@ -478,54 +479,69 @@ class Cr50Test(FirmwareTest):
         self._reset_ccd_settings()
 
 
-    def find_cr50_gs_image(self, filename, image_type=None):
+    def find_cr50_gs_image(self, gsurl):
         """Find the cr50 gs image name.
 
         Args:
-            filename: the cr50 filename to match to
-            image_type: release or debug. If it is not specified we will search
-                        both the release and debug directories
+            gsurl: the cr50 image location
         Returns:
-            a tuple of the gsutil bucket, filename
+            a list of the gsutil bucket, filename or None if the file can't be
+            found
         """
-        gs_url = self.CR50_GS_URL % (image_type if image_type else '*')
-        gs_filename = os.path.join(gs_url, filename)
-        bucket, gs_filename = utils.gs_ls(gs_filename)[0].rsplit('/', 1)
-        return bucket, gs_filename
+        try:
+            return utils.gs_ls(gsurl)[0].rsplit('/', 1)
+        except error.CmdError:
+            logging.info('%s does not exist', gsurl)
+            return None
 
 
-    def download_cr50_gs_image(self, filename, image_bid='', bucket=None,
-                               image_type=None):
+    def _extract_cr50_image(self, archive, fn):
+        """Extract the filename from the given archive
+        Aargs:
+            archive: the archive location on the host
+            fn: the file to extract
+
+        Returns:
+            The location of the extracted file
+        """
+        remote_dir = os.path.dirname(archive)
+        result = self.host.run('tar xfv %s -C %s' % (archive, remote_dir))
+        for line in result.stdout.splitlines():
+            if os.path.basename(line) == fn:
+                return os.path.join(remote_dir, line)
+        raise error.TestFail('%s was not extracted from %s' % (fn , archive))
+
+
+    def download_cr50_gs_image(self, gsurl, extract_fn, image_bid):
         """Get the image from gs and save it in the autotest dir.
 
         Args:
-            filename: The cr50 image basename
-            image_bid: the board id info list or string. It will be added to the
-                       filename.
-            bucket: The gs bucket name
-            image_type: 'debug' or 'release'. This will be used to determine
-                        the bucket if the bucket is not given.
+            gsurl: The gs url for the cr50 image
+            extract_fn: The name of the file to extract from the cr50 image
+                        tarball. Don't extract anything if extract_fn is None.
+            image_bid: the image symbolic board id
         Returns:
             A tuple with the local path and version
         """
-        # Add the image bid string to the filename
-        if image_bid:
-            bid_str = cr50_utils.GetBoardIdInfoString(image_bid,
-                                                       symbolic=True)
-            filename += '.' + bid_str.replace(':', '_')
-
-        if not bucket:
-            bucket, filename = self.find_cr50_gs_image(filename, image_type)
+        file_info = self.find_cr50_gs_image(gsurl)
+        if not file_info:
+            raise error.TestFail('Could not find %s' % gsurl)
+        bucket, fn = file_info
 
         remote_temp_dir = '/tmp/'
-        src = os.path.join(remote_temp_dir, filename)
-        dest = os.path.join(self.resultsdir, filename)
+        src = os.path.join(remote_temp_dir, fn)
+        dest = os.path.join(self.resultsdir, fn)
 
         # Copy the image to the dut
         gsutil_wrapper.copy_private_bucket(host=self.host,
                                            bucket=bucket,
-                                           filename=filename,
+                                           filename=fn,
                                            destination=remote_temp_dir)
+        if extract_fn:
+            src = self._extract_cr50_image(src, extract_fn)
+            logging.info('extracted %s', src)
+            # Remove .tbz2 from the local path.
+            dest = os.path.splitext(dest)[0]
 
         self.host.get_file(src, dest)
         ver = cr50_utils.GetBinVersion(self.host, src)
@@ -533,9 +549,9 @@ class Cr50Test(FirmwareTest):
         # Compare the image board id to the downloaded image to make sure we got
         # the right file
         downloaded_bid = cr50_utils.GetBoardIdInfoString(ver[2], symbolic=True)
-        if image_bid and bid_str != downloaded_bid:
+        if image_bid and image_bid != downloaded_bid:
             raise error.TestError('Could not download image with matching '
-                                  'board id wanted %s got %s' % (bid_str,
+                                  'board id wanted %s got %s' % (image_bid,
                                   downloaded_bid))
         return dest, ver
 
@@ -551,15 +567,25 @@ class Cr50Test(FirmwareTest):
         Returns:
             A tuple with the debug image local path and version
         """
-        # Debug images are node locked with the devid. Add the devid to the
-        # filename
-        filename = self.CR50_DEBUG_FILE % (devid.replace(' ', '_'))
+        bid_ext = ''
+        # Add the image bid string to the filename
+        if image_bid:
+            image_bid = cr50_utils.GetBoardIdInfoString(image_bid,
+                                                        symbolic=True)
+            bid_ext = '.' + image_bid.replace(':', '_')
 
-        # Download the image
-        dest, ver = self.download_cr50_gs_image(filename, image_bid=image_bid,
-                                                image_type='debug')
+        gsurl = os.path.join(self.GS_PRIVATE +
+                (self.CR50_DEBUG_FILE % (devid.replace(' ', '_'), bid_ext)))
+        return self.download_cr50_gs_image(gsurl, None, image_bid)
 
-        return dest, ver
+
+    def _find_release_image_gsurl(self, fn):
+        """Find the gs url for the release image"""
+        for gsbucket in [self.GS_PUBLIC, self.GS_PRIVATE]:
+            gsurl = os.path.join(gsbucket, fn)
+            if self.find_cr50_gs_image(gsurl):
+                return gsurl
+        raise error.TestFail('%s is not on google storage' % fn)
 
 
     def download_cr50_release_image(self, image_rw, image_bid=''):
@@ -573,12 +599,19 @@ class Cr50Test(FirmwareTest):
         Returns:
             A tuple with the release image local path and version
         """
-        # Release images can be found using the rw version
-        filename = self.CR50_PROD_FILE % image_rw
+        bid_ext = ''
+        # Add the image bid string to the gsurl
+        if image_bid:
+            image_bid = cr50_utils.GetBoardIdInfoString(image_bid,
+                                                      symbolic=True)
+            bid_ext = '_' + image_bid.replace(':', '_')
+        release_fn = self.CR50_PROD_FILE % (image_rw, bid_ext)
+        gsurl = self._find_release_image_gsurl(release_fn)
 
+        # Release images can be found using the rw version
         # Download the image
-        dest, ver = self.download_cr50_gs_image(filename, image_bid=image_bid,
-                                                image_type='release')
+        dest, ver = self.download_cr50_gs_image(gsurl, 'cr50.bin.prod',
+                                                image_bid)
 
         # Compare the rw version and board id info to make sure the right image
         # was found
