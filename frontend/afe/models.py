@@ -1651,25 +1651,33 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         """Assigns unassigned jobs to a shard.
 
         For all labels that have been assigned to this shard, all jobs that
-        have this label, are assigned to this shard.
-
-        Jobs that are assigned to the shard but aren't already present on the
-        shard are returned.
+        have this label are assigned to this shard.
 
         @param shard: The shard to assign jobs to.
-        @param known_ids: List of all ids of incomplete jobs, the shard already
+        @param known_ids: List of all ids of incomplete jobs the shard already
                           knows about.
-                          This is used to figure out which jobs should be sent
-                          to the shard. If shard_ids were used instead, jobs
-                          would only be transferred once, even if the client
-                          failed persisting them.
-                          The number of unfinished jobs usually lies in O(1000).
-                          Assuming one id takes 8 chars in the json, this means
-                          overhead that lies in the lower kilobyte range.
-                          A not in query with 5000 id's takes about 30ms.
 
         @returns The job objects that should be sent to the shard.
         """
+        job_ids = cls._get_new_jobs_for_shard(shard, known_ids)
+        if not job_ids:
+            return []
+        cls._assign_jobs_to_shard(job_ids, shard)
+        return cls._jobs_with_ids(job_ids)
+
+
+    @classmethod
+    def _assign_jobs_to_shard(cls, job_ids, shard):
+        Job.objects.filter(pk__in=job_ids).update(shard=shard)
+
+
+    @classmethod
+    def _jobs_with_ids(cls, job_ids):
+        return list(Job.objects.filter(pk__in=job_ids).all())
+
+
+    @classmethod
+    def _get_new_jobs_for_shard(cls, shard, known_ids):
         # Disclaimer: Concurrent heartbeats should not occur in today's setup.
         # If this changes or they are triggered manually, this applies:
         # Jobs may be returned more than once by concurrent calls of this
@@ -1729,11 +1737,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                     cls.SQL_JOBS_TO_EXCLUDE %
                     {'candidates': ','.join([str(i) for i in job_ids])})
             job_ids -= set([j.id for j in query])
-
-        if job_ids:
-            Job.objects.filter(pk__in=job_ids).update(shard=shard)
-            return list(Job.objects.filter(pk__in=job_ids).all())
-        return []
+        return job_ids
 
 
     def queue(self, hosts, is_template=False):
