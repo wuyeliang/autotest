@@ -1391,18 +1391,9 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                                          'jobkeyval_set',
                                          'shard'])
 
-    # SQL for selecting jobs that should be sent to shard.
-    # We use raw sql as django filters were not optimized.
-    # The following jobs are excluded by the SQL.
-    #     - Non-aborted jobs known to shard as specified in |known_ids|.
-    #       Note for jobs aborted on master, even if already known to shard,
-    #       will be sent to shard again so that shard can abort them.
-    #     - Completed jobs
-    #     - Active jobs
-    #     - Jobs without host_queue_entries
-    NON_ABORTED_KNOWN_JOBS = '''
-        (afe_host_queue_entries.aborted = 0
-         AND afe_jobs.id IN (%(known_ids)s))
+    EXCLUDE_KNOWN_JOBS_CLAUSE = '''
+        AND NOT (afe_host_queue_entries.aborted = 0
+                 AND afe_jobs.id IN (%(known_ids)s))
     '''
 
     SQL_SHARD_JOBS = '''
@@ -1417,7 +1408,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         WHERE (afe_shards_labels.shard_id = %(shard_id)s
                AND afe_host_queue_entries.complete != 1
                AND afe_host_queue_entries.active != 1
-               %(check_known_jobs)s)
+               %(exclude_known_jobs)s)
     '''
 
     # Jobs can be created with assigned hosts and have no dependency
@@ -1439,7 +1430,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                AND afe_host_queue_entries.active != 1
                AND afe_host_queue_entries.meta_host IS NULL
                AND afe_host_queue_entries.host_id IS NOT NULL
-               %(check_known_jobs)s)
+               %(exclude_known_jobs)s)
     '''
 
     # Even if we had filters about complete, active and aborted
@@ -1683,19 +1674,11 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         # Jobs may be returned more than once by concurrent calls of this
         # function, as there is a race condition between SELECT and UPDATE.
         job_ids = set([])
-        check_known_jobs_exclude = ''
-
-        if known_ids:
-            check_known_jobs = (
-                    cls.NON_ABORTED_KNOWN_JOBS %
-                    {'known_ids': ','.join([str(i) for i in known_ids])})
-            check_known_jobs_exclude = 'AND NOT ' + check_known_jobs
 
         raw_sql = cls.SQL_SHARD_JOBS % {
-            'check_known_jobs': check_known_jobs_exclude,
+            'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
             'shard_id': shard.id
         }
-
 
         if cls.FETCH_READONLY_JOBS:
             #TODO(jkop): Get rid of this kludge when we update Django to >=1.7
@@ -1717,7 +1700,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         if static_labels:
             label_ids = [str(l.id) for l in static_labels]
             query = Job.objects.raw(cls.SQL_SHARD_JOBS_WITH_HOSTS % {
-                'check_known_jobs': check_known_jobs_exclude,
+                'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
                 'host_label_table': 'afe_static_hosts_labels',
                 'host_label_column': 'staticlabel_id',
                 'label_ids': '(%s)' % ','.join(label_ids)})
@@ -1726,7 +1709,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         if non_static_labels:
             label_ids = [str(l.id) for l in non_static_labels]
             query = Job.objects.raw(cls.SQL_SHARD_JOBS_WITH_HOSTS % {
-                'check_known_jobs': check_known_jobs_exclude,
+                'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
                 'host_label_table': 'afe_hosts_labels',
                 'host_label_column': 'label_id',
                 'label_ids': '(%s)' % ','.join(label_ids)})
@@ -1738,6 +1721,14 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                     {'candidates': ','.join([str(i) for i in job_ids])})
             job_ids -= set([j.id for j in query])
         return job_ids
+
+
+    @classmethod
+    def _exclude_known_jobs_clause(cls, known_ids):
+        if not known_ids:
+            return ''
+        return (cls.EXCLUDE_KNOWN_JOBS_CLAUSE %
+                {'known_ids': ','.join([str(i) for i in known_ids])})
 
 
     def queue(self, hosts, is_template=False):
