@@ -729,6 +729,16 @@ class TradefedTest(test.test):
             self._num_media_bundles = len(
                     os.listdir(constants.TRADEFED_MEDIA_PATH))
 
+    def _cleanup_media(self):
+        """Clean up the local copy of cached media files."""
+        self._fail_on_unexpected_media_download()
+        if os.path.islink(constants.TRADEFED_MEDIA_PATH):
+            path = os.readlink(constants.TRADEFED_MEDIA_PATH)
+            os.unlink(constants.TRADEFED_MEDIA_PATH)
+            if os.path.isdir(path):
+                logging.info('Cleaning up media files in %s', path)
+                shutil.rmtree(path)
+
     def _fail_on_unexpected_media_download(self):
         if os.path.isdir(constants.TRADEFED_MEDIA_PATH):
             contents = os.listdir(constants.TRADEFED_MEDIA_PATH)
@@ -1113,6 +1123,13 @@ class TradefedTest(test.test):
 
                 waived = len(waived_tests)
                 last_session_id, passed, failed, all_done = result
+
+                if passed + failed > 0:
+                    # At least one test had run, which means the media push step
+                    # of tradefed didn't fail. To free up the storage earlier,
+                    # delete the copy on the server side. See crbug.com/970881
+                    self._cleanup_media()
+
                 # If the result is |acc|urate according to the log, or the
                 # inaccuracy is recognized by tradefed (not all_done), then
                 # it is fine.
