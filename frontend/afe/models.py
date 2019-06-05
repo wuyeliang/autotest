@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring
 
+import contextlib
 import logging
 from datetime import datetime
 import django.core
@@ -1496,9 +1497,6 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         'AUTOTEST_WEB', 'parse_failed_repair_default', type=bool, default=False)
     FETCH_READONLY_JOBS = global_config.global_config.get_config_value(
         'AUTOTEST_WEB','readonly_heartbeat', type=bool, default=False)
-    CHECK_MASTER_IF_EMPTY = global_config.global_config.get_config_value(
-        'AUTOTEST_WEB','heartbeat_fall_back_to_master',
-        type=bool, default=False)
 
 
     owner = dbmodels.CharField(max_length=255)
@@ -1690,20 +1688,22 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
             'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
             'shard_id': shard.id
         }
-        if cls.FETCH_READONLY_JOBS:
-            #TODO(jkop): Get rid of this kludge when we update Django to >=1.7
-            #correct usage would be .raw(..., using='readonly')
-            old_db = Job.objects._db
-            try:
-                Job.objects._db = 'readonly'
-                return set([j.id for j in Job.objects.raw(raw_sql)])
-            except django_utils.DatabaseError:
-                logging.exception(
-                    'Error attempting to query slave db, will retry on master')
-            finally:
-                Job.objects._db = old_db
-        else:
+        with cls._readonly_job_query_context():
             return set([j.id for j in Job.objects.raw(raw_sql)])
+
+
+    @classmethod
+    @contextlib.contextmanager
+    def _readonly_job_query_context(cls):
+        #TODO(jkop): Get rid of this kludge when we update Django to >=1.7
+        #correct usage would be .raw(..., using='readonly')
+        old_db = Job.objects._db
+        try:
+            if cls.FETCH_READONLY_JOBS:
+                Job.objects._db = 'readonly'
+            yield
+        finally:
+            Job.objects._db = old_db
 
 
     @classmethod
