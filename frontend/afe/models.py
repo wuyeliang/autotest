@@ -1408,16 +1408,16 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
     SQL_SHARD_JOBS = '''
         SELECT DISTINCT(afe_jobs.id) FROM afe_jobs
         INNER JOIN afe_host_queue_entries
-          ON (afe_jobs.id = afe_host_queue_entries.job_id
-              AND afe_host_queue_entries.complete != 1
-              AND afe_host_queue_entries.active != 1
-              %(check_known_jobs)s)
+          ON (afe_jobs.id = afe_host_queue_entries.job_id)
         LEFT OUTER JOIN afe_jobs_dependency_labels
           ON (afe_jobs.id = afe_jobs_dependency_labels.job_id)
         JOIN afe_shards_labels
           ON (afe_shards_labels.label_id = afe_jobs_dependency_labels.label_id
               OR afe_shards_labels.label_id = afe_host_queue_entries.meta_host)
-        WHERE afe_shards_labels.shard_id = %(shard_id)s
+        WHERE (afe_shards_labels.shard_id = %(shard_id)s
+               AND afe_host_queue_entries.complete != 1
+               AND afe_host_queue_entries.active != 1
+               %(check_known_jobs)s)
     '''
 
     # Jobs can be created with assigned hosts and have no dependency
