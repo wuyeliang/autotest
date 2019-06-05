@@ -1648,11 +1648,26 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
 
         @returns The job objects that should be sent to the shard.
         """
-        job_ids = cls._get_new_jobs_for_shard(shard, known_ids)
+        with cls._readonly_job_query_context():
+            job_ids = cls._get_new_jobs_for_shard(shard, known_ids)
         if not job_ids:
             return []
         cls._assign_jobs_to_shard(job_ids, shard)
         return cls._jobs_with_ids(job_ids)
+
+
+    @classmethod
+    @contextlib.contextmanager
+    def _readonly_job_query_context(cls):
+        #TODO(jkop): Get rid of this kludge when we update Django to >=1.7
+        #correct usage would be .raw(..., using='readonly')
+        old_db = Job.objects._db
+        try:
+            if cls.FETCH_READONLY_JOBS:
+                Job.objects._db = 'readonly'
+            yield
+        finally:
+            Job.objects._db = old_db
 
 
     @classmethod
@@ -1688,22 +1703,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
             'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
             'shard_id': shard.id
         }
-        with cls._readonly_job_query_context():
-            return set([j.id for j in Job.objects.raw(raw_sql)])
-
-
-    @classmethod
-    @contextlib.contextmanager
-    def _readonly_job_query_context(cls):
-        #TODO(jkop): Get rid of this kludge when we update Django to >=1.7
-        #correct usage would be .raw(..., using='readonly')
-        old_db = Job.objects._db
-        try:
-            if cls.FETCH_READONLY_JOBS:
-                Job.objects._db = 'readonly'
-            yield
-        finally:
-            Job.objects._db = old_db
+        return set([j.id for j in Job.objects.raw(raw_sql)])
 
 
     @classmethod
