@@ -244,15 +244,13 @@ def create_default_metric_set(system_facade):
             mem,
             file_handles,
             storage_written_amount,
-            # TODO(crbug.com/952172): Temporarily disabled until resolved.
-            #storage_written_count,
+            storage_written_count,
             temperature,
             peak_cpu,
             peak_mem,
             peak_temperature,
-            sum_storage_written_amount]
-            # TODO(crbug.com/952172): Temporarily disabled until resolved.
-            #sum_storage_written_count]
+            sum_storage_written_amount,
+            sum_storage_written_count]
 
 class SystemMetricsCollector(object):
     """
