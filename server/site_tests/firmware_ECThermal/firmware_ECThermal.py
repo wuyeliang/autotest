@@ -5,10 +5,10 @@
 import logging
 import re
 import time
+import xmlrpclib
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
-
 
 class firmware_ECThermal(FirmwareTest):
     """
@@ -79,7 +79,7 @@ class firmware_ECThermal(FirmwareTest):
             try:
                 lines = self.faft_client.system.run_shell_command_get_output(
                         'ectool thermalget %d %d' % (type_id, current_id))
-            except self.RPC_ERROR:
+            except xmlrpclib.Fault:
                 break
             pattern = re.compile('Threshold \d* [a-z ]* \d* is (\d*) K.')
             for line in lines:
@@ -133,7 +133,7 @@ class firmware_ECThermal(FirmwareTest):
                 self.faft_client.system.run_shell_command('ectool temps %d' %
                                                    self._num_temp_sensor)
                 self._num_temp_sensor = self._num_temp_sensor + 1
-            except self.RPC_ERROR:
+            except xmlrpclib.Fault:
                 break
         logging.info("Number of temperature sensor: %d", self._num_temp_sensor)
 
@@ -146,7 +146,7 @@ class firmware_ECThermal(FirmwareTest):
         self.ec.send_command("chan 0")
         try:
             self.faft_client.system.run_shell_command('stop temp_metrics')
-        except self.RPC_ERROR:
+        except xmlrpclib.Fault:
             self._has_temp_metrics = False
         else:
             logging.info('Stopped temp_metrics')
@@ -203,7 +203,6 @@ class firmware_ECThermal(FirmwareTest):
 
         Raises:
           xmlrpclib.Fault: Raised when we fail to read temperature.
-          grpc.RpcError: Raised when we fail to read temperature (if using grpc)
           error.TestError: Raised if ectool doesn't behave as we expected.
         """
         assert sensor_id < self._num_temp_sensor
@@ -423,7 +422,8 @@ class firmware_ECThermal(FirmwareTest):
 
 
     def run_once(self):
-        """Execute the main body of the test."""
+        """Execute the main body of the test.
+        """
         if not self.check_ec_capability(['thermal']):
             raise error.TestNAError("Nothing needs to be tested on this device")
         logging.info("Checking host temperature report.")

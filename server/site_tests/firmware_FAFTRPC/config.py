@@ -1,4 +1,5 @@
 import operator
+import xmlrpclib
 
 
 NO_ARGS = tuple()
@@ -577,3 +578,7 @@ RPC_CATEGORIES = [
         ]
     }
 ]
+RPC_ERRORS = (
+    xmlrpclib.Fault,
+    # grpc.RpcError, # TODO (gredelston): Un-comment when grpc is available
+)

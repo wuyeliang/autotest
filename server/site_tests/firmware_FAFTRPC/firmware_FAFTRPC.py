@@ -144,7 +144,7 @@ class firmware_FAFTRPC(FirmwareTest):
         rpc_name = ".".join([category, method])
         try:
             result = rpc_function(*params)
-        except self.RPC_ERROR as e:
+        except config.RPC_ERRORS as e:
             if allow_error_msg is not None and allow_error_msg in str(e):
                 success_msg = "raised an acceptable error during RPC handling"
                 self._log_success(rpc_name, params, success_msg)
@@ -197,7 +197,7 @@ class firmware_FAFTRPC(FirmwareTest):
         rpc_name = ".".join([category, method])
         try:
             result = rpc_function(*params)
-        except self.RPC_ERROR as e:
+        except config.RPC_ERRORS as e:
             self._log_success(rpc_name, params, "raised RPC error")
         except:
             error_msg = "Unexpected misc error: %s" % sys.exc_info()[0]
