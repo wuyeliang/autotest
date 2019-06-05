@@ -1431,21 +1431,21 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
     SQL_SHARD_JOBS_WITH_HOSTS = '''
         SELECT DISTINCT(afe_jobs.id) FROM afe_jobs
         INNER JOIN afe_host_queue_entries
-          ON (afe_jobs.id = afe_host_queue_entries.job_id
-              AND afe_host_queue_entries.complete != 1
-              AND afe_host_queue_entries.active != 1
-              AND afe_host_queue_entries.meta_host IS NULL
-              AND afe_host_queue_entries.host_id IS NOT NULL
-              %(check_known_jobs)s)
+          ON (afe_jobs.id = afe_host_queue_entries.job_id)
         LEFT OUTER JOIN %(host_label_table)s
           ON (afe_host_queue_entries.host_id = %(host_label_table)s.host_id)
-        WHERE (%(host_label_table)s.%(host_label_column)s IN %(label_ids)s)
+        WHERE (%(host_label_table)s.%(host_label_column)s IN %(label_ids)s
+               AND afe_host_queue_entries.complete != 1
+               AND afe_host_queue_entries.active != 1
+               AND afe_host_queue_entries.meta_host IS NULL
+               AND afe_host_queue_entries.host_id IS NOT NULL
+               %(check_known_jobs)s)
     '''
 
     # Even if we had filters about complete, active and aborted
     # bits in the above two SQLs, there is a chance that
     # the result may still contain a job with an hqe with 'complete=1'
-    # or 'active=1' or 'aborted=0 and afe_job.id in known jobs.'
+    # or 'active=1'.'
     # This happens when a job has two (or more) hqes and at least
     # one hqe has different bits than others.
     # We use a second sql to ensure we exclude all un-desired jobs.
@@ -1455,8 +1455,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
           ON (afe_jobs.id = afe_host_queue_entries.job_id)
         WHERE (afe_jobs.id in (%(candidates)s)
                AND (afe_host_queue_entries.complete=1
-                    OR afe_host_queue_entries.active=1
-                    %(check_known_jobs)s))
+                    OR afe_host_queue_entries.active=1))
     '''
 
     def _deserialize_relation(self, link, data):
@@ -1677,14 +1676,12 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         # function, as there is a race condition between SELECT and UPDATE.
         job_ids = set([])
         check_known_jobs_exclude = ''
-        check_known_jobs_include = ''
 
         if known_ids:
             check_known_jobs = (
                     cls.NON_ABORTED_KNOWN_JOBS %
                     {'known_ids': ','.join([str(i) for i in known_ids])})
             check_known_jobs_exclude = 'AND NOT ' + check_known_jobs
-            check_known_jobs_include = 'OR ' + check_known_jobs
 
         raw_sql = cls.SQL_SHARD_JOBS % {
             'check_known_jobs': check_known_jobs_exclude,
@@ -1730,8 +1727,7 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
         if job_ids:
             query = Job.objects.raw(
                     cls.SQL_JOBS_TO_EXCLUDE %
-                    {'check_known_jobs': check_known_jobs_include,
-                     'candidates': ','.join([str(i) for i in job_ids])})
+                    {'candidates': ','.join([str(i) for i in job_ids])})
             job_ids -= set([j.id for j in query])
 
         if job_ids:
