@@ -1669,32 +1669,46 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
 
     @classmethod
     def _get_new_jobs_for_shard(cls, shard, known_ids):
-        # Disclaimer: Concurrent heartbeats should not occur in today's setup.
-        # If this changes or they are triggered manually, this applies:
-        # Jobs may be returned more than once by concurrent calls of this
-        # function, as there is a race condition between SELECT and UPDATE.
-        job_ids = set([])
+        job_ids = cls._get_jobs_without_hosts(shard, known_ids)
+        job_ids |= cls._get_jobs_with_hosts(shard, known_ids)
+        if job_ids:
+            job_ids -= cls._filter_finished_jobs(job_ids)
+        return job_ids
 
+
+    @classmethod
+    def _filter_finished_jobs(cls, job_ids):
+        query = Job.objects.raw(
+                cls.SQL_JOBS_TO_EXCLUDE %
+                {'candidates': ','.join([str(i) for i in job_ids])})
+        return set([j.id for j in query])
+
+
+    @classmethod
+    def _get_jobs_without_hosts(cls, shard, known_ids):
         raw_sql = cls.SQL_SHARD_JOBS % {
             'exclude_known_jobs': cls._exclude_known_jobs_clause(known_ids),
             'shard_id': shard.id
         }
-
         if cls.FETCH_READONLY_JOBS:
             #TODO(jkop): Get rid of this kludge when we update Django to >=1.7
             #correct usage would be .raw(..., using='readonly')
             old_db = Job.objects._db
             try:
                 Job.objects._db = 'readonly'
-                job_ids = set([j.id for j in Job.objects.raw(raw_sql)])
+                return set([j.id for j in Job.objects.raw(raw_sql)])
             except django_utils.DatabaseError:
                 logging.exception(
                     'Error attempting to query slave db, will retry on master')
             finally:
                 Job.objects._db = old_db
         else:
-            job_ids = set([j.id for j in Job.objects.raw(raw_sql)])
+            return set([j.id for j in Job.objects.raw(raw_sql)])
 
+
+    @classmethod
+    def _get_jobs_with_hosts(cls, shard, known_ids):
+        job_ids = set([])
         static_labels, non_static_labels = Host.classify_label_objects(
                 shard.labels.all())
         if static_labels:
@@ -1705,7 +1719,6 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                 'host_label_column': 'staticlabel_id',
                 'label_ids': '(%s)' % ','.join(label_ids)})
             job_ids |= set([j.id for j in query])
-
         if non_static_labels:
             label_ids = [str(l.id) for l in non_static_labels]
             query = Job.objects.raw(cls.SQL_SHARD_JOBS_WITH_HOSTS % {
@@ -1714,12 +1727,6 @@ class Job(dbmodels.Model, model_logic.ModelExtensions):
                 'host_label_column': 'label_id',
                 'label_ids': '(%s)' % ','.join(label_ids)})
             job_ids |= set([j.id for j in query])
-
-        if job_ids:
-            query = Job.objects.raw(
-                    cls.SQL_JOBS_TO_EXCLUDE %
-                    {'candidates': ','.join([str(i) for i in job_ids])})
-            job_ids -= set([j.id for j in query])
         return job_ids
 
 
