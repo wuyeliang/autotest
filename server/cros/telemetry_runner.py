@@ -4,6 +4,8 @@
 
 import json
 import logging
+import numbers
+import numpy
 import os
 import StringIO
 
@@ -18,6 +20,9 @@ TELEMETRY_TIMEOUT_MINS = 150
 
 DUT_CHROME_ROOT = '/usr/local/telemetry/src'
 
+CHART_JSON_RESULT = 'results-chart.json'
+HISTOGRAM_SET_RESULT = 'histograms.json'
+
 # Result Statuses
 SUCCESS_STATUS = 'SUCCESS'
 WARNING_STATUS = 'WARNING'
@@ -28,6 +33,12 @@ ON_DUT_BLACKLIST = [
     'loading.desktop',              # crbug/882299
     'rendering.desktop',            # crbug/882291
     'system_health.memory_desktop', # crbug/874386
+]
+
+# A list of telemetry tests that output histograms.
+HISTOGRAMS_WHITELIST = [
+    'rendering.desktop',
+    'speedometer2',
 ]
 
 class TelemetryResult(object):
@@ -157,7 +168,8 @@ class TelemetryRunner(object):
         self._telemetry_path = telemetry_src
 
 
-    def _get_telemetry_cmd(self, script, test_or_benchmark, *args):
+    def _get_telemetry_cmd(self, script, test_or_benchmark, output_format,
+                           *args):
         """Build command to execute telemetry based on script and benchmark.
 
         @param script: Telemetry script we want to run. For example:
@@ -181,7 +193,7 @@ class TelemetryRunner(object):
                      'python',
                      script,
                      '--verbose',
-                     '--output-format=chartjson',
+                     '--output-format=%s' % output_format,
                      '--output-dir=%s' % DUT_CHROME_ROOT,
                      '--browser=system'])
         else:
@@ -190,7 +202,7 @@ class TelemetryRunner(object):
                      script,
                      '--verbose',
                      '--browser=cros-chrome',
-                     '--output-format=chartjson',
+                     '--output-format=%s' % output_format,
                      '--output-dir=%s' % self._telemetry_path,
                      '--remote=%s' % self._host.host_port])
         telemetry_cmd.extend(args)
@@ -199,7 +211,7 @@ class TelemetryRunner(object):
         return ' '.join(telemetry_cmd)
 
 
-    def _scp_telemetry_results_cmd(self, perf_results_dir):
+    def _scp_telemetry_results_cmd(self, perf_results_dir, output_format):
         """Build command to copy the telemetry results from the devserver.
 
         @param perf_results_dir: directory path where test output is to be
@@ -209,20 +221,23 @@ class TelemetryRunner(object):
         if not perf_results_dir:
             return ''
 
+        output_filename = CHART_JSON_RESULT
+        if output_format == 'histograms':
+            output_filename = HISTOGRAM_SET_RESULT
         scp_cmd = ['scp']
         if self._telemetry_on_dut:
             scp_cmd.append(self._host.make_ssh_options(alive_interval=900,
                                                        connection_attempts=4))
             if not self._host.is_default_port:
                 scp_cmd.append('-P %d' % self._host.port)
-            src = 'root@%s:%s/results-chart.json' % (self._host.hostname,
-                                                     DUT_CHROME_ROOT)
+            src = 'root@%s:%s/%s' % (self._host.hostname, DUT_CHROME_ROOT,
+                                     output_filename)
         else:
             devserver_hostname = ''
             if self._devserver:
                 devserver_hostname = self._devserver.hostname + ':'
-            src = '%s%s/results-chart.json' % (devserver_hostname,
-                                               self._telemetry_path)
+            src = '%s%s/%s' % (devserver_hostname, self._telemetry_path,
+                               output_filename)
 
         scp_cmd.extend([src, perf_results_dir])
         return ' '.join(scp_cmd)
@@ -257,7 +272,7 @@ class TelemetryRunner(object):
         return stdout, stderr, exit_code
 
 
-    def _run_telemetry(self, script, test_or_benchmark, *args):
+    def _run_telemetry(self, script, test_or_benchmark, output_format, *args):
         """Runs telemetry on a dut.
 
         @param script: Telemetry script we want to run. For example:
@@ -274,6 +289,7 @@ class TelemetryRunner(object):
 
         telemetry_cmd = self._get_telemetry_cmd(script,
                                                 test_or_benchmark,
+                                                output_format,
                                                 *args)
         logging.debug('Running Telemetry: %s', telemetry_cmd)
 
@@ -283,18 +299,29 @@ class TelemetryRunner(object):
                                stderr=stderr)
 
 
-    def _run_scp(self, perf_results_dir):
+    def _run_scp(self, perf_results_dir, output_format):
         """Runs telemetry on a dut.
 
         @param perf_results_dir: The local directory that results are being
                                  collected.
         """
-        scp_cmd = self._scp_telemetry_results_cmd(perf_results_dir)
+        scp_cmd = self._scp_telemetry_results_cmd(perf_results_dir,
+                                                  output_format)
         logging.debug('Retrieving Results: %s', scp_cmd)
         _, _, exit_code = self._run_cmd(scp_cmd)
         if exit_code != 0:
             raise error.TestFail('Unable to retrieve results.')
 
+        if output_format == 'histograms':
+            # Converts to chart json format.
+            input_filename = os.path.join(perf_results_dir,
+                                          HISTOGRAM_SET_RESULT)
+            output_filename = os.path.join(perf_results_dir,
+                                           CHART_JSON_RESULT)
+            histograms = json.loads(open(input_filename).read())
+            chartjson = TelemetryRunner.convert_chart_json(histograms)
+            with open(output_filename, 'w') as fout:
+                fout.write(json.dumps(chartjson, indent=2))
 
     def _run_test(self, script, test, *args):
         """Runs a telemetry test on a dut.
@@ -310,7 +337,7 @@ class TelemetryRunner(object):
         """
         logging.debug('Running telemetry test: %s', test)
         telemetry_script = os.path.join(self._telemetry_path, script)
-        result = self._run_telemetry(telemetry_script, test, *args)
+        result = self._run_telemetry(telemetry_script, test, 'chartjson', *args)
         if result.status is FAILED_STATUS:
             raise error.TestFail('Telemetry test %s failed.' % test)
         return result
@@ -349,6 +376,10 @@ class TelemetryRunner(object):
         if benchmark in ON_DUT_BLACKLIST:
             self._telemetry_on_dut = False
 
+        output_format = 'chartjson'
+        if benchmark in HISTOGRAMS_WHITELIST:
+            output_format = 'histograms'
+
         if self._telemetry_on_dut:
             telemetry_script = os.path.join(DUT_CHROME_ROOT,
                                             TELEMETRY_RUN_BENCHMARKS_SCRIPT)
@@ -357,7 +388,8 @@ class TelemetryRunner(object):
             telemetry_script = os.path.join(self._telemetry_path,
                                             TELEMETRY_RUN_BENCHMARKS_SCRIPT)
 
-        result = self._run_telemetry(telemetry_script, benchmark, *args)
+        result = self._run_telemetry(telemetry_script, benchmark,
+                                     output_format, *args)
 
         if result.status is WARNING_STATUS:
             raise error.TestWarn('Telemetry Benchmark: %s'
@@ -366,7 +398,7 @@ class TelemetryRunner(object):
             raise error.TestFail('Telemetry Benchmark: %s'
                                  ' failed to run.' % benchmark)
         if perf_value_writer:
-            self._run_scp(perf_value_writer.resultsdir)
+            self._run_scp(perf_value_writer.resultsdir, output_format)
         return result
 
 
@@ -451,3 +483,79 @@ class TelemetryRunner(object):
                     raise error.TestFail('Error occurred while saving DEPs.')
                 logging.info('Copying: %s -> %s', src, dst)
                 dut.send_file(src, dst)
+
+    @staticmethod
+    def convert_chart_json(histogram_set):
+        """
+        Convert from histogram set to chart json format.
+
+        @param histogram_set: result in histogram set format.
+
+        @returns result in chart json format.
+        """
+        value_map = {}
+
+        # Gets generic set values.
+        for obj in histogram_set:
+            if 'type' in obj and obj['type'] == 'GenericSet':
+                value_map[obj['guid']] = obj['values']
+
+        # Mapping histogram set units to chart json units.
+        units_map = {'ms_smallerIsBetter': 'ms',
+                     'unitless_biggerIsBetter': 'score'}
+
+        charts = {}
+        benchmark_name = ''
+        benchmark_desc = ''
+
+        # Checks the unit test for how this conversion works.
+        for obj in histogram_set:
+            if 'name' not in obj or 'sampleValues' not in obj:
+                continue
+            metric_name = obj['name']
+            diagnostics = obj['diagnostics']
+            story_name = value_map[diagnostics['stories']][0]
+            local_benchmark_name = value_map[diagnostics['benchmarks']][0]
+            if benchmark_name is '':
+                benchmark_name = local_benchmark_name
+                benchmark_desc = value_map[
+                    diagnostics['benchmarkDescriptions']][0]
+            assert(benchmark_name == local_benchmark_name,
+                   'There are more than 1 benchmark names in the result, '
+                   'could not parse.')
+            unit = units_map.get(obj['unit'], '')
+            values = [x for x in obj['sampleValues']
+                      if isinstance(x, numbers.Number)]
+            if metric_name not in charts:
+                charts[metric_name] = {}
+            charts[metric_name][story_name] = {
+                'name': metric_name, 'std': numpy.std(values),
+                'type': 'list_of_scalar_values', 'units': unit,
+                'values': values
+            }
+
+        # Adds summaries.
+        for metric_name in charts:
+            values = []
+            metric_content = charts[metric_name]
+            for story_name in metric_content:
+                story_content = metric_content[story_name]
+                values += story_content['values']
+                metric_type = story_content['type']
+                units = story_content['units']
+            values.sort()
+            std = numpy.std(values)
+            metric_content['summary'] = {
+                'name': metric_name, 'std': std, 'type': metric_type,
+                'units': units, 'values': values
+            }
+
+        benchmark_metadata = {
+            'description': benchmark_desc, 'name': benchmark_name,
+            'type': 'telemetry_benchmark'
+        }
+        return {'benchmark_description': benchmark_desc,
+                'benchmark_metadata': benchmark_metadata,
+                'benchmark_name': benchmark_name, 'charts': charts,
+                'format_version': 1.0}
+
