@@ -15,7 +15,7 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
     version = 1
 
     _EXPECTED_EOL_STATUS = 'EOL_STATUS=eol'
-    _EOL_NOTIFICATION_TITLE = 'This device is no longer supported'
+    _EOL_NOTIFICATION_TITLE = 'Final software update'
 
     def cleanup(self):
         self._save_extra_update_engine_logs()
