@@ -101,7 +101,6 @@ RPC_CATEGORIES = [
             {
                 "method_names": [
                     "run_shell_command",
-                    "run_shell_command_get_output",
                     "run_shell_command_get_status",
                 ],
                 "passing_args": [
@@ -110,6 +109,24 @@ RPC_CATEGORIES = [
                 "failing_args": [
                     NO_ARGS,
                     ("ls", "-l"),
+                ],
+            },
+            {
+                "method_name": "run_shell_command_check_output",
+                "passing_args": [
+                    ("ls -l", "total"),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                ],
+            },
+            {
+                "method_name": "run_shell_command_get_output",
+                "passing_args": [
+                    ("ls -l", True),
+                ],
+                "failing_args": [
+                    NO_ARGS,
                 ],
             },
             {
