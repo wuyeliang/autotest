@@ -82,7 +82,35 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     CAP_IS_ACCESSIBLE = 0
     CAP_SETTING = 1
     CAP_REQ = 2
-    GET_CAP_TRIES = 3
+    GET_CAP_TRIES = 5
+    # Regex to match the valid capability settings.
+    CAP_STATES = '(Always|Default|IfOpened|UnlessLocked)'
+    # List of all cr50 ccd capabilities. Same order of 'ccd' output
+    CAP_NAMES = [
+        'UartGscRxAPTx', 'UartGscTxAPRx', 'UartGscRxECTx', 'UartGscTxECRx',
+        'FlashAP', 'FlashEC', 'OverrideWP', 'RebootECAP', 'GscFullConsole',
+        'UnlockNoReboot', 'UnlockNoShortPP', 'OpenNoTPMWipe', 'OpenNoLongPP',
+        'BatteryBypassPP', 'UpdateNoTPMWipe', 'I2C', 'FlashRead',
+        'OpenNoDevMode', 'OpenFromUSB'
+    ]
+    # There are two capability formats. Match both.
+    #  UartGscRxECTx   Y 3=IfOpened
+    #  or
+    #  UartGscRxECTx   Y 0=Default (Always)
+    # Make sure the last word is at the end of the line. The next line will
+    # start with some whitespace, so account for that too.
+    CAP_FORMAT = '\s+(Y|-) \d\=%s( \(%s\))?[\r\n]+\s*' % (CAP_STATES,
+                                                          CAP_STATES)
+    # Name each group, so we can use groupdict to extract all useful information
+    # from the ccd outupt.
+    CCD_FORMAT = [
+        '(State: (?P<State>Opened|Locked|Unlocked))',
+        '(Password: (?P<Password>set|none))',
+        '(Flags: (?P<Flags>\S*))',
+        '(Capabilities:.*(?P<Capabilities>%s))' %
+                (CAP_FORMAT.join(CAP_NAMES) + CAP_FORMAT),
+        '(TPM:(?P<TPM>[ \S]*)\r)',
+    ]
 
 
     def __init__(self, servo, faft_config):
@@ -213,54 +241,39 @@ class ChromeCr50(chrome_ec.ChromeConsole):
             A dictionary with the ccd state name as the key and setting as
             value.
         """
-        info = {}
+        matched_output = None
         original_timeout = float(self._servo.get('cr50_uart_timeout'))
         # Change the console timeout to 10s, it may take longer than 3s to read
         # ccd info
         self._servo.set_nocheck('cr50_uart_timeout', self.CONSERVATIVE_CCD_WAIT)
-        try:
-            rv = self.send_command_get_output('ccd', ["ccd.*>"])[0]
-        finally:
-            self._servo.set_nocheck('cr50_uart_timeout', original_timeout)
-        for line in rv.splitlines():
-            # CCD information is separated with an :
-            #   State: Opened
-            # Extract the state name and the value.
-            line = line.strip()
-            if ':' not in line or '[' in line:
-                continue
-            key, value = line.split(':')
-            info[key.strip()] = value.strip()
-        logging.info('Current CCD settings:\n%s', pprint.pformat(info))
-        return info
+        for i in range(self.GET_CAP_TRIES):
+          try:
+            # If some ccd output is dropped and the output doesn't match the
+            # expected ccd output format, send_command_get_output will wait the
+            # full CONSERVATIVE_CCD_WAIT even though ccd is done printing. Use
+            # re to search the command output instead of
+            # send_safe_command_get_output, so we don't have to wait the full
+            # timeout if output is dropped.
+            rv = self.send_safe_command_get_output('ccd', ['ccd.*>'])[0]
+            matched_output = re.search('.*'.join(self.CCD_FORMAT), rv,
+                                       re.DOTALL)
+            if matched_output:
+                break
+            logging.info('try %d: could not match ccd output %s', i, rv)
+          except Exception, e:
+            logging.info('try %d got error %s', i, str(e))
+
+        self._servo.set_nocheck('cr50_uart_timeout', original_timeout)
+        if not matched_output:
+            raise error.TestFail('Could not get ccd output')
+        logging.info('Current CCD settings:\n%s',
+                     pprint.pformat(matched_output.groupdict()))
+        return matched_output.groupdict()
 
 
     def get_cap(self, cap):
         """Returns the capabilitiy from the capability dictionary"""
         return self.get_cap_dict()[cap]
-
-
-    def _get_ccd_cap_string(self):
-        """Return a string with the current capability settings.
-
-        The ccd information is pretty long. Servo micro sometimes drops
-        characters. Run the command a couple of times. Return the capapability
-        string that matches a previous run.
-
-        Raises:
-            TestError if the test could not retrieve consistent capability
-            information.
-        """
-        past_results = []
-        for i in range(self.GET_CAP_TRIES):
-            rv = self.send_safe_command_get_output('ccd',
-                    ["Capabilities:\s+[\da-f]+\s(.*)TPM:"])[0][1]
-            logging.debug(rv)
-            if rv in past_results:
-                return rv
-            past_results.append(rv)
-        logging.debug(past_results)
-        raise error.TestError('Could not get consistent capability information')
 
 
     def get_cap_dict(self, info=None):
@@ -279,21 +292,17 @@ class ChromeCr50(chrome_ec.ChromeConsole):
             A dictionary with the capability as the key a list of the current
             settings as the value [is_accessible, setting, requirement]
         """
-        caps = {}
-        cap_info_str = self._get_ccd_cap_string()
-        # There are two capability formats. Extract the setting and the
-        # requirement from both formats
-        #  UartGscRxECTx   Y 3=IfOpened
-        #  or
-        #  UartGscRxECTx   Y 0=Default (Always)
-        cap_settings = re.findall('(\S+) +(Y|-).*=(\w+)( \((\S+)\))?',
+        # Add whitespace at the end, so we can still match the last line.
+        cap_info_str = self.get_ccd_info()['Capabilities'] + '\r\n'
+        cap_settings = re.findall('(\S+) ' + self.CAP_FORMAT,
                                   cap_info_str)
+        caps = {}
         for cap, accessible, setting, _, required in cap_settings:
-            cap_info = [accessible == 'Y', setting, required]
             # If there's only 1 value after =, then the setting is the
             # requirement.
             if not required:
-                cap_info[self.CAP_REQ] = setting
+                required = setting
+            cap_info = [accessible == 'Y', setting, required]
             if info is not None:
                 caps[cap] = cap_info[info]
             else:
