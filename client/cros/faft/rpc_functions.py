@@ -264,12 +264,16 @@ class BiosServicer(object):
         """Get SHA1 hash of BIOS RW firmware section.
 
         @param section: A firmware section, either 'a' or 'b'.
-        @param flags: An integer of preamble flags.
+        @return: A string of the body SHA1 hash.
         """
         return self._bios_handler.get_section_sha(section)
 
     def get_sig_sha(self, section):
-        """Get SHA1 hash of firmware vblock in section."""
+        """Get SHA1 hash of firmware vblock in section.
+
+        @param section: A firmware section, either 'a' or 'b'.
+        @return: A string of the sig SHA1 hash.
+        """
         return self._bios_handler.get_section_sig_sha(section)
 
     def corrupt_sig(self, section):

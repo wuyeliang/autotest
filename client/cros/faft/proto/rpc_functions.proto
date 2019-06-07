@@ -1,0 +1,978 @@
+syntax = "proto3";
+
+service Bios {
+  rpc Reload
+    (BiosReloadRequest)
+    returns (BiosReloadResponse);
+  rpc GetFwid
+    (BiosGetFwidRequest)
+    returns (BiosGetFwidResponse);
+  rpc GetGbbFlags
+    (BiosGetGbbFlagsRequest)
+    returns (BiosGetGbbFlagsResponse);
+  rpc SetGbbFlags
+    (BiosSetGbbFlagsRequest)
+    returns (BiosSetGbbFlagsResponse);
+  rpc GetPreambleFlags
+    (BiosGetPreambleFlagsRequest)
+    returns (BiosGetPreambleFlagsResponse);
+  rpc SetPreambleFlags
+    (BiosSetPreambleFlagsRequest)
+    returns (BiosSetPreambleFlagsResponse);
+  rpc GetBodySha
+    (BiosGetBodyShaRequest)
+    returns (BiosGetBodyShaResponse);
+  rpc GetSigSha
+    (BiosGetSigShaRequest)
+    returns (BiosGetSigShaResponse);
+  rpc CorruptSig
+    (BiosCorruptSigRequest)
+    returns (BiosCorruptSigResponse);
+  rpc RestoreSig
+    (BiosRestoreSigRequest)
+    returns (BiosRestoreSigResponse);
+  rpc CorruptBody
+    (BiosCorruptBodyRequest)
+    returns (BiosCorruptBodyResponse);
+  rpc RestoreBody
+    (BiosRestoreBodyRequest)
+    returns (BiosRestoreBodyResponse);
+  rpc MoveVersionBackward
+    (BiosMoveVersionBackwardRequest)
+    returns (BiosMoveVersionBackwardResponse);
+  rpc MoveVersionForward
+    (BiosMoveVersionForwardRequest)
+    returns (BiosMoveVersionForwardResponse);
+  rpc GetVersion
+    (BiosGetVersionRequest)
+    returns (BiosGetVersionResponse);
+  rpc GetDatakeyVersion
+    (BiosGetDatakeyVersionRequest)
+    returns (BiosGetDatakeyVersionResponse);
+  rpc GetKernelSubkeyVersion
+    (BiosGetKernelSubkeyVersionRequest)
+    returns (BiosGetKernelSubkeyVersionResponse);
+  rpc DumpWhole
+    (BiosDumpWholeRequest)
+    returns (BiosDumpWholeResponse);
+  rpc WriteWhole
+    (BiosWriteWholeRequest)
+    returns (BiosWriteWholeResponse);
+}
+
+service Cgpt {
+  rpc GetAttributes
+    (CgptGetAttributesRequest)
+    returns (CgptGetAttributesResponse);
+  rpc SetAttributes
+    (CgptSetAttributesRequest)
+    returns (CgptSetAttributesResponse);
+}
+
+service Ec {
+  rpc Reload
+    (EcReloadRequest)
+    returns (EcReloadResponse);
+  rpc GetVersion
+    (EcGetVersionRequest)
+    returns (EcGetVersionResponse);
+  rpc GetFwid
+    (EcGetFwidRequest)
+    returns (EcGetFwidResponse);
+  rpc GetActiveHash
+    (EcGetActiveHashRequest)
+    returns (EcGetActiveHashResponse);
+  rpc DumpWhole
+    (EcDumpWholeRequest)
+    returns (EcDumpWholeResponse);
+  rpc WriteWhole
+    (EcWriteWholeRequest)
+    returns (EcWriteWholeResponse);
+  rpc CorruptBody
+    (EcCorruptBodyRequest)
+    returns (EcCorruptBodyResponse);
+  rpc DumpFirmware
+    (EcDumpFirmwareRequest)
+    returns (EcDumpFirmwareResponse);
+  rpc SetWriteProtect
+    (EcSetWriteProtectRequest)
+    returns (EcSetWriteProtectResponse);
+  rpc IsEfs
+    (EcIsEfsRequest)
+    returns (EcIsEfsResponse);
+  rpc CopyRw
+    (EcCopyRwRequest)
+    returns (EcCopyRwResponse);
+  rpc RebootToSwitchSlot
+    (EcRebootToSwitchSlotRequest)
+    returns (EcRebootToSwitchSlotResponse);
+}
+
+service Host {
+  rpc RunShellCommand
+    (HostRunShellCommandRequest)
+    returns (HostRunShellCommandResponse);
+  rpc RunShellCommandGetOutput
+    (HostRunShellCommandGetOutputRequest)
+    returns (HostRunShellCommandGetOutputResponse);
+}
+
+service Kernel {
+  rpc CorruptSig
+    (KernelCorruptSigRequest)
+    returns (KernelCorruptSigResponse);
+  rpc RestoreSig
+    (KernelRestoreSigRequest)
+    returns (KernelRestoreSigResponse);
+  rpc ModifyVersion
+    (KernelModifyVersionRequest)
+    returns (KernelModifyVersionResponse);
+  rpc MoveVersionBackward
+    (KernelMoveVersionBackwardRequest)
+    returns (KernelMoveVersionBackwardResponse);
+  rpc MoveVersionForward
+    (KernelMoveVersionForwardRequest)
+    returns (KernelMoveVersionForwardResponse);
+  rpc GetVersion
+    (KernelGetVersionRequest)
+    returns (KernelGetVersionResponse);
+  rpc GetDatakeyVersion
+    (KernelGetDatakeyVersionRequest)
+    returns (KernelGetDatakeyVersionResponse);
+  rpc DiffAB
+    (KernelDiffABRequest)
+    returns (KernelDiffABResponse);
+  rpc ResignWithKeys
+    (KernelResignWithKeysRequest)
+    returns (KernelResignWithKeysResponse);
+  rpc Dump
+    (KernelDumpRequest)
+    returns (KernelDumpResponse);
+  rpc Write
+    (KernelWriteRequest)
+    returns (KernelWriteResponse);
+  rpc GetSha
+    (KernelGetShaRequest)
+    returns (KernelGetShaResponse);
+}
+
+service Rootfs {
+  rpc VerifyRootfs
+    (RootfsVerifyRootfsRequest)
+    returns (RootfsVerifyRootfsResponse);
+}
+
+service System {
+  rpc IsAvailable
+    (SystemIsAvailableRequest)
+    returns (SystemIsAvailableResponse);
+  rpc HasHost
+    (SystemHasHostRequest)
+    returns (SystemHasHostResponse);
+  rpc WaitForClient
+    (SystemWaitForClientRequest)
+    returns (SystemWaitForClientResponse);
+  rpc WaitForClientOffline
+    (SystemWaitForClientOfflineRequest)
+    returns (SystemWaitForClientOfflineResponse);
+  rpc DumpLog
+    (SystemDumpLogRequest)
+    returns (SystemDumpLogResponse);
+  rpc RunShellCommand
+    (SystemRunShellCommandRequest)
+    returns (SystemRunShellCommandResponse);
+  rpc RunShellCommandCheckOutput
+    (SystemRunShellCommandCheckOutputRequest)
+    returns (SystemRunShellCommandCheckOutputResponse);
+  rpc RunShellCommandGetOutput
+    (SystemRunShellCommandGetOutputRequest)
+    returns (SystemRunShellCommandGetOutputResponse);
+  rpc RunShellCommandGetStatus
+    (SystemRunShellCommandGetStatusRequest)
+    returns (SystemRunShellCommandGetStatusResponse);
+  rpc GetPlatformName
+    (SystemGetPlatformNameRequest)
+    returns (SystemGetPlatformNameResponse);
+  rpc DevTpmPresent
+    (SystemDevTpmPresentRequest)
+    returns (SystemDevTpmPresentResponse);
+  rpc GetCrossystemValue
+    (SystemGetCrossystemValueRequest)
+    returns (SystemGetCrossystemValueResponse);
+  rpc GetRootDev
+    (SystemGetRootDevRequest)
+    returns (SystemGetRootDevResponse);
+  rpc GetRootPart
+    (SystemGetRootPartRequest)
+    returns (SystemGetRootPartResponse);
+  rpc SetTryFwB
+    (SystemSetTryFwBRequest)
+    returns (SystemSetTryFwBResponse);
+  rpc SetFwTryNext
+    (SystemSetFwTryNextRequest)
+    returns (SystemSetFwTryNextResponse);
+  rpc GetFwVboot2
+    (SystemGetFwVboot2Request)
+    returns (SystemGetFwVboot2Response);
+  rpc RequestRecoveryBoot
+    (SystemRequestRecoveryBootRequest)
+    returns (SystemRequestRecoveryBootResponse);
+  rpc GetDevBoostUsb
+    (SystemGetDevBootUsbRequest)
+    returns (SystemGetDevBootUsbResponse);
+  rpc SetDevBootUsb
+    (SystemSetDevBootUsbRequest)
+    returns (SystemSetDevBootUsbResponse);
+  rpc IsRemovableDeviceBoot
+    (SystemIsRemovableDeviceBootRequest)
+    returns (SystemIsRemovableDeviceBootResponse);
+  rpc GetInternalDevice
+    (SystemGetInternalDeviceRequest)
+    returns (SystemGetInternalDeviceResponse);
+  rpc CreateTempDir
+    (SystemCreateTempDirRequest)
+    returns (SystemCreateTempDirResponse);
+  rpc RemoveFile
+    (SystemRemoveFileRequest)
+    returns (SystemRemoveFileResponse);
+  rpc RemoveDir
+    (SystemRemoveDirRequest)
+    returns (SystemRemoveDirResponse);
+  rpc CheckKeys
+    (SystemCheckKeysRequest)
+    returns (SystemCheckKeysResponse);
+}
+
+service Tpm {
+  rpc GetFirmwareVersion
+    (TpmGetFirmwareVersionRequest)
+    returns (TpmGetFirmwareVersionResponse);
+  rpc GetFirmwareDatakeyVersion
+    (TpmGetFirmwareDatakeyVersionRequest)
+    returns (TpmGetFirmwareDatakeyVersionResponse);
+  rpc GetKernelVersion
+    (TpmGetKernelVersionRequest)
+    returns (TpmGetKernelVersionResponse);
+  rpc GetKernelDatakeyVersion
+    (TpmGetKernelDatakeyVersionRequest)
+    returns (TpmGetKernelDatakeyVersionResponse);
+  rpc StopDaemon
+    (TpmStopDaemonRequest)
+    returns (TpmStopDaemonResponse);
+  rpc RestartDaemon
+    (TpmRestartDaemonRequest)
+    returns (TpmRestartDaemonResponse);
+}
+
+service Updater {
+  rpc Cleanup
+    (UpdaterCleanupRequest)
+    returns (UpdaterCleanupResponse);
+  rpc StopDaemon
+    (UpdaterStopDaemonRequest)
+    returns (UpdaterStopDaemonResponse);
+  rpc StartDaemon
+    (UpdaterStartDaemonRequest)
+    returns (UpdaterStartDaemonResponse);
+  rpc GetFwid
+    (UpdaterGetFwidRequest)
+    returns (UpdaterGetFwidResponse);
+  rpc ModifyFwid
+    (UpdaterModifyFwidRequest)
+    returns (UpdaterModifyFwidResponse);
+  rpc GetInstalledFwid
+    (UpdaterGetInstalledFwidRequest)
+    returns (UpdaterGetInstalledFwidResponse);
+  rpc ModifyEcidAndFlashToBios
+    (UpdaterModifyEcidAndFlashToBiosRequest)
+    returns (UpdaterModifyEcidAndFlashToBiosResponse);
+  rpc GetEcHash
+    (UpdaterGetEcHashRequest)
+    returns (UpdaterGetEcHashResponse);
+  rpc ResignFirmware
+    (UpdaterResignFirmwareRequest)
+    returns (UpdaterResignFirmwareResponse);
+  rpc ExtractShellball
+    (UpdaterExtractShellballRequest)
+    returns (UpdaterExtractShellballResponse);
+  rpc RepackShellball
+    (UpdaterRepackShellballRequest)
+    returns (UpdaterRepackShellballResponse);
+  rpc ResetShellball
+    (UpdaterResetShellballRequest)
+    returns (UpdaterResetShellballResponse);
+  rpc RunFirmwareupdate
+    (UpdaterRunFirmwareupdateRequest) 
+    returns (UpdaterRunFirmwareupdateResponse);
+  rpc RunAutoupdate
+    (UpdaterRunAutoupdateRequest)
+    returns (UpdaterRunAutoupdateResponse);
+  rpc RunFactoryInstall
+    (UpdaterRunFactoryInstallRequest)
+    returns (UpdaterRunFactoryInstallResponse);
+  rpc RunBootok
+    (UpdaterRunBootokRequest)
+    returns (UpdaterRunBootokResponse);
+  rpc RunRecovery
+    (UpdaterRunRecoveryRequest)
+    returns (UpdaterRunRecoveryResponse);
+  rpc CbfsSetupWorkDir
+    (UpdaterCbfsSetupWorkDirRequest)
+    returns (UpdaterCbfsSetupWorkDirResponse);
+  rpc CbfsExtractChip
+    (UpdaterCbfsExtractChipRequest)
+    returns (UpdaterCbfsExtractChipResponse);
+  rpc CbfsGetChipHash
+    (UpdaterCbfsGetChipHashRequest)
+    returns (UpdaterCbfsGetChipHashResponse);
+  rpc CbfsReplaceChip
+    (UpdaterCbfsReplaceChipRequest)
+    returns (UpdaterCbfsReplaceChipResponse);
+  rpc CbfsSignAndFlash
+    (UpdaterCbfsSignAndFlashRequest)
+    returns (UpdaterCbfsSignAndFlashResponse);
+  rpc GetTempPath
+    (UpdaterGetTempPathRequest)
+    returns (UpdaterGetTempPathResponse);
+  rpc GetKeysPath
+    (UpdaterGetKeysPathRequest)
+    returns (UpdaterGetKeysPathResponse);
+  rpc GetWorkPath
+    (UpdaterGetWorkPathRequest)
+    returns (UpdaterGetWorkPathResponse);
+  rpc GetBiosRelativePath
+    (UpdaterGetBiosRelativePathRequest)
+    returns (UpdaterGetBiosRelativePathResponse);
+  rpc GetEcRelativePath
+    (UpdaterGetEcRelativePathRequest)
+    returns (UpdaterGetEcRelativePathResponse);
+  rpc CopyBios
+    (UpdaterCopyBiosRequest)
+    returns (UpdaterCopyBiosResponse);
+}
+
+// Bios messages
+
+message BiosReloadRequest {}
+message BiosReloadResponse {}
+
+message BiosGetFwidRequest {
+  string section = 1;
+}
+message BiosGetFwidResponse {
+  string fwid = 1;
+}
+
+message BiosGetGbbFlagsRequest {}
+message BiosGetGbbFlagsResponse {
+  int32 flags = 1;
+}
+
+message BiosSetGbbFlagsRequest {
+  int32 flags = 1;
+}
+message BiosSetGbbFlagsResponse {}
+
+message BiosGetPreambleFlagsRequest {
+  string section = 1;
+}
+message BiosGetPreambleFlagsResponse {
+  int32 flags = 1;
+}
+
+message BiosSetPreambleFlagsRequest {
+  string section = 1;
+  int32 flags = 2;
+}
+message BiosSetPreambleFlagsResponse {}
+
+message BiosGetBodyShaRequest {
+  string section = 1;
+}
+message BiosGetBodyShaResponse {
+  string hash = 1;
+}
+
+message BiosGetSigShaRequest {
+  string section = 1;
+}
+message BiosGetSigShaResponse {
+  string hash = 1;
+}
+
+message BiosCorruptSigRequest {
+  string section = 1;
+}
+message BiosCorruptSigResponse {}
+
+message BiosRestoreSigRequest {
+  string section = 1;
+}
+message BiosRestoreSigResponse {}
+
+message BiosCorruptBodyRequest {
+  string section = 1;
+  bool corrupt_all = 3; // optional
+}
+message BiosCorruptBodyResponse {}
+
+message BiosRestoreBodyRequest {
+  string section = 1;
+}
+message BiosRestoreBodyResponse {}
+
+message BiosMoveVersionBackwardRequest {
+  string section = 1;
+}
+message BiosMoveVersionBackwardResponse {}
+
+message BiosMoveVersionForwardRequest {
+  string section = 1;
+}
+message BiosMoveVersionForwardResponse {}
+
+message BiosGetVersionRequest {
+  string section = 1;
+}
+message BiosGetVersionResponse {
+  int32 version = 1;
+}
+
+message BiosGetDatakeyVersionRequest {
+  string section = 1;
+}
+message BiosGetDatakeyVersionResponse {
+  int32 version = 1;
+}
+
+message BiosGetKernelSubkeyVersionRequest {
+  string section = 1;
+}
+message BiosGetKernelSubkeyVersionResponse {
+  int32 version = 1;
+}
+
+message BiosDumpWholeRequest {
+  string bios_path = 1;
+}
+message BiosDumpWholeResponse {}
+
+message BiosWriteWholeRequest {
+  string bios_path = 1;
+}
+message BiosWriteWholeResponse {}
+
+// Cgpt messages
+
+message CgptSection {
+  string name = 1;
+  string UUID = 2;
+  int32 successful = 3;
+  int32 partition = 4;
+  int32 priority = 5;
+  int32 tries = 6;
+  string Type = 7;
+}
+
+message CgptGetAttributesRequest {}
+message CgptGetAttributesResponse {
+  repeated CgptSection sections = 1;
+}
+
+message CgptSetAttributesRequest {
+  repeated CgptSection sections = 1;
+}
+message CgptSetAttributesResponse {}
+
+// Ec messages
+
+message EcReloadRequest {}
+message EcReloadResponse {}
+
+message EcGetVersionRequest {}
+message EcGetVersionResponse {
+  string version = 1;
+}
+
+message EcGetFwidRequest {
+  string section = 1;
+}
+message EcGetFwidResponse {
+  string fwid = 1;
+}
+
+message EcGetActiveHashRequest {}
+message EcGetActiveHashResponse {
+  string hash = 1;
+}
+
+message EcDumpWholeRequest {
+  string ec_path = 1;
+}
+message EcDumpWholeResponse {}
+
+message EcWriteWholeRequest {
+  string ec_path = 1;
+}
+message EcWriteWholeResponse {}
+
+message EcCorruptBodyRequest {
+  string section = 1;
+}
+message EcCorruptBodyResponse {}
+
+message EcDumpFirmwareRequest {
+  string ec_path = 1;
+}
+message EcDumpFirmwareResponse {}
+
+message EcSetWriteProtectRequest {
+  bool enable = 1;
+}
+message EcSetWriteProtectResponse {}
+
+message EcIsEfsRequest {}
+message EcIsEfsResponse {
+  bool response = 1;
+}
+
+message EcCopyRwRequest {
+  string from_section = 1;
+  string to_section = 2;
+}
+message EcCopyRwResponse {}
+
+message EcRebootToSwitchSlotRequest {}
+message EcRebootToSwitchSlotResponse {}
+
+// Host messages
+
+message HostRunShellCommandRequest {
+  string command = 1;
+}
+message HostRunShellCommandResponse {}
+
+message HostRunShellCommandGetOutputRequest {
+  string command = 1;
+}
+message HostRunShellCommandGetOutputResponse {
+  repeated string output_lines = 1;
+}
+
+// Kernel messages
+
+message KernelCorruptSigRequest {
+  string section = 1;
+}
+message KernelCorruptSigResponse {}
+
+message KernelRestoreSigRequest {
+  string section = 1;
+}
+message KernelRestoreSigResponse {}
+
+message KernelModifyVersionRequest {
+  string section = 1;
+  int32 delta = 2;
+}
+message KernelModifyVersionResponse {}
+
+message KernelMoveVersionBackwardRequest {
+  string section = 1;
+}
+message KernelMoveVersionBackwardResponse {}
+
+message KernelMoveVersionForwardRequest {
+  string section = 1;
+}
+message KernelMoveVersionForwardResponse {}
+
+message KernelGetVersionRequest {
+  string section = 1;
+}
+message KernelGetVersionResponse {
+  int32 version = 1;
+}
+
+message KernelGetDatakeyVersionRequest {
+  string section = 1;
+}
+message KernelGetDatakeyVersionResponse {
+  int32 version = 1;
+}
+
+message KernelDiffABRequest {}
+message KernelDiffABResponse {
+  bool is_different = 1;
+}
+
+message KernelResignWithKeysRequest {
+  string section = 1;
+  string key_path = 2; // optional
+}
+message KernelResignWithKeysResponse {}
+
+message KernelDumpRequest {
+  string section = 1;
+  string kernel_path = 2;
+}
+message KernelDumpResponse {}
+
+message KernelWriteRequest {
+  string section = 1;
+  string kernel_path = 2;
+}
+message KernelWriteResponse {}
+
+message KernelGetShaRequest {
+  string section = 1;
+}
+message KernelGetShaResponse {
+  string hash = 1;
+}
+
+// Rootfs messages
+
+message RootfsVerifyRootfsRequest {
+  string section = 1;
+}
+message RootfsVerifyRootfsResponse {
+  bool verified = 1;
+}
+
+// System messages
+
+message SystemIsAvailableRequest {}
+message SystemIsAvailableResponse {
+  bool response = 1;
+}
+
+message SystemHasHostRequest {}
+message SystemHasHostResponse {
+  bool response = 1;
+}
+
+message SystemWaitForClientRequest {
+  int32 timeout = 1; // seconds
+}
+message SystemWaitForClientResponse {
+  bool success = 1;
+}
+
+message SystemWaitForClientOfflineRequest {
+  int32 timeout = 1; // seconds
+}
+message SystemWaitForClientOfflineResponse {
+  bool success = 1;
+}
+
+message SystemDumpLogRequest {
+  bool remove_log = 1; // optional
+}
+message SystemDumpLogResponse {
+  string log = 1;
+}
+
+message SystemRunShellCommandRequest {
+  string command = 1;
+}
+message SystemRunShellCommandResponse {}
+
+message SystemRunShellCommandCheckOutputRequest {
+  string command = 1;
+  string success_token = 2;
+}
+message SystemRunShellCommandCheckOutputResponse {
+  bool response = 1;
+}
+
+message SystemRunShellCommandGetOutputRequest {
+  string command = 1;
+  bool include_stderr = 2; // optional
+}
+message SystemRunShellCommandGetOutputResponse {
+  repeated string output_lines = 1;
+}
+
+message SystemRunShellCommandGetStatusRequest {
+  string command = 1;
+}
+message SystemRunShellCommandGetStatusResponse {
+  int32 status = 1;
+}
+
+message SystemGetPlatformNameRequest {}
+message SystemGetPlatformNameResponse {
+  string name = 1;
+}
+
+message SystemDevTpmPresentRequest {}
+message SystemDevTpmPresentResponse {
+  bool response = 1;
+}
+
+message SystemGetCrossystemValueRequest {
+  string key = 1;
+}
+message SystemGetCrossystemValueResponse {
+  string value = 1;
+}
+
+message SystemGetRootDevRequest {}
+message SystemGetRootDevResponse {
+  string name = 1;
+}
+
+message SystemGetRootPartRequest {}
+message SystemGetRootPartResponse {
+  string name = 1;
+}
+
+message SystemSetTryFwBRequest {
+  int32 count = 1; // optional
+}
+message SystemSetTryFwBResponse {}
+
+message SystemSetFwTryNextRequest {
+  string next = 1;
+  int32 count = 2; // optional
+}
+message SystemSetFwTryNextResponse {}
+
+message SystemGetFwVboot2Request {}
+message SystemGetFwVboot2Response {
+  bool response = 1;
+}
+
+message SystemRequestRecoveryBootRequest {}
+message SystemRequestRecoveryBootResponse {}
+
+message SystemGetDevBootUsbRequest {}
+message SystemGetDevBootUsbResponse {
+  bool enabled = 1;
+}
+
+message SystemSetDevBootUsbRequest {
+  bool value = 1;
+}
+message SystemSetDevBootUsbResponse {}
+
+message SystemIsRemovableDeviceBootRequest {}
+message SystemIsRemovableDeviceBootResponse {
+  bool response = 1;
+}
+
+message SystemGetInternalDeviceRequest {}
+message SystemGetInternalDeviceResponse {
+  string device = 1;
+}
+
+message SystemCreateTempDirRequest {
+  string prefix = 1; // optional
+}
+message SystemCreateTempDirResponse {
+  string path = 1;
+}
+
+message SystemRemoveFileRequest {
+  string file_path = 1;
+}
+message SystemRemoveFileResponse {
+  bool status = 1;
+}
+
+message SystemRemoveDirRequest {
+  string dir_path = 1;
+}
+message SystemRemoveDirResponse {
+  bool status = 1;
+}
+
+message SystemCheckKeysRequest {
+  repeated int32 expected_keys = 1;
+}
+message SystemCheckKeysResponse {
+  int32 response = 1;
+}
+
+// Tpm messages
+
+message TpmGetFirmwareVersionRequest {}
+message TpmGetFirmwareVersionResponse {
+  int32 version = 1;
+}
+
+message TpmGetFirmwareDatakeyVersionRequest {}
+message TpmGetFirmwareDatakeyVersionResponse {
+  int32 version = 1;
+}
+
+message TpmGetKernelVersionRequest {}
+message TpmGetKernelVersionResponse {
+  int32 version = 1;
+}
+
+message TpmGetKernelDatakeyVersionRequest {}
+message TpmGetKernelDatakeyVersionResponse {
+  int32 version = 1;
+}
+
+message TpmStopDaemonRequest {}
+message TpmStopDaemonResponse {}
+
+message TpmRestartDaemonRequest {}
+message TpmRestartDaemonResponse {}
+
+// Updater messages
+
+message UpdaterCleanupRequest {}
+message UpdaterCleanupResponse {}
+
+message UpdaterStopDaemonRequest {}
+message UpdaterStopDaemonResponse {}
+
+message UpdaterStartDaemonRequest {}
+message UpdaterStartDaemonResponse {}
+
+message UpdaterGetFwidRequest {
+  string target = 1; // optional
+  string section = 2; // optional
+}
+message UpdaterGetFwidResponse {
+  string fwid = 1;
+}
+
+message UpdaterModifyFwidRequest {
+  string target = 1; // optional
+  string section = 2; // optional
+}
+message UpdaterModifyFwidResponse {
+  string fwid = 1;
+}
+
+message UpdaterGetInstalledFwidRequest {
+  string target = 1; // optional
+  string section = 2; // optional
+  string filename = 3; // optional
+}
+message UpdaterGetInstalledFwidResponse {
+  string fwid = 1;
+}
+
+message UpdaterModifyEcidAndFlashToBiosRequest {}
+message UpdaterModifyEcidAndFlashToBiosResponse {}
+
+message UpdaterGetEcHashRequest {}
+message UpdaterGetEcHashResponse {
+  string hash = 1;
+}
+
+message UpdaterResignFirmwareRequest {
+  int32 version = 1;
+}
+message UpdaterResignFirmwareResponse {}
+
+message UpdaterExtractShellballRequest {
+  string append = 1; // optional
+}
+message UpdaterExtractShellballResponse {
+  string shellball_path = 1;
+}
+
+message UpdaterRepackShellballRequest {
+  string append = 1; // optional
+}
+message UpdaterRepackShellballResponse {
+  string shellball_path = 1;
+}
+
+message UpdaterResetShellballRequest {}
+message UpdaterResetShellballResponse {}
+
+message UpdaterRunFirmwareupdateRequest {
+  string mode = 1;
+  string append = 2; // optional
+  repeated string options = 3; // optional
+}
+message UpdaterRunFirmwareupdateResponse {
+  int32 return_code = 1;
+}
+
+message UpdaterRunAutoupdateRequest {
+  string append = 1;
+}
+message UpdaterRunAutoupdateResponse {}
+
+message UpdaterRunFactoryInstallRequest {}
+message UpdaterRunFactoryInstallResponse {}
+
+message UpdaterRunBootokRequest {
+  string append = 1;
+}
+message UpdaterRunBootokResponse {}
+
+message UpdaterRunRecoveryRequest {}
+message UpdaterRunRecoveryResponse {}
+
+message UpdaterCbfsSetupWorkDirRequest {}
+message UpdaterCbfsSetupWorkDirResponse {
+  string path = 1;
+}
+
+message UpdaterCbfsExtractChipRequest {
+  string fw_name = 1;
+}
+message UpdaterCbfsExtractChipResponse {
+  bool success = 1;
+}
+
+message UpdaterCbfsGetChipHashRequest {
+  string fw_name = 1;
+}
+message UpdaterCbfsGetChipHashResponse {
+  string hash = 1;
+}
+
+message UpdaterCbfsReplaceChipRequest {
+  string fw_name = 1;
+}
+message UpdaterCbfsReplaceChipResponse {
+  bool success = 1;
+}
+
+message UpdaterCbfsSignAndFlashRequest {}
+message UpdaterCbfsSignAndFlashResponse {
+  bool success = 1;
+}
+
+message UpdaterGetTempPathRequest {}
+message UpdaterGetTempPathResponse {
+  string path = 1;
+}
+
+message UpdaterGetKeysPathRequest {}
+message UpdaterGetKeysPathResponse {
+  string path = 1;
+}
+
+message UpdaterGetWorkPathRequest {}
+message UpdaterGetWorkPathResponse {
+  string path = 1;
+}
+
+message UpdaterGetBiosRelativePathRequest {}
+message UpdaterGetBiosRelativePathResponse {
+  string path = 1;
+}
+
+message UpdaterGetEcRelativePathRequest {}
+message UpdaterGetEcRelativePathResponse {
+  string path = 1;
+}
+
+message UpdaterCopyBiosRequest {
+  string filename = 1;
+}
+message UpdaterCopyBiosResponse {
+  string full_path = 1;
+}
