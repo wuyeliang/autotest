@@ -32,10 +32,13 @@ def _metric_name(base_name):
 UPDATER_IDLE = 'UPDATE_STATUS_IDLE'
 UPDATER_NEED_REBOOT = 'UPDATE_STATUS_UPDATED_NEED_REBOOT'
 # A list of update engine client states that occur after an update is triggered.
-UPDATER_PROCESSING_UPDATE = ['UPDATE_STATUS_CHECKING_FORUPDATE',
+UPDATER_PROCESSING_UPDATE = ['UPDATE_STATUS_CHECKING_FOR_UPDATE',
                              'UPDATE_STATUS_UPDATE_AVAILABLE',
                              'UPDATE_STATUS_DOWNLOADING',
-                             'UPDATE_STATUS_FINALIZING']
+                             'UPDATE_STATUS_FINALIZING',
+                             'UPDATE_STATUS_VERIFYING',
+                             'UPDATE_STATUS_REPORTING_ERROR_EVENT',
+                             'UPDATE_STATUS_ATTEMPTING_ROLLBACK']
 
 
 _STATEFUL_UPDATE_SCRIPT = 'stateful_update'
