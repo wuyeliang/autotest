@@ -7,7 +7,6 @@ import time
 
 import common
 from autotest_lib.client.common_lib import hosts
-from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.server.hosts import repair_utils
 
 
@@ -298,9 +297,10 @@ class _ServoRebootRepair(repair_utils.RebootRepair):
     Reboot repair action that also waits for an update.
 
     This is the same as the standard `RebootRepair`, but for
-    a servo host, if there's a pending update, we wait for that
-    to complete before rebooting.  This should ensure that the
-    servo is up-to-date after reboot.
+    a non-multi-DUTs servo host, if there's a pending update,
+    we wait for that to complete before rebooting.  This should
+    ensure that the servo_v3 is up-to-date after reboot. Labstation
+    reboot and update is handled by labstation host class.
     """
 
     def repair(self, host):
@@ -308,15 +308,13 @@ class _ServoRebootRepair(repair_utils.RebootRepair):
             raise hosts.AutoservRepairError(
                 'Target servo is not a test lab servo',
                 'servo_not_applicable_to_host_outside_lab')
-        host.update_image(wait_for_update=True)
-        afe = frontend_wrappers.RetryingAFE(timeout_min=5, delay_sec=10)
-        dut_list = host.get_attached_duts(afe)
-        if len(dut_list) > 1:
+        if host.is_labstation():
             raise hosts.AutoservRepairError(
-                    'Repairing labstation with > 1 host not supported.'
-                    ' See crbug.com/843358',
-                    'can_not_repair_labstation_with_multiple_hosts')
+                'Repairing that reboot labstation is not supported.'
+                ' See crbug.com/843358',
+                'can_not_repair_labstation_with_multiple_hosts')
         else:
+            host.update_image(wait_for_update=True)
             super(_ServoRebootRepair, self).repair(host)
 
     @property

@@ -9,34 +9,18 @@
 """This file provides core logic for servo verify/repair process."""
 
 
-import httplib
 import logging
-import socket
 import xmlrpclib
 import os
 
 from autotest_lib.client.bin import utils
-from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import global_config
 from autotest_lib.client.common_lib import hosts
-from autotest_lib.client.common_lib import lsbrelease_utils
-from autotest_lib.client.common_lib.cros import dev_server
 from autotest_lib.client.common_lib.cros import retry
 from autotest_lib.client.common_lib.cros.network import ping_runner
-from autotest_lib.client.cros import constants as client_constants
-from autotest_lib.server import afe_utils
-from autotest_lib.server import site_utils as server_utils
-from autotest_lib.server.cros import autoupdater
-from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.server.cros.servo import servo
 from autotest_lib.server.hosts import servo_repair
-from autotest_lib.server.hosts import ssh_host
-from autotest_lib.site_utils.rpm_control_system import rpm_client
-
-try:
-    from chromite.lib import metrics
-except ImportError:
-    metrics = utils.metrics_mock
+from autotest_lib.server.hosts import base_servohost
 
 
 # Names of the host attributes in the database that represent the values for
@@ -63,8 +47,9 @@ AUTOTEST_BASE = _CONFIG.get_config_value(
         default='/usr/local/autotest')
 
 
-class ServoHost(ssh_host.SSHHost):
-    """Host class for a host that controls a servo, e.g. beaglebone."""
+class ServoHost(base_servohost.BaseServoHost):
+    """Host class for a servo host(e.g. beaglebone, labstation)
+     that with a servo instance for a specific port."""
 
     DEFAULT_PORT = int(os.getenv('SERVOD_PORT', '9999'))
 
@@ -73,8 +58,6 @@ class ServoHost(ssh_host.SSHHost):
 
     # Ready test function
     SERVO_READY_METHOD = 'get_version'
-
-    REBOOT_CMD = 'sleep 1; reboot & sleep 10; reboot -f'
 
 
     def _initialize(self, servo_host='localhost',
@@ -98,30 +81,15 @@ class ServoHost(ssh_host.SSHHost):
 
         """
         super(ServoHost, self)._initialize(hostname=servo_host,
-                                           *args, **dargs)
+                                           is_in_lab=is_in_lab, *args, **dargs)
         self.servo_port = int(servo_port)
         self.servo_board = servo_board
         self.servo_model = servo_model
         self.servo_serial = servo_serial
         self._servo = None
+
         self._repair_strategy = (
                 servo_repair.create_servo_repair_strategy())
-        self._is_localhost = (self.hostname == 'localhost')
-        if self._is_localhost:
-            self._is_in_lab = False
-        elif is_in_lab is None:
-            self._is_in_lab = utils.host_is_in_lab_zone(self.hostname)
-        else:
-            self._is_in_lab = is_in_lab
-
-        # Commands on the servo host must be run by the superuser.
-        # Our account on a remote host is root, but if our target is
-        # localhost then we might be running unprivileged.  If so,
-        # `sudo` will have to be added to the commands.
-        if self._is_localhost:
-            self._sudo_required = utils.system_output('id -u') != '0'
-        else:
-            self._sudo_required = False
 
 
     def connect_servo(self):
@@ -160,24 +128,6 @@ class ServoHost(ssh_host.SSHHost):
             self._servo = None
 
 
-    def is_in_lab(self):
-        """Check whether the servo host is a lab device.
-
-        @returns: True if the servo host is in Cros Lab, otherwise False.
-
-        """
-        return self._is_in_lab
-
-
-    def is_localhost(self):
-        """Checks whether the servo host points to localhost.
-
-        @returns: True if it points to localhost, otherwise False.
-
-        """
-        return self._is_localhost
-
-
     def get_servod_server_proxy(self):
         """Return a proxy that can be used to communicate with servod server.
 
@@ -193,332 +143,6 @@ class ServoHost(ssh_host.SSHHost):
         else:
             remote = 'http://%s:%s' % (self.hostname, self.servo_port)
             return xmlrpclib.ServerProxy(remote)
-
-
-    def is_cros_host(self):
-        """Check if a servo host is running chromeos.
-
-        @return: True if the servo host is running chromeos.
-            False if it isn't, or we don't have enough information.
-        """
-        try:
-            result = self.run('grep -q CHROMEOS /etc/lsb-release',
-                              ignore_status=True, timeout=10)
-        except (error.AutoservRunError, error.AutoservSSHTimeout):
-            return False
-        return result.exit_status == 0
-
-
-    def make_ssh_command(self, user='root', port=22, opts='', hosts_file=None,
-                         connect_timeout=None, alive_interval=None,
-                         alive_count_max=None, connection_attempts=None):
-        """Override default make_ssh_command to use tuned options.
-
-        Tuning changes:
-          - ConnectTimeout=30; maximum of 30 seconds allowed for an SSH
-          connection failure. Consistency with remote_access.py.
-
-          - ServerAliveInterval=180; which causes SSH to ping connection every
-          180 seconds. In conjunction with ServerAliveCountMax ensures
-          that if the connection dies, Autotest will bail out quickly.
-
-          - ServerAliveCountMax=3; consistency with remote_access.py.
-
-          - ConnectAttempts=4; reduce flakiness in connection errors;
-          consistency with remote_access.py.
-
-          - UserKnownHostsFile=/dev/null; we don't care about the keys.
-
-          - SSH protocol forced to 2; needed for ServerAliveInterval.
-
-        @param user User name to use for the ssh connection.
-        @param port Port on the target host to use for ssh connection.
-        @param opts Additional options to the ssh command.
-        @param hosts_file Ignored.
-        @param connect_timeout Ignored.
-        @param alive_interval Ignored.
-        @param alive_count_max Ignored.
-        @param connection_attempts Ignored.
-
-        @returns: An ssh command with the requested settings.
-
-        """
-        options = ' '.join([opts, '-o Protocol=2'])
-        return super(ServoHost, self).make_ssh_command(
-            user=user, port=port, opts=options, hosts_file='/dev/null',
-            connect_timeout=30, alive_interval=180, alive_count_max=3,
-            connection_attempts=4)
-
-
-    def _make_scp_cmd(self, sources, dest):
-        """Format scp command.
-
-        Given a list of source paths and a destination path, produces the
-        appropriate scp command for encoding it. Remote paths must be
-        pre-encoded. Overrides _make_scp_cmd in AbstractSSHHost
-        to allow additional ssh options.
-
-        @param sources: A list of source paths to copy from.
-        @param dest: Destination path to copy to.
-
-        @returns: An scp command that copies |sources| on local machine to
-                  |dest| on the remote servo host.
-
-        """
-        command = ('scp -rq %s -o BatchMode=yes -o StrictHostKeyChecking=no '
-                   '-o UserKnownHostsFile=/dev/null -P %d %s "%s"')
-        return command % (self._master_ssh.ssh_option,
-                          self.port, sources, dest)
-
-
-    def run(self, command, timeout=3600, ignore_status=False,
-            stdout_tee=utils.TEE_TO_LOGS, stderr_tee=utils.TEE_TO_LOGS,
-            connect_timeout=30, ssh_failure_retry_ok=False,
-            options='', stdin=None, verbose=True, args=()):
-        """Run a command on the servo host.
-
-        Extends method `run` in SSHHost. If the servo host is a remote device,
-        it will call `run` in SSHost without changing anything.
-        If the servo host is 'localhost', it will call utils.system_output.
-
-        @param command: The command line string.
-        @param timeout: Time limit in seconds before attempting to
-                        kill the running process. The run() function
-                        will take a few seconds longer than 'timeout'
-                        to complete if it has to kill the process.
-        @param ignore_status: Do not raise an exception, no matter
-                              what the exit code of the command is.
-        @param stdout_tee/stderr_tee: Where to tee the stdout/stderr.
-        @param connect_timeout: SSH connection timeout (in seconds)
-                                Ignored if host is 'localhost'.
-        @param options: String with additional ssh command options
-                        Ignored if host is 'localhost'.
-        @param ssh_failure_retry_ok: when True and ssh connection failure is
-                                     suspected, OK to retry command (but not
-                                     compulsory, and likely not needed here)
-        @param stdin: Stdin to pass (a string) to the executed command.
-        @param verbose: Log the commands.
-        @param args: Sequence of strings to pass as arguments to command by
-                     quoting them in " and escaping their contents if necessary.
-
-        @returns: A utils.CmdResult object.
-
-        @raises AutoservRunError if the command failed.
-        @raises AutoservSSHTimeout SSH connection has timed out. Only applies
-                when servo host is not 'localhost'.
-
-        """
-        run_args = {'command': command, 'timeout': timeout,
-                    'ignore_status': ignore_status, 'stdout_tee': stdout_tee,
-                    'stderr_tee': stderr_tee, 'stdin': stdin,
-                    'verbose': verbose, 'args': args}
-        if self.is_localhost():
-            if self._sudo_required:
-                run_args['command'] = 'sudo -n sh -c "%s"' % utils.sh_escape(
-                        command)
-            try:
-                return utils.run(**run_args)
-            except error.CmdError as e:
-                logging.error(e)
-                raise error.AutoservRunError('command execution error',
-                                             e.result_obj)
-        else:
-            run_args['connect_timeout'] = connect_timeout
-            run_args['options'] = options
-            return super(ServoHost, self).run(**run_args)
-
-
-    def _get_release_version(self):
-        """Get the value of attribute CHROMEOS_RELEASE_VERSION from lsb-release.
-
-        @returns The version string in lsb-release, under attribute
-                 CHROMEOS_RELEASE_VERSION.
-        """
-        lsb_release_content = self.run(
-                    'cat "%s"' % client_constants.LSB_RELEASE).stdout.strip()
-        return lsbrelease_utils.get_chromeos_release_version(
-                    lsb_release_content=lsb_release_content)
-
-
-    def get_attached_duts(self, afe):
-        """Gather a list of duts that use this servo host.
-
-        @param afe: afe instance.
-
-        @returns list of duts.
-        """
-        return afe.get_hosts_by_attribute(
-                attribute=SERVO_HOST_ATTR, value=self.hostname)
-
-
-    def get_board(self):
-        """Determine the board for this servo host.
-
-        @returns a string representing this servo host's board.
-        """
-        return lsbrelease_utils.get_current_board(
-                lsb_release_content=self.run('cat /etc/lsb-release').stdout)
-
-
-    def reboot(self, *args, **dargs):
-        """Reboot using special servo host reboot command."""
-        super(ServoHost, self).reboot(reboot_cmd=self.REBOOT_CMD,
-                                      *args, **dargs)
-
-
-    def _maybe_reboot_post_upgrade(self, updater):
-        """Reboot this servo host if an upgrade is waiting.
-
-        If the host has successfully downloaded and finalized a new
-        build, reboot.
-
-        @param updater: a ChromiumOSUpdater instance for checking
-            whether reboot is needed.
-        """
-        if updater.check_update_status() != autoupdater.UPDATER_NEED_REBOOT:
-            return
-
-        if self._needs_synchronized_reboot():
-            logging.info('Servohost requies synchronized reboot, which is no'
-                         ' longer supported. Manually reboot servohost instead.'
-                         ' See crbug/848528')
-            return
-
-        self._reboot_post_upgrade()
-
-
-    def _needs_synchronized_reboot(self):
-        """Does this servohost need synchronized reboot across multiple DUTs"""
-        # TODO(pprabhu) Use HostInfo in this check instead of hitting AFE.
-        afe = frontend_wrappers.RetryingAFE(
-                timeout_min=5, delay_sec=10,
-                server=server_utils.get_global_afe_hostname())
-        dut_list = self.get_attached_duts(afe)
-        return len(dut_list) > 1
-
-
-    def _reboot_post_upgrade(self):
-        """Reboot this servo host because an upgrade is waiting."""
-        logging.info('Rebooting servo host %s from build %s', self.hostname,
-                     self._get_release_version())
-        # Tell the reboot() call not to wait for completion.
-        # Otherwise, the call will log reboot failure if servo does
-        # not come back.  The logged reboot failure will lead to
-        # test job failure.  If the test does not require servo, we
-        # don't want servo failure to fail the test with error:
-        # `Host did not return from reboot` in status.log.
-        self.reboot(fastsync=True, wait=False)
-
-        # We told the reboot() call not to wait, but we need to wait
-        # for the reboot before we continue.  Alas.  The code from
-        # here below is basically a copy of Host.wait_for_restart(),
-        # with the logging bits ripped out, so that they can't cause
-        # the failure logging problem described above.
-        #
-        # The black stain that this has left on my soul can never be
-        # erased.
-        old_boot_id = self.get_boot_id()
-        if not self.wait_down(timeout=self.WAIT_DOWN_REBOOT_TIMEOUT,
-                                warning_timer=self.WAIT_DOWN_REBOOT_WARNING,
-                                old_boot_id=old_boot_id):
-            raise error.AutoservHostError(
-                    'servo host %s failed to shut down.' %
-                    self.hostname)
-        if self.wait_up(timeout=120):
-            logging.info('servo host %s back from reboot, with build %s',
-                            self.hostname, self._get_release_version())
-        else:
-            raise error.AutoservHostError(
-                    'servo host %s failed to come back from reboot.' %
-                    self.hostname)
-
-
-    def update_image(self, wait_for_update=False):
-        """Update the image on the servo host, if needed.
-
-        This method recognizes the following cases:
-          * If the Host is not running Chrome OS, do nothing.
-          * If a previously triggered update is now complete, reboot
-            to the new version.
-          * If the host is processing a previously triggered update,
-            do nothing.
-          * If the host is running a version of Chrome OS different
-            from the default for servo Hosts, trigger an update, but
-            don't wait for it to complete.
-
-        @param wait_for_update If an update needs to be applied and
-            this is true, then don't return until the update is
-            downloaded and finalized, and the host rebooted.
-        @raises dev_server.DevServerException: If all the devservers are down.
-        @raises site_utils.ParseBuildNameException: If the devserver returns
-            an invalid build name.
-        @raises AutoservRunError: If the update_engine_client isn't present on
-            the host, and the host is a cros_host.
-
-        """
-        # servod could be running in a Ubuntu workstation.
-        if not self.is_cros_host():
-            logging.info('Not attempting an update, either %s is not running '
-                         'chromeos or we cannot find enough information about '
-                         'the host.', self.hostname)
-            return
-
-        if lsbrelease_utils.is_moblab():
-            logging.info('Not attempting an update, %s is running moblab.',
-                         self.hostname)
-            return
-
-        target_build = afe_utils.get_stable_cros_image_name(self.get_board())
-        target_build_number = server_utils.ParseBuildName(
-                target_build)[3]
-        # For servo image staging, we want it as more widely distributed as
-        # possible, so that devservers' load can be evenly distributed. So use
-        # hostname instead of target_build as hash.
-        ds = dev_server.ImageServer.resolve(self.hostname,
-                                            hostname=self.hostname)
-        url = ds.get_update_url(target_build)
-
-        updater = autoupdater.ChromiumOSUpdater(update_url=url, host=self)
-        self._maybe_reboot_post_upgrade(updater)
-        current_build_number = self._get_release_version()
-        status = updater.check_update_status()
-        update_pending = True
-        if status in autoupdater.UPDATER_PROCESSING_UPDATE:
-            logging.info('servo host %s already processing an update, update '
-                         'engine client status=%s', self.hostname, status)
-        elif status == autoupdater.UPDATER_NEED_REBOOT:
-            return
-        elif current_build_number != target_build_number:
-            logging.info('Using devserver url: %s to trigger update on '
-                         'servo host %s, from %s to %s', url, self.hostname,
-                         current_build_number, target_build_number)
-            try:
-                ds.stage_artifacts(target_build,
-                                   artifacts=['full_payload'])
-            except Exception as e:
-                logging.error('Staging artifacts failed: %s', str(e))
-                logging.error('Abandoning update for this cycle.')
-            else:
-                try:
-                    updater.trigger_update()
-                except autoupdater.RootFSUpdateError as e:
-                    trigger_download_status = 'failed with %s' % str(e)
-                    metrics.Counter('chromeos/autotest/servo/'
-                                    'rootfs_update_failed').increment()
-                else:
-                    trigger_download_status = 'passed'
-                logging.info('Triggered download and update %s for %s, '
-                             'update engine currently in status %s',
-                             trigger_download_status, self.hostname,
-                             updater.check_update_status())
-        else:
-            logging.info('servo host %s does not require an update.',
-                         self.hostname)
-            update_pending = False
-
-        if update_pending and wait_for_update:
-            logging.info('Waiting for servo update to complete.')
-            self.run('update_engine_client --follow', ignore_status=True)
 
 
     def verify(self, silent=False):
@@ -549,34 +173,6 @@ class ServoHost(ssh_host.SSHHost):
         except:
             self.disconnect_servo()
             raise
-
-
-    def has_power(self):
-        """Return whether or not the servo host is powered by PoE."""
-        # TODO(fdeng): See crbug.com/302791
-        # For now, assume all servo hosts in the lab have power.
-        return self.is_in_lab()
-
-
-    def power_cycle(self):
-        """Cycle power to this host via PoE if it is a lab device.
-
-        @raises AutoservRepairError if it fails to power cycle the
-                servo host.
-
-        """
-        if self.has_power():
-            try:
-                rpm_client.set_power(self, 'CYCLE')
-            except (socket.error, xmlrpclib.Error,
-                    httplib.BadStatusLine,
-                    rpm_client.RemotePowerException) as e:
-                raise hosts.AutoservRepairError(
-                        'Power cycling %s failed: %s' % (self.hostname, e),
-                        'power_cycle_via_rpm_failed'
-                )
-        else:
-            logging.info('Skipping power cycling, not a lab device.')
 
 
     def get_servo(self):
@@ -769,12 +365,8 @@ def create_servo_host(dut, servo_args, try_lab_servo=False,
         logging.debug('ServoHost is not up.')
         return None
 
-    newhost = ServoHost(
-            is_in_lab=(servo_args
-                       and server_utils.host_in_lab(
-                               servo_args[SERVO_HOST_ATTR])),
-            **servo_args
-    )
+    newhost = ServoHost(**servo_args)
+
     # Note that the logic of repair() includes everything done
     # by verify().  It's sufficient to call one or the other;
     # we don't need both.
