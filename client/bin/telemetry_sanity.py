@@ -31,11 +31,11 @@ class TelemetrySanity(object):
 
 
   def __init__(self, count=1, run_cryptohome=True, run_incognito=True,
-               run_screenlocker=True):
+               run_screenlock=True):
     self.count = count
     self.run_cryptohome = run_cryptohome
     self.run_incognito = run_incognito
-    self.run_screenlocker = run_screenlocker
+    self.run_screenlock = run_screenlock
 
 
   def Run(self):
@@ -48,7 +48,7 @@ class TelemetrySanity(object):
         self.RunCryptohomeTest()
       if self.run_incognito:
         self.RunIncognitoTest()
-      if self.run_screenlocker:
+      if self.run_screenlock:
         self.RunScreenlockTest()
 
     elapsed = datetime.datetime.now() - start
@@ -142,7 +142,8 @@ def main(argv):
     # Run all tests if none are specified.
     if opts.run_all or not (opts.run_cryptohome or opts.run_incognito or
                             opts.run_screenlock):
-      opts.run_cryptohome = opts.run_incognito = opts.run_screen_lock = True
+      opts.run_cryptohome = opts.run_screenlock = True
+      opts.run_incognito = False  # crbug.com/970065
 
     TelemetrySanity(opts.count, opts.run_cryptohome, opts.run_incognito,
              opts.run_screenlock).Run()

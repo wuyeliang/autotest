@@ -19,4 +19,8 @@ DOC = """
 This test runs telemetry_sanity.py
 """
 
-job.run_test('telemetry_Sanity')
+job.run_test('telemetry_Sanity',
+             count=1,
+             run_cryptohome=True,
+             run_incognito=False,  # crbug.com/970065.
+             run_screenlock=True)

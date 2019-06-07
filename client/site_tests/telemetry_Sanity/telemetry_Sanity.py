@@ -9,5 +9,9 @@ class telemetry_Sanity(test.test):
     """Run telemetry_sanity."""
     version = 1
 
-    def run_once(self):
-        telemetry_sanity.TelemetrySanity().Run()
+    def run_once(self, count, run_cryptohome, run_incognito, run_screenlock):
+        telemetry_sanity.TelemetrySanity(
+            count=count,
+            run_cryptohome=run_cryptohome,
+            run_incognito=run_incognito,
+            run_screenlock=run_screenlock).Run()
