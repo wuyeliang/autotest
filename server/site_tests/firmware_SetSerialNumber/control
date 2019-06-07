@@ -13,7 +13,7 @@ This test will fail if after setting the serial number in firmware:
 * The serial number is not set in VPD
 * Flash write protect is not enabled
 """
-ATTRIBUTES = "suite:faft"
+ATTRIBUTES = ""
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "firmware"
