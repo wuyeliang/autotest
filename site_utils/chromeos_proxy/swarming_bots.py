@@ -295,12 +295,12 @@ class BotManager(object):
                'bots/list?is_dead=TRUE']
         try:
             bots = cros_build_lib.RunCommand(cmd, capture_output=True)
-            server_name = get_hostname()
             bot_info = json.loads(bots.output)
-            dead_bot_ids = {item['bot_id'] for item in bot_info['items']
-                            if server_name in item['bot_id']}
+            dead_bot_ids = {item['bot_id'] for item in bot_info['items']}
+            logging.debug('Dead bots: %r', dead_bot_ids)
             for b in self.bots:
-                if b.bot_dir not in dead_bot_ids:
+                logging.debug('Checking if bot %s is dead', b.bot_id)
+                if b.bot_id not in dead_bot_ids:
                     continue
 
                 logging.info('Killing dead bot %s', b.bot_id)
