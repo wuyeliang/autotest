@@ -28,8 +28,7 @@ except ImportError:
            " Run 'sudo aptitude install pylint' if you haven't already.")
     sys.exit(1)
 
-major, minor, release = pylint_version.split('.')
-pylint_version = float("%s.%s" % (major, minor))
+pylint_version_parsed = tuple(map(int, pylint_version.split('.')))
 
 # some files make pylint blow up, so make sure we ignore them
 BLACKLIST = ['/site-packages/*', '/contrib/*', '/frontend/afe/management.py']
@@ -123,7 +122,11 @@ class CustomVariablesChecker(variables.VariablesChecker):
         """
         super(CustomVariablesChecker, self).visit_module(node)
         scoped_names = self._to_consume.pop()
-        patch_consumed_list(scoped_names[0],scoped_names[1])
+        # The type of the object has changed in pylint 1.8.2
+        if pylint_version_parsed >= (1, 8, 2):
+            patch_consumed_list(scoped_names.to_consume,scoped_names.consumed)
+        else:
+            patch_consumed_list(scoped_names[0],scoped_names[1])
         self._to_consume.append(scoped_names)
 
     def visit_importfrom(self, node):
@@ -400,7 +403,7 @@ def main():
                              'pylintrc')
 
     no_docstring_rgx = r'((_.*)|(set_.*)|(get_.*))'
-    if pylint_version >= 0.21:
+    if pylint_version_parsed >= (0, 21):
         pylint_base_opts = ['--rcfile=%s' % pylint_rc,
                             '--reports=no',
                             '--disable=W,R,E,C,F',
