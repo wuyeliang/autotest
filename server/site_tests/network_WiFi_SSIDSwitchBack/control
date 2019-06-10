@@ -6,7 +6,7 @@ AUTHOR = 'wiley, pstew, quiche'
 TIME = 'SHORT'
 NAME = 'network_WiFi_SSIDSwitchBack'
 TEST_TYPE = 'Server'
-ATTRIBUTES = ('suite:wifi_matfunc')
+ATTRIBUTES = ('suite:wifi_flaky')
 DEPENDENCIES = 'wificell'
 
 DOC = """
