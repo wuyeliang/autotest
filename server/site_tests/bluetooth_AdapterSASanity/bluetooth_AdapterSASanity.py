@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""A Batch of of Bluetooth stand alone sanity tests"""
+"""A Batch of Bluetooth stand alone sanity tests"""
 
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_quick_tests
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
@@ -15,7 +15,7 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
        methods to start and end a test and a batch of tests.
 
        This class can be called to run the entire test batch or to run a
-       specific test only (todo http://b/132199238)
+       specific test only
     """
 
     test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
@@ -70,6 +70,44 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         self.test_nonpairable()
         self.test_pairable()
 
+
+    @test_wrapper('Adapter suspend resume test')
+    def sa_adapter_suspend_resume_test(self):
+
+        def adapter_on_SR_test():
+            """Test Case: Power on - SR"""
+            self.test_power_on_adapter()
+            self.test_bluetoothd_running()
+            self.suspend_resume()
+            self.test_bluetoothd_running()
+            self.test_adapter_work_state()
+            self.test_power_on_adapter()
+
+
+        def adapter_off_SR_test():
+            """Test Case: Power off - SR"""
+            self.test_power_off_adapter()
+            self.test_bluetoothd_running()
+            self.suspend_resume()
+            self.test_power_off_adapter()
+            self.test_bluetoothd_running()
+
+        adapter_on_SR_test()
+        adapter_off_SR_test()
+
+
+    @test_wrapper('Adapter present test')
+    def sa_adapter_present_test(self):
+        """Verify that the client has a Bluetooth adapter."""
+
+        # Reset the adapter (if any) to the powered off state.
+        self.test_reset_off_adapter()
+
+        # Verify that there is an adapter. This will only return True if both
+        # the kernel and bluetooth daemon see the adapter.
+        self.test_has_adapter()
+
+
     @batch_wrapper('Stand Alone Sanity')
     def sa_sanity_batch_run(self, num_iterations=1, test_name=None):
         """Run the stand alone sanity test batch or a specific given test.
@@ -84,6 +122,8 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
                              whole batch
         """
         self.sa_basic_test()
+        self.sa_adapter_suspend_resume_test()
+        self.sa_adapter_present_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None):

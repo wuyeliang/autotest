@@ -506,13 +506,14 @@ class BluetoothAdapterTests(test.test):
                             sleep_interval=ADAPTER_POLLING_DEFAULT_SLEEP_SECS):
         """Wait for the func() to become True.
 
-        @param fun: the function to wait for.
+        @param func: the function to wait for.
         @param method_name: the invoking class method.
         @param timeout: number of seconds to wait before giving up.
         @param sleep_interval: the interval in seconds to sleep between
                 invoking func().
 
-        @returns: the bluetooth device object
+        @returns: True if the condition is met,
+                  False otherwise
 
         """
 
@@ -555,6 +556,13 @@ class BluetoothAdapterTests(test.test):
         """Test that bluetoothd could be stopped successfully."""
         return self.bluetooth_facade.stop_bluetoothd()
 
+
+    @_test_retry_and_log
+    def test_has_adapter(self):
+        """Verify that there is an adapter. This will return True only if both
+        the kernel and bluetooth daemon see the adapter.
+        """
+        return self.bluetooth_facade.has_adapter()
 
     @_test_retry_and_log
     def test_adapter_work_state(self):
