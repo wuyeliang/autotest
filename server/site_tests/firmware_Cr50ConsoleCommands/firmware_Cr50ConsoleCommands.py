@@ -43,10 +43,10 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
     # exclude can be none if there is no label that shoud be excluded based on
     # the property.
     BOARD_PROPERTIES = [
-        [0x1, 'sps', 'i2cs'],
-        [0x2, 'i2cs', 'sps'],
-        [0x40, 'plt_rst', 'sys_rst'],
-        [0x20000, 'closed_source_set1', 'open_source_set'],
+        ['BOARD_SLAVE_CONFIG_SPI', 'sps', 'i2cs'],
+        ['BOARD_SLAVE_CONFIG_I2C', 'i2cs', 'sps'],
+        ['BOARD_USE_PLT_RESET', 'plt_rst', 'sys_rst'],
+        ['BOARD_CLOSED_SOURCE_SET1', 'closed_source_set1', 'open_source_set'],
     ]
 
     def initialize(self, host, cmdline_args, full_args):
@@ -156,11 +156,10 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         The saved board property flags will not include oboslete flags or the wp
         setting. These won't change the gpio or pinmux settings.
         """
-        brdprop = self.cr50.get_board_properties()
         self.include = []
         self.exclude = []
         for prop, include, exclude in self.BOARD_PROPERTIES:
-            if prop & brdprop:
+            if self.cr50.uses_board_property(prop):
                 self.include.append(include)
                 if exclude:
                     self.exclude.append(exclude)
@@ -175,6 +174,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         else:
             self.exclude.append('mp')
             self.include.append('prepvt')
+        brdprop = self.cr50.get_board_properties()
         logging.info('brdprop 0x%x: %s', brdprop, ', '.join(self.include))
 
 

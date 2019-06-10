@@ -113,6 +113,26 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         '(TPM:(?P<TPM>[ \S]*)\r)',
     ]
 
+    # CR50 Board Properties as defined in platform/ec/board/cr50/scratch-reg1.h
+    BOARD_PROP = {
+           'BOARD_SLAVE_CONFIG_SPI'      : 1 << 0,
+           'BOARD_SLAVE_CONFIG_I2C'      : 1 << 1,
+           'BOARD_NEEDS_SYS_RST_PULL_UP' : 1 << 5,
+           'BOARD_USE_PLT_RESET'         : 1 << 6,
+           'BOARD_WP_ASSERTED'           : 1 << 8,
+           'BOARD_FORCING_WP '           : 1 << 9,
+           'BOARD_NO_RO_UART'            : 1 << 10,
+           'BOARD_CCD_STATE_MASK'        : 3 << 11,
+           'BOARD_DEEP_SLEEP_DISABLED'   : 1 << 13,
+           'BOARD_DETECT_AP_WITH_UART'   : 1 << 14,
+           'BOARD_ITE_EC_SYNC_NEEDED'    : 1 << 15,
+           'BOARD_WP_DISABLE_DELAY'      : 1 << 16,
+           'BOARD_CLOSED_SOURCE_SET1'    : 1 << 17,
+           'BOARD_CLOSED_LOOP_RESET'     : 1 << 18,
+           'BOARD_NO_INA_SUPPORT'        : 1 << 19,
+           'BOARD_ALLOW_CHANGE_TPM_MODE' : 1 << 20,
+    }
+
 
     def __init__(self, servo, faft_config):
         """Initializes a ChromeCr50 object.
@@ -409,6 +429,16 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         rv = self.send_safe_command_get_output('brdprop',
                 ['properties = (\S+)\s'])
         return int(rv[0][1], 16)
+
+
+    def uses_board_property(self, prop_name):
+        """Returns 1 if the given property is set, or 0 otherwise
+
+        @param prop_name: a property name in string type.
+        """
+        brdprop = self.get_board_properties()
+        prop = self.BOARD_PROP[prop_name]
+        return bool(brdprop & prop)
 
 
     def has_command(self, cmd):

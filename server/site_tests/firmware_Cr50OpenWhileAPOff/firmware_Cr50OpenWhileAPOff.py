@@ -24,7 +24,6 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
     SHORT_DELAY = 2
     CCD_PASSWORD_RATE_LIMIT = 3
     PASSWORD = 'Password'
-    PLT_RST = 1 << 6
 
     def initialize(self, host, cmdline_args, full_args):
         """Initialize the test"""
@@ -62,7 +61,7 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         # open.
         # warm_reset doesn't interfere with rdd, so it's best to use that when
         # possible.
-        self.reset_ec = self.cr50.get_board_properties() & self.PLT_RST
+        self.reset_ec = self.cr50.uses_board_property('BOARD_USE_PLT_RESET')
         self.changed_dut_state = True
         if self.reset_ec and not self.reset_device_get_deep_sleep_count(True):
             # Some devices can't tell the AP is off when the EC is off. Try
