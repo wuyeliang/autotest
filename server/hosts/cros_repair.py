@@ -412,7 +412,12 @@ class KvmExistsVerifier(hosts.Verifier):
         result = host.run('[ ! -e /dev/kvm -a -f /usr/bin/vm_concierge ]',
                           ignore_status=True)
         if result.exit_status == 0:
-            raise hosts.AutoservVerifyError('/dev/kvm is missing')
+            # Silently check if the kvm_transition flag is being used by Chrome
+            # indicating /dev/kvm may not be present yet on this system.
+            result = host.run('grep -qsxF "kvm_transition" '
+                              '/etc/ui_use_flags.txt', ignore_status=True)
+            if result.exit_status != 0:
+                raise hosts.AutoservVerifyError('/dev/kvm is missing')
 
     @property
     def description(self):
