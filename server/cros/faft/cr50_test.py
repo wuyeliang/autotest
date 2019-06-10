@@ -114,8 +114,7 @@ class Cr50Test(FirmwareTest):
     def _save_node_locked_dev_image(self, cr50_dev_path):
         """Save or download the node locked dev image.
 
-        Args:
-            cr50_dev_path: The path to the node locked cr50 image.
+        @param cr50_dev_path: The path to the node locked cr50 image.
         """
         if os.path.isfile(cr50_dev_path):
             self._node_locked_cr50_image = cr50_dev_path
@@ -130,8 +129,7 @@ class Cr50Test(FirmwareTest):
 
         This will download running cr50 image and the device image.
 
-        Args:
-            release_path: The release path given by test args
+        @param release_path: The release path given by test args
         """
         # Copy the prod and prepvt images from the DUT
         _, prod_rw, prod_bid = self._original_state['device_prod_ver']
@@ -227,11 +225,10 @@ class Cr50Test(FirmwareTest):
         the DBG image to erase the state that can only be erased by a DBG image.
         Set the chip board id during rollback
 
-        Args:
-            chip_bid: the integer representation of chip board id or None if the
-                      board id should be erased
-            chip_flags: the integer representation of chip board id flags or
-                        None if the board id should be erased
+        @param chip_bid: the integer representation of chip board id or None if
+                         the board id should be erased
+        @param chip_flags: the integer representation of chip board id flags or
+                           None if the board id should be erased
         """
         for i in range(3):
             try:
@@ -335,9 +332,8 @@ class Cr50Test(FirmwareTest):
     def _check_original_state(self):
         """Compare the current cr50 state to the original state.
 
-        Returns:
-            A dictionary with the state that is wrong as the key and
-            the new and old state as the value
+        @return: A dictionary with the state that is wrong as the key and the
+                 new and old state as the value
         """
         if not (self._saved_state & self.INITIAL_STATE):
             logging.warning('Did not save the original state. Cannot verify it '
@@ -482,11 +478,9 @@ class Cr50Test(FirmwareTest):
     def find_cr50_gs_image(self, gsurl):
         """Find the cr50 gs image name.
 
-        Args:
-            gsurl: the cr50 image location
-        Returns:
-            a list of the gsutil bucket, filename or None if the file can't be
-            found
+        @param gsurl: the cr50 image location
+        @return: a list of the gsutil bucket, filename or None if the file
+                 can't be found
         """
         try:
             return utils.gs_ls(gsurl)[0].rsplit('/', 1)
@@ -515,13 +509,11 @@ class Cr50Test(FirmwareTest):
     def download_cr50_gs_image(self, gsurl, extract_fn, image_bid):
         """Get the image from gs and save it in the autotest dir.
 
-        Args:
-            gsurl: The gs url for the cr50 image
-            extract_fn: The name of the file to extract from the cr50 image
+        @param gsurl: The gs url for the cr50 image
+        @param extract_fn: The name of the file to extract from the cr50 image
                         tarball. Don't extract anything if extract_fn is None.
-            image_bid: the image symbolic board id
-        Returns:
-            A tuple with the local path and version
+        @param image_bid: the image symbolic board id
+        @return: A tuple with the local path and version
         """
         file_info = self.find_cr50_gs_image(gsurl)
         if not file_info:
@@ -561,11 +553,9 @@ class Cr50Test(FirmwareTest):
 
         Get the file with the matching devid and image board id info
 
-        Args:
-            devid: the cr50_devid string '${DEVID0} ${DEVID1}'
-            image_bid: the image board id info string or list
-        Returns:
-            A tuple with the debug image local path and version
+        @param devid: the cr50_devid string '${DEVID0} ${DEVID1}'
+        @param image_bid: the image board id info string or list
+        @return: A tuple with the debug image local path and version
         """
         bid_ext = ''
         # Add the image bid string to the filename
@@ -593,11 +583,9 @@ class Cr50Test(FirmwareTest):
 
         Get the file with the matching version and image board id info
 
-        Args:
-            image_rw: the rw version string
-            image_bid: the image board id info string or list
-        Returns:
-            A tuple with the release image local path and version
+        @param image_rw: the rw version string
+        @param image_bid: the image board id info string or list
+        @return: A tuple with the release image local path and version
         """
         bid_ext = ''
         # Add the image bid string to the gsurl
@@ -624,13 +612,10 @@ class Cr50Test(FirmwareTest):
     def _cr50_verify_update(self, expected_rw, expect_rollback):
         """Verify the expected version is running on cr50.
 
-        Args:
-            expected_rw: The RW version string we expect to be running
-            expect_rollback: True if cr50 should have rolled back during the
-                             update
-
-        Raises:
-            TestFail if there is any unexpected update state
+        @param expected_rw: The RW version string we expect to be running
+        @param expect_rollback: True if cr50 should have rolled back during the
+                                update
+        @raise TestFail: if there is any unexpected update state
         """
         errors = []
         running_rw = self.cr50.get_version()
@@ -649,11 +634,8 @@ class Cr50Test(FirmwareTest):
     def _cr50_run_update(self, path):
         """Install the image at path onto cr50.
 
-        Args:
-            path: the location of the image to update to
-
-        Returns:
-            the rw version of the image
+        @param path: the location of the image to update to
+        @return: the rw version of the image
         """
         tmp_dest = '/tmp/' + os.path.basename(path)
 
@@ -669,19 +651,16 @@ class Cr50Test(FirmwareTest):
         If rollback is True, we assume that cr50 is already running an image
         that can rollback.
 
-        Args:
-            path: the location of the update image
-            rollback: True if we need to force cr50 to rollback to update to
-                      the given image
-            erase_nvmem: True if we need to erase nvmem during rollback
-            expect_rollback: True if cr50 should rollback on its own
-            chip_bid: the integer representation of chip board id or None if the
-                      board id should be erased during rollback
-            chip_flags: the integer representation of chip board id flags or
+        @param path: the location of the update image
+        @param rollback: True if we need to force cr50 to rollback to update to
+                         the given image
+        @param erase_nvmem: True if we need to erase nvmem during rollback
+        @param expect_rollback: True if cr50 should rollback on its own
+        @param chip_bid: the integer representation of chip board id or None if
+                         the board id should be erased during rollback
+        @param chip_flags: the integer representation of chip board id flags or
                         None if the board id should be erased during rollback
-
-        Raises:
-            TestFail if the update failed
+        @raise TestFail: if the update failed
         """
         original_rw = self.cr50.get_version()
 
@@ -763,8 +742,7 @@ class Cr50Test(FirmwareTest):
     def _check_open_and_press_power_button(self):
         """Check stdout and press the power button if prompted.
 
-        Returns:
-            True if the process is still running.
+        @return: True if the process is still running.
         """
         logging.info(self._get_ccd_open_output())
         self.servo.power_short_press()
@@ -809,8 +787,7 @@ class Cr50Test(FirmwareTest):
     def fast_open(self, enable_testlab=False):
         """Try to use testlab open. If that fails, do regular ap open.
 
-        Args:
-            enable_testlab: If True, enable testlab mode after cr50 is open.
+        @param enable_testlab: If True, enable testlab mode after cr50 is open.
         """
         # Try to use testlab open first, so we don't have to wait for the
         # physical presence check.
@@ -842,11 +819,10 @@ class Cr50Test(FirmwareTest):
     def run_gsctool_cmd_with_password(self, password, cmd, name, expect_error):
         """Run a gsctool command and input the password
 
-        Args:
-            password: The cr50 password string
-            cmd: The gsctool command
-            name: The name to give the job
-            expect_error: True if the command should fail
+        @param password: The cr50 password string
+        @param cmd: The gsctool command
+        @param name: The name to give the job
+        @param expect_error: True if the command should fail
         """
         set_pwd_cmd = utils.sh_escape(cmd)
         full_ssh_command = '%s "%s"' % (self.host.ssh_command(options='-tt'),
