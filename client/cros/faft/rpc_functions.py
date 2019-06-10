@@ -943,7 +943,7 @@ class UpdaterServicer(object):
 
     def ModifyFwids(self, target='bios', sections=None):
         """Modify the AP fwid in the image, but don't flash it."""
-        return self._updater.modify_fwids(target)
+        return self._updater.modify_fwids(target, sections)
 
     def ModifyEcidAndFlashToBios(self):
         """Modify ecid, put it to AP firmware, and flash it to the system."""

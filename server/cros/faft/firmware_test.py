@@ -1540,12 +1540,10 @@ class FirmwareTest(FAFTBase):
         @return: the dict of versions in the shellball
         """
         fwids = dict()
-        fwids['bios'] = self.faft_client.Updater.GetFwid(
-                'bios', ('ro', 'a', 'b'))
+        fwids['bios'] = self.faft_client.Updater.GetAllFwids('bios')
 
         if include_ec:
-            fwids['ec'] = self.faft_client.Updater.GetFwid(
-                    'ec', ('ro', 'rw'))
+            fwids['ec'] = self.faft_client.Updater.GetAllFwids('ec')
         return fwids
 
     def modify_shellball(self, append, modify_ro=True, modify_ec=False):
@@ -1555,15 +1553,15 @@ class FirmwareTest(FAFTBase):
         """
 
         if modify_ro:
-            self.faft_client.Updater.ModifyFwid('bios', ('ro', 'a', 'b'))
+            self.faft_client.Updater.ModifyFwids('bios', ['ro', 'a', 'b'])
         else:
-            self.faft_client.Updater.ModifyFwid('bios', ('a', 'b'))
+            self.faft_client.Updater.ModifyFwids('bios', ['a', 'b'])
 
         if modify_ec:
             if modify_ro:
-                self.faft_client.Updater.ModifyFwid('ec', ('ro', 'rw'))
+                self.faft_client.Updater.ModifyFwids('ec', ['ro', 'rw'])
             else:
-                self.faft_client.Updater.ModifyFwid('ec', 'rw')
+                self.faft_client.Updater.ModifyFwids('ec', ['rw'])
 
         modded_shellball = self.faft_client.Updater.RepackShellball(append)
 
