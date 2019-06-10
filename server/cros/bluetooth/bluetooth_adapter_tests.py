@@ -18,8 +18,6 @@ from autotest_lib.client.bin.input.linux_input import (
         BTN_LEFT, BTN_RIGHT, EV_KEY, EV_REL, REL_X, REL_Y, REL_WHEEL)
 
 
-REBOOTING_CHAMELEON = False
-
 Event = recorder.Event
 
 
@@ -93,11 +91,12 @@ def get_bluetooth_emulated_device(host, device_type):
         contrary, given device.GetAdvertisedName, it is not feasible to get the
         method name by device.GetAdvertisedName.__name__
 
-        Also note that if the device method fails at the first time, we would
-        try to fix the problem by re-creating the serial device and see if the
-        problem is fixed. If not, we will reboot the chameleon board and see
-        if the problem is fixed. If yes, execute the target method the second
-        time.
+        Also note that if the device method fails, we would try remediation
+        step and retry the device method. The remediation steps are
+         1) re-creating the serial device.
+         2) reset (powercycle) the bluetooth dongle.
+         3) reboot chameleond host.
+        If the device method still fails after these steps, we fail the test
 
         The default values exist for uses of this function before the options
         were added, ideally we should change zero_ok to False.
@@ -105,22 +104,34 @@ def get_bluetooth_emulated_device(host, device_type):
         @param method_name: the string of the method name.
         @param legal_falsy_values: Values that are falsy but might be OK.
 
-        @returns: the result returned by the device's method.
+        @returns: the result returned by the device's method if the call was
+                  successful
+
+        @raises: TestError if the devices's method fails or if repair of
+                 peripheral kit fails
 
         """
-        result = _run_method(getattr(device, method_name), method_name)
-        if _is_successful(result, legal_falsy_values):
-            return result
 
-        logging.error('%s failed the 1st time. Try to fix the serial device.',
-                      method_name)
+        action_table = [('recreate' , 'Fixing the serial device'),
+                        ('reset', 'Power cycle the peer device'),
+                        ('reboot', 'Reboot the chamleond host')]
 
-        # Try to fix the serial device if possible.
-        if not fix_serial_device(host, device):
-            return False
+        for i, (action, description) in enumerate(action_table):
+            logging.info('Attempt %s : %s ', i+1, method_name)
 
-        logging.info('%s: retry the 2nd time.', method_name)
-        return _run_method(getattr(device, method_name), method_name)
+            result = _run_method(getattr(device, method_name), method_name)
+            if _is_successful(result, legal_falsy_values):
+                return result
+
+            logging.error('%s failed the %s time. Attempting to %s',
+                          method_name,i,description)
+            if not fix_serial_device(host, device, action):
+                logging.info('%s failed', description)
+            else:
+                logging.info('%s successful', description)
+
+        raise error.TestError('Failed to execute %s. Bluetooth peer device is'
+                              'not working' % method_name)
 
 
     if device_type not in SUPPORTED_DEVICE_TYPES:
@@ -209,37 +220,58 @@ def recreate_serial_device(device):
         return False
 
 
-def _reboot_chameleon(host, device):
-    REBOOT_SLEEP_SECS = 40
-
-    if not REBOOTING_CHAMELEON:
-        logging.info('Skip rebooting chameleon.')
+def _check_device_init(device, operation):
+    # Check if the serial device could initialize, connect, and
+    # enter command mode correctly.
+    logging.info('Checking device status...')
+    if not _run_method(device.Init, 'Init'):
+        logging.info('device.Init: failed after %s', operation)
         return False
+    if not device.CheckSerialConnection():
+        logging.info('device.CheckSerialConnection: failed after %s', operation)
+        return False
+    if not _run_method(device.EnterCommandMode, 'EnterCommandMode'):
+        logging.info('device.EnterCommandMode: failed after %s', operation)
+        return False
+    logging.info('The device is created successfully after %s.', operation)
+    return True
+
+def _reboot_chameleon(host, device):
+    """ Reboot chameleond host
+
+    Also power cycle the device since reboot may not do that.."""
+
+    # Chameleond fizz hosts should have write protect removed and
+    # set_gbb_flags set to 0 to minimize boot time
+    REBOOT_SLEEP_SECS = 10
+    RESET_SLEEP_SECS = 1
 
     # Close the bluetooth peripheral device and reboot the chameleon board.
     device.Close()
+    logging.info("Powercycling the device")
+    device.PowerCycle()
+    time.sleep(RESET_SLEEP_SECS)
     logging.info('rebooting chameleon...')
     host.chameleon.reboot()
 
     # Every chameleon reboot would take a bit more than REBOOT_SLEEP_SECS.
     # Sleep REBOOT_SLEEP_SECS and then begin probing the chameleon board.
     time.sleep(REBOOT_SLEEP_SECS)
+    return _check_device_init(device, 'reboot')
 
-    # Check if the serial device could initialize, connect, and
-    # enter command mode correctly.
-    logging.info('Checking device status...')
-    if not _run_method(device.Init, 'Init'):
-        logging.info('device.Init: failed after reboot')
-        return False
-    if not device.CheckSerialConnection():
-        logging.info('device.CheckSerialConnection: failed after reboot')
-        return False
-    if not _run_method(device.EnterCommandMode, 'EnterCommandMode'):
-        logging.info('device.EnterCommandMode: failed after reboot')
-        return False
-    logging.info('The device is created successfully after reboot.')
-    return True
-
+def _reset_device_power(device):
+    """Power cycle the device."""
+    RESET_SLEEP_SECS = 1
+    try:
+        if not device.PowerCycle():
+            logging.info('device.PowerCycle() failed')
+            return False
+    except:
+        logging.error('exception in device.PowerCycle')
+    else:
+        logging.info('device powercycled')
+    time.sleep(RESET_SLEEP_SECS)
+    return _check_device_init(device, 'reset')
 
 def _is_successful(result, legal_falsy_values=[]):
     """Is the method result considered successful?
@@ -260,35 +292,56 @@ def _is_successful(result, legal_falsy_values=[]):
     return truthiness_of_result or result in legal_falsy_values
 
 
-def fix_serial_device(host, device):
+def fix_serial_device(host, device, operation='reset'):
     """Fix the serial device.
 
     This function tries to fix the serial device by
     (1) re-creating a serial device, or
-    (2) rebooting the chameleon board.
+    (2) power cycling the usb port to which device is connected
+    (3) rebooting the chameleon board.
+
+    Argument operation determine which of the steps above are perform
+
+    Note that rebooting the chameleon board or reseting the device will remove
+    the state on the peripheral which might cause test failures. Please use
+    reset/reboot only before or after a test.
 
     @param host: the DUT, usually a chromebook
-    @param device: the bluetooth HID device
+    @param device: the bluetooth HID device.
+    @param operation: Recovery operation to perform 'recreate/reset/reboot'
 
     @returns: True if the serial device is fixed. False otherwise.
 
     """
-    # Check the serial connection. Fix it if needed.
-    if device.CheckSerialConnection():
-        # The USB serial connection still exists.
-        # Re-connection suffices to solve the problem. The problem
-        # is usually caused by serial port change. For example,
-        # the serial port changed from /dev/ttyUSB0 to /dev/ttyUSB1.
-        logging.info('retry: creating a new serial device...')
-        if not recreate_serial_device(device):
-            return False
 
-    # Check if recreate_serial_device() above fixes the problem.
-    # If not, reboot the chameleon board including creation of a new
-    # bluetooth device. Check if reboot fixes the problem.
-    # If not, return False.
-    result = _run_method(device.EnterCommandMode, 'EnterCommandMode')
-    return _is_successful(result) or _reboot_chameleon(host, device)
+    if operation == 'recreate':
+        # Check the serial connection. Fix it if needed.
+        if device.CheckSerialConnection():
+            # The USB serial connection still exists.
+            # Re-connection suffices to solve the problem. The problem
+            # is usually caused by serial port change. For example,
+            # the serial port changed from /dev/ttyUSB0 to /dev/ttyUSB1.
+            logging.info('retry: creating a new serial device...')
+            return recreate_serial_device(device)
+        else:
+            # Recreate the bluetooth peer device
+            return _check_device_init(device, operation)
+
+    elif operation == 'reset':
+        # Powercycle the USB port where the bluetooth peer device is connected.
+        # RN-42 and RN-52 share the same vid:pid so both will be powercycled.
+        # This will only work on fizz host with write protection removed.
+        # Note that the state on the device will be lost.
+        return _reset_device_power(device)
+
+    elif operation == 'reboot':
+        # Reboot the chameleon host.
+        # The device is power cycled before rebooting chameleon host
+        return _reboot_chameleon(host, device)
+
+    else:
+        logging.error('fix_serial_device Invalid operation %s', operation)
+        return False
 
 
 def retry(test_method, instance, *args, **kwargs):
@@ -320,7 +373,7 @@ def retry(test_method, instance, *args, **kwargs):
 
     host = instance.host
     device = instance.devices[instance.device_type]
-    if not fix_serial_device(host, device):
+    if not fix_serial_device(host, device, "recreate"):
         return False
 
     logging.info('%s: retry the 2nd time.', test_method.__name__)
