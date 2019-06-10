@@ -134,11 +134,13 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
 
         time.sleep(self.SHORT_DELAY)
 
-        # Press the power button to turn on the AP
-        if state == 'on':
+        # Press the power button to turn on the AP, if it doesn't automatically
+        # turn on after deasserting the reset signal. ap_is_on will print the
+        # ccdstate which is useful for debugging. Do that first, so it always
+        # happens.
+        if not self.cr50.ap_is_on() and state == 'on':
             self.servo.power_short_press()
-
-        time.sleep(self.SHORT_DELAY)
+            time.sleep(self.SHORT_DELAY)
 
 
     def reset_device_get_deep_sleep_count(self, deep_sleep):
