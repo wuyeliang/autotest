@@ -22,16 +22,7 @@ class firmware_FWMPDisableCCD(Cr50Test):
         """Initialize servo check if cr50 exists"""
         super(firmware_FWMPDisableCCD, self).initialize(host, cmdline_args,
                 full_args)
-
-        self.host = host
-        # Test CCD if servo has access to Cr50, is running with CCD v1, and has
-        # testlab mode enabled.
-        self.test_ccd_unlock = (hasattr(self, 'cr50') and
-            self.cr50.has_command('ccdstate'))
-
-        logging.info('%sTesting CCD', '' if self.test_ccd_unlock else 'Not')
-        if self.test_ccd_unlock:
-            self.fast_open(enable_testlab=True)
+        self.fast_open(enable_testlab=True)
 
 
     def try_set_ccd_level(self, level, fwmp_disabled_ccd):
@@ -95,9 +86,6 @@ class firmware_FWMPDisableCCD(Cr50Test):
         start_state = self.cr50.get_ccd_info()['TPM']
         if ('fwmp_lock' in start_state) != fwmp_disabled_ccd:
             raise error.TestFail('Unexpected fwmp state with flags %x' % flags)
-
-        if not self.test_ccd_unlock:
-            return
 
         logging.info('Flags are set to %s ccd is%s permitted', flags,
                      ' not' if fwmp_disabled_ccd else '')
