@@ -41,9 +41,6 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         if 'servo_v4_with_servo_micro' != self.servo.get_servo_version():
             raise error.TestNAError('Run using servo v4 with servo micro')
 
-        if not self.cr50.has_command('ccdstate'):
-            raise error.TestNAError('Cannot test on Cr50 with old CCD version')
-
         dts_mode_works = self.cr50.servo_v4_supports_dts_mode()
         if not dts_mode_works:
             raise error.TestNAError('Plug in servo v4 type c cable into ccd '
