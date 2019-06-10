@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import logging
+import pprint
 import time
 
 from autotest_lib.client.common_lib import error
@@ -137,8 +138,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         """
         logging.info(self.cr50.send_safe_command_get_output('sleepmask',
                 ['sleepmask.*>'])[0])
-        logging.info(self.cr50.send_safe_command_get_output('ccdstate',
-                ['ccdstate.*>'])[0])
+        logging.info(pprint.pformat(self.cr50.get_ccdstate()))
 
 
     def run_once(self, host, suspend_count, reset_type):

@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import pprint
 import time
 
 from autotest_lib.client.common_lib import error
@@ -134,7 +133,9 @@ class firmware_Cr50CCDServoCap(Cr50Test):
     def state_matches(self, state_dict, state_name, expected_value):
         """Check the current state. Make sure it matches expected value"""
         valid_state = self.VALID_STATES[state_name][expected_value]
-        current_state = state_dict[state_name]
+        # I2C isn't a reliable flag, because the hardware often doesn't support
+        # it. Remove any I2C flags from the ccdstate output.
+        current_state = state_dict[state_name].replace(' I2C', '')
         if isinstance(valid_state, list):
             return current_state in valid_state
         return current_state == valid_state
@@ -147,34 +148,12 @@ class firmware_Cr50CCDServoCap(Cr50Test):
         servo_detect_error = error.TestNAError("Cannot run on device that does "
                 "not support servo dectection with ec_uart_en:off/on")
         self.fake_servo('off')
-        if not self.state_matches(self.get_ccdstate(), 'Servo', self.OFF):
+        if not self.state_matches(self.cr50.get_ccdstate(), 'Servo', self.OFF):
             raise servo_detect_error
         self.fake_servo('on')
-        if not self.state_matches(self.get_ccdstate(), 'Servo', self.ON):
+        if not self.state_matches(self.cr50.get_ccdstate(), 'Servo', self.ON):
             raise servo_detect_error
 
-
-    def get_ccdstate(self):
-        """Get the current Cr50 CCD states"""
-        for i in range(self.cr50.MAX_RETRY_COUNT):
-            rv = self.cr50.send_command_get_output('ccdstate',
-                                                   ['ccdstate(.*)>'])[0][0]
-            if 'debouncing' not in rv:
-                break
-            time.sleep(self.cr50.SHORT_WAIT)
-
-        # I2C isn't a reliable flag, because the hardware often doesn't support
-        # it. Remove any I2C flags from the ccdstate output.
-        rv = rv.replace(' I2C', '')
-        # Extract only the ccdstate output from rv
-        ccdstate = {}
-        for line in rv.splitlines():
-            line = line.strip()
-            if ':' in line:
-                k, v = line.split(':', 1)
-                ccdstate[k.strip()] = v.strip()
-        logging.info('Current CCD state:\n%s', pprint.pformat(ccdstate))
-        return ccdstate
 
     def state_is_on(self, ccdstate, state_name):
         """Returns true if the state is on"""
@@ -223,7 +202,7 @@ class firmware_Cr50CCDServoCap(Cr50Test):
         # Wait a short time for the ccd state to settle
         time.sleep(self.SLEEP)
 
-        ccdstate = self.get_ccdstate()
+        ccdstate = self.cr50.get_ccdstate()
         # Check the state flags. Make sure they're in line with the rest of
         # ccdstate
         mismatch = self.check_state_flags(ccdstate)

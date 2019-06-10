@@ -73,6 +73,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     FWMP_LOCKED_PROD = ["Managed device console can't be unlocked"]
     FWMP_LOCKED_DBG = ['Ignoring FWMP unlock setting']
     MAX_RETRY_COUNT = 5
+    CCDSTATE_MAX_RETRY_COUNT = 20
     START_STR = ['(.*Console is enabled;)']
     REBOOT_DELAY_WITH_CCD = 60
     REBOOT_DELAY_WITH_FLEX = 3
@@ -891,23 +892,35 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return result.lower() == 'enabled'
 
 
+    def get_ccdstate(self):
+        """Return a dictionary of the ccdstate once it's done debouncing"""
+        for i in range(self.CCDSTATE_MAX_RETRY_COUNT):
+            rv = self.send_safe_command_get_output('ccdstate',
+                                                   ['ccdstate(.*)>'])[0][0]
+
+            # Look for a line like 'AP: on' or 'AP: off'. 'debouncing' or
+            # 'unknown' may appear transiently. 'debouncing' should transition
+            # to 'on' or 'off' within 1 second, and 'unknown' should do so
+            # within 20 seconds.
+            if 'debouncing' not in rv and 'unknown' not in rv:
+                break
+            time.sleep(self.SHORT_WAIT)
+        ccdstate = {}
+        for line in rv.splitlines():
+            line = line.strip()
+            if ':' in line:
+                k, v = line.split(':', 1)
+                ccdstate[k.strip()] = v.strip()
+        logging.info('Current CCD state:\n%s', pprint.pformat(ccdstate))
+        return ccdstate
+
+
     def ap_is_on(self):
         """Get the power state of the AP.
 
         @return: True if the AP is on; False otherwise.
         """
-        # Look for a line like 'AP: on' or 'AP: off'. 'debouncing' or 'unknown'
-        # may appear transiently. 'debouncing' should transition to 'on' or
-        # 'off' within 1 second, and 'unknown' should do so within 20 seconds.
-        ap_state = ''
-        max_tries = 20
-        tries = 0
-        while not (ap_state == 'on' or ap_state == 'off') and tries < max_tries:
-            ap_state = self.send_command_get_output('ccdstate',
-                                                    [r'\bAP:\s*(\w+)\b'])[0][1]
-            tries += 1
-            time.sleep(1)
-
+        ap_state = self.get_ccdstate()['AP']
         if ap_state == 'on':
             return True
         elif ap_state == 'off':
