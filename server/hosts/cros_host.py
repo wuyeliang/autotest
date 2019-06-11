@@ -1523,6 +1523,10 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                          ' changing servo_role to %s.', servo_role)
             self.servo.set_servo_v4_role(servo_role)
             if not self.ping_wait_up(timeout=self._CHANGE_SERVO_ROLE_TIMEOUT):
+                # Make sure we don't leave DUT with no power(servo_role=snk)
+                # when DUT is not pingable, as we raise a exception here
+                # that may break a power cycle in the middle.
+                self.servo.set_servo_v4_role('src')
                 raise error.AutoservError(
                     'DUT failed to regain network connection after %d seconds.'
                     % self._CHANGE_SERVO_ROLE_TIMEOUT)
