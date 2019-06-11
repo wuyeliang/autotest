@@ -2001,6 +2001,35 @@ class BluetoothAdapterTests(test.test):
         }
         return all(self.results.values())
 
+    def add_device(self, address, address_type, action):
+        """Add a device to the Kernel action list."""
+        return self.bluetooth_facade.add_device(address, address_type, action)
+
+
+    def remove_device(self, address, address_type):
+        """Remove a device from the Kernel action list."""
+        return self.bluetooth_facade.remove_device(address,address_type)
+
+
+    def read_supported_commands(self):
+        """Read the set of supported commands from the Kernel."""
+        return self.bluetooth_facade.read_supported_commands()
+
+
+    def read_info(self):
+        """Read the adapter information from the Kernel."""
+        return self.bluetooth_facade.read_info()
+
+
+    def get_adapter_properties(self):
+        """Read the adapter properties from the Bluetooth Daemon."""
+        return self.bluetooth_facade.get_adapter_properties()
+
+
+    def get_dev_info(self):
+        """Read raw HCI device information."""
+        return self.bluetooth_facade.get_dev_info()
+
 
     # -------------------------------------------------------------------
     # Bluetooth mouse related tests

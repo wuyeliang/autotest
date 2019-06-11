@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 
 AUTHOR = 'chromeos-bluetooth'
-NAME = 'bluetooth_AdapterSASanity.sa_adapter_present_test'
+NAME = 'bluetooth_AdapterSASanity.sa_valid_address_test'
 PURPOSE = ('batch of Bluetooth stand along sanity tests')
 CRITERIA = 'Pass all sanity test'
 ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity'
@@ -16,7 +16,8 @@ TEST_TYPE = 'server'
 DEPENDENCIES = 'bluetooth'
 
 DOC = """
-   This test tries to verify the client has a bluetooth adapter
+   This test tries to verify the client bluetooth adapter has a
+   valid address.
     """
 
 args_dict = utils.args_to_dict(args)
@@ -25,6 +26,6 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
     job.run_test('bluetooth_AdapterSASanity', host=host,
-                 num_iterations=1, test_name=NAME.split('.')[1])
+                  num_iterations=1, test_name=NAME.split('.')[1])
 
 parallel_simple(run, machines)

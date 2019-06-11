@@ -8,9 +8,13 @@ import logging
 
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
      BluetoothAdapterQuickTests
+from autotest_lib.server.cros.bluetooth import bluetooth_default_state_test
+from autotest_lib.server.cros.bluetooth import bluetooth_valid_address_test
 
 
-class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
+class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
+        bluetooth_default_state_test.bluetooth_Sanity_DefaultStateTest,
+        bluetooth_valid_address_test.bluetooth_Sanity_ValidAddressTest):
     """A Batch of Bluetooth stand alone sanity tests. This test is written as
        a batch of tests in order to reduce test time, since auto-test ramp up
        time is costy. The batch is using BluetoothAdapterQuickTests wrapper
@@ -123,6 +127,18 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         logging.info("Result is %s", result)
 
 
+    @test_wrapper('Default state test')
+    def sa_default_state_test(self):
+        """Verify that the Bluetooth adapter has correct state."""
+        self.default_state_test()
+
+
+    @test_wrapper('Valid address test')
+    def sa_valid_address_test(self):
+        """Verify that the client Bluetooth adapter has a valid address."""
+        self.valid_address_test()
+
+
     @batch_wrapper('Stand Alone Sanity')
     def sa_sanity_batch_run(self, num_iterations=1, test_name=None):
         """Run the stand alone sanity test batch or a specific given test.
@@ -141,6 +157,8 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         self.sa_adapter_present_test()
         self.sa_adapter_discoverable_timeout_test()
         self.sa_adapter_pairable_timeout_test()
+        self.sa_default_state_test()
+        self.sa_valid_address_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None):
