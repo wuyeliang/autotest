@@ -57,8 +57,11 @@ class firmware_Cr50DeviceState(Cr50Test):
     SLEEP_KEYS = [ KEY_REGULAR_SLEEP, KEY_DEEP_SLEEP ]
     # Cr50 won't enable any form of sleep until it has been up for 20 seconds.
     SLEEP_DELAY = 20
-    # The time in seconds to wait in each state
-    SLEEP_TIME = 30
+    # The time in seconds to wait in each state. Wait one minute so it's long
+    # enough for cr50 to settle into whatever state. 60 seconds is also long
+    # enough that cr50 has enough time to enter deep sleep twice, so we can
+    # catch extra wakeups.
+    SLEEP_TIME = 60
     SHORT_WAIT = 5
     CONSERVATIVE_WAIT_TIME = SLEEP_TIME + SHORT_WAIT + 10
     # Cr50 should wake up twice per second while in regular sleep
