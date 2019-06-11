@@ -6,14 +6,14 @@ from autotest_lib.server import utils
 
 AUTHOR = 'chromeos-chameleon'
 NAME = 'bluetooth_AdapterPairing.le.mouse'
-PURPOSE = 'Test bluetooth adapter pairing and connecting to a bluetooth device.'
+PURPOSE = 'Test bluetooth adapter pairing and connecting to a bluetooth le device.'
 CRITERIA = 'Adapter should work in correct states.'
-ATTRIBUTES = 'suite:bluetooth'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_chameleon, suite:bluetooth_chameleon_sanity'
 TIME = 'SHORT'    # This test takes about 2 minutes.
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth, chameleon:bt_hog'
+DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
 Verify that the bluetooth adapter of the DUT could pair and connect
@@ -40,7 +40,7 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
-    job.run_test('bluetooth_AdapterPairing', host=host, device_type='LE_MOUSE',
+    job.run_test('bluetooth_AdapterPairing', host=host, device_type='BLE_MOUSE',
                  num_iterations=1, min_pass_count=1)
 
 parallel_simple(run, machines)

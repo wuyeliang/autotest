@@ -8,12 +8,12 @@ AUTHOR = 'chromeos-chameleon'
 NAME = 'bluetooth_AdapterPairing.le.mouse.pairing_twice'
 PURPOSE = 'Test bluetooth adapter pairing and connecting to a bluetooth device.'
 CRITERIA = 'Adapter should work in correct states.'
-ATTRIBUTES = 'suite:bluetooth'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_stress'
 TIME = 'SHORT'    # This test takes about 2 and half minutes.
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth, chameleon:bt_hog'
+DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
 Verify that the bluetooth adapter of the DUT could pair and connect
@@ -40,7 +40,7 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
-    job.run_test('bluetooth_AdapterPairing', host=host, device_type='LE_MOUSE',
+    job.run_test('bluetooth_AdapterPairing', host=host, device_type='BLE_MOUSE',
                  num_iterations=1, min_pass_count=1, pairing_twice=True)
 
 parallel_simple(run, machines)

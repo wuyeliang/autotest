@@ -7,14 +7,14 @@ from autotest_lib.server import utils
 AUTHOR = 'chromeos-chameleon'
 NAME = 'bluetooth_AdapterPairing.le.mouse.stress_500'
 PURPOSE = ('Stress test for 500 iterations on bluetooth adapter pairing '
-           'and connection.')
+           'and connection with le device.')
 CRITERIA = 'Adapter should work in correct states.'
 ATTRIBUTES = 'suite:bluetooth'
 TIME = 'LONG'     # This test takes about 8 hours 45 minutes.
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth, chameleon:bt_hog'
+DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
 Verify that the bluetooth adapter of the DUT could pair and connect
@@ -41,7 +41,7 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
-    job.run_test('bluetooth_AdapterPairing', host=host, device_type='LE_MOUSE',
+    job.run_test('bluetooth_AdapterPairing', host=host, device_type='BLE_MOUSE',
                  num_iterations=500, min_pass_count=500)
 
 parallel_simple(run, machines)
