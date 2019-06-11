@@ -6,10 +6,9 @@
 
 class Values(object):
     """FAFT config values for Kukui."""
-    has_lid = False
     has_keyboard = False
     chrome_ec = True
-    ec_capability = ['arm', 'battery', 'charging']
+    ec_capability = ['arm', 'battery', 'charging', 'lid']
     mode_switcher_type = 'tablet_detachable_switcher'
     fw_bypasser_type = 'tablet_detachable_bypasser'
     ec_reboot_to_g3_delay = 10
