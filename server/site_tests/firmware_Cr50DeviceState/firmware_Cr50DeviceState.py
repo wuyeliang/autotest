@@ -106,6 +106,16 @@ class firmware_Cr50DeviceState(Cr50Test):
             raise error.TestNAError("Nothing needs to be tested on this device")
 
 
+    def log_sleep_debug_information(self):
+        """Log some information used for debugging sleep issues"""
+        logging.debug(
+            self.cr50.send_safe_command_get_output('sleepmask',
+                                                   ['sleepmask.*>'])[0])
+        logging.debug(
+            self.cr50.send_safe_command_get_output('sysinfo',
+                                                   ['sysinfo.*>'])[0])
+
+
     def get_taskinfo_output(self):
         """Return a dict with the irq numbers as keys and counts as values"""
         output = self.cr50.send_safe_command_get_output('taskinfo',
@@ -129,6 +139,8 @@ class firmware_Cr50DeviceState(Cr50Test):
         irq_counts[self.KEY_RESET] = int(self.servo.get('cr50_reset_count'))
         irq_counts[self.KEY_DEEP_SLEEP] = int(self.cr50.get_deep_sleep_count())
         irq_counts[self.KEY_TIME] = int(self.cr50.gettime())
+        # Log some information, so we can debug issues with sleep.
+        self.log_sleep_debug_information()
         return irq_counts
 
 
