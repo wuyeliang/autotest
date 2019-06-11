@@ -1,0 +1,36 @@
+# Copyright 2018 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file has been automatically generated. Do not edit!
+
+AUTHOR = 'ARC++ Team'
+NAME = 'cheets_CTS_Instant.9.0_r8.x86.all.except-flaky'
+ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-qual'
+DEPENDENCIES = 'arc, cts_cpu_x86'
+JOB_RETRIES = 0
+TEST_TYPE = 'server'
+TIME = 'LONG'
+MAX_RESULT_SIZE_KB = 512000
+DOC = 'Run module all of the Android Compatibility Test Suite for Instant Apps (CTS Instant) using x86 ABI in the ARC++ container.'
+
+def run_CTS(machine):
+    host_list = [hosts.create_host(machine)]
+    job.run_test(
+        'cheets_CTS_Instant',
+        hosts=host_list,
+        iterations=1,
+        max_retry=9,
+        needs_push_media=False,
+        tag='9.0_r8.x86.all.except-flaky',
+        test_name='cheets_CTS_Instant.9.0_r8.x86.all.except-flaky',
+        run_template=['run', 'commandAndExit', 'cts-instant', '--exclude-filter', 'CtsFileSystemTestCases', '--logcat-on-failure'],
+        retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
+        target_module='all.except-flaky',
+        target_plan=None,
+        bundle='x86',
+        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts_instant-9.0_r8-linux_x86-x86.zip',
+        login_precondition_commands=['lsblk -do NAME,RM | sed -n s/1$//p | xargs -n1 eject'],
+        timeout=43200)
+
+parallel_simple(run_CTS, machines)
