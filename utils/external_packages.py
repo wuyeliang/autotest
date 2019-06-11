@@ -1111,6 +1111,30 @@ class PyYAMLPackage(ExternalPackage):
             ExternalPackage._build_and_install_current_dir_noegg)
 
 
+class Grpcio(ExternalPackage):
+    """grpcio package."""
+    version = '1.20.1'
+    url_filename = 'grpcio-%s.tar.gz' % version
+    local_filename = url_filename
+    urls = (_CHROMEOS_MIRROR + local_filename,)
+    hex_sum = 'ab1be32ec3f3d0d64bc2a2c1fdb612c67d267238'
+    _build_and_install = ExternalPackage._build_and_install_from_package
+    _build_and_install_current_dir = (
+            ExternalPackage._build_and_install_current_dir_setup_py)
+
+
+class GrpcioTools(ExternalPackage):
+    """grpcio-tools package."""
+    version = '1.20.1'
+    url_filename = 'grpcio-tools-%s.tar.gz' % version
+    local_filename = url_filename
+    urls = (_CHROMEOS_MIRROR + local_filename,)
+    hex_sum = '3dca9886f5e4ca5d56f9933883f74ec538fa9c50'
+    _build_and_install = ExternalPackage._build_and_install_from_package
+    _build_and_install_current_dir = (
+            ExternalPackage._build_and_install_current_dir_setup_py)
+
+
 class _ExternalGitRepo(ExternalPackage):
     """
     Parent class for any package which needs to pull a git repo.
@@ -1345,3 +1369,4 @@ class SkylabInventoryRepo(_ExternalGitRepo):
         if git_repo.get_latest_commit_hash():
             return True
         return False
+
