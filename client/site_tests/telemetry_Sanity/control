@@ -9,7 +9,7 @@ CRITERIA = """
 Test will fail if telemetry_sanity fails.
 """
 # crbug.com/930157: This test is flaky and blocks CQ, disable it until fixed.
-ATTRIBUTES = "suite:bvt-perbuild" # "suite:bvt-inline, suite:smoke"
+ATTRIBUTES = "suite:bvt-perbuild, suite:smoke"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "login"
