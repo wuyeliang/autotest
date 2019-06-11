@@ -18,20 +18,19 @@ class firmware_IntegratedU2F(FirmwareTest):
     version = 1
 
     U2FTEST_PATH = '/usr/local/bin/U2FTest'
-    G2FFORCE_PATH = '/var/lib/u2f/force/g2f.force'
+    U2FFORCE_PATH = '/var/lib/u2f/force/u2f.force'
 
     VID = '18D1'
     PID = '502C'
     SHORT_WAIT = 1
 
     def cleanup(self):
-        """Remove g2f.force"""
-        if self.start_u2fd:
-            if self.u2fd_is_running():
-                self.host.run('stop u2fd')
-            if self.create_g2f_force:
-                self.host.run('rm /var/lib/u2f/force/g2f.force')
-            tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
+        """Remove u2f.force"""
+        if self.create_u2f_force:
+            self.host.run('rm /var/lib/u2f/force/u2f.force')
+            # Restart u2fd so that flag change takes effect.
+            self.host.run('restart u2fd')
+        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
 
         super(firmware_IntegratedU2F, self).cleanup()
 
@@ -54,10 +53,6 @@ class firmware_IntegratedU2F(FirmwareTest):
 
     def setup_u2fd(self):
         """Start u2fd on the host"""
-        self.start_u2fd = not self.u2fd_is_running()
-        if not self.start_u2fd:
-            logging.info('u2fd is already running')
-            return
 
         # Login
         tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
@@ -76,13 +71,13 @@ class firmware_IntegratedU2F(FirmwareTest):
                                     timeout_sec=120):
             raise error.TestError('Device did not create owner key')
 
-        self.create_g2f_force = not self.host.path_exists(self.G2FFORCE_PATH)
-        if self.create_g2f_force:
-            logging.info('Creating %s', self.G2FFORCE_PATH)
-            self.host.run('touch %s' % self.G2FFORCE_PATH)
+        self.create_u2f_force = not self.host.path_exists(self.U2FFORCE_PATH)
+        if self.create_u2f_force:
+            logging.info('Creating %s', self.U2FFORCE_PATH)
+            self.host.run('touch %s' % self.U2FFORCE_PATH)
+            # Restart u2fd so that flag change takes effect.
+            self.host.run('restart u2fd')
 
-        # Start u2fd
-        self.host.run('start u2fd')
         self.host.run('trunks_send --u2f_cert --crt=/tmp/cert0.crt')
         # Make sure it is still running
         if not self.u2fd_is_running():
