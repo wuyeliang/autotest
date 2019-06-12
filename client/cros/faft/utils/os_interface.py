@@ -4,6 +4,7 @@
 """A module to provide interface to OS services."""
 
 import datetime
+import errno
 import os
 import re
 import struct
@@ -53,10 +54,17 @@ class OSInterface(object):
 
     ANDROID_TESTER_FILE = '/mnt/stateful_partition/.android_faft_tester'
 
-    def __init__(self):
-        """Object construction time initialization."""
-        self.state_dir = None
-        self.log_file = None
+    def __init__(self, state_dir='/var/tmp/faft', log_file='faft_client.log'):
+        """Object construction time initialization.
+
+        @param state_dir: the name of the directory (as defined by the caller).
+                            The contents of this directory persist over system
+                            restarts and power cycles.
+        @param log_file: the name of the log file kept in the state directory.
+        """
+        # We keep the state of FAFT test in a permanent directory over reboots.
+        self.state_dir = state_dir
+        self.log_file = log_file
         self.cs = Crossystem()
         self.is_android = os.path.isfile(self.ANDROID_TESTER_FILE)
         if self.is_android:
@@ -66,32 +74,23 @@ class OSInterface(object):
             self.shell = shell_wrapper.LocalShell()
             self.host_shell = None
 
-    def init(self, state_dir=None, log_file=None):
-        """Initialize the OS interface object.
-
-        Args:
-          state_dir - a string, the name of the directory (as defined by the
-                      caller). The contents of this directory persist over
-                      system restarts and power cycles.
-          log_file - a string, the name of the log file kept in the state
-                     directory.
-
-        Default argument values support unit testing.
+    def init(self):
+        """Initialize the OS interface object.  This creates the log directory,
+        and initializes the CrosSystem object and the shell.
         """
+        # TODO(dgoyette): Convert most init() methods into __init__().
+        # Affected: Crossystem, LocalShell, and many others.
         self.cs.init(self)
-        self.state_dir = state_dir
 
         if self.state_dir:
-            if not os.path.exists(self.state_dir):
-                try:
-                    os.mkdir(self.state_dir)
-                except OSError, err:
+            try:
+                os.mkdir(self.state_dir)
+            except EnvironmentError as err:
+                if err.errno != errno.EEXIST:
                     raise OSInterfaceError(err)
-            if log_file:
-                if log_file[0] == '/':
-                    self.log_file = log_file
-                else:
-                    self.log_file = os.path.join(state_dir, log_file)
+            if self.log_file:
+                if not os.path.isabs(self.log_file):
+                    self.log_file = os.path.join(self.state_dir, self.log_file)
 
         # Initialize the shell. Should be after creating the log file.
         self.shell.init(self)

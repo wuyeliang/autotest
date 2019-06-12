@@ -4,15 +4,16 @@
 # found in the LICENSE file.
 """Exposes the FAFTClient interface over XMLRPC.
 
-It launches a XMLRPC server and exposes the functions in RPCFunctions().
+It launches a XMLRPC server and exposes the functions in RPCRouter().
 """
-
+import os
 from datetime import datetime
 from optparse import OptionParser
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 import common
-from autotest_lib.client.cros.faft.rpc_functions import RPCRouter
+from autotest_lib.client.cros.faft import rpc_functions
+from autotest_lib.client.cros.faft.utils import os_interface
 
 
 def main():
@@ -28,11 +29,16 @@ def main():
 
     print '[%s] XMLRPC Server: Spinning up FAFT server' % str(datetime.now())
     # Launch the XMLRPC server to provide FAFTClient commands.
+    os_if = os_interface.OSInterface()
+    os_if.init()
+    os.chdir(os_if.state_dir)
+    router = rpc_functions.RPCRouter(os_if)
+
     server = SimpleXMLRPCServer(('localhost', options.port),
                                 allow_none=True,
                                 logRequests=True)
     server.register_introspection_functions()
-    server.register_instance(RPCRouter())
+    server.register_instance(router)
     print '[%s] XMLRPC Server: Serving FAFT functions on port %s' % (str(
             datetime.now()), options.port)
 

@@ -56,31 +56,34 @@ class RPCRouter(object):
     The method is then dispatched to a Servicer class.
     """
 
-    def __init__(self):
-        """Initialize the data attributes of this class."""
+    def __init__(self, os_if):
+        """Initialize the servicer for each category.
 
-        # TODO(dgoyette): Convert most init() methods into __init__().
-        # Affected: OSInterface, Crossystem, LocalShell, and many others.
-        self._os_if = os_interface.OSInterface()
+        @type os_if: os_interface.OSInterface
+        """
+        self.bios = BiosServicer(os_if)
+        self.cgpt = CgptServicer(os_if)
+        self.ec = EcServicer(os_if)
+        self.host = HostServicer(os_if)
+        self.kernel = KernelServicer(os_if)
+        self.rootfs = RootfsServicer(os_if)
+        self.system = SystemServicer(os_if)
+        self.tpm = TpmServicer(os_if)
+        self.updater = UpdaterServicer(os_if)
 
-        # We keep the state of FAFT test in a permanent directory over reboots.
-        state_dir = '/var/tmp/faft'
-        self._log_file = os.path.join(state_dir, 'faft_client.log')
+        self._rpc_servicers = {
+                'bios': self.bios,
+                'cgpt': self.cgpt,
+                'ec': self.ec,
+                'host': self.host,
+                'kernel': self.kernel,
+                'rootfs': self.rootfs,
+                'system': self.system,
+                'tpm': self.tpm,
+                'updater': self.updater
+        }
 
-        self._os_if.init(state_dir, log_file=self._log_file)
-        os.chdir(state_dir)
-
-        os_if = self._os_if
-        self._rpc_servicers = dict()
-        self._rpc_servicers['bios'] = self.bios = BiosServicer(os_if)
-        self._rpc_servicers['cgpt'] = self.cgpt = CgptServicer(os_if)
-        self._rpc_servicers['ec'] = self.ec = EcServicer(os_if)
-        self._rpc_servicers['host'] = self.host = HostServicer(os_if)
-        self._rpc_servicers['kernel'] = self.kernel = KernelServicer(os_if)
-        self._rpc_servicers['rootfs'] = self.rootfs = RootfsServicer(os_if)
-        self._rpc_servicers['system'] = self.system = SystemServicer(os_if)
-        self._rpc_servicers['tpm'] = self.tpm = TpmServicer(os_if)
-        self._rpc_servicers['updater'] = self.updater = UpdaterServicer(os_if)
+        self._os_if = os_if
 
     def _report_error(self, fault_code, message, exc_info=None):
         """Raise the given RPC error text, including information about last
