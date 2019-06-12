@@ -309,10 +309,9 @@ class _ServoRebootRepair(repair_utils.RebootRepair):
                 'Target servo is not a test lab servo',
                 'servo_not_applicable_to_host_outside_lab')
         if host.is_labstation():
-            raise hosts.AutoservRepairError(
-                'Repairing that reboot labstation is not supported.'
-                ' See crbug.com/843358',
-                'can_not_repair_labstation_with_multiple_hosts')
+            host.request_reboot()
+            logging.warning('Reboot labstation requested, it will be '
+                            'handled by labstation administrative task.')
         else:
             host.update_image(wait_for_update=True)
             super(_ServoRebootRepair, self).repair(host)

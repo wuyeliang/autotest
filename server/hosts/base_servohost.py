@@ -38,10 +38,13 @@ class BaseServoHost(ssh_host.SSHHost):
     """
     REBOOT_CMD = 'sleep 1; reboot & sleep 10; reboot -f'
 
-    SERVOHOST_TEMP_FILE_DIR = '/var/lib/servod/'
+    TEMP_FILE_DIR = '/var/lib/servod/'
+
+    LOCK_FILE_POSTFIX = '_in_use'
+    REBOOT_FILE_POSTFIX = '_reboot'
 
     # Time to wait a rebooting servohost. In seconds
-    SERVOHOST_REBOOT_TIMEOUT = 120
+    REBOOT_TIMEOUT = 120
 
 
     def _initialize(self, hostname, is_in_lab=None, *args, **dargs):
@@ -299,7 +302,7 @@ class BaseServoHost(ssh_host.SSHHost):
             raise error.AutoservHostError(
                 'servo host %s failed to shut down.' %
                 self.hostname)
-        if self.wait_up(timeout=self.SERVOHOST_REBOOT_TIMEOUT):
+        if self.wait_up(timeout=self.REBOOT_TIMEOUT):
             logging.info('servo host %s back from reboot, with build %s',
                          self.hostname, self._get_release_version())
         else:

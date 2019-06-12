@@ -14,6 +14,7 @@ import xmlrpclib
 import os
 
 from autotest_lib.client.bin import utils
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import global_config
 from autotest_lib.client.common_lib import hosts
 from autotest_lib.client.common_lib.cros import retry
@@ -87,6 +88,20 @@ class ServoHost(base_servohost.BaseServoHost):
         self.servo_model = servo_model
         self.servo_serial = servo_serial
         self._servo = None
+        # Path of the servo host lock file.
+        self._lock_file = (self.TEMP_FILE_DIR + str(self.servo_port)
+                           + self.LOCK_FILE_POSTFIX)
+        # File path to declare a reboot request.
+        self._reboot_file = (self.TEMP_FILE_DIR + str(self.servo_port)
+                             + self.REBOOT_FILE_POSTFIX)
+
+        # Lock the servo host if it's an in-lab labstation to prevent other
+        # task to reboot it until current task completes. We also wait and
+        # make sure the labstation is up here, in the case of the labstation is
+        # in the middle of reboot.
+        if (self.is_in_lab() and self.is_labstation()
+            and self.wait_up(self.REBOOT_TIMEOUT)):
+            self._lock()
 
         self._repair_strategy = (
                 servo_repair.create_servo_repair_strategy())
@@ -183,6 +198,30 @@ class ServoHost(base_servohost.BaseServoHost):
         return self._servo
 
 
+    def request_reboot(self):
+        """Request servohost to be rebooted when it's safe to by touch a file.
+        """
+        logging.debug('Request to reboot servohost %s has been created by '
+                      'servo with port %s', self.hostname, self.servo_port)
+        self.run('touch %s' % self._reboot_file, ignore_status=True)
+
+
+    def _lock(self):
+        """lock servohost by touching a file.
+        """
+        logging.debug('Locking servohost %s by touching %s file',
+                      self.hostname, self._lock_file)
+        self.run('touch %s' % self._lock_file, ignore_status=True)
+
+
+    def _unlock(self):
+        """Unlock servohost by removing the lock file.
+        """
+        logging.debug('Unlocking servohost by removing %s file',
+                      self._lock_file)
+        self.run('rm %s' % self._lock_file, ignore_status=True)
+
+
     def close(self):
         """Close the associated servo and the host object."""
         if self._servo:
@@ -190,6 +229,15 @@ class ServoHost(base_servohost.BaseServoHost):
             if self.job and not self._servo.uart_logs_dir:
                 self._servo.uart_logs_dir = self.job.resultdir
             self._servo.close()
+
+        if self.is_in_lab() and self.is_labstation():
+            # Remove the lock if the host is an in-lab labstation.
+            try:
+                self._unlock()
+            except error.AutoservSSHTimeout:
+                logging.error('Unlock servohost failed due to ssh timeout.'
+                              ' It may caused by servohost went down during'
+                              ' the task.')
 
         super(ServoHost, self).close()
 
