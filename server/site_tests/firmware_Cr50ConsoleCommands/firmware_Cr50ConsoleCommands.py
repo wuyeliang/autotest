@@ -31,6 +31,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
     COMPARE_LINES = '\n'
     COMPARE_WORDS = None
     SORTED = True
+    CMD_RETRY_COUNT = 5
     TESTS = [
         ['pinmux', 'pinmux(.*)>', COMPARE_LINES, not SORTED],
         ['help', 'Known commands:(.*)HELP LIST.*>', COMPARE_WORDS, SORTED],
@@ -79,9 +80,18 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
 
     def get_output(self, cmd, regexp, split_str, sort):
         """Return the cr50 console output"""
-        output = self.cr50.send_safe_command_get_output(cmd,
-                                                        [regexp])[0][1].strip()
-        logging.debug('%s output:%s\n', cmd, output)
+        old_output = []
+        # Try to get consistent command output.
+        for i in range(self.CMD_RETRY_COUNT):
+            output = self.cr50.send_safe_command_get_output(
+                    cmd, [regexp])[0][1].strip()
+            if output in old_output:
+                logging.debug('%s output:%s\n', cmd, output)
+                break
+            else:
+                old_output.append(output)
+        else:
+            raise error.TestFail('Could not get consistent %r output', cmd)
 
         # Record the original command output
         results_path = os.path.join(self.resultsdir, cmd)
