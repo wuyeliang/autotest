@@ -203,8 +203,9 @@ class OSInterface(object):
         """Return True if running on DUT."""
         if self.is_android:
             return True
-        signature = open('/etc/lsb-release', 'r').readlines()[0]
-        return re.search(r'chrom(ium|e)os', signature, re.IGNORECASE) != None
+        with open('/etc/lsb-release', 'r') as lsb_release:
+            signature = lsb_release.readlines()[0]
+        return bool(re.search(r'chrom(ium|e)os', signature, re.IGNORECASE))
 
     def state_dir_file(self, file_name):
         """Get a full path of a file in the state directory."""
@@ -234,7 +235,7 @@ class OSInterface(object):
         with open(self.log_file, 'a') as log_f:
             log_f.write('%s %s\n' % (timestamp, text))
             log_f.flush()
-            os.fdatasync(log_f)
+            os.fdatasync(log_f.fileno())
 
     def is_removable_device(self, device):
         """Check if a certain storage device is removable.

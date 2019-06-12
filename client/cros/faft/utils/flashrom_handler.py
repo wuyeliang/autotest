@@ -224,7 +224,8 @@ class FlashromHandler(object):
         """
 
         if image_file:
-            self.image = open(image_file, 'rb').read()
+            with open(image_file, 'rb') as image_f:
+                self.image = image_f.read()
             self.fum.set_firmware_layout(image_file)
         else:
             self.image = self.fum.read_whole()
@@ -235,9 +236,9 @@ class FlashromHandler(object):
                     continue
                 blob = self.fum.get_section(self.image, subsection_name)
                 if blob:
-                    f = open(self.os_if.state_dir_file(subsection_name), 'wb')
-                    f.write(blob)
-                    f.close()
+                    blob_filename = self.os_if.state_dir_file(subsection_name)
+                    with open(blob_filename, 'wb') as blob_f:
+                        blob_f.write(blob)
 
             blob = self.fum.get_section(self.image, section.get_body_name())
             if blob:
@@ -300,11 +301,10 @@ class FlashromHandler(object):
 
         # All checks passed, let's store the key in a file.
         self.pub_key_file = self.os_if.state_dir_file(self.PUB_KEY_FILE_NAME)
-        keyf = open(self.pub_key_file, 'w')
-        key = gbb_section[rootk_offs:rootk_offs + key_body_offset +
-                          key_body_size]
-        keyf.write(key)
-        keyf.close()
+        with open(self.pub_key_file, 'w') as key_f:
+            key = gbb_section[rootk_offs:rootk_offs + key_body_offset +
+                              key_body_size]
+            key_f.write(key)
 
     def verify_image(self):
         """Confirm the image's validity.
@@ -679,11 +679,12 @@ class FlashromHandler(object):
         self.os_if.run_shell_command(cmd)
 
         #  Pad the new signature.
-        new_sig = open(sig_name, 'a')
-        pad = ('%c' % 0) * (sig_size - os.path.getsize(sig_name))
-        new_sig.write(pad)
-        new_sig.close()
+        with open(sig_name, 'a') as sig_f:
+            f_size = os.fstat(sig_f.fileno()).st_size
+            pad = '\0' * (sig_size - f_size)
+            sig_f.write(pad)
 
         # Inject the new signature block into the image
-        new_sig = open(sig_name, 'r').read()
+        with open(sig_name, 'r') as sig_f:
+            new_sig = sig_f.read()
         self.write_partial(fv_section.get_sig_name(), new_sig, write_through)
