@@ -237,10 +237,10 @@ class platform_KernelErrorPaths(test.test):
             logging.info("Falling back to %s", interface)
 
         # Find out how many cpus we have
-        client_no_cpus = int(
-            self.client.run('cat /proc/cpuinfo | grep processor | wc -l')
-                            .stdout.strip())
-        no_cpus = 1
+        client_cpus = map(lambda x: int(x),
+            self.client.run(
+                'cat /proc/cpuinfo | grep processor | cut -f 2 -d :')
+                .stdout.split())
 
         # Skip any triggers that are undefined for the given interface.
         if trigger == None:
@@ -260,11 +260,12 @@ class platform_KernelErrorPaths(test.test):
             # This needs to be pre-triggered so the second one locks.
             self._provoke_crash(interface, trigger, None)
 
-        if not all_cpu:
-            no_cpus = 1
+        if all_cpu:
+            which_cpus = client_cpus
         else:
-            no_cpus = client_no_cpus
-        for cpu in range(no_cpus):
+            which_cpus = [client_cpus[0]]
+
+        for cpu in which_cpus:
             # Always run on at least one cpu
             # Delete crash results, if any
             self.client.run('rm -f %s/*' % self._crash_log_dir)
