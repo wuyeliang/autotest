@@ -11,7 +11,7 @@ ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity'
 TIME = 'SHORT'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'Server'
-DEPENDENCIES = 'bluetooth'
+DEPENDENCIES = 'bluetooth, chameleon:bt_a2dp_sink'
 
 DOC = """
 Bluetooth audio test to verify that audio connection can be established

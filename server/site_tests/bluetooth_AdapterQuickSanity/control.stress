@@ -8,12 +8,12 @@ AUTHOR = 'chromeos-chameleon'
 NAME = 'bluetooth_AdapterQuickSanity.stress'
 PURPOSE = ('Stress test for package of Bluetooth quick sanity tests')
 CRITERIA = 'Pass all sanity test'
-ATTRIBUTES = 'suite:bluetooth'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_stress'
 TIME = 'MEDIUM'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth, chameleon:ble, nRF52'
+DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
     This class implements a Bluetooth quick sanity package, using

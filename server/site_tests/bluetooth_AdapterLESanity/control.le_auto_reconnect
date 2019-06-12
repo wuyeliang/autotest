@@ -13,7 +13,7 @@ TIME = 'MEDIUM'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth, chameleon:ble, nRF52'
+DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
     A Batch of Bluetooth LE sanity tests. This test is written as a batch

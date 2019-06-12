@@ -48,6 +48,7 @@ suite:bluetooth_chameleon
 suite:bluetooth_qualification
 suite:bluetooth_quicksanity
 suite:bluetooth_sanity
+suite:bluetooth_stress
 suite:brillo-bvt
 suite:brillo-presubmit
 suite:brillo-pts
