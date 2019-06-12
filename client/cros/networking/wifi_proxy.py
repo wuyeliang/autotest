@@ -278,7 +278,7 @@ class WifiProxy(shill_proxy.ShillProxy):
 
     def configure_bgscan(self, interface, method=None, short_interval=None,
                          long_interval=None, signal=None):
-        """Configures bgscan parameters for wpa_supplicant.
+        """Configures bgscan parameters for shill and wpa_supplicant.
 
         @param interface string name of interface to configure (e.g. 'mlan0').
         @param method string bgscan method (e.g. 'none').
