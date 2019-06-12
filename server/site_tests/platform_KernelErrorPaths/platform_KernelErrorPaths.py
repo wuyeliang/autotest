@@ -301,7 +301,8 @@ class platform_KernelErrorPaths(test.test):
             'HARDLOCKUP' : ('nmiwatchdog', 50, False,
                             'Watchdog detected hard LOCKUP'),
             'SPINLOCKUP' : (None, 25, False, ('softlockup: hung tasks',
-                                              'BUG: scheduling while atomic')),
+                                             'BUG: scheduling while atomic',
+                                             'BUG: sleeping function called')),
             'EXCEPTION' : ('nullptr',     10, True,
              # x86 gives "BUG: unable to" while ARM gives "Unableto".
                            'nable to handle kernel NULL pointer '
