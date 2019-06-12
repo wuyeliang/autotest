@@ -425,8 +425,8 @@ class Cr50Test(FirmwareTest):
         """Reset the DUT if it doesn't respond to ping"""
         logging.info('checking dut state')
 
-        self.servo.set('cold_reset', 'off')
-        self.servo.set('warm_reset', 'off')
+        self.servo.set_nocheck('cold_reset', 'off')
+        self.servo.set_nocheck('warm_reset', 'off')
         time.sleep(self.cr50.SHORT_WAIT)
         if not self.cr50.ap_is_on():
             logging.info('Pressing power button to turn on AP')
