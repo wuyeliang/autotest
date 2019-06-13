@@ -129,6 +129,6 @@ class CgptHandler(object):
         if not options:
             return
 
-        command = 'cgpt add -i %d %s %s' % (current['partition'],
-                                            ' '.join(options), device)
-        self.os_if.run_shell_command(command)
+        cgpt_add_cmd = 'cgpt add -i %d %s %s' % (current['partition'],
+                                                 ' '.join(options), device)
+        self.os_if.run_shell_command(cgpt_add_cmd, modifies_device=True)

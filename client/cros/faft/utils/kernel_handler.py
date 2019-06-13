@@ -99,9 +99,9 @@ class KernelHandler(object):
         @param kernel_path: The path to the kernel image to write.
         """
         dev = self.partition_map[section.upper()]['device']
-        cmd = 'dd if=%s of=%s bs=%dM count=1' % (kernel_path, dev,
-                                                 self.KERNEL_SIZE_MB)
-        self.os_if.run_shell_command(cmd)
+        dd_cmd = 'dd if=%s of=%s bs=%dM count=1' % (kernel_path, dev,
+                                                    self.KERNEL_SIZE_MB)
+        self.os_if.run_shell_command(dd_cmd, modifies_device=True)
 
     def _modify_kernel(self,
                        section,

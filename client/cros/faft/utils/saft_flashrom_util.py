@@ -332,11 +332,17 @@ class flashrom_util(object):
     def enable_write_protect(self):
         """Enable the write pretection of the flash chip."""
         cmd = 'flashrom %s --wp-enable' % self._target_command
-        self.os_if.run_shell_command(cmd)
+        self.os_if.run_shell_command(cmd, modifies_device=True)
 
     def disable_write_protect(self):
         """Disable the write pretection of the flash chip."""
         cmd = 'flashrom %s --wp-disable' % self._target_command
+        self.os_if.run_shell_command(cmd, modifies_device=True)
+
+    def dump_flash(self, filename):
+        """Read the flash device's data into a file, but don't parse it."""
+        cmd = 'flashrom %s -r "%s"' % (self._target_command, filename)
+        self.os_if.log('flashrom_util.dump_flash(): %s' % cmd)
         self.os_if.run_shell_command(cmd)
 
     def read_whole(self):
@@ -370,16 +376,16 @@ class flashrom_util(object):
         self.os_if.write_file(tmpfn, base_image)
         layout_fn = self._create_layout_file(layout_map)
 
-        cmd = 'flashrom %s -l "%s" -i %s -w "%s"' % (
+        write_cmd = 'flashrom %s -l "%s" -i %s -w "%s"' % (
                 self._target_command, layout_fn, ' -i '.join(write_list),
                 tmpfn)
-        self.os_if.log('flashrom.write_partial(): %s' % cmd)
-        self.os_if.run_shell_command(cmd)
+        self.os_if.log('flashrom.write_partial(): %s' % write_cmd)
+        self.os_if.run_shell_command(write_cmd, modifies_device=True)
 
         # flashrom write will reboot the ec after corruption
         # For Android, need to make sure ec is back online
         # before continuing, or adb command will cause test failure
-        if self.os_if.is_android:
+        if self.os_if.is_android and not self.os_if.test_mode:
             self.os_if.wait_for_device(60)
 
         # clean temporary resources

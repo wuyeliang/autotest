@@ -209,6 +209,13 @@ class FlashromHandler(object):
         self.image = ''
         self.initialized = False
 
+    def dump_flash(self, target_filename):
+        """Copy the flash device's data into a file, but don't parse it.
+
+        @param target_filename: the file to create
+        """
+        self.fum.dump_flash(target_filename)
+
     def new_image(self, image_file=None):
         """Parse the full flashrom image and store sections into files.
 
@@ -216,7 +223,7 @@ class FlashromHandler(object):
                        flashrom image. If not passed in or empty, the actual
                        flash device is read and its contents are saved into a
                        temporary file which is used instead.
-        @type image_file: str
+        @type image_file: str | None
 
         The input file is parsed and the sections of importance (as defined in
         self.fv_sections) are saved in separate files in the state directory

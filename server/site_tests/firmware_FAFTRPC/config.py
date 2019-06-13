@@ -124,7 +124,7 @@ RPC_CATEGORIES = [
                 ],
                 "failing_args": [
                     NO_ARGS,
-                    ("ls", "-l"),
+                    ("ls", "-l", 'foo'),
                 ],
             },
             {
@@ -639,31 +639,31 @@ RPC_CATEGORIES = [
                     ("foo", "bar"),
                 ]
             },
-            # {
-            #     "method_name": "run_firmwareupdate",
-            #     "passing_args": [
-            #         ("autoupdate", ),
-            #         ("recovery", ),
-            #         ("bootok", ),
-            #         ("factory_install", ),
-            #         ("bootok", None),
-            #         ("bootok", "foo"),
-            #         ("bootok", "foo", ()),
-            #         ("bootok", "foo", ("--noupdate_ec", "--wp=1")),
-            #     ],
-            #     "failing_args": [NO_ARGS],
-            # },
-            # {
-            #     "method_names": [
-            #         "run_autoupdate",
-            #         "run_bootok",
-            #     ],
-            #     "passing_args": [ONE_STR_ARG],
-            #     "failing_args": [
-            #         NO_ARGS,
-            #         ("foo", "bar"),
-            #     ],
-            # },
+            {
+                "method_name": "run_firmwareupdate",
+                "passing_args": [
+                    ("autoupdate", ),
+                    ("recovery", ),
+                    ("bootok", ),
+                    ("factory_install", ),
+                    ("bootok", None),
+                    ("bootok", "foo"),
+                    ("bootok", "foo", ()),
+                    ("bootok", "foo", ("--noupdate_ec", "--wp=1")),
+                ],
+                "failing_args": [NO_ARGS],
+            },
+            {
+                "method_names": [
+                    "run_autoupdate",
+                    "run_bootok",
+                ],
+                "passing_args": [ONE_STR_ARG],
+                "failing_args": [
+                    NO_ARGS,
+                    ("foo", "bar"),
+                ],
+            },
             {
                 "method_names": [
                     "cbfs_extract_chip",
@@ -676,7 +676,8 @@ RPC_CATEGORIES = [
                 "failing_args": [
                     NO_ARGS,
                     ONE_INT_ARG,
-                ]
+                ],
+                "allow_error_msg": "cbfstool /var/tmp/faft/"
             },
             {
                 "method_name": "copy_bios",

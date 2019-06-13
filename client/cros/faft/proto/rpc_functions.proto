@@ -162,6 +162,15 @@ service Rootfs {
     returns (RootfsVerifyRootfsResponse);
 }
 
+service RpcSettings {
+  rpc DisableTestMode
+    (RpcSettingsDisableTestModeRequest)
+    returns (RpcSettingsDisableTestModeResponse);
+  rpc EnableTestMode
+    (RpcSettingsEnableTestModeRequest)
+    returns (RpcSettingsEnableTestModeResponse);
+}
+
 service System {
   rpc IsAvailable
     (SystemIsAvailableRequest)
@@ -302,7 +311,7 @@ service Updater {
     (UpdaterResetShellballRequest)
     returns (UpdaterResetShellballResponse);
   rpc RunFirmwareupdate
-    (UpdaterRunFirmwareupdateRequest) 
+    (UpdaterRunFirmwareupdateRequest)
     returns (UpdaterRunFirmwareupdateResponse);
   rpc RunAutoupdate
     (UpdaterRunAutoupdateRequest)
@@ -641,6 +650,13 @@ message RootfsVerifyRootfsRequest {
 message RootfsVerifyRootfsResponse {
   bool verified = 1;
 }
+
+// RpcSettings messages
+
+message RpcSettingsDisableTestModeRequest {}
+message RpcSettingsDisableTestModeResponse {}
+message RpcSettingsEnableTestModeRequest {}
+message RpcSettingsEnableTestModeResponse {}
 
 // System messages
 

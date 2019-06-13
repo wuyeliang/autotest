@@ -5,7 +5,6 @@
 
 These can be exposed via a xmlrpci server running on the DUT.
 """
-
 import httplib
 import os
 import sys
@@ -47,6 +46,7 @@ class RPCRouter(object):
         self.host = HostServicer(os_if)
         self.kernel = KernelServicer(os_if)
         self.rootfs = RootfsServicer(os_if)
+        self.rpc_settings = RpcSettingsServicer(os_if)
         self.system = SystemServicer(os_if)
         self.tpm = TpmServicer(os_if)
         self.updater = UpdaterServicer(os_if)
@@ -57,6 +57,7 @@ class RPCRouter(object):
                 'ec': self.ec,
                 'host': self.host,
                 'kernel': self.kernel,
+                'rpc_settings': self.rpc_settings,
                 'rootfs': self.rootfs,
                 'system': self.system,
                 'tpm': self.tpm,
@@ -644,6 +645,24 @@ class RootfsServicer(object):
         return self._rootfs_handler.verify_rootfs(section)
 
 
+class RpcSettingsServicer(object):
+    """Class to service RPCs for settings of the RPC server itself"""
+
+    def __init__(self, os_if):
+        """
+        @type os_if: os_interface.OSInterface
+        """
+        self._os_if = os_if
+
+    def enable_test_mode(self):
+        """Enable test mode (avoids writing to flash or gpt)"""
+        self._os_if.test_mode = True
+
+    def disable_test_mode(self):
+        """Disable test mode and return to normal operation"""
+        self._os_if.test_mode = False
+
+
 class SystemServicer(object):
     """Class to service all System RPCs"""
 
@@ -712,15 +731,13 @@ class SystemServicer(object):
         return self._os_if.run_shell_command_check_output(
                 command, success_token)
 
-    def run_shell_command_get_output(self, command,
-                                     include_stderr=False):
+    def run_shell_command_get_output(self, command, include_stderr=False):
         """Run shell command and get its console output.
 
         @param command: A shell command to be run.
         @return: A list of strings stripped of the newline characters.
         """
-        return self._os_if.run_shell_command_get_output(command,
-                                                        include_stderr)
+        return self._os_if.run_shell_command_get_output(command, include_stderr)
 
     def run_shell_command_get_status(self, command):
         """Run shell command and get its console status.
@@ -982,7 +999,7 @@ class UpdaterServicer(object):
         """Run chromeos-firmwareupdate with autoupdate mode."""
         options = ['--noupdate_ec', '--wp=1']
         self._updater.run_firmwareupdate(
-                mode='autoupdate', updater_append=append, options=options)
+                mode='autoupdate', append=append, options=options)
 
     def run_factory_install(self):
         """Run chromeos-firmwareupdate with factory_install mode."""
@@ -992,7 +1009,7 @@ class UpdaterServicer(object):
 
     def run_bootok(self, append):
         """Run chromeos-firmwareupdate with bootok mode."""
-        self._updater.run_firmwareupdate(mode='bootok', updater_append=append)
+        self._updater.run_firmwareupdate(mode='bootok', append=append)
 
     def run_recovery(self):
         """Run chromeos-firmwareupdate with recovery mode."""

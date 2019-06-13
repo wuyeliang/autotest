@@ -40,18 +40,8 @@ class FirmwareUpdater(object):
         self._ec_path = 'ec.bin'
 
         self.pubkey_path = os.path.join(self._keys_path, 'root_key.vbpubk')
-        self._real_bios_handler = flashrom_handler.FlashromHandler(
-                self.os_if,
-                self.pubkey_path,
-                self._keys_path,
-                'bios',
-        )
-        self._real_ec_handler = flashrom_handler.FlashromHandler(
-                self.os_if,
-                self.pubkey_path,
-                self._keys_path,
-                'ec',
-        )
+        self._real_bios_handler = self._create_handler('bios')
+        self._real_ec_handler = self._create_handler('ec')
 
         # _detect_image_paths always needs to run during initialization
         # or after extract_shellball is called.
@@ -85,6 +75,19 @@ class FirmwareUpdater(object):
             return self._real_ec_handler
         else:
             raise FirmwareUpdaterError("Unhandled target: %r" % target)
+
+    def _create_handler(self, target):
+        """Return a new (not pre-populated) handler for the given target,
+        such as for use in checking installed versions.
+
+        @param target: image type ('bios' or 'ec')
+        @return: a new handler for that target
+
+        @type target: str
+        @rtype: flashrom_handler.FlashromHandler
+        """
+        return flashrom_handler.FlashromHandler(
+                self.os_if, self.pubkey_path, self._keys_path, target=target)
 
     def _get_image_path(self, target):
         """Return the handler for the given target
@@ -200,8 +203,7 @@ class FirmwareUpdater(object):
         if sections is None:
             sections = self._get_default_section(target)
 
-        handler = flashrom_handler.FlashromHandler(
-                self.os_if, self.pubkey_path, target=target)
+        handler = self._create_handler(target)
         if filename:
             filename = os.path.join(self._temp_path, filename)
         handler.new_image(filename)
@@ -472,31 +474,49 @@ class FirmwareUpdater(object):
             self._real_ec_handler.deinit()
             self._real_ec_handler.init(ec_file, allow_fallback=True)
 
-    def run_firmwareupdate(self, mode, updater_append=None, options=[]):
+    def run_firmwareupdate(self, mode, append=None, options=None):
         """Do firmwareupdate with updater in temp_dir.
 
-        @param updater_append: decide which shellball to use with format
-                chromeos-firmwareupdate-[append]. Use'chromeos-firmwareupdate'
-                if updater_append is None.
+        @param append: decide which shellball to use with format
+                chromeos-firmwareupdate-[append].
+                Use'chromeos-firmwareupdate' if append is None.
         @param mode: ex.'autoupdate', 'recovery', 'bootok', 'factory_install'...
-        @param options: ex. ['--noupdate_ec', '--force'] or [] for no option.
-        """
-        if updater_append:
-            updater = os.path.join(
-                    self._temp_path,
-                    'chromeos-firmwareupdate-%s' % updater_append)
-        else:
-            updater = os.path.join(self._temp_path, 'chromeos-firmwareupdate')
-        command = '/bin/sh %s --mode %s %s' % (updater, mode,
-                                               ' '.join(options))
+        @param options: ex. ['--noupdate_ec', '--force'] or [] or None.
 
+        @type append: str
+        @type mode: str
+        @type options: list | tuple | None
+        """
         if mode == 'bootok':
             # Since CL:459837, bootok is moved to chromeos-setgoodfirmware.
-            new_command = '/usr/sbin/chromeos-setgoodfirmware'
-            command = 'if [ -e %s ]; then %s; else %s; fi' % (
-                    new_command, new_command, command)
+            set_good_cmd = '/usr/sbin/chromeos-setgoodfirmware'
+            if os.path.isfile(set_good_cmd):
+                return self.os_if.run_shell_command_get_status(set_good_cmd)
 
-        return self.os_if.run_shell_command_get_status(command)
+        updater = os.path.join(self._temp_path, 'chromeos-firmwareupdate')
+        if append:
+            updater = '%s-%s' % (updater, append)
+
+        if options is None:
+            options = []
+        if isinstance(options, tuple):
+            options = list(options)
+
+        def _has_emulate(option):
+            return option == '--emulate' or option.startswith('--emulate=')
+
+        if self.os_if.test_mode and not filter(_has_emulate, options):
+            # if in test mode, forcibly use --emulate, if not already used.
+            fake_bios = os.path.join(self._temp_path, 'rpc-test-fake-bios.bin')
+            if not os.path.exists(fake_bios):
+                bios_reader = self._create_handler('bios')
+                bios_reader.dump_flash(fake_bios)
+            options = ['--emulate', fake_bios] + options
+
+        update_cmd = '/bin/sh %s --mode %s %s' % (updater, mode,
+                                                  ' '.join(options))
+
+        return self.os_if.run_shell_command_get_status(update_cmd)
 
     def cbfs_setup_work_dir(self):
         """Sets up cbfs on DUT.
