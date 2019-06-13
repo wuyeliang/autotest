@@ -61,7 +61,10 @@ def _parse_config_file(config_file):
             json_obj = json.load(fp)
     config_dict = {}
     for entry in json_obj:
-        config_dict[entry['autotest_name']] = entry
+        if 'autotest_regex' in entry:
+            config_dict[entry['autotest_regex']] = entry
+        else:
+            config_dict[re.escape(entry['autotest_name'])] = entry
     return config_dict
 
 
@@ -82,8 +85,10 @@ def _gather_presentation_info(config_data, test_name):
     for regex in config_data:
         match = re.match(regex, test_name)
         if match:
+            if presentation_dict:
+                raise PerfUploadingError('Duplicate config data refer to the '
+                                         'same test %s' % test_name)
             presentation_dict = config_data[regex]
-            break
 
     if not presentation_dict:
         raise PerfUploadingError(

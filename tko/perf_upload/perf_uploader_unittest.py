@@ -4,7 +4,10 @@
 
 """
 
-import json, unittest
+import json
+import os
+import tempfile
+import unittest
 
 import common
 from autotest_lib.tko import models as tko_models
@@ -87,6 +90,20 @@ class test_json_config_file_sanity(unittest.TestCase):
         perf_uploader._parse_config_file(
                 perf_uploader._PRESENTATION_CONFIG_FILE)
 
+    def test_proper_config(self):
+        """Verifies configs have either autotest_name or autotest_regex."""
+        json_obj = []
+        try:
+            with open(perf_uploader._PRESENTATION_CONFIG_FILE, 'r') as fp:
+                json_obj = json.load(fp)
+        except:
+            self.fail('Presentation config file could not be parsed as JSON.')
+
+        for entry in json_obj:
+            if 'autotest_name' not in entry and 'autotest_regex' not in entry:
+                self.fail('Missing autotest_name or autotest_regex field for '
+                          'test %s.' % entry)
+
 
     def test_proper_json(self):
         """Verifies the file can be parsed as proper JSON."""
@@ -95,20 +112,6 @@ class test_json_config_file_sanity(unittest.TestCase):
                 json.load(fp)
         except:
             self.fail('Presentation config file could not be parsed as JSON.')
-
-
-    def test_unique_test_names(self):
-        """Verifies that each test name appears only once in the JSON file."""
-        json_obj = []
-        try:
-            with open(perf_uploader._PRESENTATION_CONFIG_FILE, 'r') as fp:
-                json_obj = json.load(fp)
-        except:
-            self.fail('Presentation config file could not be parsed as JSON.')
-
-        name_set = set([x['autotest_name'] for x in json_obj])
-        self.assertEqual(len(name_set), len(json_obj),
-                         msg='Autotest names not unique in the JSON file.')
 
 
     def test_required_master_name(self):
@@ -148,6 +151,27 @@ class test_gather_presentation_info(unittest.TestCase):
             'dashboard_test_name': 'new_test_name',
         }
     }
+
+    _PRESENT_INFO_COLLISION = {
+        'test_name.*': {
+            'master_name': 'new_master_name',
+            'dashboard_test_name': 'new_test_name',
+        },
+        'test_name-test.*': {
+            'master_name': 'new_master_name',
+            'dashboard_test_name': 'new_test_name',
+        },
+    }
+
+    def test_test_selection_collision(self):
+        """Verifies error when multiple entry refers to the same test."""
+        try:
+            result = perf_uploader._gather_presentation_info(
+                self._PRESENT_INFO_COLLISION, 'test_name-test-23')
+            self.fail('PerfUploadingError is expected if more than one entry '
+                      'refer to the same test.')
+        except perf_uploader.PerfUploadingError:
+            return
 
     def test_test_name_regex_specified(self):
         """Verifies gathers presentation info for regex search correctly"""
@@ -196,6 +220,76 @@ class test_gather_presentation_info(unittest.TestCase):
                 perf_uploader._gather_presentation_info,
                     self._PRESENT_INFO_MISSING_MASTER, 'test_name')
 
+
+class test_parse_and_gather_presentation(unittest.TestCase):
+    """Tests for _parse_config_file and then_gather_presentation_info."""
+    _AUTOTEST_NAME_CONFIG = """[{
+        "autotest_name": "test.test.VM",
+        "master_name": "ChromeOSPerf"
+    }]"""
+
+    _AUTOTEST_REGEX_CONFIG = r"""[{
+        "autotest_regex": "test\\.test\\.VM.*",
+        "master_name": "ChromeOSPerf"
+    }]"""
+
+    def setUp(self):
+        _, self._temp_path = tempfile.mkstemp()
+
+    def tearDown(self):
+        os.remove(self._temp_path)
+
+    def test_autotest_name_is_matched(self):
+        """Verifies that autotest name is matched to the test properly."""
+        with open(self._temp_path, 'w') as f:
+            f.write(self._AUTOTEST_NAME_CONFIG)
+        config = perf_uploader._parse_config_file(self._temp_path)
+        test_name = 'test.test.VM'
+        result = perf_uploader._gather_presentation_info(config, test_name)
+        self.assertEqual(result, {
+            'test_name': test_name,
+            'master_name': 'ChromeOSPerf'
+        })
+
+    def test_autotest_name_is_escaped(self):
+        """Verifies that autotest name is escaped properly."""
+        with open(self._temp_path, 'w') as f:
+            f.write(self._AUTOTEST_NAME_CONFIG)
+        config = perf_uploader._parse_config_file(self._temp_path)
+        try:
+            test_name = 'test.testkVM'
+            result = perf_uploader._gather_presentation_info(
+                config, test_name)
+            self.fail(
+                'PerfUploadingError is expected for %s. autotest_name should '
+                'be escaped' % test_name)
+        except perf_uploader.PerfUploadingError:
+            return
+
+    def test_autotest_regex_is_matched(self):
+        """Verifies that autotest regex is matched to the test properly."""
+        with open(self._temp_path, 'w') as f:
+            f.write(self._AUTOTEST_REGEX_CONFIG)
+        config = perf_uploader._parse_config_file(self._temp_path)
+        for test_name in ['test.test.VM1', 'test.test.VMTest']:
+            result = perf_uploader._gather_presentation_info(config, test_name)
+            self.assertEqual(result, {
+                'test_name': test_name,
+                'master_name': 'ChromeOSPerf'
+            })
+
+    def test_autotest_regex_is_not_matched(self):
+        """Verifies that autotest regex is matched to the test properly."""
+        with open(self._temp_path, 'w') as f:
+            f.write(self._AUTOTEST_REGEX_CONFIG)
+        config = perf_uploader._parse_config_file(self._temp_path)
+        for test_name in ['testktest.VM', 'test.testkVM', 'test.test\VM']:
+            try:
+                result = perf_uploader._gather_presentation_info(
+                    config, test_name)
+                self.fail('PerfUploadingError is expected for %s' % test_name)
+            except perf_uploader.PerfUploadingError:
+                return
 
 class test_get_id_from_version(unittest.TestCase):
     """Tests for the _get_id_from_version function."""
