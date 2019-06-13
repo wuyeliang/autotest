@@ -116,13 +116,16 @@ class desktopui_FilesApp(test.test):
         @param role: The type of role to search for.
 
         """
-        roles = cr.autotest_ext.EvaluateJavaScript("""
-            var root;
-            chrome.automation.getDesktop(r => root = r);
-            root.findAll({attributes: {role: '%s'}}).map(node => node.name);
-            """ % role)
-        logging.info(roles)
-        return roles
+        try:
+            roles = cr.autotest_ext.EvaluateJavaScript("""
+                var root;
+                chrome.automation.getDesktop(r => root = r);
+                root.findAll({attributes: {role: '%s'}}).map(node => node.name);
+                """ % role)
+            logging.info(roles)
+            return roles
+        except Exception:
+            logging.exception('Failed to get elements by role.')
 
 
     def _open_more_options(self, cr):
