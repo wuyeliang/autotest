@@ -1,3 +1,4 @@
+android.hardware.camera2.cts.AllocationTest#testAllocationFromCameraFlexibleYuv: [reef]
 android.hardware.camera2.cts.CaptureRequestTest#testEdgeModeControl: [nautilus]
 android.hardware.camera2.cts.CaptureRequestTest#testNoiseReductionModeControl: [nautilus]
 android.hardware.camera2.cts.ImageReaderTest#testYuvAndJpeg: [coral]
