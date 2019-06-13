@@ -43,6 +43,7 @@ class firmware_UpdateKernelVersion(FirmwareTest):
             self.reset_and_prioritize_kernel('b')
 
     def initialize(self, host, cmdline_args, dev_mode=True):
+        """Initialize the test"""
         super(firmware_UpdateKernelVersion, self).initialize(host, cmdline_args)
 
         self.switcher.setup_mode('dev' if dev_mode else 'normal')
@@ -56,6 +57,7 @@ class firmware_UpdateKernelVersion(FirmwareTest):
         self.setup_kernel('a')
 
     def cleanup(self):
+        """Cleanup after the test"""
         super(firmware_UpdateKernelVersion, self).cleanup()
 
     def run_once(self):

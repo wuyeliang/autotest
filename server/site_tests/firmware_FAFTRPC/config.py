@@ -54,9 +54,11 @@ Each element of RPC_CATEGORIES must be a dict containing the following keys:
                        the RPC method.
     @key silence_result: Normally, the RPC return value is logged. However, if
                          this key is truthy, then the result is not logged.
-    @key allow_error_msg (optional): String. If the RPC method is called with a
+    @key allow_error_msg (optional): String representing a regex pattern.
+                                     If the RPC method is called with a
                                      passing_args tuple, but it yields an RPC
-                                     error whose message contains this string,
+                                     error whose message is matched by
+                                     re.search(allow_error_msg, error_msg),
                                      then the test will be considered a pass.
     @key store_result_as (optional): String. If this field is specified, then
                                      the result from the RPC call will be stored
@@ -571,47 +573,58 @@ RPC_CATEGORIES = [
                     ONE_INT_ARG,
                     ONE_STR_ARG,
                 ],
-                "allow_error_msg": ("command cp -rf /var/tmp/faft/autest/work "
-                                    "/var/tmp/faft/autest/cbfs failed"),
+                "allow_error_msg": (r"command cp -rf /var/tmp/faft/autest/work "
+                                    r"/var/tmp/faft/autest/cbfs failed"),
+            },
+            {
+                "method_name": "get_section_fwid",
+                "passing_args": [
+                    NO_ARGS,
+                    ("bios", ),
+                    ("ec", ),
+                    ("bios", "b"),
+                    ("ec", "rw"),
+                ],
+                "failing_args": [
+                    ("foo", ),
+                    ("bios", "foo"),
+                    ("ec", "foo"),
+                ],
+                "expected_return_type": str,
+                "allow_error_msg": "is empty",
             },
             {
                 "method_names": [
-                    "get_fwid",
-                    "modify_fwid",
-                    "get_installed_fwid",
+                    "get_all_fwids",
+                    "get_all_installed_fwids",
                 ],
                 "passing_args": [
                     NO_ARGS,
-                    ("bios", "ro"),
-                    ("bios", "a"),
+                    ("bios", ),
+                    ("ec", ),
                 ],
                 "failing_args": [
-                    ("", ),
                     ("foo", ),
-                    ("bios", ""),
-                    ("bios", "foo"),
-                ],
-                "expected_return_type": str,
-                "allow_error_msg": "is already modified",
-            },
-            {
-                "method_names": [
-                    "get_fwid",
-                    "modify_fwid",
-                    "get_installed_fwid",
-                ],
-                "passing_args": [
-                    ("bios", ()),
-                    ("bios", ("ro",)),
-                    ("bios", ("ro", "a")),
-                ],
-                "failing_args": [
-                    ("", ("ro",)),
-                    ("bios", ("foo",)),
-                    ("bios", ("foo", "bar")),
                 ],
                 "expected_return_type": dict,
-                "allow_error_msg": "is already modified",
+                "allow_error_msg": r"is already modified|is empty",
+            },
+            {
+                "method_name": "modify_fwids",
+                "passing_args": [
+                    NO_ARGS,
+                    ("bios", ),
+                    ("ec", ),
+                    ("bios", ("b", "rec")),
+                    ("ec", ("rw_b", )),
+                ],
+                "failing_args": [
+                    ("foo", ),
+                    ("bios", ("foo", )),
+                    ("ec", ("foo", )),
+                ],
+                "expected_return_type": dict,
+                "allow_error_msg": r"is already modified|is empty",
             },
             {
                 "method_name": "resign_firmware",

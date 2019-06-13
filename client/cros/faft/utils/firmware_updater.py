@@ -29,6 +29,7 @@ class FirmwareUpdater(object):
     DAEMON = 'update-engine'
     CBFSTOOL = 'cbfstool'
     HEXDUMP = 'hexdump -v -e \'1/1 "0x%02x\\n"\''
+    DEFAULT_SECTION_FOR_TARGET = {'bios': 'a', 'ec': 'rw'}
 
     def __init__(self, os_if):
         self.os_if = os_if
@@ -114,10 +115,8 @@ class FirmwareUpdater(object):
         @type target: str
         @rtype: str
         """
-        if target == 'bios':
-            return 'a'
-        elif target == 'ec':
-            return 'rw'
+        if target in self.DEFAULT_SECTION_FOR_TARGET:
+            return self.DEFAULT_SECTION_FOR_TARGET[target]
         else:
             raise FirmwareUpdaterError("Unhandled target: %r" % target)
 
@@ -162,52 +161,69 @@ class FirmwareUpdater(object):
         ec = self._get_handler('ec')
         return ec.get_section_hash('rw')
 
-    def get_fwid(self, target='bios', sections=None):
-        """Get fwids from in-memory image, for the given target and section(s).
+    def get_section_fwid(self, target='bios', section=None):
+        """Get one fwid from in-memory image, for the given target.
 
-        If 'sections' argument is a string, the result is a single fwid string.
-        Otherwise, it's a dict of {section: fwid} for the requested sections.
+        @param target: the image type to get from: 'bios (default) or 'ec'
+        @param section: section to return.  Default: A for bios, RW for EC
 
-        @param target: the image type to get from: 'bios' (default) or 'ec'
-        @param sections: section(s) to return.  Default: A for bios, RW for ec
-        @return: fwids for the sections
-
-        @type target: str
-        @type sections: str | tuple
-        @rtype: str | tuple
+        @type target: str | None
+        @rtype: dict
         """
-        if sections is None:
-            sections = self._get_default_section(target)
-
+        if section is None:
+            section = self._get_default_section(target)
         image_path = self._get_image_path(target)
         handler = self._get_handler(target)
         handler.new_image(image_path)
-        return handler.get_fwid(sections)
+        fwid = handler.get_section_fwid(section)
+        if fwid is not None:
+            return str(fwid)
+        else:
+            return None
 
-    def get_installed_fwid(self, target='bios', sections=None, filename=None):
-        """Get fwids from disk or flash, for the given target and section(s).
-
-        If 'sections' argument is a string, the result is a single fwid string.
-        Otherwise, it's a dict of {section: fwid} for the requested sections.
+    def get_all_fwids(self, target='bios'):
+        """Get all non-empty fwids from in-memory image, for the given target.
 
         @param target: the image type to get from: 'bios' (default) or 'ec'
-        @param sections: section(s) to return.  Default: A for bios, RW for ec
-        @param filename: filename to read instead of using the actual flash
-        @return: fwids for the sections
+        @return: fwid for the sections
 
         @type target: str
-        @type sections: str | tuple | list
-        @type filename: str
-        @rtype: str | dict
+        @rtype: dict
         """
-        if sections is None:
-            sections = self._get_default_section(target)
+        image_path = self._get_image_path(target)
+        handler = self._get_handler(target)
+        handler.new_image(image_path)
 
-        handler = self._create_handler(target)
+        fwids = {}
+        for section in handler.fv_sections:
+            fwid = handler.get_section_fwid(section)
+            if fwid is not None:
+                fwids[section] = fwid
+        return fwids
+
+    def get_all_installed_fwids(self, target='bios', filename=None):
+        """Get all non-empty fwids from disk or flash, for the given target.
+
+        @param target: the image type to get from: 'bios' (default) or 'ec'
+        @param filename: filename to read instead of using the actual flash
+        @return: fwid for the sections
+
+        @type target: str
+        @type filename: str
+        @rtype: dict
+        """
+        handler = flashrom_handler.FlashromHandler(
+                self.os_if, self.pubkey_path, target=target)
         if filename:
             filename = os.path.join(self._temp_path, filename)
         handler.new_image(filename)
-        return handler.get_fwid(sections)
+
+        fwids = {}
+        for section in handler.fv_sections:
+            fwid = handler.get_section_fwid(section)
+            if fwid is not None:
+                fwids[section] = fwid
+        return fwids
 
     def _modify_one_fwid(self, handler, section):
         """Modify a section's fwid on the handler, adding a tilde and the
@@ -222,7 +238,7 @@ class FirmwareUpdater(object):
         @rtype: str
         """
 
-        fwid = handler.get_section_fwid(section)
+        fwid = handler.get_section_fwid(section, strip_null=False)
         fwid_size = len(fwid)
 
         if not fwid:
@@ -244,28 +260,20 @@ class FirmwareUpdater(object):
         handler.set_section_fwid(section, padded_fwid)
         return fwid
 
-    def modify_fwid(self, target='bios', sections=None):
+    def modify_fwids(self, target='bios', sections=None):
         """Modify the fwid in the image, but don't flash it.
-
-        If 'sections' argument is a string, the result is a single fwid string.
-        Otherwise, it's a dict of {section: fwid} for the requested sections.
 
         @param target: the image type to modify: 'bios' (default) or 'ec'
         @param sections: section(s) to modify.  Default: A for bios, RW for ec
-        @return: fwids for the modified sections
+        @return: fwids for the modified sections, as {section: fwid}
 
         @type target: str
-        @type sections: str | tuple | list
-        @rtype: str | dict
+        @type sections: tuple | list
+        @rtype: dict
         """
         # if arg was str, return single section as str
         if sections is None:
-            sections = self._get_default_section(target)
-
-        single = False
-        if isinstance(sections, basestring):
-            single = True
-            sections = [sections]
+            sections = [self._get_default_section(target)]
 
         handler = self._get_handler(target)
         image_fullpath = self._get_image_path(target)
@@ -276,10 +284,6 @@ class FirmwareUpdater(object):
 
         handler.dump_whole(image_fullpath)
         handler.new_image(image_fullpath)
-
-        if single:
-            section = sections[0]
-            return fwids[section]
 
         return fwids
 
@@ -303,7 +307,7 @@ class FirmwareUpdater(object):
         """
         self.cbfs_setup_work_dir()
 
-        fwid = self.get_fwid('ec', 'rw')
+        fwid = self.get_section_fwid('ec', 'rw')
         if fwid.endswith('~'):
             raise FirmwareUpdaterError('The EC fwid is already modified')
 

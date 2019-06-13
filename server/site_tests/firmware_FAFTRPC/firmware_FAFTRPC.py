@@ -4,6 +4,7 @@
 
 import logging
 import operator
+import re
 import sys
 
 from autotest_lib.client.common_lib import error
@@ -126,8 +127,8 @@ class firmware_FAFTRPC(FirmwareTest):
         @param category: The RPC subsystem category; ex. kernel, bios
         @param method: The name of the RPC function within the subsystem
         @param params: A tuple containing params to pass into the RPC function
-        @param allow_error_msg: If a string is passed in, and the RPC call
-                                returns an RPC error containing this string,
+        @param allow_error_msg: If a regexy string is passed in, and the RPC
+                                returns an RPC error matching this regex,
                                 then the test will pass instead of failing.
         @param expected_return_type: If not None, then the RPC return value
                                      must be this type, else the test fails.
@@ -147,7 +148,8 @@ class firmware_FAFTRPC(FirmwareTest):
         try:
             result = rpc_function(*params)
         except config.RPC_ERRORS as e:
-            if allow_error_msg is not None and allow_error_msg in str(e):
+            if allow_error_msg is not None and \
+                    re.search(allow_error_msg, str(e)):
                 success_msg = "raised an acceptable error during RPC handling"
                 self._log_success(rpc_name, params, success_msg)
                 return e
@@ -219,7 +221,7 @@ class firmware_FAFTRPC(FirmwareTest):
         @param method: The name of the RPC function within the subsystem
         @param params: A tuple containing params to pass into the RPC function
         @param expected_output: The value that the RPC function should return
-        @param allow_error_msg: If a string is passed in, and the RPC call
+        @param allow_error_msg: If a regexy string is passed in, and the RPC
                                 returns an RPC error containing this string,
                                 then the test will pass instead of failing.
 
@@ -230,7 +232,8 @@ class firmware_FAFTRPC(FirmwareTest):
 
         """
         rpc_name = ".".join([category, method])
-        actual_output = self._assert_passes(category, method, params)
+        actual_output = self._assert_passes(category, method, params,
+                                            allow_error_msg=allow_error_msg)
         if expected_output == actual_output:
             success_message = "returned the expected value <%s>" \
                               % expected_output

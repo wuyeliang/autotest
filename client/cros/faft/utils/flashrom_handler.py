@@ -595,37 +595,26 @@ class FlashromHandler(object):
         blob = self.fum.get_section(self.image, subsection_name)
         return blob
 
-    def get_section_fwid(self, section):
-        """Retrieve fwid blob of a firmware section"""
-        subsection_name = self.fv_sections[section].get_fwid_name()
-        blob = self.fum.get_section(self.image, subsection_name)
-        return blob
-
-    def get_fwid(self, sections):
-        """Retrieve multiple sections' fwids from the image.
-
-        If 'sections' argument is a string, the result is a single fwid string.
-        Otherwise, it's a dict of {section: fwid} for the requested sections.
-
-        @param sections: section(s) to return
-        @return: fwid(s) of the section(s)
-
-        @type sections: str | tuple | list
-        @rtype: str | dict
+    def get_section_fwid(self, section, strip_null=True):
         """
-        single = False
-        if isinstance(sections, str):
-            single = True
-            sections = [sections]
+        Retrieve fwid blob of a firmware section.
 
-        fwids = {}
-        for section in sections:
-            fwid = self.get_section_fwid(section)
-            fwids[section] = fwid.rstrip('\0')
-            if single:
-                return fwids[section]
+        @param section: Name of the section whose fwid to return.
+        @param strip_null: If True, remove \0 from the end of the blob.
+        @return: fwid of the section
 
-        return fwids
+        @type section: str
+        @type strip_null: bool
+        @rtype: str | None
+
+        """
+        subsection_name = self.fv_sections[section].get_fwid_name()
+        if not subsection_name:
+            return None
+        blob = self.fum.get_section(self.image, subsection_name)
+        if strip_null:
+            blob = blob.rstrip('\0')
+        return blob
 
     def set_section_body(self, section, blob, write_through=False):
         """Put the supplied blob to the body of the firmware section"""

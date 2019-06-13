@@ -4,9 +4,6 @@ service Bios {
   rpc Reload
     (BiosReloadRequest)
     returns (BiosReloadResponse);
-  rpc GetFwid
-    (BiosGetFwidRequest)
-    returns (BiosGetFwidResponse);
   rpc GetGbbFlags
     (BiosGetGbbFlagsRequest)
     returns (BiosGetGbbFlagsResponse);
@@ -76,9 +73,6 @@ service Ec {
   rpc GetVersion
     (EcGetVersionRequest)
     returns (EcGetVersionResponse);
-  rpc GetFwid
-    (EcGetFwidRequest)
-    returns (EcGetFwidResponse);
   rpc GetActiveHash
     (EcGetActiveHashRequest)
     returns (EcGetActiveHashResponse);
@@ -283,17 +277,15 @@ service Updater {
   rpc StartDaemon
     (UpdaterStartDaemonRequest)
     returns (UpdaterStartDaemonResponse);
-  rpc GetFwid
-    (UpdaterGetFwidRequest)
-    returns (UpdaterGetFwidResponse);
-  rpc ModifyFwid
-    (UpdaterModifyFwidRequest)
-    returns (UpdaterModifyFwidResponse);
-  rpc GetInstalledFwid
-    (UpdaterGetInstalledFwidRequest)
-    returns (UpdaterGetInstalledFwidResponse);
-  rpc ModifyEcidAndFlashToBios
-    (UpdaterModifyEcidAndFlashToBiosRequest)
+  rpc GetSectionFwid (UpdaterGetSectionFwidRequest)
+    returns (UpdaterGetSectionFwidResponse);
+  rpc GetAllFwids (UpdaterGetAllFwidsRequest)
+    returns (UpdaterGetAllFwidsResponse);
+  rpc ModifyFwids (UpdaterModifyFwidsRequest)
+    returns (UpdaterModifyFwidsResponse);
+  rpc GetAllInstalledFwids (UpdaterGetAllInstalledFwidsRequest)
+    returns (UpdaterGetAllInstalledFwidsResponse);
+  rpc ModifyEcidAndFlashToBios (UpdaterModifyEcidAndFlashToBiosRequest)
     returns (UpdaterModifyEcidAndFlashToBiosResponse);
   rpc GetEcHash
     (UpdaterGetEcHashRequest)
@@ -364,13 +356,6 @@ service Updater {
 
 message BiosReloadRequest {}
 message BiosReloadResponse {}
-
-message BiosGetFwidRequest {
-  string section = 1;
-}
-message BiosGetFwidResponse {
-  string fwid = 1;
-}
 
 message BiosGetGbbFlagsRequest {}
 message BiosGetGbbFlagsResponse {
@@ -503,13 +488,6 @@ message EcReloadResponse {}
 message EcGetVersionRequest {}
 message EcGetVersionResponse {
   string version = 1;
-}
-
-message EcGetFwidRequest {
-  string section = 1;
-}
-message EcGetFwidResponse {
-  string fwid = 1;
 }
 
 message EcGetActiveHashRequest {}
@@ -852,29 +830,56 @@ message UpdaterStopDaemonResponse {}
 message UpdaterStartDaemonRequest {}
 message UpdaterStartDaemonResponse {}
 
-message UpdaterGetFwidRequest {
+message UpdaterGetSectionFwidRequest {
   string target = 1; // optional
   string section = 2; // optional
 }
-message UpdaterGetFwidResponse {
+message UpdaterGetSectionFwidResponse {
   string fwid = 1;
 }
 
-message UpdaterModifyFwidRequest {
+message UpdaterGetAllFwidsRequest {
   string target = 1; // optional
-  string section = 2; // optional
 }
-message UpdaterModifyFwidResponse {
-  string fwid = 1;
+message UpdaterGetAllFwidsResponse {
+  string ro = 1;
+  string a = 2;
+  string b = 3;
+  string rec = 4;
+  string ec_a = 5;
+  string ec_b = 6;
+  string rw = 7;
+  string rw_b = 8;
 }
 
-message UpdaterGetInstalledFwidRequest {
+message UpdaterGetAllInstalledFwidsRequest {
   string target = 1; // optional
-  string section = 2; // optional
   string filename = 3; // optional
 }
-message UpdaterGetInstalledFwidResponse {
-  string fwid = 1;
+message UpdaterGetAllInstalledFwidsResponse {
+  string ro = 1;
+  string a = 2;
+  string b = 3;
+  string rec = 4;
+  string ec_a = 5;
+  string ec_b = 6;
+  string rw = 7;
+  string rw_b = 8;
+}
+
+message UpdaterModifyFwidsRequest {
+  string target = 1; // optional
+  repeated string sections = 2; // optional
+}
+message UpdaterModifyFwidsResponse {
+  string ro = 1;
+  string a = 2;
+  string b = 3;
+  string rec = 4;
+  string ec_a = 5;
+  string ec_b = 6;
+  string rw = 7;
+  string rw_b = 8;
 }
 
 message UpdaterModifyEcidAndFlashToBiosRequest {}

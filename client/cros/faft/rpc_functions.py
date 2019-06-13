@@ -225,10 +225,6 @@ class BiosServicer(object):
         """Reload the firmware image that may be changed."""
         self._bios_handler.new_image()
 
-    def get_fwid(self, sections='a'):
-        """Get FWIDs for the given sections"""
-        return self._bios_handler.get_fwid(sections)
-
     def get_gbb_flags(self):
         """Get the GBB flags.
 
@@ -432,10 +428,6 @@ class EcServicer(object):
     def reload(self):
         """Reload the firmware image that may be changed."""
         self._ec_handler.new_image()
-
-    def get_fwid(self, sections='rw'):
-        """Get FWIDs for the given sections of EC firmware"""
-        return self._ec_handler.get_fwid(sections)
 
     def get_version(self):
         """Get EC version via mosys.
@@ -937,17 +929,21 @@ class UpdaterServicer(object):
         """Start update-engine daemon."""
         return self._updater.start_daemon()
 
-    def get_fwid(self, target='bios', sections='a'):
-        """Retrieve shellball's RW and/or RO fwid."""
-        return self._updater.get_fwid(target, sections)
+    def get_section_fwid(self, target='bios', section=None):
+        """Retrieve shellball's RW or RO fwid."""
+        return self._updater.get_section_fwid(target, section)
 
-    def modify_fwid(self, target='bios', sections='a'):
+    def get_all_fwids(self, target='bios'):
+        """Retrieve shellball's RW and/or RO fwids for all sections."""
+        return self._updater.get_all_fwids(target)
+
+    def get_all_installed_fwids(self, target='bios', filename=None):
+        """Retrieve installed (possibly emulated) fwids for the target."""
+        return self._updater.get_all_installed_fwids(target, filename)
+
+    def modify_fwids(self, target='bios', sections=None):
         """Modify the AP fwid in the image, but don't flash it."""
-        return self._updater.modify_fwid(target, sections)
-
-    def get_installed_fwid(self, target='bios', sections=None, filename=None):
-        """Retrieve installed (possibly emulated) RW and/or RO fwids."""
-        return self._updater.get_installed_fwid(target, sections, filename)
+        return self._updater.modify_fwids(target)
 
     def modify_ecid_and_flash_to_bios(self):
         """Modify ecid, put it to AP firmware, and flash it to the system."""
