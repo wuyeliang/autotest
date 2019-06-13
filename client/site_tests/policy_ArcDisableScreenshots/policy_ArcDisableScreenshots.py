@@ -50,11 +50,12 @@ class policy_ArcDisableScreenshots(
 
         """
         # Remove any lingering possible screenshots
-        arc.adb_shell('rm /sdcard/test.png')
+        arc.adb_shell('rm -f /sdcard/test.png')
 
         # Take a screenshot, then check its size
-        arc.adb_shell('screencap > /sdcard/test.png')
-        screenshotsize = arc.adb_shell('du -s /sdcard/test.png').split()[0]
+        arc.adb_shell('screencap > /sdcard/test.png', ignore_status=True)
+        screenshotsize = arc.adb_shell('du -s /sdcard/test.png',
+                                       ignore_status=True).split()[0]
 
         # Some devices screenshot may contain metadata that would be up to 8b
         if case and int(screenshotsize) > 8:
