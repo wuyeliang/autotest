@@ -373,8 +373,6 @@ class Cr50Test(FirmwareTest):
         elif self.original_ccd_level != self.cr50.get_ccd_level():
             self.cr50.set_ccd_level(self.original_ccd_level)
 
-
-
     def cleanup(self):
         """Attempt to cleanup the cr50 state. Then run firmware cleanup"""
         try:
@@ -726,7 +724,6 @@ class Cr50Test(FirmwareTest):
                                          nickname='ccd_open',
                                          stdout_tee=self._ccd_open_stdout,
                                          stderr_tee=utils.TEE_TO_LOGS)
-
         if self._ccd_open_job == None:
             raise error.TestFail('could not start ccd open')
 
@@ -811,12 +808,17 @@ class Cr50Test(FirmwareTest):
 
         @param enable_testlab: If True, enable testlab mode after cr50 is open.
         """
+        if not self.faft_config.has_power_button:
+            logging.warning('No power button', exc_info=True)
+            enable_testlab = False
         # Try to use testlab open first, so we don't have to wait for the
         # physical presence check.
         self.cr50.send_command('ccd testlab open')
         if self.cr50.get_ccd_level() == 'open':
             return
 
+        if self.servo.has_control('chassis_open'):
+            self.servo.set('chassis_open','yes')
         # Use the console to open cr50 without entering dev mode if possible. It
         # takes longer and relies on more systems to enter dev mode and ssh into
         # the AP. Skip the steps that aren't required.
@@ -827,6 +829,9 @@ class Cr50Test(FirmwareTest):
             self.cr50.set_ccd_level(self.cr50.OPEN)
         else:
             self.ccd_open_from_ap()
+
+        if self.servo.has_control('chassis_open'):
+            self.servo.set('chassis_open','no')
 
         if enable_testlab:
             self.cr50.set_ccd_testlab('on')
@@ -895,6 +900,9 @@ class Cr50Test(FirmwareTest):
         # If for some reason the test sets a password and is interrupted before
         # we can clear it, we want testlab mode to be enabled, so it's possible
         # to clear the password without knowing it.
+        if self.faft_config.has_power_button:
+            raise error.TestError('No power button')
+
         if not self.cr50.testlab_is_on():
             raise error.TestError('Will not set password unless testlab mode '
                                   'is enabled.')

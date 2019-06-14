@@ -116,3 +116,6 @@ class Values(object):
     # Length of serial number that can be set in firmware; if serial number
     # cannot be set then 0
     serial_number_length = 0
+
+    # True if the chrome devices has power button.
+    has_power_button = True

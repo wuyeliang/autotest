@@ -89,6 +89,9 @@ class firmware_FWMPDisableCCD(Cr50Test):
 
         logging.info('Flags are set to %s ccd is%s permitted', flags,
                      ' not' if fwmp_disabled_ccd else '')
+        if not self.faft_config.has_power_button:
+            logging.info('Can not test ccd without power button')
+            return
 
         self.open_cr50_and_setup_ccd()
         # Try setting password after FWMP has been created. Setting password is

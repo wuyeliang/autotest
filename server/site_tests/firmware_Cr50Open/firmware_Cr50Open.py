@@ -36,6 +36,10 @@ class firmware_Cr50Open(Cr50Test):
                     True, the device is in dev mode. If False, the device is in
                     normal mode.
         """
+        if not self.faft_config.has_power_button:
+            logging.info('Can not test ccd open without power button')
+            return
+
         self.cr50.set_ccd_level('lock')
         self.cr50.get_ccd_info()
 
@@ -54,7 +58,6 @@ class firmware_Cr50Open(Cr50Test):
             if self.ccd_open_restricted:
                 raise error.TestFail('Open should not be accessible from the '
                                      'console')
-
         self.cr50.set_ccd_level('lock')
 
         #Make sure open only works from the AP when the device is in dev mode.
