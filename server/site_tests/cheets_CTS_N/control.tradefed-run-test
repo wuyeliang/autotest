@@ -49,8 +49,8 @@ cts_abi = args_dict.get('abi', cts_abi)
 cts_module = args_dict.get('module', cts_module)
 cts_revision = args_dict.get('revision', cts_revision)
 cts_test = args_dict.get('test', cts_test)
-cts_timeout = args_dict.get('timeout', cts_timeout)
-cts_retry = args_dict.get('max_retry', cts_retry)
+cts_timeout = float(args_dict.get('timeout', cts_timeout))
+cts_retry = int(args_dict.get('max_retry', cts_retry))
 
 # Sanity checks.
 logging.error('Running module %s with test %s on abi %s and revision %s',
