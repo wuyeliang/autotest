@@ -29,6 +29,7 @@ JOB_REPO_URL = 'job_repo_url'
 VERSION_PREFIX = 'cros-version:'
 BOARD_PREFIX = 'board:'
 MODEL_LABEL = 'model'
+DEVICE_SKU_LABEL = 'device-sku'
 OS_PREFIX = 'os'
 
 # Bug filing

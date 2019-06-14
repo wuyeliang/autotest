@@ -11,6 +11,7 @@ from autotest_lib.server import utils
 from autotest_lib.server.hosts.cros_label import BoardLabel
 from autotest_lib.server.hosts.cros_label import BluetoothLabel
 from autotest_lib.server.hosts.cros_label import Cr50Label
+from autotest_lib.server.hosts.cros_label import DeviceSkuLabel
 from autotest_lib.server.hosts.cros_label import ModelLabel
 from autotest_lib.server.hosts import host_info
 
@@ -190,6 +191,25 @@ class BoardLabelTests(unittest.TestCase):
     def test_existing_label_in_host_info_store(self):
         host = MockHostWithoutAFE(['board:existing'])
         self.assertEqual(BoardLabel().generate_labels(host), ['existing'])
+
+
+class DeviceSkuLabelTests(unittest.TestCase):
+    """Unit tests for DeviceSkuLabel"""
+
+    def test_new_label(self):
+        mosys_cmd = 'mosys platform sku'
+        host = MockHost([], MockCmd(mosys_cmd, 0, '27\n'))
+        self.assertEqual(DeviceSkuLabel().generate_labels(host), ['27'])
+
+    def test_new_label_mosys_fails(self):
+        mosys_cmd = 'mosys platform sku'
+        host = MockHost([], MockCmd(mosys_cmd, 1, '27\n'))
+        self.assertEqual(DeviceSkuLabel().generate_labels(host), [])
+
+    def test_existing_label(self):
+        host = MockHost(['device-sku:48'])
+        self.assertEqual(DeviceSkuLabel().generate_labels(host), ['48'])
+
 
 class BluetoothLabelTests(unittest.TestCase):
     """Unit tests for BluetoothLabel"""

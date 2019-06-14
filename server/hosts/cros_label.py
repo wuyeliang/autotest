@@ -95,6 +95,24 @@ class ModelLabel(base_label.StringPrefixLabel):
         return [model or lsb_output.board]
 
 
+class DeviceSkuLabel(base_label.StringPrefixLabel):
+    """Determine the correct device_sku label for the device."""
+
+    _NAME =  ds_constants.DEVICE_SKU_LABEL
+
+    def generate_labels(self, host):
+        device_sku = host.host_info_store.get().device_sku
+        if device_sku:
+            return [device_sku]
+
+        mosys_cmd = 'mosys platform sku'
+        result = host.run(command=mosys_cmd, ignore_status=True)
+        if result.exit_status == 0:
+            return [result.stdout.strip()]
+
+        return []
+
+
 class LightSensorLabel(base_label.BaseLabel):
     """Label indicating if a light sensor is detected."""
 
