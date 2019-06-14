@@ -76,21 +76,24 @@ chartjson_sample = {
                 'name': 'metric1',
                 'type': 'list_of_scalar_values',
                 'values': [1.0, 2.0],
-                'units': 'ms'
+                'units': 'ms',
+                'improvement_direction': 'down'
             },
             'story2': {
                 'std': 0.5,
                 'name': 'metric1',
                 'type': 'list_of_scalar_values',
                 'values': [1.0, 2.0],
-                'units': 'ms'
+                'units': 'ms',
+                'improvement_direction': 'down'
             },
             'summary': {
                 'std': 0.5,
                 'name': 'metric1',
                 'type': 'list_of_scalar_values',
                 'values': [1.0, 1.0, 2.0, 2.0],
-                'units': 'ms'
+                'units': 'ms',
+                'improvement_direction': 'down'
             }
         },
     }
