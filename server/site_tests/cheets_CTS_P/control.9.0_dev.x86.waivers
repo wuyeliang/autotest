@@ -32,13 +32,15 @@ def run_CTS(machine):
             '--include-filter', 'CtsFileSystemTestCases',
             '--include-filter', 'CtsSkQPTestCases',
             '--include-filter', 'CtsTelephonyTestCases android.telephony.cts.SubscriptionManagerTest',
-            '--include-filter', 'CtsBionicTestCases pthread_leak#detach'],
+            '--include-filter', 'CtsBionicTestCases pthread_leak#detach',
+            '--include-filter', 'CtsPrintTestCases android.print.cts.PrinterDiscoverySessionLifecycleTest#defaultPrinterBecomesAvailableWhileInBackground',
+            '--include-filter', 'CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerPinnedStackTests#testAutoEnterPictureInPictureOverPip'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='cts-dev',
         target_plan=None,
         load_waivers=False,
         bundle='x86',
-        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-5633254-linux_x86-x86.zip',
+        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-5658270-linux_x86-x86.zip',
         timeout=14400)
 
 parallel_simple(run_CTS, machines)
