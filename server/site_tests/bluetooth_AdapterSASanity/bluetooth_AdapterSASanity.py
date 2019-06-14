@@ -4,9 +4,11 @@
 
 """A Batch of Bluetooth stand alone sanity tests"""
 
-from autotest_lib.server.cros.bluetooth import bluetooth_adapter_quick_tests
+import logging
+
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
      BluetoothAdapterQuickTests
+
 
 class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
     """A Batch of Bluetooth stand alone sanity tests. This test is written as
@@ -73,7 +75,7 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
 
     @test_wrapper('Adapter suspend resume test')
     def sa_adapter_suspend_resume_test(self):
-
+        """Test dapter power states is perserved through suspend resume."""
         def adapter_on_SR_test():
             """Test Case: Power on - SR"""
             self.test_power_on_adapter()
@@ -108,6 +110,13 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         self.test_has_adapter()
 
 
+    @test_wrapper('Adapter DiscoverableTimeout test')
+    def sa_adapter_discoverable_timeout_test(self):
+        """Verify that DiscoverableTimout Property works."""
+        result = self.test_discoverable_timeout()
+        logging.info("Result is %s", result)
+
+
     @batch_wrapper('Stand Alone Sanity')
     def sa_sanity_batch_run(self, num_iterations=1, test_name=None):
         """Run the stand alone sanity test batch or a specific given test.
@@ -124,6 +133,7 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         self.sa_basic_test()
         self.sa_adapter_suspend_resume_test()
         self.sa_adapter_present_test()
+        self.sa_adapter_discoverable_timeout_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None):
@@ -136,4 +146,3 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         self.quick_test_init(host)
         self.sa_sanity_batch_run(num_iterations, test_name)
         self.quick_test_cleanup()
-

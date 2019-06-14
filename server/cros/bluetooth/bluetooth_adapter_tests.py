@@ -691,6 +691,122 @@ class BluetoothAdapterTests(test.test):
 
 
     @_test_retry_and_log
+    def test_discoverable_timeout(self, timeout_values = [0, 60, 180]):
+        """Test that the adapter DiscoverableTimeout works.
+
+           - Set DiscoverableTimeout
+           - Read DiscoverableTimeout and make sure values match
+           - Set adapter discoverable
+           - In a loop check if adapter is discoverable
+           - Test fails if adapter is not discoverable before timeout
+           - Test fails if adapter is discoverable after timeout
+           Repeat the test for different values for timeout
+
+           Note : Value of 0 mean it never timeouts, so the test will
+                 end after 30 seconds.
+        """
+        def _test_discoverable_timeout(timeout):
+            # minium time after timeout before checking discoverable property
+            MIN_DELTA_SECS = 3
+            # Time between checking discoverable property
+            WAIT_TIME_SECS = 5
+
+            # Set and read back the discoverable_timeout value
+            if not self.bluetooth_facade.set_discoverable_timeout(timeout):
+                logging.error('Setting the Discoverable Timeout failed')
+                return False
+            actual_timeout = self.bluetooth_facade.get_discoverable_timeout()
+            if timeout != actual_timeout:
+                logging.error('Discoverable Timeout value read %s does not '
+                              'match value set %s', actual_timeout, timeout)
+                return False
+
+            #
+            # Check that the timeout works
+            # Check adapter is discoverable until timeout
+            # and then it is not discoverable.
+
+            set_discoverable = self.bluetooth_facade.set_discoverable(True)
+            is_discoverable = self._wait_for_condition(
+                self.bluetooth_facade.is_discoverable, method_name())
+
+            self.results = {
+                'set_discoverable': set_discoverable,
+                'is_discoverable': is_discoverable}
+            if not all(self.results.values()):
+                logging.error('Setting discoverable failed')
+                return False
+
+            start_time = time.time()
+            while True:
+                time.sleep(WAIT_TIME_SECS)
+                cur_time = time.time()
+                discoverable = self.bluetooth_facade.is_discoverable()
+                time_elapsed = cur_time - start_time
+
+                # Ignore is_discoverable results made near the timeout
+                # to avoid spurious failures.
+                if abs(int(timeout - time_elapsed)) < MIN_DELTA_SECS:
+                    continue
+
+                # Timeout of zero seconds mean that the adapter never times out
+                # Check for 30 seconds and then exit the test.
+                if timeout == 0:
+                    if not discoverable:
+                        logging.error('Adapter is not discoverable after %.2f '
+                                      'secs with a timeout of zero ',
+                                      time_elapsed)
+                        return False
+                    elif time_elapsed > 30:
+                        logging.debug('Adapter discoverable after %.2f seconds '
+                                      'with timeout of zero as expected' ,
+                                      time_elapsed)
+                        return True
+                    continue
+
+                #
+                # Check if adapter is discoverable till timeout ends
+                #
+                if time_elapsed < timeout:
+                    if not discoverable:
+                        logging.error('Adapter is not discoverable after %.2f '
+                                      'secs before timeout of %.2f',
+                                      time_elapsed, timeout)
+                        return False
+                else:
+                    if discoverable:
+                        logging.error('Adapter is still discoverable after '
+                                      ' %.2f secs with timeout of %.2f',
+                                      time_elapsed, timeout)
+                        return False
+                    else:
+                        logging.debug('Adapter not discoverable after %.2f '
+                                      'secs with timeout of %.2f as expected ',
+                                      time_elapsed, timeout)
+                        return True
+
+        default_timeout = self.bluetooth_facade.get_discoverable_timeout()
+        #
+        # Test with default value along any values passed.
+        #
+        if default_timeout not in timeout_values:
+            timeout_values.append(default_timeout)
+
+        result = []
+        try:
+            for timeout in timeout_values:
+                result.append(_test_discoverable_timeout(timeout))
+            logging.debug("Test returning %s", all(self.results))
+            return all(self.results)
+        except:
+            logging.error("exception in test_discoverable_timeout")
+            raise
+        finally:
+            # Set the timeout back to default value before existing the test
+            self.bluetooth_facade.set_discoverable_timeout(default_timeout)
+
+
+    @_test_retry_and_log
     def test_nondiscoverable(self):
         """Test that the adapter could be set non-discoverable."""
         set_nondiscoverable = self.bluetooth_facade.set_discoverable(False)

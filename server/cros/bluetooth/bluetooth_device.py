@@ -208,6 +208,26 @@ class BluetoothDevice(object):
         return properties.get('Discoverable') == 1
 
 
+    def set_discoverable_timeout(self, discoverable_timeout):
+        """Set the adapter DiscoverableTimeout.
+
+        @param discoverable_timeout: adapter DiscoverableTimeout
+                value to set in seconds (Integer).
+
+        @return True on success, False otherwise.
+
+        """
+        return self._proxy.set_discoverable_timeout(discoverable_timeout)
+
+    def get_discoverable_timeout(self):
+        """Get the adapter DiscoverableTimeout.
+
+        @return Value of property DiscoverableTimeout in seconds (Integer).
+
+        """
+        return self._proxy.get_discoverable_timeout()
+
+
     def set_pairable(self, pairable):
         """Set the adapter pairable state.
 

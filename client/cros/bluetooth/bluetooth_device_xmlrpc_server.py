@@ -524,6 +524,35 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
 
     @xmlrpc_server.dbus_safe(False)
+    def get_discoverable_timeout(self):
+        """Get the adapter discoverable_timeout.
+
+        @return True on success, False otherwise.
+
+        """
+        return int(self._adapter.Get(self.BLUEZ_ADAPTER_IFACE,
+                          'DiscoverableTimeout',
+                          dbus_interface=dbus.PROPERTIES_IFACE))
+
+
+    @xmlrpc_server.dbus_safe(False)
+    def set_discoverable_timeout(self, discoverable_timeout):
+        """Set the adapter discoverable_timeout property.
+
+        @param discoverable_timeout: adapter discoverable_timeout value
+               in seconds to set (Integer).
+
+        @return True on success, False otherwise.
+
+        """
+        self._adapter.Set(self.BLUEZ_ADAPTER_IFACE,
+                          'DiscoverableTimeout',
+                          dbus.UInt32(discoverable_timeout, variant_level=1),
+                          dbus_interface=dbus.PROPERTIES_IFACE)
+        return True
+
+
+    @xmlrpc_server.dbus_safe(False)
     def set_pairable(self, pairable):
         """Set the adapter pairable state.
 
