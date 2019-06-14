@@ -524,13 +524,19 @@ class TelemetryRunner(object):
                    'There are more than 1 benchmark names in the result, '
                    'could not parse.')
             unit = units_map.get(obj['unit'], '')
+            improvement = 'up'
+            if obj['unit'].endswith('smallerIsBetter'):
+                improvement = 'down'
             values = [x for x in obj['sampleValues']
                       if isinstance(x, numbers.Number)]
             if metric_name not in charts:
                 charts[metric_name] = {}
             charts[metric_name][story_name] = {
-                'name': metric_name, 'std': numpy.std(values),
-                'type': 'list_of_scalar_values', 'units': unit,
+                'improvement_direction': improvement,
+                'name': metric_name,
+                'std': numpy.std(values),
+                'type': 'list_of_scalar_values',
+                'units': unit,
                 'values': values
             }
 
@@ -543,19 +549,28 @@ class TelemetryRunner(object):
                 values += story_content['values']
                 metric_type = story_content['type']
                 units = story_content['units']
+                improvement = story_content['improvement_direction']
             values.sort()
             std = numpy.std(values)
             metric_content['summary'] = {
-                'name': metric_name, 'std': std, 'type': metric_type,
-                'units': units, 'values': values
+                'improvement_direction': improvement,
+                'name': metric_name,
+                'std': std,
+                'type': metric_type,
+                'units': units,
+                'values': values
             }
 
         benchmark_metadata = {
-            'description': benchmark_desc, 'name': benchmark_name,
+            'description': benchmark_desc,
+            'name': benchmark_name,
             'type': 'telemetry_benchmark'
         }
-        return {'benchmark_description': benchmark_desc,
-                'benchmark_metadata': benchmark_metadata,
-                'benchmark_name': benchmark_name, 'charts': charts,
-                'format_version': 1.0}
+        return {
+            'benchmark_description': benchmark_desc,
+            'benchmark_metadata': benchmark_metadata,
+            'benchmark_name': benchmark_name,
+            'charts': charts,
+            'format_version': 1.0
+        }
 
