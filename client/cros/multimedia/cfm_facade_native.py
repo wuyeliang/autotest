@@ -9,6 +9,7 @@ import logging
 import os
 import time
 import urlparse
+import xmlrpclib
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
@@ -521,6 +522,20 @@ class CFMFacadeNative(object):
         """
         self._cfmApi.move_camera(camera_motion)
 
+    def _convert_large_integers(self, o):
+        if type(o) is list:
+            return [self._convert_large_integers(x) for x in o]
+        elif type(o) is dict:
+            return {
+                    k: self._convert_large_integers(v)
+                    for k, v in o.iteritems()
+            }
+        else:
+            if type(o) is int and o > xmlrpclib.MAXINT:
+                return float(o)
+            else:
+                return o
+
     def get_media_info_data_points(self):
         """
         Gets media info data points containing media stats.
@@ -556,9 +571,5 @@ class CFMFacadeNative(object):
             get_data_points_js_script)
         # XML RCP gives overflow errors when trying to send too large
         # integers or longs so we convert media stats to floats.
-        for data_point in data_points:
-            for media in data_point['media']:
-                for k, v in media.iteritems():
-                    if type(v) == int:
-                        media[k] = float(v)
+        data_points = self._convert_large_integers(data_points)
         return data_points
