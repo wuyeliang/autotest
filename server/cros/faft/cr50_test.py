@@ -108,7 +108,7 @@ class Cr50Test(FirmwareTest):
     def after_run_once(self):
         """Log which iteration just ran"""
         logging.info('successfully ran iteration %d', self.iteration)
-        self._confirm_dut_is_pingable()
+        self._try_to_bring_dut_up()
 
 
     def _save_node_locked_dev_image(self, cr50_dev_path):
@@ -421,8 +421,8 @@ class Cr50Test(FirmwareTest):
         logging.info('do_flash_op count: %d', flash_error_count)
 
 
-    def _confirm_dut_is_pingable(self):
-        """Reset the DUT if it doesn't respond to ping"""
+    def _try_to_bring_dut_up(self):
+        """Try to quickly get the dut in a pingable state"""
         logging.info('checking dut state')
 
         self.servo.set_nocheck('cold_reset', 'off')
@@ -436,7 +436,8 @@ class Cr50Test(FirmwareTest):
         while not self.host.ping_wait_up(
                 self.faft_config.delay_reboot_to_ping):
             if time.time() > end_time:
-                raise error.TestFail('DUT is unresponsive')
+                logging.warn('DUT is unresponsive at end of test')
+                return
             self.servo.get_power_state_controller().reset()
             logging.info('DUT did not respond. Resetting it.')
 
