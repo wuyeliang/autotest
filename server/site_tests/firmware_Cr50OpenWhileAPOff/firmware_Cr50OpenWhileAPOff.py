@@ -41,14 +41,16 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         if 'servo_v4_with_servo_micro' != self.servo.get_servo_version():
             raise error.TestNAError('Run using servo v4 with servo micro')
 
-        dts_mode_works = self.cr50.servo_v4_supports_dts_mode()
-        if not dts_mode_works:
+        if not self.cr50.servo_v4_supports_dts_mode():
             raise error.TestNAError('Plug in servo v4 type c cable into ccd '
                     'port')
 
         self.fast_open(enable_testlab=True)
         # make sure password is cleared.
         self.cr50.send_command('ccd reset')
+        # Set GscFullConsole to Always, so we can always use gpioset.
+        self.cr50.set_cap('GscFullConsole', 'Always')
+
         self.cr50.get_ccd_info()
         # You can only open cr50 from the console if a password is set. Set
         # a password, so we can use it to open cr50 while the AP is off.
@@ -159,13 +161,26 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         return ds_count
 
 
+    def set_dts(self, state):
+        """Set servo v4 dts mode"""
+        self.servo.set_nocheck('servo_v4_dts_mode', state)
+        # Some boards can't detect DTS mode when the EC is off. After 0.X.18,
+        # we can set CCD_MODE_L manually using gpioset. If detection is working,
+        # this won't do anything. If it isn't working, it'll force cr50 to
+        # disconnect ccd.
+        if state == 'off':
+            time.sleep(self.SHORT_DELAY)
+            self.cr50.send_command('gpioset CCD_MODE_L 1')
+
+
     def toggle_dts_mode(self):
         """Toggle DTS mode to enable and disable deep sleep"""
         # We cant use cr50 ccd_disable/enable, because those uses the cr50
         # console. Call servo_v4_dts_mode directly.
-        self.servo.set_nocheck('servo_v4_dts_mode', 'off')
+        self.set_dts('off')
+
         time.sleep(self.SLEEP_DELAY)
-        self.servo.set_nocheck('servo_v4_dts_mode', 'on')
+        self.set_dts('on')
 
 
     def deep_sleep_reset_get_count(self):
