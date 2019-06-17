@@ -74,7 +74,7 @@ class firmware_ECCbiEeprom(FirmwareTest):
 
     def _read_write_data(self, offset):
         before = self._read_eeprom(offset)
-        logging.info("To reset CBI that's in a bad state, run w/ WP off:\n%s" %
+        logging.info("To reset CBI that's in a bad state, run w/ WP off:\n%s",
                      self._gen_write_command(offset, before))
 
         if before == self.TEST_EEPROM_DATA:

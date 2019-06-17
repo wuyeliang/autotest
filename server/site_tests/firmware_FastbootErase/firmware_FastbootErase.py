@@ -3,8 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import time
-import re
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
@@ -56,6 +54,7 @@ class firmware_FastbootErase(FirmwareTest):
         utils.wait_for_value(self.is_recovery_mode, True, timeout_sec=timeout)
 
     def run_once(self, dev_mode=False):
+        """Runs a single iteration of the test."""
         if not self.faft_client.system.has_host():
             raise error.TestNAError('DUT is not Android device.  Skipping test')
 

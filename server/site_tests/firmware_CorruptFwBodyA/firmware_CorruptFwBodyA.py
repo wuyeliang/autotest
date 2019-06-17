@@ -36,6 +36,7 @@ class firmware_CorruptFwBodyA(FirmwareTest):
         super(firmware_CorruptFwBodyA, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         if (self.faft_client.bios.get_preamble_flags('a') &
                 vboot.PREAMBLE_USE_RO_NORMAL):
             # USE_RO_NORMAL flag is ON. Firmware body corruption doesn't

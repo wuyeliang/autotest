@@ -23,6 +23,7 @@ class firmware_UpdateFirmwareVersion(FirmwareTest):
     version = 1
 
     def check_firmware_version(self, expected_ver):
+        """Checks the firmware version."""
         actual_ver = self.faft_client.bios.get_version(
                 'b' if self.fw_vboot2 else 'a')
         actual_tpm_fwver = self.faft_client.tpm.get_firmware_version()
@@ -76,6 +77,7 @@ class firmware_UpdateFirmwareVersion(FirmwareTest):
         super(firmware_UpdateFirmwareVersion, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Update firmware with new version.")
         self.check_state((self.checkers.crossystem_checker, {
                           'fwid': self._fwid

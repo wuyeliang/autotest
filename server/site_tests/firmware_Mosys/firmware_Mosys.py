@@ -189,6 +189,7 @@ class firmware_Mosys(FirmwareTest):
         logging.error('Execute %s failed', cmd)
 
     def run_once(self, dev_mode=False):
+        """Runs a single iteration of the test."""
         # a. mosys -k smbios info bios
         command = 'mosys -k smbios info bios'
         if 'smbios' in self.command_list:

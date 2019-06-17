@@ -29,6 +29,7 @@ class firmware_CorruptFwSigA(FirmwareTest):
         super(firmware_CorruptFwSigA, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Corrupt firmware signature A.")
         self.check_state((self.checkers.fw_tries_checker, 'A'))
         self.faft_client.bios.corrupt_sig('a')

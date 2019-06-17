@@ -33,6 +33,7 @@ class firmware_Cr50USB(FirmwareTest):
 
 
     def run_once(self, host, cmdline_args, num_iterations=100,
+        """Runs a single iteration of the test."""
                  exit_condition=None):
         self.host = host
         # Disable CCD so it doesn't interfere with the Cr50 AP usb connection.

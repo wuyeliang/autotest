@@ -44,6 +44,7 @@ class firmware_RecoveryButton(FirmwareTest):
         super(firmware_RecoveryButton, self).cleanup()
 
     def run_once(self, dev_mode=False):
+        """Runs a single iteration of the test."""
         is_jetstream = (self.faft_config.mode_switcher_type ==
                         'jetstream_switcher')
         logging.info("Switch to recovery mode and reboot.")

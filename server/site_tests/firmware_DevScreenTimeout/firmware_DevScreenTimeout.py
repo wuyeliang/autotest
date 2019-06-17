@@ -92,6 +92,7 @@ class firmware_DevScreenTimeout(FirmwareTest):
         self.setup_usbkey(usbkey=False)
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Always expected developer mode firmware A boot.")
         self.check_state((self.checkers.crossystem_checker, {
                               'devsw_boot': '1',

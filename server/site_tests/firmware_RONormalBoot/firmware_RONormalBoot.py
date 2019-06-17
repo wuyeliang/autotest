@@ -38,6 +38,7 @@ class firmware_RONormalBoot(FirmwareTest):
         super(firmware_RONormalBoot, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         flags = self.faft_client.bios.get_preamble_flags('a')
         if flags & vboot.PREAMBLE_USE_RO_NORMAL == 0:
             logging.info('The firmware USE_RO_NORMAL flag is disabled.')

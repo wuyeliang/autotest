@@ -77,6 +77,7 @@ class firmware_SoftwareSync(FirmwareTest):
             time.sleep(self.faft_config.software_sync_update)
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Corrupt EC firmware RW body.")
         self.check_state((self.checkers.ec_act_copy_checker, 'RW'))
         self.record_hash()

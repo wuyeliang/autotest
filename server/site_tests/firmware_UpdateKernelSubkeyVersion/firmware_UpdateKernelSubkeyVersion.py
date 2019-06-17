@@ -20,6 +20,7 @@ class firmware_UpdateKernelSubkeyVersion(FirmwareTest):
     version = 1
 
     def resign_kernel_subkey_version(self, host):
+        """Resigns the kernel subkey version."""
         host.send_file(os.path.join(self.bindir,
                                     'files/common.sh'),
                        os.path.join(self.faft_client.updater.get_temp_path(),
@@ -35,6 +36,7 @@ class firmware_UpdateKernelSubkeyVersion(FirmwareTest):
             self._update_version))
 
     def check_kernel_subkey_version(self, expected_ver):
+        """Checks the kernel subkey version."""
         actual_ver = self.faft_client.bios.get_kernel_subkey_version(
                 'b' if self.fw_vboot2 else 'a')
         if actual_ver != expected_ver:
@@ -83,6 +85,7 @@ class firmware_UpdateKernelSubkeyVersion(FirmwareTest):
         super(firmware_UpdateKernelSubkeyVersion, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Update firmware with new kernel subkey version.")
         self.check_state((self.checkers.crossystem_checker, {
                           'fwid': self._fwid

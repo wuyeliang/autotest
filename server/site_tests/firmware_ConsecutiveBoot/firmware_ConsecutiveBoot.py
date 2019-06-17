@@ -5,7 +5,6 @@
 import logging
 import time
 
-from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 from autotest_lib.server.cros import vboot_constants as vboot
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
@@ -88,6 +87,7 @@ class firmware_ConsecutiveBoot(FirmwareTest):
         super(firmware_ConsecutiveBoot, self).cleanup()
 
     def run_once(self, host, dev_mode=False):
+        """Runs a single iteration of the test."""
         for i in xrange(self.faft_iterations):
             logging.info('======== Running FAFT ITERATION %d/%s ========',
                          i+1, self.faft_iterations)

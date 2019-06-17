@@ -18,6 +18,7 @@ class firmware_UpdateKernelVersion(FirmwareTest):
     version = 1
 
     def check_kernel_version(self, expected_ver):
+        """Checks the kernel version."""
         actual_ver = self.faft_client.kernel.get_version('b')
         if actual_ver != expected_ver:
             raise error.TestFail(
@@ -29,6 +30,7 @@ class firmware_UpdateKernelVersion(FirmwareTest):
                 actual_ver)
 
     def modify_kernel_b_and_set_cgpt_priority(self, delta, target_dev):
+        """Modifies kernel B and sets CGPT priority."""
         if delta == 1:
             self.faft_client.kernel.move_version_forward('b')
         elif delta == -1:
@@ -57,6 +59,7 @@ class firmware_UpdateKernelVersion(FirmwareTest):
         super(firmware_UpdateKernelVersion, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Update Kernel Version.")
         self.check_state((self.check_root_part_on_non_recovery, 'a'))
         self.modify_kernel_b_and_set_cgpt_priority(1, 'b')

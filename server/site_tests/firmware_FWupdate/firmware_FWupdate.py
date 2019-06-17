@@ -4,7 +4,6 @@
 
 import logging
 import os
-import shutil
 import tempfile
 
 from chromite.lib import remote_access

@@ -12,6 +12,7 @@ class firmware_CompareInstalledToShellBall(test.test):
     version = 1
 
     def run_once(self, host):
+        """Runs a single iteration of the test."""
         # Make sure the client library is on the device so that the proxy
         # code is there when we try to call it.
         client_at = autotest.Autotest(host)

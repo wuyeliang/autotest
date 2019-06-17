@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
@@ -25,7 +24,7 @@ class firmware_FastbootReboot(FirmwareTest):
         self.switcher.setup_mode('dev' if dev_mode else 'normal')
 
     def in_fastboot_mode(self):
-        # make sure that we're in fastboot mode
+        """Makes sure that we're in fastboot mode."""
         result = self.faft_client.host.run_shell_command_get_output(
             'fastboot devices')
         if not result:
@@ -34,6 +33,7 @@ class firmware_FastbootReboot(FirmwareTest):
             return True
 
     def run_once(self, dev_mode=False):
+        """Runs a single iteration of the test."""
         if not self.faft_client.system.has_host():
             raise error.TestNAError('DUT is not Android device.  Skipping test')
 

@@ -29,6 +29,7 @@ class firmware_TPMExtend(FirmwareTest):
         return ('PCR-%.2d: %s' % (num, spaced.upper())) in pcrs
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info('Verifying HWID digest in PCR1')
         hwid = self.faft_client.system.run_shell_command_get_output(
                 'crossystem hwid')[0]

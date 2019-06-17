@@ -28,6 +28,7 @@ class firmware_WriteProtect(FirmwareTest):
         super(firmware_WriteProtect, self).cleanup()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info('Force write-protect on and reboot for a clean slate.')
         self.set_hardware_write_protect(True)
         self.switcher.mode_aware_reboot()

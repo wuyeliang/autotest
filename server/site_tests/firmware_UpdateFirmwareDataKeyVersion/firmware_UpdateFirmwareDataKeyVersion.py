@@ -20,6 +20,7 @@ class firmware_UpdateFirmwareDataKeyVersion(FirmwareTest):
     version = 1
 
     def resign_datakey_version(self, host):
+        """Resigns the datakey version."""
         host.send_file(os.path.join(self.bindir,
                                     'files/common.sh'),
                        os.path.join(self.faft_client.updater.get_temp_path(),
@@ -36,6 +37,7 @@ class firmware_UpdateFirmwareDataKeyVersion(FirmwareTest):
 
 
     def check_firmware_datakey_version(self, expected_ver):
+        """Checks the firmware datakey version."""
         actual_ver = self.faft_client.bios.get_datakey_version(
                 'b' if self.fw_vboot2 else 'a')
         actual_tpm_fwver = self.faft_client.tpm.get_firmware_datakey_version()
@@ -92,6 +94,7 @@ class firmware_UpdateFirmwareDataKeyVersion(FirmwareTest):
 
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         logging.info("Update firmware with new datakey version.")
         self.check_state((self.checkers.crossystem_checker, {
                           'fwid': self._fwid

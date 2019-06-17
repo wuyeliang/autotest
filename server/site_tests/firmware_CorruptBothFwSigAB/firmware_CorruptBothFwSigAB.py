@@ -35,6 +35,7 @@ class firmware_CorruptBothFwSigAB(FirmwareTest):
         super(firmware_CorruptBothFwSigAB, self).cleanup()
 
     def run_once(self, dev_mode=False):
+        """Runs a single iteration of the test."""
         logging.info("Corrupt both firmware signature A and B.")
         self.check_state((self.checkers.crossystem_checker, {
                           'mainfw_type': 'developer' if dev_mode else 'normal',

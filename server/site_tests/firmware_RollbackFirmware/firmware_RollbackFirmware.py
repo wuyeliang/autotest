@@ -34,6 +34,7 @@ class firmware_RollbackFirmware(FirmwareTest):
         super(firmware_RollbackFirmware, self).cleanup()
 
     def run_once(self, dev_mode=False):
+        """Runs a single iteration of the test."""
         logging.info("Rollback firmware A.")
         self.check_state((self.checkers.fw_tries_checker, 'A'))
         self.faft_client.bios.move_version_backward('a')

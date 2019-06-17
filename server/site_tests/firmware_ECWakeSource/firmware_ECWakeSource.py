@@ -35,6 +35,7 @@ class firmware_ECWakeSource(FirmwareTest):
         self.servo.power_short_press()
 
     def run_once(self, host):
+        """Runs a single iteration of the test."""
         # TODO(victoryang): make this test run on both x86 and arm
         if not self.check_ec_capability(['x86', 'lid']):
             raise error.TestNAError("Nothing needs to be tested on this device")

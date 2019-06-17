@@ -48,6 +48,7 @@ class firmware_FWtries(FirmwareTest):
         self.switcher.setup_mode('dev' if dev_mode else 'normal')
 
     def run_once(self, host):
+        """Runs a single iteration of the test."""
         self.check_state((self.checkers.fw_tries_checker, ('A', True, 0)))
 
         self.try_fwb(2);

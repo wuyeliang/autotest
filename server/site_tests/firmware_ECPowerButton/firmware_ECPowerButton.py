@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import re
 from threading import Timer
 
 from autotest_lib.client.common_lib import error
@@ -67,6 +66,7 @@ class firmware_ECPowerButton(FirmwareTest):
               [wake_powerkey_duration]).start()
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         if not self.check_ec_capability():
             raise error.TestNAError("Nothing needs to be tested on this device")
 

@@ -76,6 +76,7 @@ class firmware_ECHash(FirmwareTest):
         return recomputed_echash == self.original_echash
 
     def run_once(self):
+        """Runs a single iteration of the test."""
         if not self.check_ec_capability():
             raise error.TestNAError("Nothing needs to be tested on this device")
         logging.info("Save the EC hash, invalidate it, and warm reboot.")
