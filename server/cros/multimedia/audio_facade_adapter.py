@@ -260,6 +260,14 @@ class AudioFacadeRemoteAdapter(object):
         self._audio_proxy.wait_for_unexpected_nodes_changed(timeout_secs)
 
 
+    def get_chrome_audio_availablity(self):
+        """Gets if the chrome.audio API is ready.
+
+        @returns: chrome.audio is ready or not.
+        """
+        return self._audio_proxy.get_audio_availability()
+
+
     def set_chrome_active_volume(self, volume):
         """Sets the active audio output volume using chrome.audio API.
 

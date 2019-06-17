@@ -99,6 +99,14 @@ class AudioFacadeNative(object):
         return self._loaded_extension_handler
 
 
+    def get_audio_availability(self):
+        """Returns the availability of chrome.audio API.
+
+        @returns: True if chrome.audio exists
+        """
+        return self._extension_handler.get_audio_api_availability()
+
+
     def get_audio_devices(self):
         """Returns the audio devices from chrome.audio API.
 
