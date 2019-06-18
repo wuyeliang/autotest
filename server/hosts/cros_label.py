@@ -680,3 +680,9 @@ CROS_LABELS = [
     StorageLabel(),
     VideoGlitchLabel(),
 ]
+
+LABSTATION_LABELS = [
+    BoardLabel(),
+    ModelLabel(),
+    common_label.OSLabel(),
+]

@@ -175,7 +175,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             result = host.run(
                     'grep -q CHROMEOS /etc/lsb-release && '
                     '! test -f /mnt/stateful_partition/.android_tester && '
-                    '! grep -q moblab /etc/lsb-release',
+                    '! grep -q moblab /etc/lsb-release && '
+                    '! grep -q labstation /etc/lsb-release',
                     ignore_status=True, timeout=timeout)
             if result.exit_status == 0:
                 lsb_release_content = host.run(
