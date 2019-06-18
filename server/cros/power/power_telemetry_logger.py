@@ -22,9 +22,26 @@ from servo import measure_power
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.power import power_status
-from autotest_lib.client.cros.power import power_telemetry_utils
+from autotest_lib.client.cros.power import power_telemetry_utils as utils
 from autotest_lib.server.cros.power import power_dashboard
 
+
+# If a sample has over 10% NaN values, the data might be very unreliable if
+# interpolation is applied.
+ACCEPTABLE_NAN_RATIO = 0.1
+
+# If a sample has more than these NaN values in sequence, the data is also not
+# reliable.
+MAX_CONSECUTIVE_NAN_READINGS = 5
+
+# If for over a second no values can be read, the data is also not reliable.
+MAX_NAN_GAP_S = 1
+
+# Dictionary to make passing the default arguments for loggers to the NaN
+# interpolation utility easy.
+INTERPOLATION_ARGS = {'max_nan_ratio': ACCEPTABLE_NAN_RATIO,
+                      'max_sample_gap': MAX_CONSECUTIVE_NAN_READINGS,
+                      'max_sample_time_gap': MAX_NAN_GAP_S}
 
 def ts_processing(ts_str):
     """Parse autotest log timestamp into local time seconds since epoch.
@@ -161,8 +178,8 @@ class PowerTelemetryLogger(object):
         custom_test_events = collections.defaultdict(dict)
         default_test_events['start']['str'] = self.DEFAULT_START
         default_test_events['end']['str'] = self.DEFAULT_END
-        custom_test_events['start']['str'] = power_telemetry_utils.CUSTOM_START
-        custom_test_events['end']['str'] = power_telemetry_utils.CUSTOM_END
+        custom_test_events['start']['str'] = utils.CUSTOM_START
+        custom_test_events['end']['str'] = utils.CUSTOM_END
         for event in default_test_events:
             default_test_events[event]['re'] = re.compile(r'([\d\s\./:]+).+' +
                     default_test_events[event]['str'])
@@ -374,6 +391,24 @@ class ServodTelemetryLogger(PowerTelemetryLogger):
                 for k, v in raw_data[source].iteritems()
                 if k not in metadata_domains
             }
+
+            # Add the timeline of this measurement to the interpolation
+            # arguments. This is to detect and reject large measurement gaps.
+            # See above for details or in power_telemetry_utils.
+            INTERPOLATION_ARGS['timeline'] = tl
+
+            try:
+                # Smoothen out data to remove any NaN values by interpolating
+                # the missing values. If too many values are NaN, or too many
+                # values are NaN consecutively, fail the test.
+                # Here r stands for rail and d stands for data.
+                data = {r: utils.interpolate_missing_data(d,
+                                                          **INTERPOLATION_ARGS)
+                        for r, d in data.iteritems()}
+            except utils.TelemetryUtilsError as e:
+                raise error.TestFail('Issue at source %s: %s' % (source,
+                                                                 str(e)))
+
             ave = {
                 k[:-3] if k.endswith('_mw') else k: v['mean']
                 for k, v in summary[source].iteritems()
