@@ -30,7 +30,7 @@ class bluetooth_AdapterQuickSanity(
         """
 
         # Init the quick test and start the package
-        self.quick_test_init(host)
+        self.quick_test_init(host, use_chameleon=True)
         self.quick_test_package_start('BT Quick Sanity')
 
         # Run sanity package

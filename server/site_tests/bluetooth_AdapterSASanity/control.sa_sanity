@@ -27,10 +27,9 @@ DOC = """
     """
 
 args_dict = utils.args_to_dict(args)
-chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
-    host = hosts.create_host(machine, chameleon_args=chameleon_args)
+    host = hosts.create_host(machine)
     job.run_test('bluetooth_AdapterSASanity', host=host,
                   num_iterations=1)
 

@@ -25,6 +25,7 @@ Event = recorder.Event
 SUPPORTED_DEVICE_TYPES = {
     'MOUSE': lambda host: host.chameleon.get_bluetooth_hid_mouse,
     'BLE_MOUSE': lambda host: host.chameleon.get_ble_mouse,
+    'A2DP_SINK': lambda host: host.chameleon.get_bluetooth_a2dp_sink,
 }
 
 

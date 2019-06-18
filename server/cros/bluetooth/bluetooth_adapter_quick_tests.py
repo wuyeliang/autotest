@@ -51,25 +51,41 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
     def restart_peers(self):
         """Restart and clear peer devices"""
-        # Restart the link to HID device
+        # Restart the link to device
         logging.info('Restarting peer devices...')
         self.cleanup()
-        self.devices['BLE_MOUSE'] = None
-        self.device = self.get_device('BLE_MOUSE')
 
+        for device_name, device in self.devices.items():
+            if device is not None:
+                logging.info('Restarting %s', device.name)
+                self.devices[device_name] = None
+                self.get_device(device_name)
+
+
+    def start_peers(self, devices_name):
+        """Start peer devices"""
+        # Start the link to devices
+        logging.info('Starting peer devices...')
+
+        for device_name in devices_name:
+            logging.info('Getting device %s', device_name)
+            self.get_device(device_name)
 
     def _print_delimiter(self):
         logging.info('=======================================================')
 
 
-    def quick_test_init(self, host):
+    def quick_test_init(self, host, use_chameleon=True):
         """Inits the test batch"""
-        factory = remote_facade_factory.RemoteFacadeFactory(host)
         self.device = None
         self.host = host
+        factory = remote_facade_factory.RemoteFacadeFactory(host)
         self.bluetooth_facade = factory.create_bluetooth_hid_facade()
-        self.input_facade = factory.create_input_facade()
-        self.check_chameleon()
+        self.use_chameleon = use_chameleon
+
+        if self.use_chameleon:
+            self.input_facade = factory.create_input_facade()
+            self.check_chameleon()
 
         self.bat_tests_results = []
         self.bat_pass_count = 0
@@ -86,13 +102,15 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
 
     @staticmethod
-    def quick_test_test_decorator(test_name):
+    def quick_test_test_decorator(test_name, devices=[]):
         """A decorator providing a wrapper to a quick test.
            Using the decorator a test method can implement only the core
            test and let the decorator handle the quick test wrapper methods
            (test_start and test_end).
 
            @param test_name: the name of the test to log
+           @param devices:   list of device names which are going to be used
+                             in the following test
         """
 
         def decorator(test_method):
@@ -103,7 +121,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
             @functools.wraps(test_method)
             def wrapper(self):
-                self.quick_test_test_start(test_name)
+                self.quick_test_test_start(test_name, devices)
                 test_method(self)
                 self.quick_test_test_end()
             return wrapper
@@ -111,30 +129,21 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         return decorator
 
 
-    def quick_test_test_start(self, test_name=None):
+    def quick_test_test_start(self, test_name=None, devices=[]):
         """Start a quick test. The method clears and restarts adapter on DUT
            as well as peer devices. In addition the methods prints test start
            traces.
         """
-        self.test_name = test_name
-        if test_name is not None:
-            logging.info('Cleanning up and restarting towards next test...')
 
-        self.bluetooth_facade.stop_discovery()
-        # Disconnect the device, and remove the pairing.
-        if self.device is not None:
-            self.bluetooth_facade.disconnect_device(self.device.address)
-            device_is_paired = self.bluetooth_facade.device_is_paired(
-                    self.device.address)
-            if device_is_paired:
-                self.bluetooth_facade.remove_device_object(
-                        self.device.address)
+        self.test_name = test_name
+
         # Reset the adapter
         self.test_reset_on_adapter()
-        # Restart and clear peer HID device
-        self.restart_peers()
         # Initialize bluetooth_adapter_tests class (also clears self.fails)
         self.initialize()
+        # Start and peer HID devices
+        self.start_peers(devices)
+
         if test_name is not None:
             time.sleep(self.TEST_SLEEP_SECS)
             self._print_delimiter()
@@ -171,6 +180,25 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self._print_delimiter()
         self.bat_tests_results.append(result_msg)
         self.pkg_tests_results.append(result_msg)
+
+        if self.test_name is not None:
+            logging.info('Cleanning up and restarting towards next test...')
+
+        self.bluetooth_facade.stop_discovery()
+        # Disconnect devices used in the test, and remove the pairing.
+        for device in self.devices.values():
+            if device is not None:
+                logging.info('Clear device %s', device.name)
+                self.bluetooth_facade.disconnect_device(device.address)
+                device_is_paired = self.bluetooth_facade.device_is_paired(
+                        device.address)
+                if device_is_paired:
+                    self.bluetooth_facade.remove_device_object(
+                            device.address)
+        # Close the connection between peers
+        self.cleanup()
+
+
 
     @staticmethod
     def quick_test_batch_decorator(batch_name):
