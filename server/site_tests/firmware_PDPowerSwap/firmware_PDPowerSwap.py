@@ -23,7 +23,6 @@ class firmware_PDPowerSwap(FirmwareTest):
 
     PD_ROLE_DELAY = 0.5
     PD_CONNECT_DELAY = 4
-    PDTESTER_PORT = 0
     POWER_SWAP_ITERATIONS = 5
     # Source power role
     SRC ='SRC_READY'
@@ -39,7 +38,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         self.pdtester.charge(PDTESTER_SRC_VOLTAGE)
         # Wait for change to take place
         time.sleep(self.PD_CONNECT_DELAY)
-        pdtester_state = self.pdtester_pd_utils.get_pd_state(self.PDTESTER_PORT)
+        pdtester_state = self.pdtester_pd_utils.get_pd_state(self.pdtester_port)
         # Current PDTester power role should be source
         return bool(pdtester_state == self.SRC)
 
@@ -79,7 +78,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         dut_pr = self.dut_pd_utils.get_pd_state(pd_port)
         if direction == 'rx':
             console = self.pdtester_pd_utils
-            port = self.PDTESTER_PORT
+            port = self.pdtester_port
         else:
             console = self.dut_pd_utils
             port = pd_port
@@ -87,7 +86,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         self._send_power_swap_get_reply(console, port)
         time.sleep(self.PD_CONNECT_DELAY)
         # Get PDTester power role
-        pdtester_pr = self.pdtester_pd_utils.get_pd_state(self.PDTESTER_PORT)
+        pdtester_pr = self.pdtester_pd_utils.get_pd_state(self.pdtester_port)
         return bool(dut_pr == pdtester_pr)
 
     def _test_power_swap_reject(self, pd_port):
@@ -105,7 +104,7 @@ class firmware_PDPowerSwap(FirmwareTest):
         dut_power_role = self.dut_pd_utils.get_pd_state(pd_port)
         # Send swap command from PDTester and get reply
         ctrl_msg = self._send_power_swap_get_reply(self.pdtester_pd_utils,
-                                                   self.PDTESTER_PORT)
+                                                   self.pdtester_port)
         if ctrl_msg != self.dut_pd_utils.PD_CONTROL_MSG_DICT['Reject']:
             raise error.TestFail('Power Swap Req not rejected, returned %r' %
                                  ctrl_msg)
@@ -137,6 +136,9 @@ class firmware_PDPowerSwap(FirmwareTest):
            source only and verify rejecttion of power swap request.
 
         """
+        # TODO(b/35573842): Refactor to use PDPortPartner to probe the port
+        self.pdtester_port = 1 if 'servo_v4' in self.pdtester.servo_type else 0
+
         # create objects for pd utilities
         self.dut_pd_utils = pd_console.PDConsoleUtils(self.usbpd)
         self.pdtester_pd_utils = pd_console.PDConsoleUtils(self.pdtester)

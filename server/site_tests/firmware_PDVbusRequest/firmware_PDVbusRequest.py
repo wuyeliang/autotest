@@ -71,6 +71,8 @@ class firmware_PDVbusRequest(FirmwareTest):
         """Exectue VBUS request test.
 
         """
+        # TODO(b/35573842): Refactor to use PDPortPartner to probe the port
+        self.pdtester_port = 1 if 'servo_v4' in self.pdtester.servo_type else 0
 
         # create objects for pd utilities
         pd_dut_utils = pd_console.PDConsoleUtils(self.usbpd)
@@ -127,7 +129,7 @@ class firmware_PDVbusRequest(FirmwareTest):
             # Wait for new PD contract to be established
             time.sleep(self.PD_SETTLE_DELAY)
             # Get current PDTester PD state
-            pdtester_state = pd_pdtester_utils.get_pd_state(0)
+            pdtester_state = pd_pdtester_utils.get_pd_state(self.pdtester_port)
             expected_vbus_voltage = self.pdtester.charging_voltage
             # If PDTester is sink, then Vbus_exp = 5v
             if pdtester_state == pd_pdtester_utils.SNK_CONNECT:

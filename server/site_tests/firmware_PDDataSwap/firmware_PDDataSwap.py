@@ -24,14 +24,11 @@ class firmware_PDDataSwap(FirmwareTest):
 
     PD_ROLE_DELAY = 0.5
     PD_CONNECT_DELAY = 4
-    PDTESTER_PORT = 0
     DATA_SWAP_ITERATIONS = 10
     # Upward facing port data role
     UFP = 'UFP'
     # Downward facing port data role
     DFP = 'DFP'
-    # PDTester initiated data swap request
-    PDTESTER_SWAP_REQ = 'pd %d swap data' % PDTESTER_PORT
     # Swap Result Tables
     swap_attempt = {
         ('rx', DFP): 0,
@@ -136,7 +133,7 @@ class firmware_PDDataSwap(FirmwareTest):
             self.pdtester.charge(PDTESTER_SNK_VOLTAGE)
         # Wait for change to take place
         time.sleep(self.PD_CONNECT_DELAY)
-        pdtester_state = self.pdtester_pd_utils.get_pd_state(0)
+        pdtester_state = self.pdtester_pd_utils.get_pd_state(self.pdtester_port)
         # Current PDTester state should equal DUT state when called
         return bool(pd_state == pdtester_state)
 
@@ -194,7 +191,7 @@ class firmware_PDDataSwap(FirmwareTest):
         else:
             # Initiate swap request from PDTester
             console = self.pdtester_pd_utils
-            ctrl  = self._send_data_swap_get_reply(console, self.PDTESTER_PORT)
+            ctrl  = self._send_data_swap_get_reply(console, self.pdtester_port)
 
         time.sleep(self.PD_ROLE_DELAY)
         # Get DUT current data role
@@ -248,7 +245,7 @@ class firmware_PDDataSwap(FirmwareTest):
         dut_connect_state = self.dut_pd_utils.get_pd_state(pd_port)
         # Send swap command from PDTester and get reply
         ctrl_msg = self._send_data_swap_get_reply(self.pdtester_pd_utils,
-                                                  self.PDTESTER_PORT)
+                                                  self.pdtester_port)
         if ctrl_msg != self.dut_pd_utils.PD_CONTROL_MSG_DICT['Reject']:
             raise error.TestFail('Data Swap Req not rejected, returned %r' %
                                  ctrl_msg)
@@ -283,6 +280,9 @@ class firmware_PDDataSwap(FirmwareTest):
         6. Repeat DUT received data swap requests
 
         """
+        # TODO(b/35573842): Refactor to use PDPortPartner to probe the port
+        self.pdtester_port = 1 if 'servo_v4' in self.pdtester.servo_type else 0
+
         # create objects for pd utilities
         self.dut_pd_utils = pd_console.PDConsoleUtils(self.usbpd)
         self.pdtester_pd_utils = pd_console.PDConsoleUtils(self.pdtester)
@@ -301,7 +301,7 @@ class firmware_PDDataSwap(FirmwareTest):
 
         # Determine if DUT supports data role swaps
         dr_swap_allowed = self.pdtester_pd_utils.is_pd_flag_set(
-                self.PDTESTER_PORT, 'data_swap')
+                self.pdtester_port, 'data_swap')
         # Get current DUT data role
         dut_data_role = self._get_data_role(self.dut_pd_utils, pd_port)
         logging.info('Starting DUT Data Role = %r', dut_data_role)
@@ -321,7 +321,7 @@ class firmware_PDDataSwap(FirmwareTest):
             # If DUT supports Power Role swap then attempt to change roles.
             # This way, data role swaps will be tested in both configurations.
             if self.pdtester_pd_utils.is_pd_flag_set(
-                     self.PDTESTER_PORT, 'power_swap'):
+                     self.pdtester_port, 'power_swap'):
                 logging.info('\nDUT advertises Power Swap Support')
                 # Attempt to swap power roles
                 power_swap = self._change_dut_power_role(pd_port)
