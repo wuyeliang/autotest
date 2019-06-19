@@ -655,6 +655,7 @@ CROS_LABELS = [
     Cr50Label(),
     CtsArchLabel(),
     DetachableBaseLabel(),
+    DeviceSkuLabel(),
     ECLabel(),
     FingerprintLabel(),
     HWIDLabel(),
