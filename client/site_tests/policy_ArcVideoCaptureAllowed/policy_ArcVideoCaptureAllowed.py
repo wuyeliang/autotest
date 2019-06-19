@@ -36,24 +36,15 @@ class policy_ArcVideoCaptureAllowed(
 
     def _cam_closed(self):
         """Check if the camera got closed after it opened."""
-        try:
-            cam_status = arc.adb_shell(
-                "logcat -d | grep camera | grep Closing")
-        except error.CmdError:
-            return False
-        return cam_status
+        return arc.adb_shell("logcat -d | grep camera | grep Closing",
+                             ignore_status=True)
 
     def _check_cam_status(self):
         """Returns the specified section from loggcat."""
-        try:
-            cam_device = arc.adb_shell("logcat -d | grep 'Camera device'")
-        except error.CmdError:
-            cam_device = ''
-        try:
-            cam_disable = arc.adb_shell("logcat -d | grep 'disabled by policy'")
-        except error.CmdError:
-            cam_disable = ''
-
+        cam_device = arc.adb_shell("logcat -d | grep 'Camera device'",
+                                   ignore_status=True)
+        cam_disable = arc.adb_shell("logcat -d | grep 'disabled by policy'",
+                                    ignore_status=True)
         return [cam_device, cam_disable]
 
     def did_cam_app_respond(self):
