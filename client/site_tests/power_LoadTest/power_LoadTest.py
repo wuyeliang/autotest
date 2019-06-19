@@ -808,7 +808,8 @@ def _extension_page_time_info_handler(handler, form, loop_number,
         return
 
     for field in form.keys():
-        url = field[str.find(field, "http"):]  # remove unique url salt
+        # Format is 'Unique Salt:URL', the ':' is used to delineate them.
+        url = field.split(':', 1)[1]  # Extract the URL component
         page = json.loads(form[field].value)
 
         logging.debug("[extension] @ loop_%d url: %s start_time: %d",

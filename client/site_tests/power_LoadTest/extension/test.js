@@ -270,7 +270,7 @@ function send_keyvals() {
 function send_raw_page_time_info() {
   var post = [];
   page_timestamps.forEach(function (item) {
-    var unique_url = (unique_url_salt++) + item.url;
+    var unique_url = (unique_url_salt++) + ":" + item.url;
     var key = encodeURIComponent(unique_url);
     post.push(key + "=" + JSON.stringify(item));
   })
