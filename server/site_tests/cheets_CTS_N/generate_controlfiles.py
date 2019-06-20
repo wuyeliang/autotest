@@ -82,6 +82,9 @@ _CONTROLFILE_TEMPLATE = Template(
     {%- if max_retries != None %}
             max_retry={{max_retries}},
     {%- endif %}
+    {%- if enable_default_apps %}
+            enable_default_apps=True,
+    {%- endif %}
             needs_push_media={{needs_push_media}},
             tag='{{tag}}',
             test_name='{{name}}',
@@ -231,6 +234,11 @@ _MEDIA_MODULES = [
     #'CtsMediaBitstreamsTestCases',  # Not needed on N, only P.
 ]
 _NEEDS_PUSH_MEDIA = _MEDIA_MODULES + [_ALL]
+
+# Modules that are known to need the default apps of Chrome (eg. Files.app).
+_ENABLE_DEFAULT_APPS = [
+    'CtsAppSecurityHostTestCases',
+]
 
 # TODO(kinaba, b/110869932): remove this.
 # The tests do not really require the device-info collection step to run,
@@ -872,6 +880,13 @@ def needs_push_media(modules):
     return False
 
 
+def enable_default_apps(modules):
+    """Oracle to determine if to enable default apps (eg. Files.app)."""
+    if modules.intersection(set(_ENABLE_DEFAULT_APPS)):
+        return True
+    return False
+
+
 def get_controlfile_content(combined,
                             modules,
                             abi,
@@ -919,6 +934,7 @@ def get_controlfile_content(combined,
         build=build,
         abi=abi,
         needs_push_media=needs_push_media(modules),
+        enable_default_apps=enable_default_apps(modules),
         tag=tag,
         uri=uri,
         DOC=get_doc(modules, abi, is_public),
