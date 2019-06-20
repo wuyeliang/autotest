@@ -413,6 +413,10 @@ class TradefedTest(test.test):
                   'verifier_verify_adb_installs', '0'))
         logging.info('Disable adb dialog: %s', result.stdout)
 
+        # Android "RescueParty" feature can reset the above settings when the
+        # device crashes often. Disable the rescue during testing.
+        self._android_shell(host, 'setprop persist.sys.disable_rescue true')
+
     def _ready_arc(self):
         """Ready ARC and adb in parallel for running tests via tradefed."""
         # Generate the adb keys on server.
