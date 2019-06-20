@@ -450,11 +450,11 @@ def set_selected_node_types(output_node_types, input_node_types):
     @param input_node_types: A list of input node types. None to skip setting.
 
     """
-    if len(output_node_types) == 1:
+    if output_node_types is not None and len(output_node_types) == 1:
         set_single_selected_output_node(output_node_types[0])
     elif output_node_types:
         set_selected_output_nodes(output_node_types)
-    if len(input_node_types) == 1:
+    if input_node_types is not None and len(input_node_types) == 1:
         set_single_selected_input_node(input_node_types[0])
     elif input_node_types:
         set_selected_input_nodes(input_node_types)
