@@ -29,6 +29,12 @@ class graphics_Gbm(graphics_utils.GraphicsTest):
 
     @graphics_utils.GraphicsTest.failure_report_decorator('graphics_Gbm')
     def run_once(self):
+        board = utils.get_current_board()
+        if board in ['monroe', 'fizz-moblab', 'guado_moblab']:
+            # Monroe has a hardware problem requiring hard cycling. Moblab
+            # images behave odd compared to non-moblab images.
+            logging.info('Skipping test.')
+            return
         cmd = os.path.join(self.srcdir, 'gbmtest')
         result = utils.run(cmd,
                            stderr_is_expected=False,
