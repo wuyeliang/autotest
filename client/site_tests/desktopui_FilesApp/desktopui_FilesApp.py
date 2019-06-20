@@ -43,11 +43,15 @@ class desktopui_FilesApp(test.test):
         """
         def finished_loading():
             """Check if an element has finished loading."""
-            visible = cr.autotest_ext.EvaluateJavaScript("""
-                root.find({attributes: {role: '%s', name: '%s'}});
-                """ % (role, name))
-            logging.info(visible)
-            return visible is not None
+            try:
+                visible = cr.autotest_ext.EvaluateJavaScript("""
+                   root.find({attributes: {role: '%s', name: '%s'}});
+                   """ % (role, name))
+                logging.info(visible)
+                return visible is not None
+            except KeyError as e:
+                logging.exception('Could not find autotest_ext')
+                return False
         utils.poll_for_condition(condition=finished_loading, timeout=timeout,
                                  desc=err_str)
 
