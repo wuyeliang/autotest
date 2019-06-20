@@ -9,6 +9,22 @@ ONE_INT_ARG = (1, )
 ONE_STR_ARG = ("foo", )
 SAMPLE_FILE = "/tmp/foo"
 CHIP_FW_NAMES = (chip.fw_name for chip in chip_utils.chip_id_map.itervalues())
+SAMPLE_CGPT_A = {
+    "UUID": "93EF7B23-606B-014B-A10C-E9D7CF53DFD3",
+    "successful": 1,
+    "partition": 2,
+    "priority": 1,
+    "tries": 0,
+    "Type": "ChromeOS kernel",
+}
+SAMPLE_CGPT_B = {
+    "UUID": "C6604D6B-5563-EE4E-9915-0C50530B158A",
+    "successful": 0,
+    "partition": 4,
+    "priority": 0,
+    "tries": 15,
+    "Type": "ChromeOS kernel",
+}
 
 """
 RPC_CATEGORIES contains all the test cases for our RPC tests.
@@ -508,14 +524,19 @@ RPC_CATEGORIES = [
                     ONE_INT_ARG,
                     ONE_STR_ARG,
                 ],
-                "store_result_as": "cgpt_attributes",
             },
             {
                 "method_name": "set_attributes",
                 "passing_args": [
-                    (operator.itemgetter("cgpt_attributes"), ),
+                    NO_ARGS,
+                    (SAMPLE_CGPT_A, ),
+                    (None, SAMPLE_CGPT_B),
+                    (SAMPLE_CGPT_A, SAMPLE_CGPT_B),
+                    (None, None),
                 ],
-                "failing_args": [NO_ARGS],
+                "failing_args": [
+                    (None, None, None),
+                ],
             }
         ]
     },

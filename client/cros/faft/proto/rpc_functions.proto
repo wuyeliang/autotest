@@ -476,11 +476,13 @@ message CgptSection {
 
 message CgptGetAttributesRequest {}
 message CgptGetAttributesResponse {
-  repeated CgptSection sections = 1;
+  CgptSection A = 1;
+  CgptSection B = 1;
 }
 
 message CgptSetAttributesRequest {
-  repeated CgptSection sections = 1;
+  CgptSection A = 1;
+  CgptSection B = 1;
 }
 message CgptSetAttributesResponse {}
 

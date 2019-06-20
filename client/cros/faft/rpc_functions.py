@@ -375,19 +375,22 @@ class CgptServicer(object):
                 'B': self._cgpt_handler.get_partition(rootdev, 'KERN-B')
         }
 
-    def set_attributes(self, attributes):
-        """Set kernel attributes."""
+    def set_attributes(self, a=None, b=None):
+        """Set kernel attributes for either partition (or both)."""
+        partitions = {'A': a, 'B': b}
         rootdev = self._os_if.get_root_dev()
-        allowed = ['priority', 'tries', 'successful']
-        for p in ('A', 'B'):
-            if p not in attributes:
+        modifiable_attributes = self._cgpt_handler.ATTR_TO_COMMAND.keys()
+        for partition_name in partitions.keys():
+            partition = partitions[partition_name]
+            if partition is None:
                 continue
-            attr = dict()
-            for k in allowed:
-                if k in attributes[p]:
-                    attr[k] = attributes[p][k]
-            if attr:
-                self._cgpt_handler.set_partition(rootdev, 'KERN-%s' % p, attr)
+            attributes_to_set = {
+                    key: partition[key]
+                    for key in modifiable_attributes
+            }
+            if attributes_to_set:
+                self._cgpt_handler.set_partition(
+                        rootdev, 'KERN-%s' % partition_name, attributes_to_set)
 
 
 class EcServicer(object):

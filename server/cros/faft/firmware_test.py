@@ -1511,7 +1511,8 @@ class FirmwareTest(FAFTBase):
         logging.info('CGPT table is changed. Original: %r. Current: %r.',
                      self._backup_cgpt_attr,
                      current_table)
-        self.faft_client.cgpt.set_attributes(self._backup_cgpt_attr)
+        self.faft_client.cgpt.set_attributes(
+                self._backup_cgpt_attr['A'], self._backup_cgpt_attr['B'])
 
         self.switcher.mode_aware_reboot()
         logging.info('Successfully restored CGPT table.')
