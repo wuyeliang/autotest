@@ -1215,14 +1215,6 @@ class TradefedTest(test.test):
                     'Passed: after %d retries passing %d tests, '
                     'waived=%d. %s' % (steps, passed, waived,
                                        self.summary))
-
-            # TODO(kinaba): Hack to detect b/133420179
-            if (passed + failed) % self._test_count_factor != 0:
-                raise error.TestFail(
-                    'Failed: Test count was not the multiple of abi count. '
-                    'After %d retries passing %d tests, waived=%d. %s' % (
-                        steps, passed, waived, self.summary))
-
             return
 
         raise error.TestFail(
