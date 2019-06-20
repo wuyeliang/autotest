@@ -91,15 +91,18 @@ class audio_AudioBasicUSBPlaybackRecord(audio_test.AudioTest):
                             host, audio_facade, self.resultsdir,
                             'after_suspend')
 
-                    audio_test_utils.check_and_set_chrome_active_node_types(
-                            audio_facade, 'USB', 'USB')
+                    # Directly select the node through cras
+                    # Should switch to check_and_set_chrome_active_node_types
+                    # to set the active node through chrome.audio API when
+                    # the telemetry bug is fixed (crbug.com/965704)
+                    audio_facade.set_selected_node_types(['USB'], ['USB'])
 
                     audio_test_utils.dump_cros_audio_logs(
                             host, audio_facade, self.resultsdir,
                             'after_resume_select')
 
-                    audio_test_utils.check_audio_nodes(audio_facade,
-                                                       (['USB'], ['USB']))
+                    audio_test_utils.check_audio_nodes(
+                            audio_facade, (['USB'], ['USB']))
 
                 logging.info('Start recording from Chameleon.')
                 playback_recorder.start_recording()
