@@ -78,14 +78,16 @@ class GraphicsTest(test.test):
             replace_existing_values=True
         )
 
-        # Enable the graphics tests to use keyboard interaction.
-        self._player = input_playback.InputPlayback()
-        self._player.emulate(input_type='keyboard')
-        self._player.find_connected_inputs()
-
         if hasattr(super(GraphicsTest, self), "initialize"):
             test_utils._cherry_pick_call(super(GraphicsTest, self).initialize,
                                          *args, **kwargs)
+
+    def input_check(self):
+        """Check if it exists and initialize input player."""
+        if self._player is None:
+            self._player = input_playback.InputPlayback()
+            self._player.emulate(input_type='keyboard')
+            self._player.find_connected_inputs()
 
     def cleanup(self, *args, **kwargs):
         """Finalize state checker and report values to perf dashboard."""
@@ -266,12 +268,14 @@ class GraphicsTest(test.test):
 
     def open_vt1(self):
         """Switch to VT1 with keyboard."""
+        self.input_check()
         self._player.blocking_playback_of_default_file(
             input_type='keyboard', filename='keyboard_ctrl+alt+f1')
         time.sleep(5)
 
     def open_vt2(self):
         """Switch to VT2 with keyboard."""
+        self.input_check()
         self._player.blocking_playback_of_default_file(
             input_type='keyboard', filename='keyboard_ctrl+alt+f2')
         time.sleep(5)
