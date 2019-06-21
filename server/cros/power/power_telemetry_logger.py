@@ -365,10 +365,16 @@ class ServodTelemetryLogger(PowerTelemetryLogger):
         loggers = list()
 
         for source in summary:
-            data = {k: v for k, v in raw_data[source].iteritems()
-                    if k not in ['Sample_msecs', 'time', 'timeline']}
-            ave = {k: v['mean'] for k, v in summary[source].iteritems()
-                   if k not in ['Sample_msecs', 'time', 'timeline']}
+            data = {
+                k[:-3] if k.endswith('_mw') else k: v
+                for k, v in raw_data[source].iteritems()
+                if k not in ['Sample_msecs', 'time', 'timeline']
+            }
+            ave = {
+                k[:-3] if k.endswith('_mw') else k: v['mean']
+                for k, v in summary[source].iteritems()
+                if k not in ['Sample_msecs', 'time', 'timeline']
+            }
 
             logger = {
                 # All data domains should have same sample count.
