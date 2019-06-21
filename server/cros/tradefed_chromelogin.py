@@ -77,6 +77,16 @@ class ChromeLogin(object):
                 ignore_status=False,
                 verbose=verbose,
                 timeout=timeout)
+
+            # Sanity check if Android has really started. When autotest client
+            # installed on the DUT was partially broken, the command may succeed
+            # without actually logging into Chrome/Android. See b/129382439.
+            ret = self._host.run('android-sh -c "ls /data/misc/adb"',
+                ignore_status=True, timeout=9)
+            if ret.exit_status != 0:
+                logging.error('autologin.py succeeded but Android not running. '
+                    'Let us try reinstalling Autotest.')
+                raise autotest.AutodirNotFoundError()
             return True
         except autotest.AutodirNotFoundError:
             # Autotest is not installed (can happen on moblab after image
