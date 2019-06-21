@@ -30,6 +30,7 @@ FAILED_STATUS = 'FAILED'
 
 # A list of telemetry tests that cannot run on dut.
 ON_DUT_BLACKLIST = [
+    'cros_ui_smoothness',           # crbug/976839
     'loading.desktop',              # crbug/882299
     'rendering.desktop',            # crbug/882291
     'system_health.memory_desktop', # crbug/874386
