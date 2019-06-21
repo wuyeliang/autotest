@@ -66,6 +66,7 @@ class TradefedTest(test.test):
     _android_version = None
     _num_media_bundles = 0
     _perf_results = []
+    _abilist = []
 
     def _log_java_version(self):
         """Quick sanity and spew of java version installed on the server."""
@@ -214,16 +215,6 @@ class TradefedTest(test.test):
             raise error.TestFail('Hosts\' supported fingerprint is different: '
                                  '%s', fingerprint)
 
-        # Check all hosts support same abilist.
-        abilist = set(self._run_adb_cmd(
-            host,
-            args=('shell', 'getprop', 'ro.product.cpu.abilist')).stdout
-            for host in self._hosts)
-        if len(abilist) > 1:
-            raise error.TestFail('Hosts\' supported abilist is different: %s',
-                                 abilist)
-        self._abilist = str(list(abilist)[0]).split(',')
-
     def _calculate_test_count_factor(self, bundle):
         """ Calculate the multiplicative factor for the test case number.
 
@@ -239,7 +230,8 @@ class TradefedTest(test.test):
         else:
             tradefed_abis = arm_abis | x86_abis
         self._test_count_factor = len(set(self._get_abilist()) & tradefed_abis)
-        self._timeout_factor = self._test_count_factor
+        # Avoid setting timeout=0 (None) in any cases.
+        self._timeout_factor = max(1, self._test_count_factor)
 
     @contextlib.contextmanager
     def _login_chrome(self, **cts_helper_kwargs):
@@ -818,10 +810,18 @@ class TradefedTest(test.test):
         This method should only be called after the android environment is
         successfully initialized."""
         if not self._abilist:
-            self._abilist = self._run_adb_cmd(
-                self._hosts[0],
-                args=('shell', 'getprop',
-                      'ro.product.cpu.abilist')).stdout.split(',')
+            for _ in range(3):
+                abilist_str = self._run_adb_cmd(
+                    self._hosts[0],
+                    args=('shell', 'getprop',
+                          'ro.product.cpu.abilist')).stdout.strip()
+                if abilist_str:
+                    self._abilist = abilist_str.split(',')
+                    break
+                else:
+                    # TODO(kinaba): Sometimes getprop returns an empty string.
+                    # Investigate why. For now we mitigate the bug by retries.
+                    logging.error('Empty abilist.')
         return self._abilist
 
     def _get_release_branch_number(self):
