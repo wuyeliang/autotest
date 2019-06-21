@@ -6,6 +6,7 @@ import logging
 import os
 
 from autotest_lib.client.bin import utils
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import file_utils
 from autotest_lib.client.cros import chrome_binary_test
 from autotest_lib.client.cros.video import device_capability
@@ -26,7 +27,14 @@ class video_VDASanity(chrome_binary_test.ChromeBinaryTest):
     @helper_logger.video_log_wrapper
     @chrome_binary_test.nuke_chrome
     def run_once(self, test_cases, capability):
+        """Runs the autotest."""
         device_capability.DeviceCapability().ensure_capability(capability)
+        # Skip RK3399 boards.
+        # TODO(b/35581004): remove the filter once the kernel issue is fixed.
+        if utils.get_current_board() in ['bob', 'scarlet', 'gru', 'kevin',
+                                         'nefario', 'rainier']:
+            raise error.TestNAError("Skipping RK3399 board")
+
         for (path, width, height, frame_num, frag_num, profile) in test_cases:
             video_path = os.path.join(self.bindir, 'video.download')
             test_video_data = '%s:%d:%d:%d:%d:%d:%d:%d' % (
