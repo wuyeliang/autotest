@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import logging
+import os
 import tempfile
 
 from autotest_lib.client.bin import utils
@@ -15,7 +16,6 @@ from autotest_lib.client.cros.input_playback import keyboard
 
 
 _CHROME_EXEC_TIME = 'chrome-exec'
-_LOGIN_TIME = 'login-prompt-visible'
 _LOGOUT_STARTED_TIME = 'logout-started'
 _LOGOUT_TIMEOUT = 60  # logout should finsih in 60 seconds.
 
@@ -34,11 +34,15 @@ class platform_LogoutPerf(arc.ArcTest):
     version = 1
 
 
-    def _get_latest_uptime(self, filename):
-        with open('/tmp/uptime-' + filename) as statfile:
+    def _get_latest_uptime(self, ts_name):
+        pathname = '/tmp/uptime-' + ts_name
+        if not os.path.exists(pathname):
+            logging.info('timestamp %s is missing', ts_name)
+            return 0
+        with open(pathname) as statfile:
             values = map(lambda l: float(l.split()[0]),
                          statfile.readlines())
-        logging.info('timestamp of %s -> %s ', filename, values[-1])
+        logging.info('timestamp of %s -> %s ', ts_name, values[-1])
         return values[-1]
 
 
@@ -106,17 +110,18 @@ class platform_LogoutPerf(arc.ArcTest):
         # Validate the current GAIA login session
         self._validate()
 
+        # Get old logout start timestamp
+        logout_started = self._get_latest_uptime(_LOGOUT_STARTED_TIME)
+
         # Start signing out the session, wait until the new event of
         # 'login-prompt-visible'.
         self.keyboard.press_key('ctrl+shift+q')
         self.keyboard.press_key('ctrl+shift+q')
 
-        # Get current login prompt timestamp
-        login_timestamp = self._get_latest_uptime(_LOGIN_TIME)
-
-        # Poll for new login prompt timestamp
+        # Poll for logout start timestamp update
         utils.poll_for_condition(
-                lambda: self._get_latest_uptime(_LOGIN_TIME) != login_timestamp,
+                lambda: self._get_latest_uptime(_LOGOUT_STARTED_TIME) !=
+                    logout_started,
                 exception=error.TestFail('Timeout: Could not sign off in time'),
                 timeout=_LOGOUT_TIMEOUT,
                 sleep_interval=2,
