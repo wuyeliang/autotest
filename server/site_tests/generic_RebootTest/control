@@ -7,7 +7,7 @@ from autotest_lib.client.common_lib import error, utils
 
 
 AUTHOR = "sbasi, chromeos-lab-infrastructure@google.com"
-ATTRIBUTES = "suite:bvt-cq"
+ATTRIBUTES = "suite:bvt-perbuild"
 NAME = "generic_RebootTest"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
