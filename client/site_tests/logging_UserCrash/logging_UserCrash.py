@@ -31,9 +31,11 @@ class logging_UserCrash(user_crash_test.UserCrashTest):
             raise error.TestFail('core pattern should have been %s, not %s' %
                                  (expected_core_pattern, output))
 
-        self._log_reader.set_start_by_reboot(-1)
+        bootup_found = self._log_reader.set_start_by_reboot(-1)
 
-        if not self._log_reader.can_find('Enabling user crash handling'):
+        if not bootup_found:
+            raise error.TestFail('unable to find boot message in logs')
+        elif not self._log_reader.can_find('Enabling user crash handling'):
             raise error.TestFail(
                 'user space crash handling was not started during last boot')
 
