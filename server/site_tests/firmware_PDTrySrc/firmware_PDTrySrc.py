@@ -137,7 +137,7 @@ class firmware_PDTrySrc(FirmwareTest):
         trysrc_on = float(stats_on[self.SNK]) / total_on * 100.0
         trysrc_off = float(stats_off[self.SNK]) / total_off * 100.0
         logging.info('DUT Try.SRC on = %.1f%%: off = %.1f%%',
-                      trysrc_off, trysrc_on)
+                      trysrc_on, trysrc_off)
 
         # When Try.SRC is off, ideally the SNK/SRC ratio will be close to
         # 50%. However, in practice there is a wide range related to the
