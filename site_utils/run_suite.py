@@ -393,6 +393,12 @@ def make_parser():
                         type=ast.literal_eval,
                         default=None, action="store",
                         help="A dict of args passed to the suite control file.")
+    parser.add_argument("--suite_args_json", dest="suite_args_json",
+                        type=json.loads,
+                        default=None, action="store",
+                        help="A json-encoded string representation of args to "
+                             "passed to the suite control file. Overrides "
+                             "suite_args if specified.")
     parser.add_argument('--offload_failures_only',
                         dest='offload_failures_only', type=bool_str,
                         action='store', default=False,
@@ -2278,6 +2284,12 @@ def main():
     options = parser.parse_args()
     if options.do_nothing:
         return 0
+
+    if options.suite_args_json and options.suite_args:
+        raise ValueError("suite_args and suite_args_json may not both "
+                         "be specified.")
+    if options.suite_args_json:
+        options.suite_args = options.suite_args_json
 
     sys.exceptionhandler = _ExceptionHandler(dump_json=options.json_dump)
     if options.json_dump:
