@@ -609,6 +609,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         # Get the DUT board name from AFE.
         info = self.host_info_store.get()
         board = info.board
+        model = info.model
 
         if board is None or board == '':
             board = self.servo.get_board()
@@ -632,7 +633,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             ds.download_file(fwurl, local_tarball)
 
             self._clear_fw_version_labels(rw_only)
-            self.servo.program_firmware(board, local_tarball, rw_only)
+            self.servo.program_firmware(board, model, local_tarball, rw_only)
             if utils.host_is_in_lab_zone(self.hostname):
                 self._add_fw_version_label(build, rw_only)
         finally:

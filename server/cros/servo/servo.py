@@ -909,16 +909,19 @@ class Servo(object):
             self.program_bios(os.path.join(dest_dir, image), rw_only)
 
 
-    def program_firmware(self, model, tarball_path, rw_only=False):
+    def program_firmware(self, board, model, tarball_path, rw_only=False):
         """Program firmware (EC, if applied, and BIOS) of the DUT.
 
+        @param board: The DUT board name.
         @param model: The DUT model name.
         @param tarball_path: The path of the downloaded build tarball.
         @param rw_only: True to only install firmware to its RW portions. Keep
                 the RO portions unchanged.
         """
-        ap_image_candidates = ('image.bin', 'image-%s.bin' % model)
-        ec_image_candidates = ('ec.bin', '%s/ec.bin' % model)
+        ap_image_candidates = ('image.bin', 'image-%s.bin' % model,
+                               'image-%s.bin' % board)
+        ec_image_candidates = ('ec.bin', '%s/ec.bin' % model,
+                               '%s/ec.bin' % board)
 
         self._reprogram(tarball_path, 'EC', ec_image_candidates, rw_only)
         self._reprogram(tarball_path, 'BIOS', ap_image_candidates, rw_only)
