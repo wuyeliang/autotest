@@ -99,8 +99,8 @@ class ServoHost(base_servohost.BaseServoHost):
         # task to reboot it until current task completes. We also wait and
         # make sure the labstation is up here, in the case of the labstation is
         # in the middle of reboot.
-        if (self.is_in_lab() and self.is_labstation()
-            and self.wait_up(self.REBOOT_TIMEOUT)):
+        if (self.wait_up(self.REBOOT_TIMEOUT) and self.is_in_lab()
+            and self.is_labstation()):
             self._lock()
 
         self._repair_strategy = (
