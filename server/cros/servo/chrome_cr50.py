@@ -359,6 +359,38 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return rv
 
 
+    def send_command_retry_get_output(self, command, regexp_list, safe=False,
+                                      compare_output=False):
+        """Retry the command 5 times if you get a timeout or drop some output
+
+
+        @param command: the command string
+        @param regexp_list: the regex to search for
+        @param safe: use send_safe_command_get_output if True otherwise use
+                     send_command_get_output
+        @param compare_output: look for reproducible output
+        """
+        send_command = (self.send_safe_command_get_output if safe else
+                        self.send_command_get_output)
+        err = 'no consistent output' if compare_output else 'unknown'
+        past_rv = []
+        for i in range(self.MAX_RETRY_COUNT):
+            try:
+                rv = send_command(command, regexp_list)
+                if not compare_output or rv in past_rv:
+                    return rv
+                if past_rv:
+                    logging.debug('%d %s not in %s', i, rv, past_rv)
+                past_rv.append(rv)
+            except Exception, e:
+                err = str(e)
+                logging.info('attempt %d %r: %s', i, command, str(e))
+        if compare_output:
+            logging.info('No consistent output for %r %s', command,
+                         pprint.pformat(past_rv))
+        raise error.TestError('Issue sending %r command: %s', command, err)
+
+
     def get_deep_sleep_count(self):
         """Get the deep sleep count from the idle task"""
         result = self.send_safe_command_get_output('idle', [self.IDLE_COUNT])
