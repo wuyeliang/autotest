@@ -639,7 +639,7 @@ class Servo(object):
         @param gpio_value New setting for the gpio.
         """
         assert gpio_name and gpio_value
-        logging.info('Setting %s to %r', gpio_name, gpio_value)
+        logging.debug('Setting %s to %r', gpio_name, gpio_value)
         try:
             self._server.set(gpio_name, gpio_value)
         except  xmlrpclib.Fault as e:
@@ -657,7 +657,7 @@ class Servo(object):
         """
         rv = []
         try:
-            logging.info('Set/get all: %s', str(controls))
+            logging.debug('Set/get all: %s', str(controls))
             rv = self._server.set_get_all(controls)
         except xmlrpclib.Fault as e:
             # TODO(waihong): Remove the following backward compatibility when
