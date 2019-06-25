@@ -924,6 +924,14 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return result.lower() == 'enabled'
 
 
+    def get_sleepmask(self):
+        """Returns the sleepmask as an int"""
+        rv = self.send_command_retry_get_output('sleepmask',
+                ['sleep mask: (\S{8})\s+'], safe=True)[0][1]
+        logging.info('sleepmask %s', rv)
+        return int(rv, 16)
+
+
     def get_ccdstate(self):
         """Return a dictionary of the ccdstate once it's done debouncing"""
         for i in range(self.CCDSTATE_MAX_RETRY_COUNT):
