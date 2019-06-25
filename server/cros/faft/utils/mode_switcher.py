@@ -102,10 +102,7 @@ class _CtrlDBypasser(_BaseFwBypasser):
     def trigger_dev_to_rec(self):
         """Trigger to the rec mode from the dev screen."""
         time.sleep(self.faft_config.firmware_screen)
-
-        # Pressing Enter for too long triggers a second key press.
-        # Let's press it without delay
-        self.servo.enter_key(press_secs=0)
+        self.servo.enter_key()
 
 
     def trigger_rec_to_dev(self):
