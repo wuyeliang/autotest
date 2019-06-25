@@ -118,8 +118,8 @@ class firmware_Cr50DeviceState(Cr50Test):
 
     def get_taskinfo_output(self):
         """Return a dict with the irq numbers as keys and counts as values"""
-        output = self.cr50.send_safe_command_get_output('taskinfo',
-            self.GET_TASKINFO)[0][1].strip()
+        output = self.cr50.send_command_retry_get_output('taskinfo',
+            self.GET_TASKINFO, safe=True)[0][1].strip()
         logging.info(output)
         return output
 
