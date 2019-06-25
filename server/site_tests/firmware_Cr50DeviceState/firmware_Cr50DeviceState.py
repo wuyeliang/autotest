@@ -398,6 +398,12 @@ class firmware_Cr50DeviceState(Cr50Test):
         self.ccd_str = 'ccd ' + ('enabled' if self.ccd_enabled else 'disabled')
         logging.info('Running through states with %s', self.ccd_str)
 
+        self.cr50.get_ccdstate()
+        if not self.cr50.get_sleepmask() and self.ccd_enabled:
+            logging.info('Sleepmask is not keeping cr50 up with ccd enabled')
+            self.all_errors[self.ccd_str] = 'usb is not active with ccd enabled'
+            return
+
         # Initialize the Test IRQ counts
         self.reset_irq_counts()
 
