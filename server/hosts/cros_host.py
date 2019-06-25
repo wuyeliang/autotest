@@ -467,7 +467,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             else:
                 raise error.AutoservError(
                         'Failed to stage server-side package. The host has '
-                        'no job_report_url attribute or version label.')
+                        'no job_repo_url attribute or cros-version label.')
 
         # Get the OS version of the build, for any build older than
         # MIN_VERSION_SUPPORT_SSP, server side packaging is not supported.
