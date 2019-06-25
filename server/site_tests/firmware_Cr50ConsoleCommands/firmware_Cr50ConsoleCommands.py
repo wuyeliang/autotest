@@ -81,17 +81,8 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
     def get_output(self, cmd, regexp, split_str, sort):
         """Return the cr50 console output"""
         old_output = []
-        # Try to get consistent command output.
-        for i in range(self.CMD_RETRY_COUNT):
-            output = self.cr50.send_safe_command_get_output(
-                    cmd, [regexp])[0][1].strip()
-            if output in old_output:
-                logging.debug('%s output:%s\n', cmd, output)
-                break
-            else:
-                old_output.append(output)
-        else:
-            raise error.TestFail('Could not get consistent %r output', cmd)
+        output = self.cr50.send_command_retry_get_output(
+                cmd, [regexp], safe=True, compare_output=True)[0][1].strip()
 
         # Record the original command output
         results_path = os.path.join(self.resultsdir, cmd)
