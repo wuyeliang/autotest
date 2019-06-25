@@ -673,7 +673,8 @@ class Servo(object):
         @param gpio_name Name of the gpio.
         @param gpio_value New setting for the gpio.
         """
-        assert gpio_name and gpio_value
+        # The real danger here is to pass a None value through the xmlrpc.
+        assert gpio_name and gpio_value is not None
         logging.debug('Setting %s to %r', gpio_name, gpio_value)
         try:
             self._server.set(gpio_name, gpio_value)
