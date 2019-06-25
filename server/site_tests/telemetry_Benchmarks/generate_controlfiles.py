@@ -30,7 +30,6 @@ PERF_PER_BUILD_TESTS = (
     'kraken',
     'loading.desktop',
     'octane',
-    'page_cycler_v2.typical_25',
     'rendering.desktop',
     'speedometer',
     'speedometer2',
