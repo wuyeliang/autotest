@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import shutil
+import time
 
 import common
 from autotest_lib.client.bin import test, utils
@@ -40,7 +41,9 @@ class CrashTest(test.test):
 
     If the user consents to sending crash tests, then the _CONSENT_FILE will
     exist in the home directory. This test needs to create this file for the
-    crash sending to work.
+    crash sending to work. The metrics daemon caches the consent state for
+    1 second, so we need to sleep for more than that after changing it to be
+    sure it picks up the change.
 
     Crash reports are rate limited to a certain number of reports each 24
     hours. If the maximum number has already been sent then reports are held
@@ -188,6 +191,8 @@ class CrashTest(test.test):
                             constants.OWNER_KEY_FILE)
             # Remove deprecated consent file.
             utils.system('rm -f "%s"' % (self._CONSENT_FILE))
+        # Ensure cached consent state is updated.
+        time.sleep(2)
 
 
     def _set_crash_test_in_progress(self, in_progress):
@@ -228,6 +233,8 @@ class CrashTest(test.test):
         if os.path.exists(constants.OWNER_KEY_FILE):
             shutil.move(constants.OWNER_KEY_FILE,
                         self._get_pushed_owner_key_file_path())
+        # Ensure cached consent state is updated.
+        time.sleep(2)
 
 
     def _pop_consent(self):
@@ -248,6 +255,8 @@ class CrashTest(test.test):
                         constants.OWNER_KEY_FILE)
         else:
             utils.system('rm -f "%s"' % constants.OWNER_KEY_FILE)
+        # Ensure cached consent state is updated.
+        time.sleep(2)
 
 
     def _get_crash_dir(self, username, force_user_crash_dir=False):
