@@ -411,7 +411,14 @@ def make_parser():
                         'control files, rather than SUITE.')
     parser.add_argument('--json_dump', dest='json_dump', action='store_true',
                         default=False,
-                        help='Dump the output of run_suite to stdout.')
+                        help='Dump the output of run_suite to stdout as json; '
+                             'silence other output.')
+    parser.add_argument('--json_dump_postfix', dest='json_dump_postfix',
+                        action='store_true',
+                        help='Dump the output of run_suite to stdout as json; '
+                             'do not silence other logging. Similar to '
+                             '--json_dump, the json payload will be wrapped in '
+                             'a tag to differentiate it from logging.')
     parser.add_argument(
         '--run_prod_code', dest='run_prod_code',
         action='store_true', default=False,
@@ -489,6 +496,9 @@ def verify_and_clean_options(options):
         return False
     if options.no_wait and options.retry:
         print 'Test retry is not available when using --no_wait=True'
+    if options.json_dump and options.json_dump_postfix:
+        print '--json_dump and --json_dump_postfix are mutually exclusive'
+        return False
     # Default to use the test code in CrOS build.
     if not options.test_source_build and options.build:
         options.test_source_build = options.build
@@ -2270,7 +2280,7 @@ def _run_with_autotest(options):
     else:
         result = _run_task(options)
 
-    if options.json_dump:
+    if options.json_dump or options.json_dump_postfix:
         run_suite_common.dump_json(result.output_dict)
 
     return result
