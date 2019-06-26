@@ -9,6 +9,7 @@ import ast
 import logging
 import os
 import re
+import socket
 import time
 import xmlrpclib
 
@@ -260,6 +261,7 @@ class Servo(object):
 
         @param servo_host: A ServoHost object representing
                            the host running servod.
+        @type servo_host: autotest_lib.server.hosts.servo_host.ServoHost
         @param servo_serial: Serial number of the servo board.
         """
         # TODO(fdeng): crbug.com/298379
@@ -310,7 +312,12 @@ class Servo(object):
         @param cold_reset If True, cold reset the device after
                           initialization.
         """
-        self._server.hwinit()
+        try:
+            self._server.hwinit()
+        except socket.error as e:
+            e.filename = '%s:%s' % (self._servo_host.hostname,
+                                    self._servo_host.servo_port)
+            raise
         self.set('usb_mux_oe1', 'on')
         self._usb_state = None
         self.switch_usbkey('off')
