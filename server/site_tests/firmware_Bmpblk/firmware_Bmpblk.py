@@ -23,8 +23,8 @@ class firmware_Bmpblk(FirmwareTest):
 
     def run_once(self):
         """Runs a single iteration of the test."""
-        self.faft_client.bios.dump_whole(BIOS_PATH)
-        layout = self.faft_client.system.run_shell_command_get_output(
+        self.faft_client.Bios.DumpWhole(BIOS_PATH)
+        layout = self.faft_client.System.RunShellCommandGetOutput(
                             LAYOUT_CBFS_CMD)
         layout = '\n'.join(layout)
         logging.debug('cbfstool layout output:\n\n%s', layout)
@@ -32,7 +32,7 @@ class firmware_Bmpblk(FirmwareTest):
         if 'BOOT_STUB' in layout:
           print_cbfs_cmd_options=' -r BOOT_STUB'
         try:
-            files = self.faft_client.system.run_shell_command_get_output(
+            files = self.faft_client.System.RunShellCommandGetOutput(
                     PRINT_CBFS_CMD + print_cbfs_cmd_options)
             files = '\n'.join(files)
             logging.debug('cbfstool print output:\n\n%s', files)
@@ -52,4 +52,4 @@ class firmware_Bmpblk(FirmwareTest):
                               "will ship with!")
                 raise error.TestFail('bmpblk images not scaled for this board')
         finally:
-            self.faft_client.system.remove_file(BIOS_PATH)
+            self.faft_client.System.RemoveFile(BIOS_PATH)

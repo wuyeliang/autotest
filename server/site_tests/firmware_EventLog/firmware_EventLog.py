@@ -30,7 +30,7 @@ class firmware_EventLog(FirmwareTest):
         return bool(filter(re.compile(pattern).search, self._events))
 
     def _gather_events(self):
-        entries = self.faft_client.system.run_shell_command_get_output(
+        entries = self.faft_client.System.RunShellCommandGetOutput(
                 'mosys eventlog list')
         now = self._now()
         self._events = []
@@ -49,7 +49,7 @@ class firmware_EventLog(FirmwareTest):
     # This assumes that Linux and the firmware use the same RTC. mosys converts
     # timestamps to localtime, and so do we (by calling date without --utc).
     def _now(self):
-        time_string = self.faft_client.system.run_shell_command_get_output(
+        time_string = self.faft_client.System.RunShellCommandGetOutput(
                 'date +"%s"' % self._TIME_FORMAT)[0]
         logging.debug('Current local system time on DUT is "%s"', time_string)
         return time.strptime(time_string, self._TIME_FORMAT)
@@ -130,7 +130,7 @@ class firmware_EventLog(FirmwareTest):
 
         logging.info('Verifying eventlog behavior on suspend/resume')
         self._cutoff_time = self._now()
-        self.faft_client.system.run_shell_command(
+        self.faft_client.System.RunShellCommand(
                 'powerd_dbus_suspend -wakeup_timeout=10')
         time.sleep(5)   # a little slack time for powerd to write the 'Wake'
         self._gather_events()
@@ -149,7 +149,7 @@ class firmware_EventLog(FirmwareTest):
             logging.info('Enabling S3 to retest suspend/resume')
             self.disable_suspend_to_idle()
             self._cutoff_time = self._now()
-            self.faft_client.system.run_shell_command(
+            self.faft_client.System.RunShellCommand(
                 'powerd_dbus_suspend -wakeup_timeout=10')
             time.sleep(5)   # a little slack time for powerd to write the 'Wake'
             self.teardown_powerd_prefs()
@@ -161,7 +161,7 @@ class firmware_EventLog(FirmwareTest):
         watchdog = WatchdogTester(self.host)
         if not watchdog.is_supported():
             logging.info('No hardware watchdog on this platform, skipping')
-        elif self.faft_client.system.run_shell_command_get_output(
+        elif self.faft_client.System.RunShellCommandGetOutput(
                 'crossystem arch')[0] != 'x86': # TODO: Implement event on x86
             logging.info('Verifying eventlog behavior with hardware watchdog')
             self._cutoff_time = self._now()

@@ -50,7 +50,7 @@ class firmware_PDProtocol(FirmwareTest):
         # not swapping here. So set used_for_recovery=False.
         self.setup_usbkey(usbkey=True, host=False, used_for_recovery=False)
 
-        self.original_dev_boot_usb = self.faft_client.system.get_dev_boot_usb()
+        self.original_dev_boot_usb = self.faft_client.System.GetDevBootUsb()
         logging.info('Original dev_boot_usb value: %s',
                      str(self.original_dev_boot_usb))
 
@@ -86,7 +86,7 @@ class firmware_PDProtocol(FirmwareTest):
         """
         logging.info('Command to run: %s', command)
 
-        output = self.faft_client.system.run_shell_command_get_output(command)
+        output = self.faft_client.System.RunShellCommandGetOutput(command)
 
         logging.info('Command output: %s', output)
 

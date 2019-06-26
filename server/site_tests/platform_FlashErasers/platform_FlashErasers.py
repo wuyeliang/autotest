@@ -27,7 +27,7 @@ class platform_FlashErasers(FirmwareTest):
         """
         command = command + ' 2>&1'
         logging.info('Execute %s', command)
-        output = self.faft_client.system.run_shell_command_get_output(command)
+        output = self.faft_client.System.RunShellCommandGetOutput(command)
         logging.info('Output >>> %s <<<', output)
         if checkfor and checkfor not in '\n'.join(output):
             raise error.TestFail('Expect %s in output of %s' %
@@ -94,7 +94,7 @@ class platform_FlashErasers(FirmwareTest):
         else:
             raise error.TestFail('Unexpected active fw %s' % active_fw)
 
-        dut_work_path = self.faft_client.updater.get_work_path()
+        dut_work_path = self.faft_client.Updater.GetWorkPath()
         # Sizes to try to erase.
         test_sizes = (4096, 4096 * 2, 4096 * 4, 4096 * 8, 4096 * 16)
 

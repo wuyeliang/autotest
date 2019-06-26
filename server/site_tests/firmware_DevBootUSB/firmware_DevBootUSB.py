@@ -28,7 +28,7 @@ class firmware_DevBootUSB(FirmwareTest):
         # Use the USB key for Ctrl-U dev boot, not recovery.
         self.setup_usbkey(usbkey=True, host=False, used_for_recovery=False)
 
-        self.original_dev_boot_usb = self.faft_client.system.get_dev_boot_usb()
+        self.original_dev_boot_usb = self.faft_client.System.GetDevBootUsb()
         logging.info('Original dev_boot_usb value: %s',
                      str(self.original_dev_boot_usb))
 
@@ -49,14 +49,14 @@ class firmware_DevBootUSB(FirmwareTest):
 
         logging.info("Expected developer mode, set dev_boot_usb to 0.")
         self.check_state((self.checkers.dev_boot_usb_checker, False))
-        self.faft_client.system.set_dev_boot_usb(0)
+        self.faft_client.System.SetDevBootUsb(0)
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected internal disk boot, set dev_boot_usb to 1.")
         self.check_state((self.checkers.dev_boot_usb_checker,
                           False,
                           "Not internal disk boot, dev_boot_usb misbehaved"))
-        self.faft_client.system.set_dev_boot_usb(1)
+        self.faft_client.System.SetDevBootUsb(1)
         self.switcher.simple_reboot()
         self.switcher.bypass_dev_boot_usb()
         self.switcher.wait_for_client()
@@ -64,7 +64,7 @@ class firmware_DevBootUSB(FirmwareTest):
         logging.info("Expected USB boot, set dev_boot_usb to the original.")
         self.check_state((self.checkers.dev_boot_usb_checker, (True, True),
                           'Device not booted from USB image properly.'))
-        self.faft_client.system.set_dev_boot_usb(self.original_dev_boot_usb)
+        self.faft_client.System.SetDevBootUsb(self.original_dev_boot_usb)
         self.switcher.mode_aware_reboot()
 
         logging.info("Check and done.")

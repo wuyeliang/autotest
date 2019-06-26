@@ -33,7 +33,7 @@ class firmware_CorruptFwSigB(FirmwareTest):
         logging.info("Expected firmware A boot and corrupt "
                      "firmware signature B.")
         self.check_state((self.checkers.fw_tries_checker, 'A'))
-        self.faft_client.bios.corrupt_sig('b')
+        self.faft_client.Bios.CorruptSig('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected firmware A boot and set try_fwb flag.")
@@ -43,7 +43,7 @@ class firmware_CorruptFwSigB(FirmwareTest):
 
         logging.info("Expected firmware A boot and restore firmware B.")
         self.check_state((self.checkers.fw_tries_checker, ('A', False)))
-        self.faft_client.bios.restore_sig('b')
+        self.faft_client.Bios.RestoreSig('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Final check and done.")

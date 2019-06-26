@@ -81,7 +81,7 @@ class firmware_FWupdate(FirmwareTest):
         @returns command output.
         """
         logging.info('Execute %s', command)
-        output = self.faft_client.system.run_shell_command_get_output(command)
+        output = self.faft_client.System.RunShellCommandGetOutput(command)
         logging.info('Output %s', output)
         return output
 
@@ -101,13 +101,13 @@ class firmware_FWupdate(FirmwareTest):
         """
         return {
           'pd_version': self.get_pd_version(),
-          'ec_version': self.faft_client.ec.get_version(),
+          'ec_version': self.faft_client.Ec.GetVersion(),
           'mainfw_type':
-            self.faft_client.system.get_crossystem_value('mainfw_type'),
+            self.faft_client.System.GetCrossystemValue('mainfw_type'),
           'ro_fwid':
-            self.faft_client.system.get_crossystem_value('ro_fwid'),
+            self.faft_client.System.GetCrossystemValue('ro_fwid'),
           'fwid':
-            self.faft_client.system.get_crossystem_value('fwid'),
+            self.faft_client.System.GetCrossystemValue('fwid'),
         }
 
     def repack_shellball(self, hostname):

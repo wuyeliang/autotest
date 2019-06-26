@@ -40,7 +40,7 @@ class firmware_BaseECKeyboard(FirmwareTest):
     def cleanup(self):
         # Restart UI anyway, in case the test failed in the middle
         try:
-            self.faft_client.system.run_shell_command('start ui | true')
+            self.faft_client.System.RunShellCommand('start ui | true')
         except Exception as e:
             logging.error("Caught exception: %s", str(e))
         super(firmware_BaseECKeyboard, self).cleanup()
@@ -56,7 +56,7 @@ class firmware_BaseECKeyboard(FirmwareTest):
           True if passed; or False if failed.
         """
         # Stop UI so that key presses don't go to Chrome.
-        self.faft_client.system.run_shell_command('stop ui')
+        self.faft_client.System.RunShellCommand('stop ui')
 
         # Start a thread to perform the key-press action
         Timer(self.KEY_PRESS_DELAY, press_action).start()
@@ -64,13 +64,13 @@ class firmware_BaseECKeyboard(FirmwareTest):
         # Invoke client side script to monitor keystrokes.
         # The codes are linux input event codes.
         # The order doesn't matter.
-        result = self.faft_client.system.check_keys([
+        result = self.faft_client.System.CheckKeys([
                 linux_input.KEY_ENTER,
                 linux_input.KEY_LEFTCTRL,
                 linux_input.KEY_D])
 
         # Turn UI back on
-        self.faft_client.system.run_shell_command('start ui')
+        self.faft_client.System.RunShellCommand('start ui')
         time.sleep(self.START_UI_DELAY)
 
         return result

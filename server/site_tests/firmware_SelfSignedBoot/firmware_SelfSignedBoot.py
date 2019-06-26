@@ -28,7 +28,7 @@ class firmware_SelfSignedBoot(FirmwareTest):
         self.switcher.setup_mode('dev')
         self.setup_usbkey(usbkey=True, host=False)
 
-        self.original_dev_boot_usb = self.faft_client.system.get_dev_boot_usb()
+        self.original_dev_boot_usb = self.faft_client.System.GetDevBootUsb()
         logging.info('Original dev_boot_usb value: %s',
                      str(self.original_dev_boot_usb))
 
@@ -38,7 +38,7 @@ class firmware_SelfSignedBoot(FirmwareTest):
 
     def cleanup(self):
         try:
-            self.faft_client.system.set_dev_boot_usb(self.original_dev_boot_usb)
+            self.faft_client.System.SetDevBootUsb(self.original_dev_boot_usb)
             self.disable_crossystem_selfsigned()
             self.ensure_dev_internal_boot(self.original_dev_boot_usb)
             self.resignimage_recoverykeys()
@@ -48,26 +48,26 @@ class firmware_SelfSignedBoot(FirmwareTest):
 
     def resignimage_ssdkeys(self):
         """Re-signing the USB image using the SSD keys."""
-        self.faft_client.system.run_shell_command(
+        self.faft_client.System.RunShellCommand(
             '/usr/share/vboot/bin/make_dev_ssd.sh -i %s' % self.usb_dev)
 
     def resignimage_recoverykeys(self):
         """Re-signing the USB image using the Recovery keys."""
-        self.faft_client.system.run_shell_command(
+        self.faft_client.System.RunShellCommand(
             '/usr/share/vboot/bin/make_dev_ssd.sh -i %s --recovery_key'
             % self.usb_dev)
 
     def enable_crossystem_selfsigned(self):
         """Enable dev_boot_signed_only + dev_boot_usb."""
-        self.faft_client.system.run_shell_command(
+        self.faft_client.System.RunShellCommand(
             'crossystem dev_boot_signed_only=1')
-        self.faft_client.system.run_shell_command('crossystem dev_boot_usb=1')
+        self.faft_client.System.RunShellCommand('crossystem dev_boot_usb=1')
 
     def disable_crossystem_selfsigned(self):
         """Disable dev_boot_signed_only + dev_boot_usb."""
-        self.faft_client.system.run_shell_command(
+        self.faft_client.System.RunShellCommand(
             'crossystem dev_boot_signed_only=0')
-        self.faft_client.system.run_shell_command('crossystem dev_boot_usb=0')
+        self.faft_client.System.RunShellCommand('crossystem dev_boot_usb=0')
 
     def run_once(self):
         """Runs a single iteration of the test."""

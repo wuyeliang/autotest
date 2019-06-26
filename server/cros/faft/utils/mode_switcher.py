@@ -676,9 +676,9 @@ class _BaseModeSwitcher(object):
             logging.warning("-[FAFT]-[ system did not respond to ping ]")
         if self.client_host.wait_up(timeout):
             # Check the FAFT client is avaiable.
-            self.faft_client.system.is_available()
+            self.faft_client.System.IsAvailable()
             # Stop update-engine as it may change firmware/kernel.
-            self.faft_framework.faft_client.updater.stop_daemon()
+            self.faft_framework.faft_client.Updater.StopDaemon()
         else:
             logging.error('wait_for_client() timed out.')
             raise ConnectionError('DUT is still down unexpectedly')
@@ -807,7 +807,7 @@ class _RyuSwitcher(_BaseModeSwitcher):
                         come up.
         @raise ConnectionError: Failed to connect DUT.
         """
-        if not self.faft_client.system.wait_for_client(timeout):
+        if not self.faft_client.System.WaitForClient(timeout):
             raise ConnectionError('DUT is still down unexpectedly')
 
         # there's a conflict between fwtool and crossystem trying to access
@@ -824,7 +824,7 @@ class _RyuSwitcher(_BaseModeSwitcher):
         @raise ConnectionError: Failed to wait DUT offline.
         """
         # TODO: Add a way to check orig_boot_id
-        if not self.faft_client.system.wait_for_client_offline(timeout):
+        if not self.faft_client.System.WaitForClientOffline(timeout):
             raise ConnectionError('DUT is still up unexpectedly')
 
     def print_recovery_warning(self):
@@ -837,7 +837,7 @@ class _RyuSwitcher(_BaseModeSwitcher):
 
     def is_fastboot_mode(self):
         """Return True if DUT in fastboot mode, False otherwise"""
-        result = self.faft_client.host.run_shell_command_get_output(
+        result = self.faft_client.Host.RunShellCommandGetOutput(
             'fastboot devices')
         if not result:
             return False
@@ -857,13 +857,13 @@ class _RyuSwitcher(_BaseModeSwitcher):
 
         For Process creation
         """
-        return self.faft_client.host.run_shell_command(args)
+        return self.faft_client.Host.RunShellCommand(args)
 
     def _enable_dev_mode_and_reboot(self):
         """Switch to developer mode and reboot."""
         logging.info("Entering RyuSwitcher: _enable_dev_mode_and_reboot")
         try:
-            self.faft_client.system.run_shell_command('reboot bootloader')
+            self.faft_client.System.RunShellCommand('reboot bootloader')
             self.wait_for_client_fastboot()
 
             process = Process(
@@ -878,7 +878,7 @@ class _RyuSwitcher(_BaseModeSwitcher):
 
             self.print_recovery_warning()
             self.wait_for_client_fastboot(self.RECOVERY_TIMEOUT)
-            self.faft_client.host.run_shell_command('fastboot continue')
+            self.faft_client.Host.RunShellCommand('fastboot continue')
             self.wait_for_client(self.ANDROID_BOOTUP)
 
         # need to reset DUT into clean state
@@ -893,7 +893,7 @@ class _RyuSwitcher(_BaseModeSwitcher):
     def _enable_normal_mode_and_reboot(self):
         """Switch to normal mode and reboot."""
         try:
-            self.faft_client.system.run_shell_command('reboot bootloader')
+            self.faft_client.System.RunShellCommand('reboot bootloader')
             self.wait_for_client_fastboot()
 
             process = Process(
@@ -908,7 +908,7 @@ class _RyuSwitcher(_BaseModeSwitcher):
 
             self.print_recovery_warning()
             self.wait_for_client_fastboot(self.RECOVERY_TIMEOUT)
-            self.faft_client.host.run_shell_command('fastboot continue')
+            self.faft_client.Host.RunShellCommand('fastboot continue')
             self.wait_for_client(self.ANDROID_BOOTUP)
 
         # need to reset DUT into clean state

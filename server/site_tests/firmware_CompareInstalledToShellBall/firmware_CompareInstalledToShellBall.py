@@ -19,8 +19,8 @@ class firmware_CompareInstalledToShellBall(test.test):
         client_at.install()
 
         self.faft_client = RPCProxy(host)
-        installed_ec = self.faft_client.ec.get_version()
-        installed_bios = self.faft_client.system.get_crossystem_value('fwid')
+        installed_ec = self.faft_client.Ec.GetVersion()
+        installed_bios = self.faft_client.System.GetCrossystemValue('fwid')
 
         # Chromeboxes do not have an EC
         if 'mosys' in installed_ec:

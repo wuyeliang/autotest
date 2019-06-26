@@ -43,7 +43,7 @@ class firmware_SoftwareSync(FirmwareTest):
 
     def record_hash(self):
         """Record current EC hash."""
-        self._ec_hash = self.faft_client.ec.get_active_hash()
+        self._ec_hash = self.faft_client.Ec.GetActiveHash()
         logging.info("Stored EC hash: %s", self._ec_hash)
 
     def corrupt_active_rw(self):
@@ -57,11 +57,11 @@ class firmware_SoftwareSync(FirmwareTest):
             # TODO(waihong): Remove this except clause.
             pass
         logging.info("Corrupt the EC section: %s", section)
-        self.faft_client.ec.corrupt_body(section)
+        self.faft_client.Ec.CorruptBody(section)
 
     def software_sync_checker(self):
         """Check EC firmware is restored by software sync."""
-        ec_hash = self.faft_client.ec.get_active_hash()
+        ec_hash = self.faft_client.Ec.GetActiveHash()
         logging.info("Current EC hash: %s", ec_hash)
         if self._ec_hash != ec_hash:
             return False

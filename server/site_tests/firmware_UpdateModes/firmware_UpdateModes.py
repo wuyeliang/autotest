@@ -34,7 +34,7 @@ class firmware_UpdateModes(FirmwareTest):
         return output
 
     def get_fake_bios_fwids(self):
-        return self.faft_client.updater.get_installed_fwid(
+        return self.faft_client.Updater.GetInstalledFwid(
                 'bios', ('ro', 'a', 'b'), self._fake_bios)
 
     def run_case(self, mode, write_protected, written, modify_ro=True,
@@ -48,9 +48,9 @@ class firmware_UpdateModes(FirmwareTest):
         @param should_abort: if True, the updater should abort with no changes
         @return: a list of failure messages for the case
         """
-        self.faft_client.updater.reset_shellball()
+        self.faft_client.Updater.ResetShellball()
 
-        fake_bios_path = self.faft_client.updater.copy_bios(self._fake_bios)
+        fake_bios_path = self.faft_client.Updater.CopyBios(self._fake_bios)
         before_fwids = {'bios': self.get_fake_bios_fwids()}
 
         case_desc = ('chromeos-firmwareupdate --mode=%s --wp=%s'
@@ -70,7 +70,7 @@ class firmware_UpdateModes(FirmwareTest):
 
         logging.info("%s (should write %s)", case_desc,
                      ', '.join(written).upper() or 'nothing')
-        rc = self.faft_client.updater.run_firmwareupdate(mode, append, options)
+        rc = self.faft_client.Updater.RunFirmwareupdate(mode, append, options)
 
         if should_abort and rc != 0:
             logging.debug('updater aborted as expected')

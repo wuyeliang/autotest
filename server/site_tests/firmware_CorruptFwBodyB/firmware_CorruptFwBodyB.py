@@ -37,11 +37,11 @@ class firmware_CorruptFwBodyB(FirmwareTest):
 
     def run_once(self):
         """Runs a single iteration of the test."""
-        RO_enabled = (self.faft_client.bios.get_preamble_flags('b') &
+        RO_enabled = (self.faft_client.Bios.GetPreambleFlags('b') &
                       vboot.PREAMBLE_USE_RO_NORMAL)
         logging.info("Corrupt firmware body B.")
         self.check_state((self.checkers.fw_tries_checker, 'A'))
-        self.faft_client.bios.corrupt_body('b')
+        self.faft_client.Bios.CorruptBody('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected firmware A boot and set try_fwb flag.")
@@ -55,7 +55,7 @@ class firmware_CorruptFwBodyB(FirmwareTest):
             self.check_state((self.checkers.fw_tries_checker, 'B'))
         else:
             self.check_state((self.checkers.fw_tries_checker, ('A', False)))
-        self.faft_client.bios.restore_body('b')
+        self.faft_client.Bios.RestoreBody('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Final check and done.")

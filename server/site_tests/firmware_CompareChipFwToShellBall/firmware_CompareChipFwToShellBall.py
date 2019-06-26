@@ -45,7 +45,7 @@ class firmware_CompareChipFwToShellBall(FirmwareTest):
     def cleanup(self):
         try:
             if self.cbfs_work_dir:
-                self.faft_client.system.remove_dir(self.cbfs_work_dir)
+                self.faft_client.System.RemoveDir(self.cbfs_work_dir)
         except Exception as e:
             logging.error("Caught exception: %s", str(e))
         super(firmware_CompareChipFwToShellBall, self).cleanup()
@@ -61,7 +61,7 @@ class firmware_CompareChipFwToShellBall(FirmwareTest):
         """
 
         cmd = 'mosys -s product_id pd chip %d' % port
-        chip_id = self.faft_client.system.run_shell_command_get_output(cmd)
+        chip_id = self.faft_client.System.RunShellCommandGetOutput(cmd)
         if not chip_id:
             # chip probably does not exist
             return None
@@ -73,7 +73,7 @@ class firmware_CompareChipFwToShellBall(FirmwareTest):
         chip = chip_utils.chip_id_map[chip_id]()
 
         cmd = 'mosys -s fw_version pd chip %d' % port
-        fw_rev = self.faft_client.system.run_shell_command_get_output(cmd)
+        fw_rev = self.faft_client.System.RunShellCommandGetOutput(cmd)
         if not fw_rev:
             # chip probably does not exist
             return None
@@ -115,8 +115,8 @@ class firmware_CompareChipFwToShellBall(FirmwareTest):
             Full path of bios.bin on DUT.
         """
 
-        work_path = self.faft_client.updater.get_work_path()
-        bios_relative_path = self.faft_client.updater.get_bios_relative_path()
+        work_path = self.faft_client.Updater.GetWorkPath()
+        bios_relative_path = self.faft_client.Updater.GetBiosRelativePath()
         bios_bin = os.path.join(work_path, bios_relative_path)
         return bios_bin
 
@@ -128,8 +128,8 @@ class firmware_CompareChipFwToShellBall(FirmwareTest):
         and used instead of the native bios.bin.
         """
 
-        cbfs_path = self.faft_client.updater.cbfs_setup_work_dir()
-        bios_relative_path = self.faft_client.updater.get_bios_relative_path()
+        cbfs_path = self.faft_client.Updater.CbfsSetupWorkDir()
+        bios_relative_path = self.faft_client.Updater.GetBiosRelativePath()
         self.cbfs_work_dir = cbfs_path
         self.dut_bios_path = os.path.join(cbfs_path, bios_relative_path)
 
@@ -157,12 +157,12 @@ class firmware_CompareChipFwToShellBall(FirmwareTest):
                 # must be an unfamiliar chip
                 continue
 
-            if not self.faft_client.updater.cbfs_extract_chip(chip.fw_name):
+            if not self.faft_client.Updater.CbfsExtractChip(chip.fw_name):
                 logging.warning('%s firmware not bundled in %s',
                                 chip.chip_name, self.BIOS)
                 continue
 
-            hashblob = self.faft_client.updater.cbfs_get_chip_hash(
+            hashblob = self.faft_client.Updater.CbfsGetChipHash(
                 chip.fw_name)
             if not hashblob:
                 logging.warning('%s firmware hash not extracted from %s',

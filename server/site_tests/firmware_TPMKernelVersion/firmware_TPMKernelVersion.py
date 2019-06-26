@@ -20,7 +20,7 @@ class firmware_TPMKernelVersion(FirmwareTest):
         self.switcher.setup_mode('dev')
         # Use the USB key for Ctrl-U dev boot, not recovery.
         self.setup_usbkey(usbkey=True, host=False, used_for_recovery=False)
-        self.original_dev_boot_usb = self.faft_client.system.get_dev_boot_usb()
+        self.original_dev_boot_usb = self.faft_client.System.GetDevBootUsb()
         logging.info('Original dev_boot_usb value: %s',
                      str(self.original_dev_boot_usb))
 
@@ -32,7 +32,7 @@ class firmware_TPMKernelVersion(FirmwareTest):
         @returns command output.
         """
         logging.info('Execute %s', command)
-        output = self.faft_client.system.run_shell_command_get_output(command)
+        output = self.faft_client.System.RunShellCommandGetOutput(command)
         logging.info('Output %s', output)
         return output
 
@@ -48,14 +48,14 @@ class firmware_TPMKernelVersion(FirmwareTest):
         """Main test logic"""
         # Get the kernel version and its datakey version.
         # TODO(twreid): Verify the results.
-        version = self.faft_client.tpm.get_kernel_version()
+        version = self.faft_client.Tpm.GetKernelVersion()
         logging.info('Kernel version: %d', version)
-        version = self.faft_client.tpm.get_kernel_datakey_version()
+        version = self.faft_client.Tpm.GetKernelDatakeyVersion()
         logging.info('Kernel datakey version: %d', version)
 
         self.dut_run_cmd('crossystem kernkey_vfy dev_boot_usb')
         # Boot CrOS from USB
-        self.faft_client.system.set_dev_boot_usb(1)
+        self.faft_client.System.SetDevBootUsb(1)
         self.switcher.simple_reboot()
         self.switcher.bypass_dev_boot_usb()
         self.switcher.wait_for_client()

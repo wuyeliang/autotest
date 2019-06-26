@@ -28,7 +28,7 @@ class firmware_CorruptBothFwBodyAB(FirmwareTest):
         """Initialize the test"""
         super(firmware_CorruptBothFwBodyAB, self).initialize(host, cmdline_args)
         self.backup_firmware()
-        if (self.faft_client.bios.get_preamble_flags('a') &
+        if (self.faft_client.Bios.GetPreambleFlags('a') &
                 vboot.PREAMBLE_USE_RO_NORMAL):
             self.use_ro = True
             self.switcher.setup_mode('dev' if dev_mode else 'normal')
@@ -55,23 +55,23 @@ class firmware_CorruptBothFwBodyAB(FirmwareTest):
             self.check_state((self.checkers.crossystem_checker, {
                         'mainfw_type': 'developer' if dev_mode else 'normal',
                         }))
-            self.faft_client.bios.corrupt_body('a')
-            self.faft_client.bios.corrupt_body('b')
+            self.faft_client.Bios.CorruptBody('a')
+            self.faft_client.Bios.CorruptBody('b')
             self.switcher.mode_aware_reboot()
 
             logging.info("Still expected normal/developer boot and restore.")
             self.check_state((self.checkers.crossystem_checker, {
                         'mainfw_type': 'developer' if dev_mode else 'normal',
                         }))
-            self.faft_client.bios.restore_body('a')
-            self.faft_client.bios.restore_body('b')
+            self.faft_client.Bios.RestoreBody('a')
+            self.faft_client.Bios.RestoreBody('b')
         else:
             logging.info("Corrupt both firmware body A and B.")
             self.check_state((self.checkers.crossystem_checker, {
                         'mainfw_type': 'developer' if dev_mode else 'normal',
                         }))
-            self.faft_client.bios.corrupt_body('a')
-            self.faft_client.bios.corrupt_body('b')
+            self.faft_client.Bios.CorruptBody('a')
+            self.faft_client.Bios.CorruptBody('b')
 
             # Older devices (without BROKEN screen) didn't wait for removal in
             # dev mode. Make sure the USB key is not plugged in so they won't
@@ -88,8 +88,8 @@ class firmware_CorruptBothFwBodyAB(FirmwareTest):
                                   (vboot.RECOVERY_REASON['RO_INVALID_RW'],
                                   vboot.RECOVERY_REASON['RW_VERIFY_BODY']),
                                   }))
-            self.faft_client.bios.restore_body('a')
-            self.faft_client.bios.restore_body('b')
+            self.faft_client.Bios.RestoreBody('a')
+            self.faft_client.Bios.RestoreBody('b')
             self.switcher.mode_aware_reboot()
 
             logging.info("Expected normal boot, done.")

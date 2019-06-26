@@ -42,7 +42,7 @@ class firmware_FastbootErase(FirmwareTest):
         Unfortunately, adb get-state just returns "unknown"
         so need to do it with adb devices and regexp
         """
-        result = self.faft_client.host.run_shell_command_get_output(
+        result = self.faft_client.Host.RunShellCommandGetOutput(
             'adb devices')
         if 'recovery' in result[1]:
             return True
@@ -55,24 +55,24 @@ class firmware_FastbootErase(FirmwareTest):
 
     def run_once(self, dev_mode=False):
         """Runs a single iteration of the test."""
-        if not self.faft_client.system.has_host():
+        if not self.faft_client.System.HasHost():
             raise error.TestNAError('DUT is not Android device.  Skipping test')
 
         # first copy out kernel partition
         logging.info("Making copy of kernel")
-        self.faft_client.host.run_shell_command(
+        self.faft_client.Host.RunShellCommand(
             'adb pull /dev/block/mmcblk0p1 %s' % self.KERNEL_TMP_FILE)
 
         # now erase boot partition
-        self.faft_client.host.run_shell_command('adb reboot bootloader')
+        self.faft_client.Host.RunShellCommand('adb reboot bootloader')
         self.switcher.wait_for_client_fastboot()
 
         if not self.switcher.is_fastboot_mode():
             raise error.TestFail("DUT not in fastboot mode!")
 
         logging.info("Erasing the kernel")
-        self.faft_client.host.run_shell_command('fastboot erase kernel')
-        self.faft_client.host.run_shell_command('fastboot continue')
+        self.faft_client.Host.RunShellCommand('fastboot erase kernel')
+        self.faft_client.Host.RunShellCommand('fastboot continue')
 
         # DUT should enter into recovery OS
         self.wait_for_client_recovery()
@@ -86,13 +86,13 @@ class firmware_FastbootErase(FirmwareTest):
         # Should be in recovery mode.
         # Reflash the kernel image that we saved earlier
         logging.info("Repairing the kernel")
-        self.faft_client.host.run_shell_command(
+        self.faft_client.Host.RunShellCommand(
             'fastboot flash kernel %s' % self.KERNEL_TMP_FILE)
-        self.faft_client.host.run_shell_command(
+        self.faft_client.Host.RunShellCommand(
             'fastboot continue')
 
         self.switcher.wait_for_client()
 
         # cleaning up the temp file
-        self.faft_client.host.run_shell_command(
+        self.faft_client.Host.RunShellCommand(
             'rm %s' % self.KERNEL_TMP_FILE)

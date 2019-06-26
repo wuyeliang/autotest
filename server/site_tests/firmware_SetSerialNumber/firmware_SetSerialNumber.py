@@ -57,10 +57,10 @@ class firmware_SetSerialNumber(FirmwareTest):
         # Disable fw wp to clear VPD value
         self.set_hardware_write_protect(False)
 
-        self.faft_client.system.run_shell_command_get_output(
+        self.faft_client.System.RunShellCommandGetOutput(
             'flashrom -p host --wp-disable')
 
-        self.faft_client.system.run_shell_command_get_output(
+        self.faft_client.System.RunShellCommandGetOutput(
             'vpd -i RO_VPD -s serial_number="%s"' %
             (' ' * self.faft_config.serial_number_length)
         )
@@ -85,7 +85,7 @@ class firmware_SetSerialNumber(FirmwareTest):
         self.checkers.mode_checker('normal')
 
         # Check that serial_number is correctly set
-        result = self.faft_client.system.run_shell_command_get_output(
+        result = self.faft_client.System.RunShellCommandGetOutput(
             'vpd -i RO_VPD -g serial_number')[0]
 
         if result != serial_number:
@@ -93,7 +93,7 @@ class firmware_SetSerialNumber(FirmwareTest):
                 serial_number, result))
 
         # Check that write protect is correctly set
-        result = self.faft_client.system.run_shell_command_get_output(
+        result = self.faft_client.System.RunShellCommandGetOutput(
             'flashrom -p host --wp-status')
 
         result = '\n'.join(result)

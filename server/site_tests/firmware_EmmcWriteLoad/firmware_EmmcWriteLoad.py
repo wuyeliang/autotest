@@ -44,7 +44,7 @@ class firmware_EmmcWriteLoad(FirmwareTest):
         # Use the USB key for Ctrl-U dev boot, not recovery.
         self.setup_usbkey(usbkey=True, host=False, used_for_recovery=False)
 
-        self.original_dev_boot_usb = self.faft_client.system.get_dev_boot_usb()
+        self.original_dev_boot_usb = self.faft_client.System.GetDevBootUsb()
         logging.info('Original dev_boot_usb value: %s',
                      str(self.original_dev_boot_usb))
 
@@ -74,7 +74,7 @@ class firmware_EmmcWriteLoad(FirmwareTest):
 
     def install_chrome_os(self):
         """Runs the install command. """
-        self.faft_client.system.run_shell_command(self.INSTALL_COMMAND)
+        self.faft_client.System.RunShellCommand(self.INSTALL_COMMAND)
 
     def poll_for_emmc_error(self, dmesg_file, poll_seconds=20):
         """Continuously polls the contents of dmesg for the emmc failure message
@@ -106,7 +106,7 @@ class firmware_EmmcWriteLoad(FirmwareTest):
 
     def run_once(self):
         """Main test logic"""
-        self.faft_client.system.set_dev_boot_usb(1)
+        self.faft_client.System.SetDevBootUsb(1)
         self.switcher.simple_reboot()
         self.switcher.bypass_dev_boot_usb()
         self.switcher.wait_for_client()

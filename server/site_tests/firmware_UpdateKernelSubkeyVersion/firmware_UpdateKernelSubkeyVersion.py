@@ -24,21 +24,21 @@ class firmware_UpdateKernelSubkeyVersion(FirmwareTest):
         """Resigns the kernel subkey version."""
         host.send_file(os.path.join(self.bindir,
                                     'files/common.sh'),
-                       os.path.join(self.faft_client.updater.get_temp_path(),
+                       os.path.join(self.faft_client.Updater.GetTempPath(),
                                      'common.sh'))
         host.send_file(os.path.join(self.bindir,
                                     'files/make_keys.sh'),
-                       os.path.join(self.faft_client.updater.get_temp_path(),
+                       os.path.join(self.faft_client.Updater.GetTempPath(),
                                     'make_keys.sh'))
 
-        self.faft_client.system.run_shell_command('/bin/bash %s %s' % (
-            os.path.join(self.faft_client.updater.get_temp_path(),
+        self.faft_client.System.RunShellCommand('/bin/bash %s %s' % (
+            os.path.join(self.faft_client.Updater.GetTempPath(),
                          'make_keys.sh'),
             self._update_version))
 
     def check_kernel_subkey_version(self, expected_ver):
         """Checks the kernel subkey version."""
-        actual_ver = self.faft_client.bios.get_kernel_subkey_version(
+        actual_ver = self.faft_client.Bios.GetKernelSubkeyVersion(
                 'b' if self.fw_vboot2 else 'a')
         if actual_ver != expected_ver:
             raise error.TestFail(
@@ -63,20 +63,20 @@ class firmware_UpdateKernelSubkeyVersion(FirmwareTest):
         # Update firmware if needed
         if shellball_path:
             self.set_hardware_write_protect(enable=False)
-            self.faft_client.updater.run_factory_install()
+            self.faft_client.Updater.RunFactoryInstall()
             self.switcher.mode_aware_reboot()
 
-        self._fwid = self.faft_client.updater.get_section_fwid()
+        self._fwid = self.faft_client.Updater.GetSectionFwid()
 
-        ver = self.faft_client.bios.get_kernel_subkey_version('a')
+        ver = self.faft_client.Bios.GetKernelSubkeyVersion('a')
         logging.info('Origin version is %s', ver)
         self._update_version = ver + 1
         logging.info('Kernel subkey version will update to version %s',
                      self._update_version)
 
         self.resign_kernel_subkey_version(host)
-        self.faft_client.updater.resign_firmware(1)
-        self.faft_client.updater.repack_shellball('test')
+        self.faft_client.Updater.ResignFirmware(1)
+        self.faft_client.Updater.RepackShellball('test')
 
     def cleanup(self):
         """Cleanup after the test"""
@@ -94,14 +94,14 @@ class firmware_UpdateKernelSubkeyVersion(FirmwareTest):
                           'fwid': self._fwid
                           }))
         self.check_state((self.checkers.fw_tries_checker, 'A'))
-        self.faft_client.updater.run_autoupdate('test')
+        self.faft_client.Updater.RunAutoupdate('test')
         self.switcher.mode_aware_reboot()
 
         logging.info("Check firmware data key version and Rollback.")
-        self.faft_client.updater.run_bootok('test')
+        self.faft_client.Updater.RunBootok('test')
         self.check_state((self.checkers.fw_tries_checker, 'B'))
         self.check_kernel_subkey_version(self._update_version)
-        self.faft_client.updater.run_recovery()
+        self.faft_client.Updater.RunRecovery()
         self.switcher.mode_aware_reboot()
 
         logging.info("Check Rollback version.")

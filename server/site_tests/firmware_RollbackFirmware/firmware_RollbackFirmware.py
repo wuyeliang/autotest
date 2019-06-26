@@ -39,12 +39,12 @@ class firmware_RollbackFirmware(FirmwareTest):
         """Runs a single iteration of the test."""
         logging.info("Rollback firmware A.")
         self.check_state((self.checkers.fw_tries_checker, 'A'))
-        self.faft_client.bios.move_version_backward('a')
+        self.faft_client.Bios.MoveVersionBackward('a')
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected firmware B boot and rollback firmware B.")
         self.check_state((self.checkers.fw_tries_checker, ('B', False)))
-        self.faft_client.bios.move_version_backward('b')
+        self.faft_client.Bios.MoveVersionBackward('b')
 
         # Older devices (without BROKEN screen) didn't wait for removal in
         # dev mode. Make sure the USB key is not plugged in so they won't
@@ -61,8 +61,8 @@ class firmware_RollbackFirmware(FirmwareTest):
                                 vboot.RECOVERY_REASON['RO_INVALID_RW'],
                                 vboot.RECOVERY_REASON['RW_FW_ROLLBACK']),
                            }))
-        self.faft_client.bios.move_version_forward('a')
-        self.faft_client.bios.move_version_forward('b')
+        self.faft_client.Bios.MoveVersionForward('a')
+        self.faft_client.Bios.MoveVersionForward('b')
         self.switcher.mode_aware_reboot()
 
         expected_slot = 'B' if self.fw_vboot2 else 'A'

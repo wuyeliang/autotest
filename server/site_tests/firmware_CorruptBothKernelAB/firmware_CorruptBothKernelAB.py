@@ -31,7 +31,7 @@ class firmware_CorruptBothKernelAB(FirmwareTest):
         """
         if not self.check_root_part_on_non_recovery(part):
             logging.info('Recover the disk OS by running chromeos-install...')
-            self.faft_client.system.run_shell_command('chromeos-install --yes')
+            self.faft_client.System.RunShellCommand('chromeos-install --yes')
             self.switcher.mode_aware_reboot()
 
     def initialize(self, host, cmdline_args, dev_mode=False):
@@ -60,8 +60,8 @@ class firmware_CorruptBothKernelAB(FirmwareTest):
 
         logging.info("Corrupt kernel A and B.")
         self.check_state((self.check_root_part_on_non_recovery, 'a'))
-        self.faft_client.kernel.corrupt_sig('a')
-        self.faft_client.kernel.corrupt_sig('b')
+        self.faft_client.Kernel.CorruptSig('a')
+        self.faft_client.Kernel.CorruptSig('b')
 
         # Older devices (without BROKEN screen) didn't wait for removal in
         # dev mode. Make sure the USB key is not plugged in so they won't
@@ -76,8 +76,8 @@ class firmware_CorruptBothKernelAB(FirmwareTest):
                               'mainfw_type': 'recovery',
                               'recovery_reason': recovery_reason,
                               }))
-        self.faft_client.kernel.restore_sig('a')
-        self.faft_client.kernel.restore_sig('b')
+        self.faft_client.Kernel.RestoreSig('a')
+        self.faft_client.Kernel.RestoreSig('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected kernel A normal/dev boot.")

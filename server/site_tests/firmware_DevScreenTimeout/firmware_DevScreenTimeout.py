@@ -42,7 +42,7 @@ class firmware_DevScreenTimeout(FirmwareTest):
         """
         timeout_time = time.time() + self.GET_BOOT_TIME_TIMEOUT_MARGIN
         while True:
-            [fw_time] = self.faft_client.system.run_shell_command_get_output(
+            [fw_time] = self.faft_client.System.RunShellCommandGetOutput(
                     'cat /tmp/firmware-boot-time')
             logging.info('Got firmware boot time [%s]: %s', tag, fw_time)
             if fw_time:

@@ -110,8 +110,8 @@ class firmware_ChipFwUpdate(FirmwareTest):
         Creates a fresh temp. dir for cbfstool to manipulate bios.bin.
         """
 
-        cbfs_path = self.faft_client.updater.cbfs_setup_work_dir()
-        bios_relative_path = self.faft_client.updater.get_bios_relative_path()
+        cbfs_path = self.faft_client.Updater.CbfsSetupWorkDir()
+        bios_relative_path = self.faft_client.Updater.GetBiosRelativePath()
         self.cbfs_work_dir = cbfs_path
         self.dut_bios_path = os.path.join(cbfs_path, bios_relative_path)
 
@@ -127,12 +127,12 @@ class firmware_ChipFwUpdate(FirmwareTest):
             logging.info('checking for %s firmware in %s',
                          chip.chip_name, self.BIOS)
 
-            if not self.faft_client.updater.cbfs_extract_chip(chip.fw_name):
+            if not self.faft_client.Updater.CbfsExtractChip(chip.fw_name):
                 logging.warning('%s firmware not bundled in %s',
                                 chip.chip_name, self.BIOS)
                 continue
 
-            hashblob = self.faft_client.updater.cbfs_get_chip_hash(
+            hashblob = self.faft_client.Updater.CbfsGetChipHash(
                 chip.fw_name)
             if not hashblob:
                 logging.warning('%s firmware hash not extracted from %s',
@@ -183,7 +183,7 @@ class firmware_ChipFwUpdate(FirmwareTest):
                                self.cbfs_work_dir,
                                fw_update.cbfs_bin_name))
 
-            if not self.faft_client.updater.cbfs_replace_chip(
+            if not self.faft_client.Updater.CbfsReplaceChip(
                     fw_update.fw_name):
                 raise error.TestFail('could not replace %s blobs in cbfs' %
                                      fw_update.chip_name)
@@ -195,7 +195,7 @@ class firmware_ChipFwUpdate(FirmwareTest):
             host: host handle to the DUT.
         """
 
-        if not self.faft_client.updater.cbfs_sign_and_flash():
+        if not self.faft_client.Updater.CbfsSignAndFlash():
             raise error.TestFail('could not re-sign %s' % self.dut_bios_path)
         host.reboot()
 

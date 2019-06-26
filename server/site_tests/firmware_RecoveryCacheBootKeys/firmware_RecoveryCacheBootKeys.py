@@ -57,7 +57,7 @@ class firmware_RecoveryCacheBootKeys(FirmwareTest):
         """
         logging.info("Checking if device has RECOVERY_MRC_CACHE")
 
-        return self.faft_client.system.run_shell_command_check_output(
+        return self.faft_client.System.RunShellCommandCheckOutput(
                 self.FMAP_CMD, self.RECOVERY_CACHE_SECTION)
 
     def check_cache_used(self):
@@ -68,7 +68,7 @@ class firmware_RecoveryCacheBootKeys(FirmwareTest):
         """
         logging.info('Checking if cache was used.')
 
-        return self.faft_client.system.run_shell_command_check_output(
+        return self.faft_client.System.RunShellCommandCheckOutput(
                 self.FIRMWARE_LOG_CMD, self.USED_CACHE_MSG)
 
     def check_cache_rebuilt(self):
@@ -79,7 +79,7 @@ class firmware_RecoveryCacheBootKeys(FirmwareTest):
         """
         logging.info('Checking if cache was rebuilt.')
 
-        return self.faft_client.system.run_shell_command_check_output(
+        return self.faft_client.System.RunShellCommandCheckOutput(
                 self.FIRMWARE_LOG_CMD, self.REBUILD_CACHE_MSG)
 
     def run_once(self):

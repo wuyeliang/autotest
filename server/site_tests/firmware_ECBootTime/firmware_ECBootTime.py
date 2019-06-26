@@ -108,7 +108,7 @@ class firmware_ECBootTime(FirmwareTest):
         """
 
         arm_legacy = ('Snow', 'Spring', 'Pit', 'Pi', 'Big', 'Blaze', 'Kitty')
-        output = self.faft_client.system.get_platform_name()
+        output = self.faft_client.System.GetPlatformName()
         return output in arm_legacy
 
     def run_once(self):

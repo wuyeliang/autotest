@@ -31,7 +31,7 @@ class firmware_ECCbiEeprom(FirmwareTest):
         # Don't bother if CBI isn't on this device.
         if not self.check_ec_capability(['cbi']):
             raise error.TestNAError("Nothing needs to be tested on this device")
-        cmd_out = self.faft_client.system.run_shell_command_get_output(
+        cmd_out = self.faft_client.System.RunShellCommandGetOutput(
                      'ectool locatechip %d %d' %
                      (self.EEPROM_LOCATE_TYPE, self.EEPROM_LOCATE_INDEX))
 
@@ -54,7 +54,7 @@ class firmware_ECCbiEeprom(FirmwareTest):
                (self.i2c_port, self.i2c_addr, self.NO_READ, offset, data))
 
     def _read_eeprom(self, offset):
-        cmd_out = self.faft_client.system.run_shell_command_get_output(
+        cmd_out = self.faft_client.System.RunShellCommandGetOutput(
                   'ectool i2cxfer %d %d %d %d' %
                   (self.i2c_port, self.i2c_addr, self.PAGE_SIZE, offset))
         if len(cmd_out) < 1:
@@ -69,7 +69,7 @@ class firmware_ECCbiEeprom(FirmwareTest):
     def _write_eeprom(self, offset, data):
         # Note we expect this call to fail in certain scenarios, so ignore
         # results
-        self.faft_client.system.run_shell_command_get_output(
+        self.faft_client.System.RunShellCommandGetOutput(
              self._gen_write_command(offset, data))
 
     def _read_write_data(self, offset):

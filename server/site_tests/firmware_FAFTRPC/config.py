@@ -71,40 +71,40 @@ Each element of RPC_CATEGORIES must be a dict containing the following keys:
 """
 RPC_CATEGORIES = [
     {
-        "category_name": "system",
+        "category_name": "System",
         "test_cases": [
             {
                 "method_names": [
-                    "is_available",
-                    "has_host",
-                    "get_platform_name",
-                    "dev_tpm_present",
-                    "get_root_dev",
-                    "get_root_part",
-                    "get_fw_vboot2",
-                    "request_recovery_boot",
-                    "is_removable_device_boot",
-                    "get_internal_device",
+                    "IsAvailable",
+                    "HasHost",
+                    "GetPlatformName",
+                    "DevTpmPresent",
+                    "GetRootDev",
+                    "GetRootPart",
+                    "GetFwVboot2",
+                    "RequestRecoveryBoot",
+                    "IsRemovableDeviceBoot",
+                    "GetInternalDevice",
                 ],
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
             },
             {
-                "method_name": "wait_for_client",
+                "method_name": "WaitForClient",
                 "passing_args": [ONE_INT_ARG],
                 "failing_args": [NO_ARGS, ONE_STR_ARG],
                 "allow_error_msg":
                     "'LocalShell' object has no attribute 'wait_for_device'",
             },
             {
-                "method_name": "wait_for_client_offline",
+                "method_name": "WaitForClientOffline",
                 "passing_args": [ONE_INT_ARG],
                 "failing_args": [NO_ARGS, ONE_STR_ARG],
                 "allow_error_msg":
                     "'LocalShell' object has no attribute 'wait_for_no_device'",
             },
             {
-                "method_name": "dump_log",
+                "method_name": "DumpLog",
                 "passing_args": [
                     NO_ARGS,
                     (True, ),
@@ -118,8 +118,8 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "run_shell_command",
-                    "run_shell_command_get_status",
+                    "RunShellCommand",
+                    "RunShellCommandGetStatus",
                 ],
                 "passing_args": [
                     ("ls", ),
@@ -130,7 +130,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "run_shell_command_check_output",
+                "method_name": "RunShellCommandCheckOutput",
                 "passing_args": [
                     ("ls -l", "total"),
                 ],
@@ -139,7 +139,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "run_shell_command_get_output",
+                "method_name": "RunShellCommandGetOutput",
                 "passing_args": [
                     ("ls -l", True),
                 ],
@@ -148,14 +148,14 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "get_crossystem_value",
+                "method_name": "GetCrossystemValue",
                 "passing_args": [
                     ("fwid", ),
                 ],
                 "failing_args": [NO_ARGS],
             },
             {
-                "method_name": "set_try_fw_b",
+                "method_name": "SetTryFwB",
                 "passing_args": [
                     NO_ARGS,
                     (1, ),
@@ -165,7 +165,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "set_fw_try_next",
+                "method_name": "SetFwTryNext",
                 "passing_args": [
                     ("A", ),
                     ("A", 1),
@@ -176,13 +176,13 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "get_dev_boot_usb",
+                "method_name": "GetDevBootUsb",
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
                 "store_result_as": "dev_boot_usb",
             },
             {
-                "method_name": "set_dev_boot_usb",
+                "method_name": "SetDevBootUsb",
                 "passing_args": [
                     (operator.itemgetter("dev_boot_usb"), ),
                 ],
@@ -192,7 +192,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "create_temp_dir",
+                "method_name": "CreateTempDir",
                 "passing_args": [
                     NO_ARGS,
                     ONE_STR_ARG,
@@ -205,7 +205,7 @@ RPC_CATEGORIES = [
                 "store_result_as": "temp_dir",
             },
             {
-                "method_name": "remove_file",
+                "method_name": "RemoveFile",
                 "passing_args": [
                     (SAMPLE_FILE, ),
                 ],
@@ -215,7 +215,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "remove_dir",
+                "method_name": "RemoveDir",
                 "passing_args":  [
                     (operator.itemgetter("temp_dir"), ),
                 ],
@@ -225,7 +225,7 @@ RPC_CATEGORIES = [
                 ]
             },
             {
-                "method_name": "check_keys",
+                "method_name": "CheckKeys",
                 "passing_args": [
                     ([], ),
                     ([116], ),
@@ -240,12 +240,12 @@ RPC_CATEGORIES = [
         ]
     },
     {
-        "category_name": "host",
+        "category_name": "Host",
         "test_cases": [
             {
                 "method_names": [
-                    "run_shell_command",
-                    "run_shell_command_get_output",
+                    "RunShellCommand",
+                    "RunShellCommandGetOutput",
                 ],
                 "passing_args": [
                     ("ls", ),
@@ -259,31 +259,31 @@ RPC_CATEGORIES = [
         ]
     },
     {
-        "category_name": "bios",
+        "category_name": "Bios",
         "test_cases": [
             {
                 "method_names": [
-                    "reload",
+                    "Reload",
                 ],
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG]
             },
             {
-                "method_name": "get_gbb_flags",
+                "method_name": "GetGbbFlags",
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
                 "expected_return_type": int,
                 "store_result_as": "gbb_flags",
             },
             {
-                "method_name": "set_gbb_flags",
+                "method_name": "SetGbbFlags",
                 "passing_args": [
                     (operator.itemgetter("gbb_flags"), ),
                 ],
                 "failing_args": [NO_ARGS],
             },
             {
-                "method_name": "get_preamble_flags",
+                "method_name": "GetPreambleFlags",
                 "passing_args": [
                     ("a", ),
                 ],
@@ -291,7 +291,7 @@ RPC_CATEGORIES = [
                 "store_result_as": "preamble_flags",
             },
             {
-                "method_name": "set_preamble_flags",
+                "method_name": "SetPreambleFlags",
                 "passing_args": [
                     ("a", operator.itemgetter("preamble_flags"), ),
                 ],
@@ -304,11 +304,11 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "get_body_sha",
-                    "get_sig_sha",
-                    "get_version",
-                    "get_datakey_version",
-                    "get_kernel_subkey_version",
+                    "GetBodySha",
+                    "GetSigSha",
+                    "GetVersion",
+                    "GetDatakeyVersion",
+                    "GetKernelSubkeyVersion",
                 ],
                 "passing_args": [
                     ("a", ),
@@ -323,12 +323,12 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "corrupt_sig",
-                    "restore_sig",
-                    "corrupt_body",
-                    "restore_body",
-                    "move_version_backward",
-                    "move_version_forward",
+                    "CorruptSig",
+                    "RestoreSig",
+                    "CorruptBody",
+                    "RestoreBody",
+                    "MoveVersionBackward",
+                    "MoveVersionForward",
                 ],
                 "passing_args": [
                     ("a", ),
@@ -342,8 +342,8 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "dump_whole",
-                    "write_whole",
+                    "DumpWhole",
+                    "WriteWhole",
                 ],
                 "passing_args": [
                     (SAMPLE_FILE, ),
@@ -353,14 +353,14 @@ RPC_CATEGORIES = [
         ],
     },
     {
-        "category_name": "ec",
+        "category_name": "Ec",
         "test_cases": [
             {
                 "method_names": [
-                    "reload",
-                    "get_version",
-                    "get_active_hash",
-                    "is_efs",
+                    "Reload",
+                    "GetVersion",
+                    "GetActiveHash",
+                    "IsEfs",
                 ],
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
@@ -368,9 +368,9 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "dump_whole",
-                    "write_whole",
-                    "dump_firmware"
+                    "DumpWhole",
+                    "WriteWhole",
+                    "DumpFirmware"
                 ],
                 "passing_args": [
                     (SAMPLE_FILE, ),
@@ -378,7 +378,7 @@ RPC_CATEGORIES = [
                 "failing_args": [NO_ARGS],
             },
             {
-                "method_name": "corrupt_body",
+                "method_name": "CorruptBody",
                 "passing_args": [
                     ("rw", ),
                 ],
@@ -390,7 +390,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "set_write_protect",
+                "method_name": "SetWriteProtect",
                 "passing_args": [
                     (True, ),
                     (False, ),
@@ -401,7 +401,7 @@ RPC_CATEGORIES = [
                 ]
             },
             {
-                "method_name": "copy_rw",
+                "method_name": "CopyRw",
                 "passing_args": [
                     ("rw", "rw"),
                 ],
@@ -413,7 +413,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "reboot_to_switch_slot",
+                "method_name": "RebootToSwitchSlot",
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
                 "allow_error_msg": "ShellError",
@@ -421,14 +421,14 @@ RPC_CATEGORIES = [
         ],
     },
     {
-        "category_name": "kernel",
+        "category_name": "Kernel",
         "test_cases": [
             {
                 "method_names": [
-                    "corrupt_sig",
-                    "restore_sig",
-                    "move_version_backward",
-                    "move_version_forward",
+                    "CorruptSig",
+                    "RestoreSig",
+                    "MoveVersionBackward",
+                    "MoveVersionForward",
                 ],
                 "passing_args": [
                     ("a", ),
@@ -443,9 +443,9 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "get_version",
-                    "get_datakey_version",
-                    "get_sha",
+                    "GetVersion",
+                    "GetDatakeyVersion",
+                    "GetSha",
                 ],
                 "passing_args": [
                     ("a", ),
@@ -459,7 +459,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "diff_a_b",
+                "method_name": "DiffAB",
                 "passing_args": [NO_ARGS],
                 "failing_args": [
                     ONE_INT_ARG,
@@ -468,7 +468,7 @@ RPC_CATEGORIES = [
                 "expected_return_type": bool,
             },
             {
-                "method_name": "resign_with_keys",
+                "method_name": "ResignWithKeys",
                 "passing_args": [
                     ("a", ),
                     ("b", ),
@@ -483,8 +483,8 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "dump",
-                    "write",
+                    "Dump",
+                    "Write",
                 ],
                 "passing_args": [
                     ("a", SAMPLE_FILE),
@@ -500,16 +500,16 @@ RPC_CATEGORIES = [
         ],
     },
     {
-        "category_name": "tpm",
+        "category_name": "Tpm",
         "test_cases": [
             {
                 "method_names": [
-                    "get_firmware_version",
-                    "get_firmware_datakey_version",
-                    "get_kernel_version",
-                    "get_kernel_datakey_version",
-                    "stop_daemon",
-                    "restart_daemon",
+                    "GetFirmwareVersion",
+                    "GetFirmwareDatakeyVersion",
+                    "GetKernelVersion",
+                    "GetKernelDatakeyVersion",
+                    "StopDaemon",
+                    "RestartDaemon",
                 ],
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
@@ -517,10 +517,10 @@ RPC_CATEGORIES = [
         ]
     },
     {
-        "category_name": "cgpt",
+        "category_name": "Cgpt",
         "test_cases": [
             {
-                "method_name": "get_attributes",
+                "method_name": "GetAttributes",
                 "passing_args": [NO_ARGS],
                 "failing_args": [
                     ONE_INT_ARG,
@@ -528,7 +528,7 @@ RPC_CATEGORIES = [
                 ],
             },
             {
-                "method_name": "set_attributes",
+                "method_name": "SetAttributes",
                 "passing_args": [
                     NO_ARGS,
                     (SAMPLE_CGPT_A, ),
@@ -543,28 +543,28 @@ RPC_CATEGORIES = [
         ]
     },
     {
-        "category_name": "updater",
+        "category_name": "Updater",
         "test_cases": [
             # TODO (gredelston/dgoyette):
             # Uncomment the methods which write to flash memory,
             # once we are able to set the firmware_updater to "emulate" mode.
             {
                 "method_names": [
-                    "cleanup",
-                    "stop_daemon",
-                    "start_daemon",
-                    # "modify_ecid_and_flash_to_bios",
-                    "get_ec_hash",
-                    "reset_shellball",
-                    # "run_factory_install",
-                    # "run_recovery",
-                    "cbfs_setup_work_dir",
-                    # "cbfs_sign_and_flash",
-                    "get_temp_path",
-                    "get_keys_path",
-                    "get_work_path",
-                    "get_bios_relative_path",
-                    "get_ec_relative_path",
+                    "Cleanup",
+                    "StopDaemon",
+                    "StartDaemon",
+                    # "ModifyEcidAndFlashToBios",
+                    "GetEcHash",
+                    "ResetShellball",
+                    # "RunFactoryInstall",
+                    # "RunRecovery",
+                    "CbfsSetupWorkDir",
+                    # "CbfsSignAndFlash",
+                    "GetTempPath",
+                    "GetKeysPath",
+                    "GetWorkPath",
+                    "GetBiosRelativePath",
+                    "GetEcRelativePath",
                 ],
                 "passing_args": [
                     NO_ARGS,
@@ -577,7 +577,7 @@ RPC_CATEGORIES = [
                                     r"/var/tmp/faft/autest/cbfs failed"),
             },
             {
-                "method_name": "get_section_fwid",
+                "method_name": "GetSectionFwid",
                 "passing_args": [
                     NO_ARGS,
                     ("bios", ),
@@ -595,8 +595,8 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "get_all_fwids",
-                    "get_all_installed_fwids",
+                    "GetAllFwids",
+                    "GetAllInstalledFwids",
                 ],
                 "passing_args": [
                     NO_ARGS,
@@ -610,7 +610,7 @@ RPC_CATEGORIES = [
                 "allow_error_msg": r"is already modified|is empty",
             },
             {
-                "method_name": "modify_fwids",
+                "method_name": "ModifyFwids",
                 "passing_args": [
                     NO_ARGS,
                     ("bios", ),
@@ -627,7 +627,7 @@ RPC_CATEGORIES = [
                 "allow_error_msg": r"is already modified|is empty",
             },
             {
-                "method_name": "resign_firmware",
+                "method_name": "ResignFirmware",
                 "passing_args": [
                     ONE_INT_ARG,
                     (None, ),
@@ -640,8 +640,8 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "repack_shellball",
-                    "extract_shellball",
+                    "RepackShellball",
+                    "ExtractShellball",
                 ],
                 "passing_args": [
                     NO_ARGS,
@@ -653,7 +653,7 @@ RPC_CATEGORIES = [
                 ]
             },
             {
-                "method_name": "run_firmwareupdate",
+                "method_name": "RunFirmwareupdate",
                 "passing_args": [
                     ("autoupdate", ),
                     ("recovery", ),
@@ -668,8 +668,8 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "run_autoupdate",
-                    "run_bootok",
+                    "RunAutoupdate",
+                    "RunBootok",
                 ],
                 "passing_args": [ONE_STR_ARG],
                 "failing_args": [
@@ -679,9 +679,9 @@ RPC_CATEGORIES = [
             },
             {
                 "method_names": [
-                    "cbfs_extract_chip",
-                    "cbfs_get_chip_hash",
-                    "cbfs_replace_chip",
+                    "CbfsExtractChip",
+                    "CbfsGetChipHash",
+                    "CbfsReplaceChip",
                 ],
                 "passing_args": [
                     (chip_fw_name, ) for chip_fw_name in CHIP_FW_NAMES
@@ -693,7 +693,7 @@ RPC_CATEGORIES = [
                 "allow_error_msg": "cbfstool /var/tmp/faft/"
             },
             {
-                "method_name": "copy_bios",
+                "method_name": "CopyBios",
                 "passing_args": [
                     ('/tmp/fake-bios.bin', )
                 ],
@@ -706,10 +706,10 @@ RPC_CATEGORIES = [
         ]
     },
     {
-        "category_name": "rootfs",
+        "category_name": "Rootfs",
         "test_cases": [
             {
-                "method_name": "verify_rootfs",
+                "method_name": "VerifyRootfs",
                 "passing_args": [
                     ("A", ),
                     ("B", ),

@@ -64,12 +64,12 @@ class firmware_FAFTRPC(FirmwareTest):
         """Runs before test begins."""
         super(firmware_FAFTRPC, self).initialize(host, cmdline_args)
         self.backup_firmware()
-        self.faft_client.rpc_settings.enable_test_mode()
+        self.faft_client.RpcSettings.EnableTestMode()
 
 
     def cleanup(self):
         """Runs after test completion."""
-        self.faft_client.rpc_settings.disable_test_mode()
+        self.faft_client.RpcSettings.DisableTestMode()
         try:
             if self.is_firmware_saved():
                 self.restore_firmware()

@@ -31,7 +31,7 @@ class firmware_RollbackKernel(FirmwareTest):
         """
         if not self.check_root_part_on_non_recovery(part):
             logging.info('Recover the disk OS by running chromeos-install...')
-            self.faft_client.system.run_shell_command('chromeos-install --yes')
+            self.faft_client.System.RunShellCommand('chromeos-install --yes')
             self.switcher.mode_aware_reboot()
 
     def initialize(self, host, cmdline_args, dev_mode=False):
@@ -61,22 +61,22 @@ class firmware_RollbackKernel(FirmwareTest):
         if dev_mode:
             logging.info("Rollbacks kernel A.")
             self.check_state((self.check_root_part_on_non_recovery, 'a'))
-            self.faft_client.kernel.move_version_backward('a')
+            self.faft_client.Kernel.MoveVersionBackward('a')
             self.switcher.mode_aware_reboot()
 
             logging.info("Still kernel A boot since dev_mode ignores "
                          "kernel rollback check.")
             self.check_state((self.check_root_part_on_non_recovery, 'a'))
-            self.faft_client.kernel.move_version_forward('a')
+            self.faft_client.Kernel.MoveVersionForward('a')
         else:
             logging.info("Rollbacks kernel A.")
             self.check_state((self.check_root_part_on_non_recovery, 'a'))
-            self.faft_client.kernel.move_version_backward('a')
+            self.faft_client.Kernel.MoveVersionBackward('a')
             self.switcher.mode_aware_reboot()
 
             logging.info("Expected kernel B boot and rollbacks kernel B.")
             self.check_state((self.check_root_part_on_non_recovery, 'b'))
-            self.faft_client.kernel.move_version_backward('b')
+            self.faft_client.Kernel.MoveVersionBackward('b')
             self.switcher.mode_aware_reboot(wait_for_dut_up=False)
             self.switcher.bypass_rec_mode()
             self.switcher.wait_for_client()
@@ -86,8 +86,8 @@ class firmware_RollbackKernel(FirmwareTest):
                                   'mainfw_type': 'recovery',
                                   'recovery_reason': recovery_reason,
                                   }))
-            self.faft_client.kernel.move_version_forward('a')
-            self.faft_client.kernel.move_version_forward('b')
+            self.faft_client.Kernel.MoveVersionForward('a')
+            self.faft_client.Kernel.MoveVersionForward('b')
             self.switcher.mode_aware_reboot()
 
             logging.info("Expected kernel A boot and done.")

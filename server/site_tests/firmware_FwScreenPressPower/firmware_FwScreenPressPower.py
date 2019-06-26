@@ -110,7 +110,7 @@ class firmware_FwScreenPressPower(FirmwareTest):
                               'devsw_boot': '1',
                               'mainfw_type': 'developer',
                               }))
-        self.faft_client.system.request_recovery_boot()
+        self.faft_client.System.RequestRecoveryBoot()
         self.switcher.simple_reboot()
         self.run_shutdown_process(self.wait_longer_fw_screen_and_press_power,
                                   post_power_action=self.switcher.bypass_dev_mode,
@@ -125,7 +125,7 @@ class firmware_FwScreenPressPower(FirmwareTest):
                               'devsw_boot': '1',
                               'mainfw_type': 'developer',
                               }))
-        self.faft_client.system.request_recovery_boot()
+        self.faft_client.System.RequestRecoveryBoot()
         self.switcher.simple_reboot()
         self.run_shutdown_process(self.wait_yuck_screen_and_press_power,
                                   post_power_action=self.switcher.bypass_dev_mode,
@@ -146,7 +146,7 @@ class firmware_FwScreenPressPower(FirmwareTest):
                               'devsw_boot': '0',
                               'mainfw_type': 'normal',
                               }))
-        self.faft_client.system.request_recovery_boot()
+        self.faft_client.System.RequestRecoveryBoot()
         self.switcher.simple_reboot()
         self.run_shutdown_process(self.wait_longer_fw_screen_and_press_power,
                                   shutdown_timeout=self.SHORT_SHUTDOWN_CONFIRMATION_PERIOD)

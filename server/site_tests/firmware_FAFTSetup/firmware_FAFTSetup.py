@@ -48,17 +48,17 @@ class firmware_FAFTSetup(FirmwareTest):
         """
         result = True
         # Stop UI so that key presses don't go to Chrome.
-        self.faft_client.system.run_shell_command("stop ui")
+        self.faft_client.System.RunShellCommand("stop ui")
 
         # Press the keys
         Timer(self.KEY_PRESS_DELAY, press_action).start()
 
         # Invoke client side script to monitor keystrokes
-        if not self.faft_client.system.check_keys([28, 29, 32]):
+        if not self.faft_client.System.CheckKeys([28, 29, 32]):
             result = False
 
         # Turn UI back on
-        self.faft_client.system.run_shell_command("start ui")
+        self.faft_client.System.RunShellCommand("start ui")
         return result
 
     def keyboard_checker(self):

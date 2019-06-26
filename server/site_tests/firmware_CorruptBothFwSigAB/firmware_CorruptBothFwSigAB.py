@@ -42,8 +42,8 @@ class firmware_CorruptBothFwSigAB(FirmwareTest):
         self.check_state((self.checkers.crossystem_checker, {
                           'mainfw_type': 'developer' if dev_mode else 'normal',
                           }))
-        self.faft_client.bios.corrupt_sig('a')
-        self.faft_client.bios.corrupt_sig('b')
+        self.faft_client.Bios.CorruptSig('a')
+        self.faft_client.Bios.CorruptSig('b')
 
         # Older devices (without BROKEN screen) didn't wait for removal in
         # dev mode. Make sure the USB key is not plugged in so they won't
@@ -60,7 +60,7 @@ class firmware_CorruptBothFwSigAB(FirmwareTest):
                               vboot.RECOVERY_REASON['RO_INVALID_RW'],
                               vboot.RECOVERY_REASON['RW_VERIFY_KEYBLOCK']),
                           }))
-        self.faft_client.system.set_try_fw_b()
+        self.faft_client.System.SetTryFwB()
 
         self.servo.switch_usbkey('host')
         self.switcher.simple_reboot(sync_before_boot=False)
@@ -74,8 +74,8 @@ class firmware_CorruptBothFwSigAB(FirmwareTest):
                               vboot.RECOVERY_REASON['RO_INVALID_RW'],
                               vboot.RECOVERY_REASON['RW_VERIFY_KEYBLOCK']),
                           }))
-        self.faft_client.bios.restore_sig('a')
-        self.faft_client.bios.restore_sig('b')
+        self.faft_client.Bios.RestoreSig('a')
+        self.faft_client.Bios.RestoreSig('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected normal boot, done.")

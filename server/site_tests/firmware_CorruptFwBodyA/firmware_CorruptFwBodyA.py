@@ -37,29 +37,29 @@ class firmware_CorruptFwBodyA(FirmwareTest):
 
     def run_once(self):
         """Runs a single iteration of the test."""
-        if (self.faft_client.bios.get_preamble_flags('a') &
+        if (self.faft_client.Bios.GetPreambleFlags('a') &
                 vboot.PREAMBLE_USE_RO_NORMAL):
             # USE_RO_NORMAL flag is ON. Firmware body corruption doesn't
             # hurt the booting results.
             logging.info('The firmware USE_RO_NORMAL flag is enabled.')
             logging.info("Corrupt firmware body A.")
             self.check_state((self.checkers.fw_tries_checker, 'A'))
-            self.faft_client.bios.corrupt_body('a')
+            self.faft_client.Bios.CorruptBody('a')
             self.switcher.mode_aware_reboot()
 
             logging.info("Still expected firmware A boot and restore.")
             self.check_state((self.checkers.fw_tries_checker, 'A'))
-            self.faft_client.bios.restore_body('a')
+            self.faft_client.Bios.RestoreBody('a')
         else:
             logging.info('The firmware USE_RO_NORMAL flag is disabled.')
             logging.info("Corrupt firmware body A.")
             self.check_state((self.checkers.fw_tries_checker, 'A'))
-            self.faft_client.bios.corrupt_body('a')
+            self.faft_client.Bios.CorruptBody('a')
             self.switcher.mode_aware_reboot()
 
             logging.info("Expected firmware B boot and restore firmware A.")
             self.check_state((self.checkers.fw_tries_checker, ('B', False)))
-            self.faft_client.bios.restore_body('a')
+            self.faft_client.Bios.RestoreBody('a')
             self.switcher.mode_aware_reboot()
 
             expected_slot = 'B' if self.fw_vboot2 else 'A'

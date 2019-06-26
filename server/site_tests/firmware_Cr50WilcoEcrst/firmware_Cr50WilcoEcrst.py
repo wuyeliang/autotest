@@ -52,7 +52,7 @@ class firmware_Cr50WilcoEcrst(Cr50Test):
         """
         GEN_PMCON_A_ADDRESS = 0xfe001020
         AFTERG3_EN_BIT = 0x1
-        orig_reg_string = self.faft_client.system.run_shell_command_get_output(
+        orig_reg_string = self.faft_client.System.RunShellCommandGetOutput(
                 'iotools mmio_read32 %#x' % (GEN_PMCON_A_ADDRESS))
         logging.info('iotools output: %s', orig_reg_string)
         orig_reg_value = int(orig_reg_string[0], 0)
@@ -60,7 +60,7 @@ class firmware_Cr50WilcoEcrst(Cr50Test):
             raise error.TestError(
                     'iotools mmio_read32 returned a value larger than 32 bits')
         new_reg_value = orig_reg_value & ~AFTERG3_EN_BIT
-        self.faft_client.system.run_shell_command('iotools mmio_write32 %#x %#x'
+        self.faft_client.System.RunShellCommand('iotools mmio_write32 %#x %#x'
                 % (GEN_PMCON_A_ADDRESS, new_reg_value))
 
 

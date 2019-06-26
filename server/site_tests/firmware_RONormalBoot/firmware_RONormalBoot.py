@@ -39,20 +39,20 @@ class firmware_RONormalBoot(FirmwareTest):
 
     def run_once(self):
         """Runs a single iteration of the test."""
-        flags = self.faft_client.bios.get_preamble_flags('a')
+        flags = self.faft_client.Bios.GetPreambleFlags('a')
         if flags & vboot.PREAMBLE_USE_RO_NORMAL == 0:
             logging.info('The firmware USE_RO_NORMAL flag is disabled.')
             return
 
         logging.info("Disable the RO normal boot flag.")
         self.check_state((self.checkers.ro_normal_checker, 'A'))
-        self.faft_client.bios.set_preamble_flags(('a',
+        self.faft_client.Bios.SetPreambleFlags(('a',
                                       flags ^ vboot.PREAMBLE_USE_RO_NORMAL))
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected TwoStop boot, restore the original flags.")
         self.check_state((lambda: self.checkers.ro_normal_checker('A',
                                                                   twostop=True)))
-        self.faft_client.bios.set_preamble_flags('a', flags)
+        self.faft_client.Bios.SetPreambleFlags('a', flags)
         self.switcher.mode_aware_reboot()
         self.check_state((self.checkers.ro_normal_checker, 'A'))

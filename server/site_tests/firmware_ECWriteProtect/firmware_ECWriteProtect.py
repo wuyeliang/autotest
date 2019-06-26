@@ -51,7 +51,7 @@ class firmware_ECWriteProtect(FirmwareTest):
     def run_once(self):
         """Execute the main body of the test.
         """
-        flags = self.faft_client.bios.get_preamble_flags('a')
+        flags = self.faft_client.Bios.GetPreambleFlags('a')
         if flags & vboot.PREAMBLE_USE_RO_NORMAL == 0:
             logging.info('The firmware USE_RO_NORMAL flag is disabled.')
             return
@@ -65,7 +65,7 @@ class firmware_ECWriteProtect(FirmwareTest):
                      "and reboot EC.")
         self.check_state([(self.checkers.ro_normal_checker, 'A'),
                           self.write_protect_checker])
-        self.faft_client.bios.set_preamble_flags('a', 0)
+        self.faft_client.Bios.SetPreambleFlags('a', 0)
         self.switcher.mode_aware_reboot(reboot_type='cold')
 
         logging.info("Expected EC RW boot, write protected. Reboot EC by "
@@ -79,7 +79,7 @@ class firmware_ECWriteProtect(FirmwareTest):
                      "normal flag and deactivate write protect.")
         self.check_state((self.checkers.ro_normal_checker, ('A', True)))
         self.check_state(self.write_protect_checker)
-        self.faft_client.bios.set_preamble_flags(('a',
+        self.faft_client.Bios.SetPreambleFlags(('a',
                                                   vboot.PREAMBLE_USE_RO_NORMAL))
         self.switcher.mode_aware_reboot(
                 'custom', lambda:self.set_ec_write_protect_and_reboot(False))

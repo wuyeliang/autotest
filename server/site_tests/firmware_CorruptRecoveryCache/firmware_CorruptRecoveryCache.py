@@ -45,7 +45,7 @@ class firmware_CorruptRecoveryCache(FirmwareTest):
         @return True if cache exists
         """
         logging.info("Checking if device has RECOVERY_MRC_CACHE")
-        return self.faft_client.system.run_shell_command_check_output(
+        return self.faft_client.System.RunShellCommandCheckOutput(
                 self.FMAP_CMD, self.RECOVERY_CACHE_SECTION)
 
     def check_cache_rebuilt(self):
@@ -55,7 +55,7 @@ class firmware_CorruptRecoveryCache(FirmwareTest):
         @return True if cache rebuilt otherwise false
         """
         logging.info("Checking if cache was rebuilt.")
-        return self.faft_client.system.run_shell_command_check_output(
+        return self.faft_client.System.RunShellCommandCheckOutput(
                 self.FIRMWARE_LOG_CMD, self.REBUILD_CACHE_MSG)
 
     def boot_to_recovery(self):
@@ -72,7 +72,7 @@ class firmware_CorruptRecoveryCache(FirmwareTest):
         if not self.cache_exist():
             raise error.TestNAError('No RECOVERY_MRC_CACHE was found on DUT.')
 
-        self.faft_client.bios.corrupt_body('rec', True)
+        self.faft_client.Bios.CorruptBody('rec', True)
         self.boot_to_recovery()
 
         if not self.check_cache_rebuilt():

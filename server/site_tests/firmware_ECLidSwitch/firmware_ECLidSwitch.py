@@ -86,7 +86,7 @@ class firmware_ECLidSwitch(FirmwareTest):
         Args:
           wake_func: Delayed function to wake DUT.
         """
-        self.faft_client.system.run_shell_command('shutdown -P now')
+        self.faft_client.System.RunShellCommand('shutdown -P now')
         wake_func()
 
     def _get_keyboard_backlight(self):
@@ -100,7 +100,7 @@ class firmware_ECLidSwitch(FirmwareTest):
         pattern_percent = re.compile(
             'Current keyboard backlight percent: (\d*)')
         pattern_disable = re.compile('Keyboard backlight disabled.')
-        lines = self.faft_client.system.run_shell_command_get_output(cmd)
+        lines = self.faft_client.System.RunShellCommandGetOutput(cmd)
         for line in lines:
             matched_percent = pattern_percent.match(line)
             if matched_percent is not None:
@@ -117,7 +117,7 @@ class firmware_ECLidSwitch(FirmwareTest):
           value: Backlight brightness percentage 0~100.
         """
         cmd = 'ectool pwmsetkblight %d' % value
-        self.faft_client.system.run_shell_command(cmd)
+        self.faft_client.System.RunShellCommand(cmd)
 
     def check_keycode(self):
         """Check that lid open/close do not send power button keycode.
@@ -131,10 +131,10 @@ class firmware_ECLidSwitch(FirmwareTest):
 
         self._open_lid()
         self.delayed_close_lid()
-        if self.faft_client.system.check_keys([]) < 0:
+        if self.faft_client.System.CheckKeys([]) < 0:
             return False
         self.delayed_open_lid()
-        if self.faft_client.system.check_keys([]) < 0:
+        if self.faft_client.System.CheckKeys([]) < 0:
             return False
         return True
 
@@ -170,7 +170,7 @@ class firmware_ECLidSwitch(FirmwareTest):
         """
         ok = True
         logging.info("Stopping powerd")
-        self.faft_client.system.run_shell_command('stop powerd')
+        self.faft_client.System.RunShellCommand('stop powerd')
         if not self.check_keycode():
             logging.error("check_keycode failed.")
             ok = False
@@ -178,7 +178,7 @@ class firmware_ECLidSwitch(FirmwareTest):
             logging.error("check_backlight failed.")
             ok = False
         logging.info("Restarting powerd")
-        self.faft_client.system.run_shell_command('start powerd')
+        self.faft_client.System.RunShellCommand('start powerd')
         return ok
 
     def run_once(self):

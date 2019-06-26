@@ -10,6 +10,6 @@ class Config(object):
     rpc_port = 9990
     rpc_command = '/usr/local/autotest/cros/faft/rpc_server.py'
     rpc_command_short = 'rpc_server'
-    rpc_ready_call = 'system.is_available'
+    rpc_ready_call = 'System.IsAvailable'
     rpc_timeout = 20
     rpc_logfile = '/var/log/faft_xmlrpc_server.log'

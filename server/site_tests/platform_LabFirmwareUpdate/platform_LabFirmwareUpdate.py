@@ -29,6 +29,7 @@ class platform_LabFirmwareUpdate(test.test):
     # TODO(kmshelton): Move most of the logic in this test to a unit tested
     # library.
     def initialize(self, host):
+        """Setup test"""
         self.host = host
         # Make sure the client library is on the device so that the proxy
         # code is there when we try to call it.
@@ -73,8 +74,8 @@ class platform_LabFirmwareUpdate(test.test):
 
     def _bios_version(self):
         """Retrive RO, RW BIOS version."""
-        ro = self.faft_client.system.get_crossystem_value('ro_fwid')
-        rw = self.faft_client.system.get_crossystem_value('fwid')
+        ro = self.faft_client.System.GetCrossystemValue('ro_fwid')
+        rw = self.faft_client.System.GetCrossystemValue('fwid')
         return (ro, rw)
 
     def _construct_fw_version(self, fw_ro, fw_rw):
@@ -152,6 +153,7 @@ class platform_LabFirmwareUpdate(test.test):
         return (bios, ec)
 
     def run_once(self, replace=True):
+        """Main test logic"""
         # Get DUT installed firmware versions.
         (installed_bios, installed_ec) = self._get_version_all()
 

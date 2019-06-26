@@ -49,7 +49,7 @@ class firmware_TPMNotCorruptedDevMode(FirmwareTest):
         # Use the USB key for Ctrl-U dev boot, not recovery.
         self.setup_usbkey(usbkey=True, host=False, used_for_recovery=False)
 
-        self.original_dev_boot_usb = self.faft_client.system.get_dev_boot_usb()
+        self.original_dev_boot_usb = self.faft_client.System.GetDevBootUsb()
         logging.info('Original dev_boot_usb value: %s',
                      str(self.original_dev_boot_usb))
 
@@ -63,9 +63,9 @@ class firmware_TPMNotCorruptedDevMode(FirmwareTest):
 
     def ensure_usb_device_boot(self):
         """Ensure USB device boot and if not reboot into USB."""
-        if not self.faft_client.system.is_removable_device_boot():
+        if not self.faft_client.System.IsRemovableDeviceBoot():
             logging.info('Reboot into USB...')
-            self.faft_client.system.set_dev_boot_usb(1)
+            self.faft_client.System.SetDevBootUsb(1)
             self.switcher.simple_reboot()
             self.switcher.bypass_dev_boot_usb()
             self.switcher.wait_for_client()
@@ -80,13 +80,13 @@ class firmware_TPMNotCorruptedDevMode(FirmwareTest):
         """
         self.ensure_dev_internal_boot(self.original_dev_boot_usb)
         logging.info('Reading kernel anti-rollback data from the TPM.')
-        self.faft_client.tpm.stop_daemon()
+        self.faft_client.Tpm.StopDaemon()
         kernel_rollback_space = (
-                self.faft_client.system.run_shell_command_get_output(
+                self.faft_client.System.RunShellCommandGetOutput(
                         'tpmc read %s %s' %
                         (self.KERNEL_NV_INDEX,
                          self.KERNEL_ANTIROLLBACK_SPACE_BYTES)))
-        self.faft_client.tpm.restart_daemon()
+        self.faft_client.Tpm.RestartDaemon()
 
         logging.info('===== TPMC OUTPUT: %s =====', kernel_rollback_space)
         if self.check_tpmc(kernel_rollback_space):

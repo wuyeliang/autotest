@@ -38,7 +38,7 @@ class firmware_ECPowerButton(FirmwareTest):
 
     def kill_powerd(self):
         """Stop powerd on client."""
-        self.faft_client.system.run_shell_command("stop powerd")
+        self.faft_client.System.RunShellCommand("stop powerd")
 
     def debounce_power_button(self):
         """Check if power button debouncing works.
@@ -50,7 +50,7 @@ class firmware_ECPowerButton(FirmwareTest):
         # Press power button for only 10ms. Should be debounced.
         logging.info('ECPowerButton: debounce_power_button')
         Timer(3, self.servo.power_key, [0.001]).start()
-        return self.faft_client.system.check_keys([116])
+        return self.faft_client.System.CheckKeys([116])
 
     def shutdown_and_wake(self,
                           shutdown_powerkey_duration,

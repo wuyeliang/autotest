@@ -84,7 +84,7 @@ class firmware_FMap(FirmwareTest):
 
         """
         logging.info('Execute %s', command)
-        output = self.faft_client.system.run_shell_command_get_output(command)
+        output = self.faft_client.System.RunShellCommandGetOutput(command)
         logging.info('Output %s', output)
         return output
 

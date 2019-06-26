@@ -50,7 +50,7 @@ class firmware_UserRequestRecovery(FirmwareTest):
                            'mainfw_type': 'developer' if dev_mode else 'normal',
                            }))
         # Execute on DUT: crossystem recovery_request=193
-        self.faft_client.system.request_recovery_boot()
+        self.faft_client.System.RequestRecoveryBoot()
         # Execute from desktop:
         #   dut-control warm_reset:on sleep:0.5000 warm_reset:off
         self.switcher.simple_reboot()
@@ -70,7 +70,7 @@ class firmware_UserRequestRecovery(FirmwareTest):
                            'recovery_reason' : vboot.RECOVERY_REASON['US_TEST'],
                            }))
 
-        self.faft_client.system.request_recovery_boot()
+        self.faft_client.System.RequestRecoveryBoot()
         self.switcher.simple_reboot()
         self.switcher.bypass_rec_mode()
         self.switcher.wait_for_client()

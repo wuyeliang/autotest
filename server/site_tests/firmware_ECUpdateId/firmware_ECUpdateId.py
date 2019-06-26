@@ -23,7 +23,7 @@ class firmware_ECUpdateId(FirmwareTest):
         # Don't bother if there is no Chrome EC or if the EC is non-EFS.
         if not self.check_ec_capability():
             raise error.TestNAError("Nothing needs to be tested on this device")
-        if not self.faft_client.ec.is_efs():
+        if not self.faft_client.Ec.IsEfs():
             raise error.TestNAError("Nothing needs to be tested for non-EFS")
         # In order to test software sync, it must be enabled.
         self.clear_set_gbb_flags(vboot.GBB_FLAG_DISABLE_EC_SOFTWARE_SYNC, 0)
@@ -49,22 +49,22 @@ class firmware_ECUpdateId(FirmwareTest):
 
     def setup_ec_rw_to_a(self):
         """For EC EFS, make EC boot into RW A."""
-        if self.faft_client.ec.is_efs():
+        if self.faft_client.Ec.IsEfs():
             active_copy = self.servo.get_ec_active_copy()
             if active_copy == 'RW_B':
                 from_section = 'rw_b'
                 to_section = 'rw'
                 logging.info("Copy EC RW from '%s' to '%s'",
                              from_section, to_section)
-                self.faft_client.ec.copy_rw(from_section, to_section)
+                self.faft_client.Ec.CopyRw(from_section, to_section)
 
                 logging.info("EC reboot to switch slot. Wait DUT up...")
-                reboot = lambda: self.faft_client.ec.reboot_to_switch_slot()
+                reboot = lambda: self.faft_client.Ec.RebootToSwitchSlot()
                 self.switcher.mode_aware_reboot('custom', reboot)
 
     def get_active_hash(self):
         """Return the current EC hash."""
-        ec_hash = self.faft_client.ec.get_active_hash()
+        ec_hash = self.faft_client.Ec.GetActiveHash()
         logging.info("Current EC hash: %s", ec_hash)
         return ec_hash
 
@@ -94,7 +94,7 @@ class firmware_ECUpdateId(FirmwareTest):
         if self.servo.get_ec_active_copy() == 'RW_B':
             section = 'rw_b'
         logging.info("Corrupt the EC section: %s", section)
-        self.faft_client.ec.corrupt_body(section)
+        self.faft_client.Ec.CorruptBody(section)
 
     def wait_software_sync_and_boot(self):
         """Wait for software sync to update EC."""
@@ -113,8 +113,8 @@ class firmware_ECUpdateId(FirmwareTest):
         original_hash = self.get_active_hash()
 
         logging.info("Modify EC ID and flash it back to BIOS...")
-        self.faft_client.updater.modify_ecid_and_flash_to_bios()
-        modified_hash = self.faft_client.updater.get_ec_hash()
+        self.faft_client.Updater.ModifyEcidAndFlashToBios()
+        modified_hash = self.faft_client.Updater.GetEcHash()
 
         logging.info("Reboot EC. Verify if EFS works as intended.")
         self.sync_and_ec_reboot('hard')

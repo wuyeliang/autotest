@@ -25,7 +25,7 @@ class firmware_FastbootReboot(FirmwareTest):
 
     def in_fastboot_mode(self):
         """Makes sure that we're in fastboot mode."""
-        result = self.faft_client.host.run_shell_command_get_output(
+        result = self.faft_client.Host.RunShellCommandGetOutput(
             'fastboot devices')
         if not result:
             return False
@@ -34,10 +34,10 @@ class firmware_FastbootReboot(FirmwareTest):
 
     def run_once(self, dev_mode=False):
         """Runs a single iteration of the test."""
-        if not self.faft_client.system.has_host():
+        if not self.faft_client.System.HasHost():
             raise error.TestNAError('DUT is not Android device.  Skipping test')
 
-        self.faft_client.host.run_shell_command('adb reboot bootloader')
+        self.faft_client.Host.RunShellCommand('adb reboot bootloader')
         # make sure that DUT goes offline first
         self.switcher.wait_for_client_offline()
         self.switcher.wait_for_client_fastboot()
@@ -47,13 +47,13 @@ class firmware_FastbootReboot(FirmwareTest):
 
         # try rebooting into OS
         logging.info("Testing fastboot reboot")
-        self.faft_client.host.run_shell_command('fastboot reboot')
+        self.faft_client.Host.RunShellCommand('fastboot reboot')
         # make sure that DUT goes offline first
         self.switcher.wait_for_client_offline()
         self.switcher.wait_for_client()
 
         # now reboot into fastboot again
-        self.faft_client.host.run_shell_command('adb reboot bootloader')
+        self.faft_client.Host.RunShellCommand('adb reboot bootloader')
         # make sure that DUT goes offline first
         self.switcher.wait_for_client_offline()
         self.switcher.wait_for_client_fastboot()
@@ -61,12 +61,12 @@ class firmware_FastbootReboot(FirmwareTest):
             raise error.TestFail("DUT not in fastboot mode!")
 
         logging.info("Testing fastboot reboot-bootloader")
-        self.faft_client.host.run_shell_command('fastboot reboot-bootloader')
+        self.faft_client.Host.RunShellCommand('fastboot reboot-bootloader')
         # make sure that DUT goes offline first
         self.switcher.wait_for_client_offline()
         self.switcher.wait_for_client_fastboot()
         if not self.in_fastboot_mode():
             raise error.TestFail("DUT not in fastboot mode!")
 
-        self.faft_client.host.run_shell_command('fastboot continue')
+        self.faft_client.Host.RunShellCommand('fastboot continue')
         self.switcher.wait_for_client()

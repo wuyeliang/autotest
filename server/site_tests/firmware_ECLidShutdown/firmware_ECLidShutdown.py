@@ -40,7 +40,7 @@ class firmware_ECLidShutdown(FirmwareTest):
             self.switcher.simple_reboot(sync_before_boot=False)
             self.switcher.wait_for_client()
             self.clear_set_gbb_flags(vboot.GBB_FLAG_DISABLE_LID_SHUTDOWN, 0)
-            self.faft_client.system.run_shell_command(
+            self.faft_client.System.RunShellCommand(
                     self.CHECK_POWER_MANAGER_CFG_DEFAULT)
         except Exception as exc:
             logging.debug(
@@ -67,7 +67,7 @@ class firmware_ECLidShutdown(FirmwareTest):
         """
         self.clear_set_gbb_flags(vboot.GBB_FLAG_DISABLE_LID_SHUTDOWN, 0)
         # TODO(kmshelton): Simplify to not use recovery mode.
-        self.faft_client.system.request_recovery_boot()
+        self.faft_client.System.RequestRecoveryBoot()
         self.servo.set('lid_open', 'no')
         time.sleep(self.LID_POWER_STATE_DELAY)
         self.switcher.simple_reboot(sync_before_boot=False)
@@ -93,8 +93,8 @@ class firmware_ECLidShutdown(FirmwareTest):
         boots to a firmware screen.
         """
         self.clear_set_gbb_flags(0, vboot.GBB_FLAG_DISABLE_LID_SHUTDOWN)
-        self.faft_client.system.request_recovery_boot()
-        self.faft_client.system.run_shell_command(
+        self.faft_client.System.RequestRecoveryBoot()
+        self.faft_client.System.RunShellCommand(
                 self.IGNORE_LID_IN_USERSPACE_CMD)
         self.servo.set('lid_open', 'no')
         if not self.wait_power_state('S0', self.POWER_STATE_CHECK_TRIES):
