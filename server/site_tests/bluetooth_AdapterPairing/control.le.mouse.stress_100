@@ -31,8 +31,8 @@ Specifically, the following subtests are executed in this autotest.
     - test_pairing
     - test_connection_by_adapter
     - test_disconnection_by_adapter
-    - test_connection_by_adapter (N.B. by adapter, Bluefruit can't initiate)
-    - test_disconnection_by_adapter (N.B Bluefruit's disconnect isn't clean.)
+    - test_connection_by_adapter (Depending on the device capabililty.)
+    - test_disconnection_by_adapter (Depending on the device capabililty.)
     - test_remove_pairing
 """
 

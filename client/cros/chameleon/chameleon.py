@@ -342,16 +342,6 @@ class ChameleonBoard(object):
         return self._chameleond_proxy.bluetooth_mouse
 
 
-    def get_bluetooth_hog_mouse(self):
-        """Gets the emulated Bluetooth Low Energy HID mouse on Chameleon.
-
-        Note that this uses HID over GATT, or HOG.
-
-        @return: A BluetoothHOGMouseFlow object.
-        """
-        return self._chameleond_proxy.bluetooth_hog_mouse
-
-
     def get_bluetooth_ref_controller(self):
         """Gets the emulated BluetoothRefController.
 

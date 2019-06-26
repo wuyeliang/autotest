@@ -26,7 +26,6 @@ Event = recorder.Event
 # Delay binding the methods since host is only available at run time.
 SUPPORTED_DEVICE_TYPES = {
     'MOUSE': lambda host: host.chameleon.get_bluetooth_hid_mouse,
-    'LE_MOUSE': lambda host: host.chameleon.get_bluetooth_hog_mouse,
     'BLE_MOUSE': lambda host: host.chameleon.get_ble_mouse,
 }
 
