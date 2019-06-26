@@ -110,7 +110,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # power suspend stress needs to ssh into the DUT. If ethernet goes
         # down, raise a test error, so we can tell the difference between
         # dts ethernet issues and the dut going down during the suspend stress.
-        if not host.ping_wait_up(self.faft_config.delay_reboot_to_ping):
+        if not host.ping_wait_up(60):
             raise error.TestError('DUT is not pingable after disabling ccd')
 
         # Duration is set to 0, because it is required but unused when
