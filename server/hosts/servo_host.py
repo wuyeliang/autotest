@@ -99,6 +99,7 @@ class ServoHost(base_servohost.BaseServoHost):
         # task to reboot it until current task completes. We also wait and
         # make sure the labstation is up here, in the case of the labstation is
         # in the middle of reboot.
+        self._is_locked = False
         if (self.wait_up(self.REBOOT_TIMEOUT) and self.is_in_lab()
             and self.is_labstation()):
             self._lock()
@@ -212,6 +213,7 @@ class ServoHost(base_servohost.BaseServoHost):
         logging.debug('Locking servohost %s by touching %s file',
                       self.hostname, self._lock_file)
         self.run('touch %s' % self._lock_file, ignore_status=True)
+        self._is_locked = True
 
 
     def _unlock(self):
@@ -220,6 +222,7 @@ class ServoHost(base_servohost.BaseServoHost):
         logging.debug('Unlocking servohost by removing %s file',
                       self._lock_file)
         self.run('rm %s' % self._lock_file, ignore_status=True)
+        self._is_locked = False
 
 
     def close(self):
@@ -230,8 +233,8 @@ class ServoHost(base_servohost.BaseServoHost):
                 self._servo.uart_logs_dir = self.job.resultdir
             self._servo.close()
 
-        if self.is_in_lab() and self.is_labstation():
-            # Remove the lock if the host is an in-lab labstation.
+        if self._is_locked:
+            # Remove the lock if the servohost has been locked.
             try:
                 self._unlock()
             except error.AutoservSSHTimeout:
