@@ -13,9 +13,9 @@ TEST_CATEGORY = "Functional"
 TEST_CLASS = "Bluetooth"
 TEST_TYPE = "client"
 DOC = """
-Go to settings and turn on/off BT
+Go to status tray and turn on/off BT
 Command to execute is
 test_that -b $BOARD $DUT_IP $TEST
 """
 
-job.run_test("bluetooth_TurnOnOffUI", iteration_count=30, tag="UI")
+job.run_test("bluetooth_TurnOnOffUI", iteration_count=30)
