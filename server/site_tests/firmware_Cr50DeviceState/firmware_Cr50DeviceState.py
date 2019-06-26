@@ -91,7 +91,11 @@ class firmware_Cr50DeviceState(Cr50Test):
         # Regular sleep is calculated based on the cr50 time
     }
 
-    GET_TASKINFO = ['IRQ counts by type:(.*)Service calls']
+    # Each line relevant taskinfo output should be 13 characters long with only
+    # digits or spaces. Use this information to make sure every taskinfo command
+    # gets the full relevant output. There are 4 characters for the irq number
+    # and 9 for the count.
+    GET_TASKINFO = ['IRQ counts by type:\s+(([\d ]{13}\r\n)+)Service calls']
 
     START = ''
     INCREASE = '+'
