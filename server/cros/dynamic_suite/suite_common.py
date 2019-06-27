@@ -399,3 +399,13 @@ def name_in_tag_predicate(name):
             ControlData object's suite member.
     """
     return lambda t: name in t.suite_tag_parts
+
+
+def test_name_in_list_predicate(name_list):
+    """Returns a predicate that matches control files by test name.
+
+    The returned predicate returns True for control files whose test name
+    is present in name_list.
+    """
+    name_set = set(name_list)
+    return lambda t: t.name in name_set
