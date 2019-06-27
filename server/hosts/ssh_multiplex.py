@@ -106,11 +106,10 @@ class MasterSsh(object):
                             condition=lambda: os.path.exists(self._socket_path),
                             timeout=timeout,
                             sleep_interval=0.2,
-                            desc='Wait for a socket file to exist')
-                # log the issue if it fails, but don't throw an exception
+                            desc='master-ssh connection up')
                 except utils.TimeoutError:
-                    logging.info('Timed out waiting for master-ssh connection '
-                                 'to be established.')
+                    # poll_for_conditional already logs an error upon timeout
+                    pass
 
 
     def close(self):

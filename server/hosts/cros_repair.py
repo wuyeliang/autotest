@@ -309,7 +309,7 @@ class HWIDVerifier(hosts.Verifier):
             if info != host.host_info_store.get():
                 host.host_info_store.commit(info)
         except Exception as e:
-            logging.exception('Failed to get HWID & Serial Number for host ',
+            logging.exception('Failed to get HWID & Serial Number for host '
                               '%s: %s', host.hostname, str(e))
 
     @property

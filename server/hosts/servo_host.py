@@ -195,6 +195,7 @@ class ServoHost(base_servohost.BaseServoHost):
         """Get the cached servo.Servo object.
 
         @return: a servo.Servo object.
+        @rtype: autotest_lib.server.cros.servo.servo.Servo
         """
         return self._servo
 

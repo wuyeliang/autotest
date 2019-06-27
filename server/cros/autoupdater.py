@@ -646,15 +646,16 @@ class ChromiumOSUpdater(object):
         remote_tmp_script = '/tmp/%s' % script_name
         server_name = urlparse.urlparse(self.update_url)[1]
         script_url = 'http://%s/static/%s' % (server_name, script_name)
-        fetch_script = (
-            'curl -o %s %s && head -1 %s | grep "^#!" | sed "s/#!//"') % (
-                   remote_tmp_script, script_url, remote_tmp_script)
-        script_interpreter = self._run(fetch_script,
-                                       ignore_status=True).stdout.strip()
-        if not script_interpreter:
-            return None
-        return '%s %s' % (script_interpreter, remote_tmp_script)
+        fetch_script = 'curl -Ss -o %s %s && head -1 %s' % (
+            remote_tmp_script, script_url, remote_tmp_script)
 
+        first_line = self._run(fetch_script).stdout.strip()
+
+        if first_line and first_line.startswith('#!'):
+            script_interpreter = first_line.lstrip('#!')
+            if script_interpreter:
+                return '%s %s' % (script_interpreter, remote_tmp_script)
+        return None
 
     def _get_stateful_update_script(self):
         """Returns a command to run the stateful update script.

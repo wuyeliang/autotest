@@ -104,14 +104,13 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
 
         @param command: the ssh command to be executed.
         """
-        # The last 3 frames on the stack are boring. Print 6-3=3 stack frames.
+        # The last few frames on the stack are not useful, so skip them.
         stack = self._get_server_stack_state(lowest_frames=3, highest_frames=6)
-        # If "logger" executable exists on the DUT use it to respew |command|.
-        # Then regardless of "logger" run |command| as usual.
-        command = ('if type "logger" > /dev/null 2>&1; then'
-                   ' logger -tag "autotest" "server[stack::%s] -> ssh_run(%s)";'
-                   'fi; '
-                   '%s' % (stack, utils.sh_escape(command), command))
+        # If logger executable exists on the DUT, use it to report the command.
+        # Then regardless of logger, run the command as usual.
+        command = ('test -x /usr/bin/logger && /usr/bin/logger --id=$$ '
+                   '--tag=autotest "from [%s] ssh_run: %s"; %s'
+                   % (stack, utils.sh_escape(command), command))
         return command
 
 
@@ -277,10 +276,10 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
             ignore_timeout=False, ssh_failure_retry_ok=False):
         """
         Run a command on the remote host.
-        This RPC call has an overhead of minimum 40ms and up to 400ms on
-        servers (crbug.com/734887). Each time a run_very_slowly is added for
-        every job - a server core dies in the lab.
-        @see common_lib.hosts.host.run()
+        @note: This RPC call has an overhead of minimum 40ms and up to 400ms on
+               servers (crbug.com/734887). Each time a call is added for
+               every job, a server core dies in the lab.
+        @see: common_lib.hosts.host.run()
 
         @param timeout: command execution timeout in seconds. Default is 1 hour.
         @param connect_timeout: ssh connection timeout (in seconds)
@@ -331,8 +330,7 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
                 raise error.AutoservRunError(timeout_message, cmderr.args[1])
 
 
-    def run(self, *args, **kwargs):
-        return self.run_very_slowly(*args, **kwargs)
+    run = run_very_slowly
 
 
     def run_background(self, command, verbose=True):

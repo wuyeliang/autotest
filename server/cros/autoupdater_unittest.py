@@ -281,10 +281,9 @@ class TestAutoUpdater(mox.MoxTestBase):
         fake_shell = '/bin/ash'
         tmp_script = '/tmp/%s' % script_name
         fake_result = self.mox.CreateMockAnything()
-        fake_result.stdout = ' %s\n' % fake_shell
+        fake_result.stdout = '#!%s\n' % fake_shell
         host.path_exists(local_script).AndReturn(False)
-        host.run(mox.IgnoreArg(),
-                 ignore_status=True).AndReturn(fake_result)
+        host.run(mox.IgnoreArg()).AndReturn(fake_result)
 
         self.mox.ReplayAll()
         # Complicated case:  script not on DUT, so try to download it.
