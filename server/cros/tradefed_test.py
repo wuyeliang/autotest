@@ -1197,7 +1197,7 @@ class TradefedTest(test.test):
             # Only record the failure by module, which exclude 'all', 'collects-tests-only', etc.
             self._perf_results.append(dict(
                 description=perf_description if perf_description else target_module,
-                value=failed,
+                value=failed - waived,
                 graph=bundle
             ))
 
