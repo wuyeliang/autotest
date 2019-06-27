@@ -11,6 +11,7 @@ from __future__ import print_function
 import collections
 import json
 import sys
+import time
 
 from autotest_lib.client.common_lib import enum
 
@@ -70,7 +71,20 @@ class SuiteResult(collections.namedtuple('SuiteResult',
 def dump_json(obj):
     """Write obj JSON to stdout."""
     output_json = json.dumps(obj, sort_keys=True)
-    sys.stdout.write('#JSON_START#%s#JSON_END#' % output_json.strip())
+    # These sleeps and flushes are a hack around the fact that when running
+    # in the autotest proxy in --json_dump_postfix mode, run_suite.py co-mingles
+    # both stdout and stderr (which include both logging output and json output)
+    # to a single output stream. This can cause the json output to be corrupted
+    # by concurrent writes (which is particularly likely because this dump
+    # occurs at the end of run_suite's execution, along with other ending
+    # logging). Buffer time and forced stream flushes reduce the likelihood of
+    # concurrent writes.
+    sys.stderr.flush()
+    time.sleep(0.5)
+    sys.stdout.flush()
+    sys.stdout.write('\n#JSON_START#%s#JSON_END#\n' % output_json.strip())
+    sys.stdout.flush()
+    time.sleep(0.5)
 
 
 # TODO (xixuan): This is duplicated from suite_tracking.py in skylab.
