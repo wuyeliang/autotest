@@ -1109,9 +1109,13 @@ class TestView(object):
         """Generate the job_id_owner string for a test.
 
         @returns: A string which looks like 135036-username
-
         """
-        return '%s-%s' % (self.view['afe_job_id'], self.user)
+        # self.user is actually the user that is executing this run_suite
+        # call, which is not necessarily the same as the job-creating user.
+        # The job creating user is available as a keyval; but fall back to
+        # self.user in case that key is missing.
+        job_user = self.view['job_keyvals'].get('user') or self.user
+        return '%s-%s' % (self.view['afe_job_id'], job_user)
 
 
     def get_bug_info(self, suite_job_keyvals):
