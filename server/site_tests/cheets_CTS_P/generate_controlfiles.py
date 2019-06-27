@@ -252,8 +252,13 @@ _CONFIG_MODULE_COMMAND = "\'modprobe configs\'"
 # TODO(b/126741318): Fix performance regression and remove this.
 _SLEEP_60_COMMAND = "\'sleep 60\'"
 
+# Hold screen wake lock to prevent the screen being turned off due to idle
+# (b/129440004).
+_SCREEN_WAKE_LOCK_COMMAND = "\'set_power_policy --screen_wake_lock=1\'"
+
 # Preconditions applicable to public and internal tests.
 _PRECONDITION = {
+    'CtsMediaTestCases': [_SCREEN_WAKE_LOCK_COMMAND],
     'CtsSecurityHostTestCases': [
         _SECURITY_PARANOID_COMMAND, _CONFIG_MODULE_COMMAND
     ],
@@ -279,6 +284,7 @@ _WIFI_CONNECT_COMMANDS = [
 
 # Preconditions applicable to public tests.
 _PUBLIC_PRECONDITION = {
+    'CtsMediaTestCases': [_SCREEN_WAKE_LOCK_COMMAND],
     'CtsSecurityHostTestCases': [
         _SECURITY_PARANOID_COMMAND, _CONFIG_MODULE_COMMAND
     ],

@@ -140,8 +140,15 @@ _NEEDS_PUSH_MEDIA = []
 _EJECT_REMOVABLE_DISK_COMMAND = (
     "\'lsblk -do NAME,RM | sed -n s/1$//p | xargs -n1 eject\'")
 
+# Hold screen wake lock to prevent the screen being turned off due to idle
+# (b/129440004).
+_SCREEN_WAKE_LOCK_COMMAND = "\'set_power_policy --screen_wake_lock=1\'"
+
 # Preconditions applicable to public and internal tests.
-_PRECONDITION = {}
+_PRECONDITION = {
+    _ALL: [_SCREEN_WAKE_LOCK_COMMAND],
+}
+
 _LOGIN_PRECONDITION = {
     'CtsAppSecurityHostTestCases': [_EJECT_REMOVABLE_DISK_COMMAND],
     'CtsJobSchedulerTestCases': [_EJECT_REMOVABLE_DISK_COMMAND],

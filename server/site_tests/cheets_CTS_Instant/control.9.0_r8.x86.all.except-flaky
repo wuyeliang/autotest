@@ -31,6 +31,7 @@ def run_CTS(machine):
         bundle='x86',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts_instant-9.0_r8-linux_x86-x86.zip',
         login_precondition_commands=['lsblk -do NAME,RM | sed -n s/1$//p | xargs -n1 eject'],
+        precondition_commands=['set_power_policy --screen_wake_lock=1'],
         timeout=43200)
 
 parallel_simple(run_CTS, machines)
