@@ -351,6 +351,14 @@ class Servo(object):
                     lsb_release_content=lsb_release_content)
 
 
+    def get_servod_version(self):
+        """Returns the servod version."""
+        result = self._servo_host.run('servod --version')
+        # TODO: use system_output once servod --version prints to stdout
+        stdout = result.stdout.strip()
+        return stdout if stdout else result.stderr.strip()
+
+
     def power_long_press(self):
         """Simulate a long power button press."""
         # After a long power press, the EC may ignore the next power

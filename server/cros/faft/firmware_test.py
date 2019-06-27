@@ -215,8 +215,7 @@ class FirmwareTest(FAFTBase):
             'ro_fwid': self.faft_client.system.get_crossystem_value('ro_fwid'),
             'rw_fwid': self.faft_client.system.get_crossystem_value('fwid'),
             'servo_host_os_version' : self.servo.get_os_version(),
-            'servod_version': self._client._servo_host.run(
-                'servod --version').stdout.strip(),
+            'servod_version': self.servo.get_servod_version(),
             'os_version': self._client.get_release_builder_path(),
             'servo_type': self.servo.get_servo_version()
         }
