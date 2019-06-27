@@ -13,6 +13,7 @@ import time
 import xmlrpclib
 
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib import lsbrelease_utils
 from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros.servo import firmware_programmer
 
@@ -340,6 +341,14 @@ class Servo(object):
           True if local hosted; otherwise, False.
         """
         return self._servo_host.is_localhost()
+
+
+    def get_os_version(self):
+        """Returns the chromeos release version."""
+        lsb_release_content = self.system_output('cat /etc/lsb-release',
+                                                 ignore_status=True)
+        return lsbrelease_utils.get_chromeos_release_builder_path(
+                    lsb_release_content=lsb_release_content)
 
 
     def power_long_press(self):
