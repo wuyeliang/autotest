@@ -1573,8 +1573,8 @@ class ResultCollector(object):
         @returns: A dict of results in the format like:
                   {
                   'tests': {
-                        'test_1': {'status': 'PASSED', 'attributes': [1,2], ...}
-                        'test_2': {'status': 'FAILED', 'attributes': [1],...}
+                        'test_1': {'status': 'GOOD', 'attributes': [1,2], ...}
+                        'test_2': {'status': 'FAIL', 'attributes': [1],...}
                   }
                   'suite_timings': {
                         'download_start': '1998-07-17 00:00:00',
@@ -1593,6 +1593,7 @@ class ResultCollector(object):
                 'attributes': v.get_control_file_attributes() or list(),
                 'reason': v['reason'],
                 'retry_count': self._retry_counts.get(v['test_idx'], 0),
+                'job_id': v['afe_job_id'],
                 })
             # For aborted test, the control file will not be parsed and thus
             # fail to get the attributes info. Therefore, the subsystems the
