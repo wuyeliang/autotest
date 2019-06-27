@@ -131,31 +131,6 @@ class BrandCodeLabel(base_label.StringPrefixLabel):
         return []
 
 
-class LightSensorLabel(base_label.BaseLabel):
-    """Label indicating if a light sensor is detected."""
-
-    _NAME = 'lightsensor'
-    _LIGHTSENSOR_SEARCH_DIR = '/sys/bus/iio/devices'
-    _LIGHTSENSOR_FILES = [
-        "in_illuminance0_input",
-        "in_illuminance_input",
-        "in_illuminance0_raw",
-        "in_illuminance_raw",
-        "illuminance0_input",
-    ]
-
-    def exists(self, host):
-        search_cmd = "find -L %s -maxdepth 4 | egrep '%s'" % (
-            self._LIGHTSENSOR_SEARCH_DIR, '|'.join(self._LIGHTSENSOR_FILES))
-        # Run the search cmd following the symlinks. Stderr_tee is set to
-        # None as there can be a symlink loop, but the command will still
-        # execute correctly with a few messages printed to stderr.
-        result = host.run(search_cmd, stdout_tee=None, stderr_tee=None,
-                          ignore_status=True)
-
-        return result.exit_status == 0
-
-
 class BluetoothLabel(base_label.BaseLabel):
     """Label indicating if bluetooth is detected."""
 
@@ -691,7 +666,6 @@ CROS_LABELS = [
     FingerprintLabel(),
     HWIDLabel(),
     InternalDisplayLabel(),
-    LightSensorLabel(),
     LucidSleepLabel(),
     PowerSupplyLabel(),
     ReferenceDesignLabel(),
