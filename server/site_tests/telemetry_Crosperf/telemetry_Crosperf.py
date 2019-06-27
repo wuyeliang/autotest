@@ -164,7 +164,9 @@ class telemetry_Crosperf(test.test):
             # The telemetry scripts will run on DUT.
             _ensure_deps(dut, test_name)
             format_string = ('python %s --browser=system '
-                             '--output-format=chartjson %s %s')
+                             '--output-format=chartjson '
+                             '--output-format=histograms '
+                             '%s %s')
             command = format_string % (os.path.join(CLIENT_CHROME_ROOT,
                                                     RUN_BENCHMARK),
                                        test_args, test_name)
@@ -173,7 +175,9 @@ class telemetry_Crosperf(test.test):
             # The telemetry scripts will run on server.
             format_string = ('python %s --browser=cros-chrome --remote=%s '
                              '--output-dir="%s" '
-                             '--output-format=chartjson %s %s')
+                             '--output-format=chartjson '
+                             '--output-format=histograms '
+                             '%s %s')
             command = format_string % (os.path.join(_find_chrome_root_dir(),
                                                     RUN_BENCHMARK),
                                        client_ip, self.resultsdir, test_args,
@@ -220,14 +224,21 @@ class telemetry_Crosperf(test.test):
                          '\nstdout:%s\nstderr:%s', exit_code,
                          stdout_str, stderr_str)
 
-        # Copy the results-chart.json file into the test_that results
-        # directory, if necessary.
+        # Copy the results-chart.json and histograms.json file into
+        # the test_that results directory, if necessary.
         if args.get('run_local', 'false').lower() == 'true':
             result = self.scp_telemetry_results(client_ip, dut,
                                                 'results-chart.json',
                                                 self.resultsdir)
+            result = self.scp_telemetry_results(client_ip, dut,
+                                                'histograms.json',
+                                                self.resultsdir)
         else:
             filepath = os.path.join(self.resultsdir, 'results-chart.json')
+            if not os.path.exists(filepath):
+                exit_code = -1
+                raise RuntimeError('Missing results file: %s' % filepath)
+            filepath = os.path.join(self.resultsdir, 'histograms.json')
             if not os.path.exists(filepath):
                 exit_code = -1
                 raise RuntimeError('Missing results file: %s' % filepath)
