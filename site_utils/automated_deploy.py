@@ -45,6 +45,7 @@ _CIPD_PACKAGES = (
         'chromiumos/infra/skylab/linux-amd64',
         'chromiumos/infra/skylab-inventory',
         'chromiumos/infra/skylab_swarming_worker/linux-amd64',
+        'chromiumos/infra/autotest_status_parser/linux-amd64',
 )
 
 
