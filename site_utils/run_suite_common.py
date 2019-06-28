@@ -17,6 +17,8 @@ from autotest_lib.client.common_lib import enum
 
 
 # Return code that will be sent back to callers.
+#
+# Note: Do not modify this enum; it is dependend upon by several clients.
 RETURN_CODES = enum.Enum(
         'OK',
         'ERROR',
