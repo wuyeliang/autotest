@@ -4,7 +4,7 @@
 
 AUTHOR = "cmasone, nkostylev"
 NAME = "login_RetrieveActiveSessions"
-ATTRIBUTES = "suite:bvt-inline, suite:smoke"
+ATTRIBUTES = "suite:bvt-perbuild, suite:smoke"
 TIME = "FAST"
 TEST_CLASS = "login"
 TEST_TYPE = "client"
