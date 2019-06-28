@@ -25,6 +25,8 @@ class Cr50Test(FirmwareTest):
     GS_PUBLIC = 'gs://chromeos-localmirror/distfiles/'
     CR50_DEBUG_FILE =  '*/cr50_dbg_%s.bin%s'
     CR50_PROD_FILE = 'cr50.r0.0.10.w%s%s.tbz2'
+    CR50_TOT_VER_FILE = 'tot/LATEST'
+    CR50_TOT_FILE = 'tot/cr50.bin.%s.%s'
     NONE = 0
     # Saved the original device state during init.
     INITIAL_STATE = 1 << 0
@@ -49,6 +51,7 @@ class Cr50Test(FirmwareTest):
         self._saved_state = self.NONE
         self._raise_error_on_mismatch = not restore_cr50_state
         self._provision_update = provision_update
+        self.tot_test_run = full_args.get('tot_test_run', '').lower() == 'true'
         super(Cr50Test, self).initialize(host, cmdline_args)
 
         if not hasattr(self, 'cr50'):
@@ -134,10 +137,8 @@ class Cr50Test(FirmwareTest):
         # Copy the prod and prepvt images from the DUT
         _, prod_rw, prod_bid = self._original_state['device_prod_ver']
         filename = 'prod_device_image_' + prod_rw
-        self._device_prod_image = os.path.join(self.resultsdir,
-                filename)
-        self.host.get_file(cr50_utils.CR50_PROD,
-                self._device_prod_image)
+        self._device_prod_image = os.path.join(self.resultsdir, filename)
+        self.host.get_file(cr50_utils.CR50_PROD, self._device_prod_image)
 
         if cr50_utils.HasPrepvtImage(self.host):
             _, prepvt_rw, prepvt_bid = self._original_state['device_prepvt_ver']
@@ -156,6 +157,10 @@ class Cr50Test(FirmwareTest):
             self._original_cr50_image = release_path
             logging.info('using supplied image')
             return
+        if self.tot_test_run:
+            self._original_cr50_image = self.download_cr50_tot_image()
+            return
+
         # If the running cr50 image version matches the image on the DUT use
         # the DUT image as the original image. If the versions don't match
         # download the image from google storage
@@ -507,14 +512,13 @@ class Cr50Test(FirmwareTest):
         raise error.TestFail('%s was not extracted from %s' % (fn , archive))
 
 
-    def download_cr50_gs_image(self, gsurl, extract_fn, image_bid):
-        """Get the image from gs and save it in the autotest dir.
+    def download_cr50_gs_file(self, gsurl, extract_fn):
+        """Download and extract the file at gsurl.
 
         @param gsurl: The gs url for the cr50 image
         @param extract_fn: The name of the file to extract from the cr50 image
                         tarball. Don't extract anything if extract_fn is None.
-        @param image_bid: the image symbolic board id
-        @return: A tuple with the local path and version
+        @return: a tuple (local path, host path)
         """
         file_info = self.find_cr50_gs_image(gsurl)
         if not file_info:
@@ -537,6 +541,19 @@ class Cr50Test(FirmwareTest):
             dest = os.path.splitext(dest)[0]
 
         self.host.get_file(src, dest)
+        return dest, src
+
+
+    def download_cr50_gs_image(self, gsurl, extract_fn, image_bid):
+        """Get the image from gs and save it in the autotest dir.
+
+        @param gsurl: The gs url for the cr50 image
+        @param extract_fn: The name of the file to extract from the cr50 image
+                        tarball. Don't extract anything if extract_fn is None.
+        @param image_bid: the image symbolic board id
+        @return: A tuple with the local path and version
+        """
+        dest, src = self.download_cr50_gs_file(gsurl, extract_fn)
         ver = cr50_utils.GetBinVersion(self.host, src)
 
         # Compare the image board id to the downloaded image to make sure we got
@@ -565,9 +582,29 @@ class Cr50Test(FirmwareTest):
                                                         symbolic=True)
             bid_ext = '.' + image_bid.replace(':', '_')
 
-        gsurl = os.path.join(self.GS_PRIVATE +
+        gsurl = os.path.join(self.GS_PRIVATE,
                 (self.CR50_DEBUG_FILE % (devid.replace(' ', '_'), bid_ext)))
         return self.download_cr50_gs_image(gsurl, None, image_bid)
+
+
+    def download_cr50_tot_image(self):
+        """download the cr50 TOT image.
+
+        @return: the local path to the TOT image.
+        """
+        # Get the TOT version information
+        ver_file = os.path.join(self.GS_PRIVATE, self.CR50_TOT_VER_FILE)
+        dut_ver_file = self.download_cr50_gs_file(ver_file, False)[1]
+        tot_ver = self.host.run('cat %s' % dut_ver_file).stdout.strip()
+
+        # Download the TOT image for the current board using the devid and TOT
+        # version information.
+        devid_ext = self.servo.get('cr50_devid').replace(' ', '_')
+        tot_file = self.CR50_TOT_FILE % (tot_ver, devid_ext)
+        gsurl = os.path.join(self.GS_PRIVATE, tot_file)
+
+        logging.info('using release image %s', tot_file)
+        return self.download_cr50_gs_image(gsurl, False, None)[0]
 
 
     def _find_release_image_gsurl(self, fn):
