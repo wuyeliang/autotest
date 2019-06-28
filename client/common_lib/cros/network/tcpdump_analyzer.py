@@ -29,12 +29,14 @@ class Frame(object):
     TIME_FORMAT = "%H:%M:%S.%f"
 
 
-    def __init__(self, frametime, bit_rate, mcs_index, ssid, source_addr):
+    def __init__(self, frametime, bit_rate, mcs_index, ssid, source_addr,
+                 frame_type):
         self._datetime = frametime
         self._bit_rate = bit_rate
         self._mcs_index = mcs_index
         self._ssid = ssid
         self._source_addr = source_addr
+        self._frame_type = frame_type
 
 
     @property
@@ -47,6 +49,12 @@ class Frame(object):
     def bit_rate(self):
         """The bitrate used to transmit the frame, as an int."""
         return self._bit_rate
+
+
+    @property
+    def frame_type(self):
+        """802.11 type/subtype field, as a hex string."""
+        return self._frame_type
 
 
     @property
@@ -83,9 +91,9 @@ class Frame(object):
 
 
     def __str__(self):
-        return '%s: rate %s, MCS %s, SSID %s, SA %s' % (
+        return '%s: rate %s, MCS %s, SSID %s, SA %s, Type %s' % (
                 self.time_datetime, self.bit_rate, self.mcs_index, self.ssid,
-                self.source_addr)
+                self.source_addr, self.frame_type)
 
 
 def _fetch_frame_field_value(frame, field):
@@ -193,7 +201,8 @@ def get_frames(local_pcap_path, display_filter, reject_bad_fcs=True,
         else:
             ssid = None
 
-        frames.append(Frame(frametime, rate, mcs_index, ssid, source_addr))
+        frames.append(Frame(frametime, rate, mcs_index, ssid, source_addr,
+                            frame_type=frame_type))
 
     return frames
 
