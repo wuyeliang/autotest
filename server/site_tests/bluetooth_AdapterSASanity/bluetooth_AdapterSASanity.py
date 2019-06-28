@@ -116,6 +116,12 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         result = self.test_discoverable_timeout()
         logging.info("Result is %s", result)
 
+    @test_wrapper('Adapter PairableTimeout test')
+    def sa_adapter_pairable_timeout_test(self):
+        """Verify that PairableTimout Property works."""
+        result = self.test_pairable_timeout()
+        logging.info("Result is %s", result)
+
 
     @batch_wrapper('Stand Alone Sanity')
     def sa_sanity_batch_run(self, num_iterations=1, test_name=None):
@@ -134,6 +140,7 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests):
         self.sa_adapter_suspend_resume_test()
         self.sa_adapter_present_test()
         self.sa_adapter_discoverable_timeout_test()
+        self.sa_adapter_pairable_timeout_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None):
