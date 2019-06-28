@@ -935,8 +935,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     def get_ccdstate(self):
         """Return a dictionary of the ccdstate once it's done debouncing"""
         for i in range(self.CCDSTATE_MAX_RETRY_COUNT):
-            rv = self.send_safe_command_get_output('ccdstate',
-                                                   ['ccdstate(.*)>'])[0][0]
+            rv = self.send_command_retry_get_output('ccdstate',
+                    ['ccdstate(.*)>'], safe=True)[0][0]
 
             # Look for a line like 'AP: on' or 'AP: off'. 'debouncing' or
             # 'unknown' may appear transiently. 'debouncing' should transition
@@ -975,8 +975,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         @return an integer 1 or 0 based on the gpioget value
         """
-        result = self.send_safe_command_get_output('gpioget',
-                ['(0|1)[ \S]*%s' % signal_name])
+        result = self.send_command_retry_get_output('gpioget',
+                ['(0|1)[ \S]*%s' % signal_name], safe=True)
         return int(result[0][1])
 
 
