@@ -42,19 +42,24 @@ class network_WiFi_APSupportedRates(wifi_cell_test_base.WiFiCellTestBase):
                          self.context.router.get_hostapd_mac(0)))
         frames = tcpdump_analyzer.get_frames(pcap_result.local_pcap_path,
                                              frame_filter, reject_bad_fcs=False)
+        if not frames:
+            raise error.TestError('Failed to capture any relevant frames')
 
-        for frame in frames:
-            # Some frames don't have bitrate fields -- for example, if they are
-            # using MCS rates (not legacy rates). For MCS rates, that's OK,
-            # since that satisfies this test requirement (not using
-            # "unsupported legacy rates"). So ignore them.
-            if (frame.bit_rate is not None and
-                frame.bit_rate not in supported_rates):
-                logging.error('Unexpected rate for: %s', frame)
-                raise error.TestFail('Frame at %s was sent at %f Mbps '
-                                     '(expected %r).' %
-                                     (frame.time_string, frame.bit_rate,
-                                      supported_rates))
+        # Some frames don't have bitrate fields -- for example, if they are
+        # using MCS rates (not legacy rates). For MCS rates, that's OK, since
+        # that satisfies this test requirement (not using "unsupported legacy
+        # rates"). So ignore them.
+        bad_frames = [f for f in frames
+                      if f.bit_rate is not None and
+                         f.bit_rate not in supported_rates]
+        if bad_frames:
+            # Remove duplicates.
+            bad_rates = list(set(f.bit_rate for f in bad_frames))
+            logging.error('Unexpected rate for frames:')
+            for f in bad_frames:
+                logging.error('%s', f)
+            raise error.TestFail('Saw frames at rates %r (expected %r).' %
+                                 (bad_rates, supported_rates))
 
     def parse_additional_arguments(self, commandline_args, additional_params):
         """Hook into super class to take control files parameters.
