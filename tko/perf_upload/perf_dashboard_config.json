@@ -56,10 +56,6 @@
     "master_name": "ChromeOSPerf"
   },
   {
-    "autotest_name": "build_RootFilesystemSize",
-    "master_name": "ChromeOSPerf"
-  },
-  {
     "autotest_name": "camera_HAL3Perf",
     "master_name": "ChromeOSVideo"
   },
@@ -110,14 +106,6 @@
     "master_name": "ChromeOS_Enterprise"
   },
   {
-    "autotest_name": "enterprise_CFM_USBPeripheralHotplugDetect.c920",
-    "master_name": "ChromeOS_Enterprise"
-  },
-  {
-    "autotest_name": "enterprise_CFM_USBPeripheralHotplugDetect.c930",
-    "master_name": "ChromeOS_Enterprise"
-  },
-  {
     "autotest_name": "firmware_StandbyPowerConsumption.30min",
     "master_name": "ChromeOSPower"
   },
@@ -150,11 +138,6 @@
     "master_name": "ChromeOS_Graphics"
   },
   {
-    "autotest_name": "graphics_dEQP.gles32-master",
-    "dashboard_test_name": "graphics_dEQP",
-    "master_name": "ChromeOS_Graphics"
-  },
-  {
     "autotest_name": "graphics_dEQP.vk-master",
     "dashboard_test_name": "graphics_dEQP",
     "master_name": "ChromeOS_Graphics"
@@ -181,10 +164,6 @@
   },
   {
     "autotest_name": "graphics_Gralloc",
-    "master_name": "ChromeOS_Graphics"
-  },
-  {
-    "autotest_name": "graphics_GpuReset",
     "master_name": "ChromeOS_Graphics"
   },
   {
@@ -228,15 +207,7 @@
     "master_name": "ChromeOS_Graphics"
   },
   {
-    "autotest_name": "graphics_WebGLClear",
-    "master_name": "ChromeOS_Graphics"
-  },
-  {
     "autotest_name": "graphics_WebGLManyPlanetsDeep",
-    "master_name": "ChromeOS_Graphics"
-  },
-  {
-    "autotest_name": "graphics_WebGLPerformance",
     "master_name": "ChromeOS_Graphics"
   },
   {
@@ -496,16 +467,6 @@
     "master_name": "ChromeOSWiFi"
   },
   {
-    "autotest_name": "network_WiFi_SuspendStress.11a",
-    "dashboard_test_name": "network_WiFi_SuspendStress",
-    "master_name": "ChromeOSWiFi"
-  },
-  {
-    "autotest_name": "network_WiFi_SuspendStress.11b",
-    "dashboard_test_name": "network_WiFi_SuspendStress",
-    "master_name": "ChromeOSWiFi"
-  },
-  {
     "autotest_name": "network_WiFi_SuspendStress.11g",
     "dashboard_test_name": "network_WiFi_SuspendStress",
     "master_name": "ChromeOSWiFi"
@@ -556,10 +517,6 @@
   },
   {
     "autotest_name": "platform_LogoutPerf",
-    "master_name": "ChromeOSPerf"
-  },
-  {
-    "autotest_name": "platform_MemoryMonitor",
     "master_name": "ChromeOSPerf"
   },
   {
@@ -651,11 +608,6 @@
   {
     "autotest_name": "telemetry_Benchmarks.octane",
     "dashboard_test_name": "octane",
-    "master_name": "ChromeOSPerf"
-  },
-  {
-    "autotest_name": "telemetry_Benchmarks.page_cycler_v2.typical_25",
-    "dashboard_test_name": "page_cycler_v2.typical_25",
     "master_name": "ChromeOSPerf"
   },
   {
