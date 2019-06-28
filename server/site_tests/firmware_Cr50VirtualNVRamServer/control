@@ -8,7 +8,7 @@ TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "firmware"
 TEST_TYPE = "server"
-ATTRIBUTES = "suite:faft_cr50_prepvt"
+ATTRIBUTES = "suite:faft_cr50_prepvt, suite:faft_cr50_tot"
 JOB_RETRIES = 1
 
 DOC = """
