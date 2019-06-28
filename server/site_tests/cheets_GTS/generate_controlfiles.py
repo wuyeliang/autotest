@@ -4,7 +4,6 @@
 # found in the LICENSE file.
 
 import argparse
-import collections
 import contextlib
 import logging
 import os
@@ -669,33 +668,30 @@ def get_tradefed_data(path, is_public):
     os.chmod(tradefed, os.stat(tradefed).st_mode | stat.S_IEXEC)
     cmd_list = [tradefed, 'list', 'modules']
     logging.info('Calling tradefed for list of modules.')
-    # TODO(ihf): Get a tradefed command which terminates then refactor.
-    p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE)
-    modules = []
+    with open(os.devnull, 'w') as devnull:
+        # tradefed terminates itself if stdin is not a tty.
+        tradefed_output = subprocess.check_output(cmd_list, stdin=devnull)
+
+    modules = set()
     build = '<unknown>'
     line = ''
     revision = None
-    # The process does not terminate, but we know the last test is vm-tests-tf.
-    while not (line.startswith('vm-tests-tf') or line.startswith('Saved log')):
-        line = p.stdout.readline().strip()
-        # Android Compatibility Test Suite 7.0 (3423912)
+    for line in tradefed_output.splitlines():
         if line.startswith('Android Google '):
+            # Android Google Mobile Services (GMS) Test Suite 6.0_r4 (5356336)
             logging.info('Unpacking: %s.', line)
             build = get_tradefed_build(line)
             revision = get_tradefed_revision(line)
         elif line.startswith('Gts'):
-            modules.append(line)
-        elif line.startswith('Saved log'):
-            break
-        elif line.isspace or line.startswith('Use "help"'):
-            pass
+            # Older GTS plainly lists the module names
+            modules.add(line)
+        elif line.startswith('arm') or line.startswith('x86'):
+            # Newer GTS shows ABI-module pairs like "x86_64 GtsAfwTestCases".
+            modules.add(line.split()[1])
         else:
-            logging.warning('Ignoring "%s"', line)
-    p.kill()
-    p.wait()
-    for module in get_modules_to_remove(is_public):
-        modules.remove(module)
-    return modules, build, revision
+            logging.info('Ignoring "%s"', line)
+    modules -= set(get_modules_to_remove(is_public))
+    return list(modules), build, revision
 
 
 # GTS is never truly public, but we consider the version for partners as such.
