@@ -21,4 +21,6 @@ DOC = """
 This runs the WebGL aquarium test under memory pressure.
 """
 
-job.run_test('graphics_WebGLAquarium', memory_pressure={'memory_to_reserve_mb': 200})
+job.run_test('graphics_WebGLAquarium',
+             tag='memory_pressure',
+             memory_pressure={'memory_to_reserve_mb': 200})
