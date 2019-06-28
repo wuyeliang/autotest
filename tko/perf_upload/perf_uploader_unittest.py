@@ -251,6 +251,20 @@ class test_parse_and_gather_presentation(unittest.TestCase):
             'master_name': 'ChromeOSPerf'
         })
 
+    def test_autotest_name_is_exact_matched(self):
+        """Verifies that autotest name is exact matched to the test properly."""
+        with open(self._temp_path, 'w') as f:
+            f.write(self._AUTOTEST_NAME_CONFIG)
+        config = perf_uploader._parse_config_file(self._temp_path)
+        test_name = 'test.test.VM.test'
+        try:
+            perf_uploader._gather_presentation_info(config, test_name)
+            self.fail(
+                'PerfUploadingError is expected for %s. autotest_name should '
+                'be exactly matched.' % test_name)
+        except perf_uploader.PerfUploadingError:
+            return
+
     def test_autotest_name_is_escaped(self):
         """Verifies that autotest name is escaped properly."""
         with open(self._temp_path, 'w') as f:

@@ -64,7 +64,7 @@ def _parse_config_file(config_file):
         if 'autotest_regex' in entry:
             config_dict[entry['autotest_regex']] = entry
         else:
-            config_dict[re.escape(entry['autotest_name'])] = entry
+            config_dict['^' + re.escape(entry['autotest_name']) + '$'] = entry
     return config_dict
 
 
