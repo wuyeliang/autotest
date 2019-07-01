@@ -30,6 +30,7 @@ VERSION_PREFIX = 'cros-version:'
 BOARD_PREFIX = 'board:'
 MODEL_LABEL = 'model'
 DEVICE_SKU_LABEL = 'device-sku'
+BRAND_CODE_LABEL = 'brand-code'
 OS_PREFIX = 'os'
 
 # Bug filing

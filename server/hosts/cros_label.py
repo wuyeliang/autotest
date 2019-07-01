@@ -113,6 +113,24 @@ class DeviceSkuLabel(base_label.StringPrefixLabel):
         return []
 
 
+class BrandCodeLabel(base_label.StringPrefixLabel):
+    """Determine the correct brand_code (aka RLZ-code) for the device."""
+
+    _NAME =  ds_constants.BRAND_CODE_LABEL
+
+    def generate_labels(self, host):
+        brand_code = host.host_info_store.get().brand_code
+        if brand_code:
+            return [brand_code]
+
+        mosys_cmd = 'mosys platform brand'
+        result = host.run(command=mosys_cmd, ignore_status=True)
+        if result.exit_status == 0:
+            return [result.stdout.strip()]
+
+        return []
+
+
 class LightSensorLabel(base_label.BaseLabel):
     """Label indicating if a light sensor is detected."""
 
@@ -668,6 +686,7 @@ CROS_LABELS = [
     CtsArchLabel(),
     DetachableBaseLabel(),
     DeviceSkuLabel(),
+    BrandCodeLabel(),
     ECLabel(),
     FingerprintLabel(),
     HWIDLabel(),

@@ -39,6 +39,7 @@ class HostInfo(object):
     # string (gen'd from HWID) and not the raw sku value, so avoiding collision
     # with device-sku instead.
     _DEVICE_SKU_PREFIX = 'device-sku'
+    _BRAND_CODE_PREFIX = 'brand-code'
     _OS_PREFIX = 'os'
     _POOL_PREFIX = 'pool'
 
@@ -102,6 +103,14 @@ class HostInfo(object):
         """
         return self.get_label_value(self._DEVICE_SKU_PREFIX)
 
+    @property
+    def brand_code(self):
+        """Retrieve the brand_code label value for the host.
+
+        @returns: The (stripped) brand_code label, or the empty string if no
+        label is found.
+        """
+        return self.get_label_value(self._BRAND_CODE_PREFIX)
 
     @property
     def os(self):
