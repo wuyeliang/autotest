@@ -69,22 +69,22 @@
     "master_name": "ChromeOSPerf"
   },
   {
-    "autotest_regex": "cheets_CTS_.*CtsDeqpTestCases$",
+    "autotest_regex": "cheets_CTS_.*\\.CtsDeqpTestCases$",
     "dashboard_test_name": "cheets_CTS",
     "master_name": "ChromeOS_Graphics"
   },
   {
-    "autotest_regex": "cheets_CTS_.*CtsGraphicsTestCases$",
+    "autotest_regex": "cheets_CTS_.*\\.CtsGraphicsTestCases$",
     "dashboard_test_name": "cheets_CTS",
     "master_name": "ChromeOS_Graphics"
   },
   {
-    "autotest_regex": "cheets_CTS_.*CtsGraphics2TestCases$",
+    "autotest_regex": "cheets_CTS_.*\\.CtsGraphics2TestCases$",
     "dashboard_test_name": "cheets_CTS",
     "master_name": "ChromeOS_Graphics"
   },
   {
-    "autotest_regex": "cheets_CTS_.*CtsSkQPTestCases$",
+    "autotest_regex": "cheets_CTS_.*\\.CtsSkQPTestCases$",
     "dashboard_test_name": "cheets_CTS",
     "master_name": "ChromeOS_Graphics"
   },
