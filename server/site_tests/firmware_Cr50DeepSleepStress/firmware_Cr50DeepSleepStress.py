@@ -128,7 +128,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
     def get_expected_ds_count(self, host, reset_type, suspend_count):
         """Returns the expected deep sleep count"""
-        is_arm = self.check_ec_capability('arm')
+        is_arm = self.check_ec_capability(['arm'], suppress_warning=True)
         # x86 devices should suspend once per reset. ARM will only suspend
         # if the device enters s5.
         return 0 if (reset_type != 'reboot' and is_arm) else suspend_count
