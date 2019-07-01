@@ -72,17 +72,11 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
         @param suspend_count: the number of times to reboot the device.
         """
-        # This test may be running on servo v4 with servo micro. That servo v4
-        # may have a type A cable or type C cable for data communication with
-        # the DUT. If it is using a type C cable, that cable will look like a
-        # debug accessory. Run ccd_disable, to stop debug accessory mode and
-        # prevent CCD from interfering with deep sleep. Running ccd_disable on
-        # a type A servo v4 or any other servo version isn't harmful.
-        self.cr50.ccd_disable()
-
         original_mainfw_type = 'developer' if self.checkers.crossystem_checker(
                 {'mainfw_type': 'developer'}) else 'normal'
-
+        # Disable CCD so Cr50 can enter deep sleep
+        self.cr50.ccd_disable()
+        self.cr50.clear_deep_sleep_count()
         for i in range(suspend_count):
             # Power off the device
             self.servo.get_power_state_controller().power_off()
@@ -98,23 +92,42 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                               {'mainfw_type': original_mainfw_type}))
 
 
+    def _dut_is_responsive(self, host):
+        """Returns True if the DUT eventually responds"""
+        return host.ping_wait_up(180)
+
+
+    def wait_for_client_after_changing_ccd(self, host, enable):
+        """Change CCD and wait for client"""
+        if enable:
+            self.cr50.ccd_enable()
+        else:
+            self.cr50.ccd_disable()
+        # power suspend stress needs to ssh into the DUT. If ethernet goes
+        # down, raise a test error, so we can tell the difference between
+        # dts ethernet issues and the dut going down during the suspend stress.
+        if self._dut_is_responsive(host):
+            return
+        logging.info('DUT is not pingable after disabling ccd')
+
+        # TODO(b/135147658): Raise an error once CCD disable is fixed.
+        logging.info('Resetting DUT')
+        self.servo.get_power_state_controller().reset()
+        if not self._dut_is_responsive(host):
+            raise error.TestError('DUT is not pingable after %sabling ccd' %
+                                  ('en' if enable else 'dis'))
+
+
     def run_suspend_resume(self, host, suspend_count):
         """Suspend the device the requested number of times
 
         @param host: the host object representing the DUT.
         @param suspend_count: the number of times to suspend the device.
         """
-        client_at = autotest.Autotest(host)
-
         # Disable CCD so Cr50 can enter deep sleep
-        self.cr50.ccd_disable()
-
-        # power suspend stress needs to ssh into the DUT. If ethernet goes
-        # down, raise a test error, so we can tell the difference between
-        # dts ethernet issues and the dut going down during the suspend stress.
-        if not host.ping_wait_up(60):
-            raise error.TestError('DUT is not pingable after disabling ccd')
-
+        self.wait_for_client_after_changing_ccd(host, False)
+        self.cr50.clear_deep_sleep_count()
+        client_at = autotest.Autotest(host)
         # Duration is set to 0, because it is required but unused when
         # iterations is given.
         client_at.run_test('power_SuspendStress', tag='idle',
@@ -124,8 +137,6 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                            check_connection=False,
                            suspend_iterations=suspend_count,
                            suspend_state=self.MEM)
-        # Reenable CCD
-        self.cr50.ccd_enable()
 
 
     def get_expected_ds_count(self, host, reset_type, suspend_count):
@@ -173,9 +184,6 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
 
-        # Clear the deep sleep count
-        logging.info('Clear Cr50 deep sleep count')
-        self.cr50.clear_deep_sleep_count()
         self.log_basic_cr50_sleep_information()
 
         if reset_type == 'reboot':
@@ -191,3 +199,5 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         expected_ds_count = self.get_expected_ds_count(host, reset_type,
                 suspend_count)
         self.check_cr50_state(expected_ds_count, self.original_cr50_version)
+        # Reenable CCD
+        self.wait_for_client_after_changing_ccd(host, True)
