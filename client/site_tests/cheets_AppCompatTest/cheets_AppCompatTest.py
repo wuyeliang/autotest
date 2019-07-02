@@ -9,6 +9,11 @@ from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import arc
 from autotest_lib.client.cros.graphics import graphics_utils
+try:
+    # Importing this private util fails on public boards (e.g amd64-generic)
+    from autotest_lib.client.common_lib.cros import password_util
+except ImportError:
+    logging.error('Failed to import password_util from autotest-private')
 
 
 class cheets_AppCompatTest(arc.ArcTest):
@@ -39,11 +44,12 @@ class cheets_AppCompatTest(arc.ArcTest):
         if self._touch_view_mode:
             browser_args = ['--force-tablet-mode=touch_view']
 
+        cred = password_util.get_appcompat_credentials()
         super(cheets_AppCompatTest, self).initialize(
             disable_arc_opt_in=False, extra_browser_args=browser_args,
             disable_app_sync=True, disable_play_auto_install=True,
-            username='crosarcappcomp070919@gmail.com',
-            password='appcompatautotest')
+            username=cred.username,
+            password=cred.password)
 
 
     def arc_setup(self):
@@ -196,18 +202,19 @@ class cheets_AppCompatTest(arc.ArcTest):
 
 
     def run_once(self, retries=3):
+        """Main entry for the test."""
         self._increase_logcat_buffer()
         self._copy_resources_to_dut()
         self._grant_storage_permission()
 
         for trial in range(retries):
-            logging.info('Iteration %d: Trying to launch play store' % trial)
+            logging.info('Iteration %d: Trying to launch play store', trial)
 
             # Bring Play Store to front.
             arc.adb_shell('am start %s' % self._PLAY_STORE_ACTIVITY)
             self._take_screenshot('test_start')
             self._start_test()
-            logging.info('Iteration %d: Test finished' % trial)
+            logging.info('Iteration %d: Test finished', trial)
             self._take_screenshot('test_end')
             self._get_app_version()
             self._capture_bugreport()
