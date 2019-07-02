@@ -326,7 +326,11 @@ class firmware_PDDataSwap(FirmwareTest):
                 # Attempt to swap power roles
                 power_swap = self._change_dut_power_role(pd_port)
                 if power_swap:
-                    self._execute_data_role_swap_test(pd_port)
+                    try:
+                        self._execute_data_role_swap_test(pd_port)
+                    finally:
+                        # Swap power role, back to the original
+                        self._change_dut_power_role(pd_port)
                 else:
                     logging.warn('Power swap not successful!')
                     logging.warn('Only tested with DUT in %s state',
