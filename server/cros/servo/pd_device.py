@@ -113,6 +113,14 @@ class PDDevice(object):
         raise NotImplementedError(
                 'drp_set should be implemented in derived class')
 
+    def drp_get(self):
+        """Gets dualrole mode
+
+        @returns one of the modes (on, off, snk, src)
+        """
+        raise NotImplementedError(
+                'drp_set should be implemented in derived class')
+
     def drp_disconnect_connect(self, disc_time_sec):
         """Force PD disconnect/connect via drp settings
 
@@ -263,12 +271,17 @@ class PDConsoleDevice(PDDevice):
         """
         # Set desired dualrole mode
         self.utils.set_pd_dualrole(self.port, mode)
-        # Get the expected output
-        resp = self.utils.dualrole_resp[self.utils.dual_index[mode]]
         # Get current setting
         current = self.utils.get_pd_dualrole(self.port)
         # Verify that setting is correct
-        return bool(resp == current)
+        return bool(mode == current)
+
+    def drp_get(self):
+        """Gets dualrole mode
+
+        @returns one of the modes (on, off, snk, src)
+        """
+        return self.utils.get_pd_dualrole(self.port)
 
     def try_src(self, enable):
         """Enables/Disables Try.SRC PD protocol setting
@@ -479,11 +492,9 @@ class PDTesterDevice(PDConsoleDevice):
         @returns True if dualrole mode matches the requested value or
         is successfully set to that value. False, otherwise.
         """
-        # Get correct dualrole console response
-        resp = self.utils.dualrole_resp[self.utils.dual_index[mode]]
         # Get current value of dualrole
         drp = self.utils.get_pd_dualrole(self.port)
-        if drp == resp:
+        if drp == mode:
             return True
 
         if mode == 'on':
@@ -492,7 +503,7 @@ class PDTesterDevice(PDConsoleDevice):
         else:
             # If desired setting is other than 'on', need to ensure that
             # drp mode on PDTester is disabled.
-            if resp == 'on':
+            if drp == 'on':
                 # This will turn off drp_enable flag and set dualmode to 'off'
                 return self._toggle_pdtester_drp()
             # With drp_enable flag off, can set to desired setting

@@ -99,6 +99,8 @@ class firmware_PDTrySrc(FirmwareTest):
 
         # Create list of available UART consoles
         consoles = [self.usbpd, self.pdtester]
+        # Backup the original dualrole settings
+        original_drp = [None, None]
         port_partner = pd_device.PDPortPartner(consoles)
         # Identify PDTester <-> DUT PD device pair
         port_pair = port_partner.identify_pd_devices()
@@ -109,35 +111,43 @@ class firmware_PDTrySrc(FirmwareTest):
         # sequence does not affect the SRC/SNK connection. PDTester provides
         # a 'fakedisconnect' feature which more closely resembles unplugging
         # and replugging a Type C cable.
-
-        # Both devices must support dualrole mode for this test. In addtion,
-        # at least one device must support Try.SRC mode.
         for side in xrange(len(port_pair)):
-            try:
-                if not port_pair[side].drp_set('on'):
-                    raise error.TestFail('Could not enable DRP')
-            except NotImplementedError:
-                raise error.TestFail('Both devices must support DRP')
+            original_drp[side] = port_pair[side].drp_get()
             if port_pair[side].is_pdtester:
                 # Identify PDTester and DUT device
                 p_idx = side
                 d_idx = side ^ 1
 
-        # Make sure that DUT supports Try.SRC mode
-        if not port_pair[d_idx].try_src(True):
-            raise error.TestFail('DUT does not support Try.SRC feature')
-        # Run disconnect/connect sequence with Try.SRC enabled
-        stats_on = self._execute_connect_sequence(
-                usbpd_dev=port_pair[d_idx],
-                pdtester_dev=port_pair[p_idx],
-                trysrc=True)
-        # Run disconnect/connect sequence with Try.SRC disabled
-        stats_off = self._execute_connect_sequence(
-                usbpd_dev=port_pair[d_idx],
-                pdtester_dev=port_pair[p_idx],
-                trysrc=False)
-        # Reenable Try.SRC mode
-        port_pair[d_idx].try_src(True)
+        try:
+            # Both devices must support dualrole mode for this test. In addtion,
+            # DUT must support Try.SRC mode.
+            for port in port_pair:
+                try:
+                    if not port.drp_set('on'):
+                        raise error.TestFail('Could not enable DRP')
+                except NotImplementedError:
+                    raise error.TestFail('Both devices must support DRP')
+
+            # Make sure that DUT supports Try.SRC mode
+            if not port_pair[d_idx].try_src(True):
+                raise error.TestFail('DUT does not support Try.SRC feature')
+
+            # Run disconnect/connect sequence with Try.SRC enabled
+            stats_on = self._execute_connect_sequence(
+                    usbpd_dev=port_pair[d_idx],
+                    pdtester_dev=port_pair[p_idx],
+                    trysrc=True)
+            # Run disconnect/connect sequence with Try.SRC disabled
+            stats_off = self._execute_connect_sequence(
+                    usbpd_dev=port_pair[d_idx],
+                    pdtester_dev=port_pair[p_idx],
+                    trysrc=False)
+        finally:
+            # Reenable Try.SRC mode
+            port_pair[d_idx].try_src(True)
+            # Restore the original dualrole settings
+            for side in xrange(len(port_pair)):
+                port_pair[side].drp_set(original_drp[side])
 
         # Compute SRC connect ratio/percent for Try.SRC on and off cases
         total_on = float(stats_on[self.SNK] + stats_on[self.SRC])
@@ -160,4 +170,3 @@ class firmware_PDTrySrc(FirmwareTest):
         if trysrc_on < self.TRYSRC_ON_THRESHOLD:
             raise error.TestFail('SRC %% = %.1f: Must be >  %.1f' %
                                  (trysrc_on, self.TRYSRC_ON_THRESHOLD))
-

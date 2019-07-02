@@ -27,11 +27,13 @@ class PDConsoleUtils(object):
     PD_MAX_PORTS = 2
     CONNECT_TIME = 4
 
-    # dualrole input/ouput values
     DUALROLE_QUERY_DELAY = 0.25
-    dual_index = {'on': 0, 'off': 1, 'snk': 2, 'src': 3}
-    dualrole_cmd = ['on', 'off', 'sink', 'source']
-    dualrole_resp = ['on', 'off', 'force sink', 'force source']
+    # Dualrole input/ouput values of methods in this class.
+    DUALROLE_VALUES = ['on', 'off', 'snk', 'src']
+    # Strings passing to the console command "pd dualrole"
+    DUALROLE_CMD_ARGS = ['on', 'off', 'sink', 'source']
+    # Strings returned from the console command "pd dualrole"
+    DUALROLE_CMD_RESULTS = ['on', 'off', 'force sink', 'force source']
 
     # Some old firmware uses a single dualrole setting for all ports; while
     # some new firmware uses a per port dualrole settting. This flag will be
@@ -200,7 +202,7 @@ class PDConsoleUtils(object):
         """Get the current PD dualrole setting
 
         @param port: Type C PD port 0/1
-        @returns: current PD dualrole setting
+        @returns: current PD dualrole setting, one of (on, off, snk, src)
         """
         if self.per_port_dualrole_setting is True:
             cmd = 'pd %d dualrole' % port
@@ -218,9 +220,12 @@ class PDConsoleUtils(object):
                 self.per_port_dualrole_setting = False
                 return self.get_pd_dualrole(port)
 
-        dual_list = self.send_pd_command_get_output(cmd,
+        m = self.send_pd_command_get_output(cmd,
                 ['dual-role toggling:\s+([\w ]+)[\r\n]'])
-        return dual_list[0][1]
+        # Find the index according to the output of "pd dualrole" command
+        dual_index = self.DUALROLE_CMD_RESULTS.index(m[0][1])
+        # Map to a string which is the output of this method
+        return self.DUALROLE_VALUES[dual_index]
 
     def set_pd_dualrole(self, port, value):
         """Set pd dualrole
@@ -242,17 +247,16 @@ class PDConsoleUtils(object):
             self.get_pd_dualrole(port)
 
         # Get string required for console command
-        dual_index = self.dual_index[value]
+        dual_index = self.DUALROLE_VALUES.index(value)
         # Create console command
-        cmd = 'pd %d dualrole %s' % (port, self.dualrole_cmd[dual_index])
+        cmd = 'pd %d dualrole %s' % (port, self.DUALROLE_CMD_ARGS[dual_index])
         self.console.send_command(cmd)
         time.sleep(self.DUALROLE_QUERY_DELAY)
         # Get current setting to verify that command was successful
         dual = self.get_pd_dualrole(port)
         # If it doesn't match, then raise error
-        if dual != self.dualrole_resp[dual_index]:
-            raise error.TestFail("dualrole error: " +
-                                 self.dualrole_resp[dual_index] + " != "+dual)
+        if dual != value:
+            raise error.TestFail("dualrole error: " + value + " != " + dual)
 
     def query_pd_connection(self):
         """Determine if PD connection is present
@@ -358,7 +362,7 @@ class PDConsoleUtils(object):
         @returns True is dualrole mode is active, false otherwise
         """
         drp = self.get_pd_dualrole(port)
-        return bool(drp == self.dualrole_resp[self.dual_index['on']])
+        return bool(drp == 'on')
 
 
 class PDConnectionUtils(PDConsoleUtils):
