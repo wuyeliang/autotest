@@ -1034,6 +1034,10 @@ class host_rename(host):
                                help='Execute the action as a dryrun.',
                                action='store_true',
                                default=False)
+        self.parser.add_option('--no-confirmation',
+                               help='do not prompt for confirmation',
+                               action='store_true',
+                               default=False)
 
 
     def parse(self):
@@ -1042,6 +1046,7 @@ class host_rename(host):
         self.for_migration = options.for_migration
         self.for_rollback = options.for_rollback
         self.dryrun = options.dryrun
+        self.require_confirmation = not options.no_confirmation
         self.host_ids = {}
 
         if not (self.for_migration ^ self.for_rollback):
@@ -1059,7 +1064,7 @@ class host_rename(host):
 
     def execute(self):
         """Execute 'atest host rename'."""
-        if not self.prompt_confirmation():
+        if self.require_confirmation and not self.prompt_confirmation():
             return
 
         successes = []
