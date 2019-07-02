@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import logging
+import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
@@ -21,6 +22,7 @@ class firmware_PDResetHard(FirmwareTest):
     """
     version = 1
     RESET_ITERATIONS = 5
+    DELAY_BETWEEN_ITERATIONS = 1
 
     def _test_hard_reset(self, port_pair):
         """Tests hard reset initated by both ends of PD connection
@@ -32,6 +34,7 @@ class firmware_PDResetHard(FirmwareTest):
                 try:
                     if dev.hard_reset() == False:
                         raise error.TestFail('Hard Reset Failed')
+                    time.sleep(self.DELAY_BETWEEN_ITERATIONS)
                 except NotImplementedError:
                     logging.warn('Device cant hard reset ... skipping')
                     break
