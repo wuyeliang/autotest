@@ -7,6 +7,7 @@ from autotest_lib.server import utils
 AUTHOR = "Chrome OS Team"
 NAME = "firmware_PDConnect"
 PURPOSE = "Servo based PD Connect/Disconnect test"
+ATTRIBUTES = "suite:faft_pd"
 CRITERIA = "This test will fail if PD connection is not successful each attempt"
 TIME = "MEDIUM"
 TEST_CATEGORY = "Functional"

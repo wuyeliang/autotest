@@ -7,6 +7,7 @@ from autotest_lib.server import utils
 AUTHOR = "Chrome OS Team"
 NAME = "firmware_PDResetHard"
 PURPOSE = "Servo based PD hard reset test"
+ATTRIBUTES = "suite:faft_pd"
 CRITERIA = "This test will fail if hard reset does not complete"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"

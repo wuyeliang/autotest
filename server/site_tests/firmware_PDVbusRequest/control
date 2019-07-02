@@ -7,6 +7,7 @@ from autotest_lib.server import utils
 AUTHOR = "Chrome OS Team"
 NAME = "firmware_PDVbusRequest"
 PURPOSE = "Servo based PD VBUS voltage level test"
+ATTRIBUTES = "suite:faft_pd"
 CRITERIA = "This test will fail if actual voltage does not meet expected"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"

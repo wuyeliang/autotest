@@ -7,6 +7,7 @@ from autotest_lib.server import utils
 AUTHOR = "Chrome OS Team"
 NAME = "firmware_PDPowerSwap"
 PURPOSE = "Servo based PD power role swap test"
+ATTRIBUTES = "suite:faft_pd"
 CRITERIA = "This test will fail if a power swap gives unexpected results"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
