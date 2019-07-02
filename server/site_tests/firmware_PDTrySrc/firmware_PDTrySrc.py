@@ -33,7 +33,7 @@ class firmware_PDTrySrc(FirmwareTest):
     TRYSRC_OFF_THRESHOLD = 15.0
     TRYSRC_ON_THRESHOLD = 96.0
 
-    def _execute_connect_sequence(self, device):
+    def _execute_connect_sequence(self, usbpd_dev, pdtester_dev, trysrc):
         """Execute mulitple connections and track power role
 
         This method will disconnect/connect a TypeC PD port and
@@ -41,7 +41,9 @@ class firmware_PDTrySrc(FirmwareTest):
         delay for reconnect adds a random delay so that test to increase
         randomness for dualrole swaps.
 
-        @param device: PD device object
+        @param usbpd_dev: PD device object of DUT
+        @param pdtester_dev: PD device object of PDTester
+        @param trysrc: Enable TrySrc or not
 
         @returns list with number of SNK and SRC connections
         """
@@ -53,15 +55,17 @@ class firmware_PDTrySrc(FirmwareTest):
                 # Disconnect time from 1 to 2 seconds
                 disc_time = self.PD_DISCONNECT_TIME + random.random()
                 logging.info('Disconnect time = %.2f seconds', disc_time)
+                # Set the TrySrc value on DUT
+                usbpd_dev.try_src(trysrc)
                 # Force disconnect/connect
-                device.cc_disconnect_connect(disc_time)
+                pdtester_dev.cc_disconnect_connect(disc_time)
                 # Wait for connection to be reestablished
                 time.sleep(self.PD_DISCONNECT_TIME + self.PD_CONNECT_DELAY)
                 # Check power role and update connection stats
-                if device.is_snk():
+                if pdtester_dev.is_snk():
                     stats[self.SNK] += 1;
                     logging.info('Power Role = SNK')
-                elif device.is_src():
+                elif pdtester_dev.is_src():
                     stats[self.SRC] += 1;
                     logging.info('Power Role = SRC')
             except NotImplementedError:
@@ -123,11 +127,15 @@ class firmware_PDTrySrc(FirmwareTest):
         if not port_pair[d_idx].try_src(True):
             raise error.TestFail('DUT does not support Try.SRC feature')
         # Run disconnect/connect sequence with Try.SRC enabled
-        stats_on = self._execute_connect_sequence(port_pair[p_idx])
-        # Disable Try.SRC mode
-        port_pair[d_idx].try_src(False)
+        stats_on = self._execute_connect_sequence(
+                usbpd_dev=port_pair[d_idx],
+                pdtester_dev=port_pair[p_idx],
+                trysrc=True)
         # Run disconnect/connect sequence with Try.SRC disabled
-        stats_off = self._execute_connect_sequence(port_pair[p_idx])
+        stats_off = self._execute_connect_sequence(
+                usbpd_dev=port_pair[d_idx],
+                pdtester_dev=port_pair[p_idx],
+                trysrc=False)
         # Reenable Try.SRC mode
         port_pair[d_idx].try_src(True)
 
