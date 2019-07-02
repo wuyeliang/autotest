@@ -23,7 +23,8 @@ class firmware_PDPowerSwap(FirmwareTest):
 
     PD_ROLE_DELAY = 0.5
     PD_CONNECT_DELAY = 4
-    POWER_SWAP_ITERATIONS = 5
+    # Should be an even number; back to the original state at the end
+    POWER_SWAP_ITERATIONS = 10
     # Source power role
     SRC ='SRC_READY'
     # Sink power role
@@ -122,6 +123,17 @@ class firmware_PDPowerSwap(FirmwareTest):
         self.usbpd.enable_console_channel('usbpd')
 
     def cleanup(self):
+        if hasattr(self, 'pd_port'):
+            # Restore DUT dual role operation
+            self.dut_pd_utils.set_pd_dualrole(self.pd_port, 'on')
+        if hasattr(self, 'pdtester_port'):
+            # Set connection back to default arrangement
+            self.pdtester_pd_utils.set_pd_dualrole(self.pdtester_port, 'off')
+
+        if hasattr(self, 'pd_port') and hasattr(self, 'pdtester_port'):
+            # Fake-disconnect to restore the original power role
+            self.pdtester_pd_utils.send_pd_command('fakedisconnect 100 1000')
+
         self.usbpd.send_command('chan 0xffffffff')
         super(firmware_PDPowerSwap, self).cleanup()
 
@@ -151,18 +163,18 @@ class firmware_PDPowerSwap(FirmwareTest):
 
         # Type C connection (PD contract) should exist at this point
         # For this test, the DUT must be connected to a PDTester.
-        pd_port = self.connect_utils.find_dut_to_pdtester_connection()
-        if pd_port is None:
+        self.pd_port = self.connect_utils.find_dut_to_pdtester_connection()
+        if self.pd_port is None:
             raise error.TestFail("DUT to PDTester PD connection not found")
-        dut_connect_state = self.dut_pd_utils.get_pd_state(pd_port)
+        dut_connect_state = self.dut_pd_utils.get_pd_state(self.pd_port)
         logging.info('Initial DUT connect state = %s', dut_connect_state)
 
         # Get DUT dualrole status
-        if self.dut_pd_utils.is_pd_dual_role_enabled(pd_port) == False:
+        if self.dut_pd_utils.is_pd_dual_role_enabled(self.pd_port) == False:
             # DUT does not support dualrole mode, power swap
             # requests to the DUT should be rejected.
             logging.info('Power Swap support not advertised by DUT')
-            self._test_power_swap_reject(pd_port)
+            self._test_power_swap_reject(self.pd_port)
             logging.info('Power Swap request rejected by DUT as expected')
         else:
             # Start with PDTester as source
@@ -176,9 +188,9 @@ class firmware_PDPowerSwap(FirmwareTest):
                     direction = 'rx'
                 else:
                     direction = 'tx'
-                if self._attempt_power_swap(pd_port, direction):
+                if self._attempt_power_swap(self.pd_port, direction):
                     success += 1
-                new_state = self.dut_pd_utils.get_pd_state(pd_port)
+                new_state = self.dut_pd_utils.get_pd_state(self.pd_port)
                 logging.info('New DUT power role = %s', new_state)
 
             if success != self.POWER_SWAP_ITERATIONS:
@@ -191,14 +203,9 @@ class firmware_PDPowerSwap(FirmwareTest):
             else:
                 dual_mode = 'snk'
             logging.info('Setting dualrole mode to %s', dual_mode)
-            self.dut_pd_utils.set_pd_dualrole(pd_port, dual_mode)
+            self.dut_pd_utils.set_pd_dualrole(self.pd_port, dual_mode)
             time.sleep(self.PD_ROLE_DELAY)
             # Expect behavior now is that DUT will reject power swap
-            self._test_power_swap_reject(pd_port)
+            self._test_power_swap_reject(self.pd_port)
             logging.info('Power Swap request rejected by DUT as expected')
-            # Restore DUT dual role operation
-            self.dut_pd_utils.set_pd_dualrole(pd_port, 'on')
-            # Set connection back to default arrangement
-            self.pdtester_pd_utils.set_pd_dualrole(pd_port, 'off')
-            self.pdtester_pd_utils.send_pd_command('fake disconnect 100 1000')
 
