@@ -64,6 +64,9 @@ class firmware_PDVbusRequest(FirmwareTest):
         self.usbpd.send_command('chan 0')
 
     def cleanup(self):
+        # Set back to the max 20V SRC mode at the end.
+        self.pdtester.charge(self.USBC_MAX_VOLTAGE)
+
         self.usbpd.send_command('chan 0xffffffff')
         super(firmware_PDVbusRequest, self).cleanup()
 
