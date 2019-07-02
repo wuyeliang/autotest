@@ -65,20 +65,28 @@ class firmware_PDConnect(FirmwareTest):
 
         # Test disconnect/connect sequences
         self._test_connect(port_pair)
+
         # Swap power roles (if possible). Note the pr swap is attempted
         # for both devices in the connection. This ensures that a device
         # such as Plankton, which is dualrole capable, but has this mode
         # disabled by default, won't prevent the device pair from role swapping.
-        swap = False;
+        swappable_dev = None;
         for dev in port_pair:
             try:
                 if dev.pr_swap():
-                    swap = True
+                    swappable_dev = dev
                     break
             except NotImplementedError:
-                logging.warn('device cant send power role swap command')
-        if swap == True:
-            # Power role has been swapped, retest.
-            self._test_connect(port_pair)
+                logging.warn('Power role swap not supported on the device')
+
+        if swappable_dev:
+            try:
+                # Power role has been swapped, retest.
+                self._test_connect(port_pair)
+            finally:
+                # Swap power role again, back to the original
+                if not swappable_dev.pr_swap():
+                    logging.error('Failed to swap power role to the original')
         else:
-            logging.warn('Device pair could not role swap, ending test')
+            logging.warn('Device pair could not perform power role swap, '
+                         'ending test')
