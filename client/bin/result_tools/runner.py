@@ -183,8 +183,10 @@ def collect_last_summary(host, source_path, dest_path,
     finally:
         # Remove the collected summary file so it won't affect later tests.
         try:
-            host.run('rm %s' % summary_file,
-                     timeout=_FIND_DIR_SUMMARY_TIMEOUT).stdout.strip()
+            # Check and remove the summary file
+            if host.path_exists(summary_file):
+                host.run('rm %s' % summary_file,
+                         timeout=_FIND_DIR_SUMMARY_TIMEOUT).stdout.strip()
         except error.AutoservRunError:
             logging.exception(
                     'Non-critical failure: Failed to delete the latest '
