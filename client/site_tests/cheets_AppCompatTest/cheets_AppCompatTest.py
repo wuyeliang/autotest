@@ -133,20 +133,21 @@ class cheets_AppCompatTest(arc.ArcTest):
 
 
     def _parse_results(self):
-        """Parse the pass/fail/skipped entries from logcat. """
+        """Parse the pass/fail/blocked/skipped entries from logcat. """
         passed = self._get_log_entry_count(",PASS,")
         failed = self._get_log_entry_count(",FAIL,")
         nt = self._get_log_entry_count(",NT,")
         blocked = self._get_log_entry_count(",BLOCKED,")
         skipped = self._get_log_entry_count(",SKIPPED,")
-        ft = self._get_failed_test_cases()
+        ft = self._get_list_of_test_cases(",FAIL,")
+        bt = self._get_list_of_test_cases(",BLOCKED,")
 
         result = ('Test results for %s(%s): Passed %s, Failed %s, Not Tested '
-                  '%s, Blocked %s, Skipped %s. Failed tests: [%s]' % (
+                  '%s, Blocked %s, Skipped %s. Failed tests: [%s] Blocked tests: [%s]' % (
                   self._pkg_name, self._app_version, passed, failed, nt,
-                  blocked, skipped, ft))
+                  blocked, skipped, ft, bt))
         logging.info(result)
-        pass_status = int(failed) == 0 and int(passed) > 0
+        pass_status = int(failed) == 0 and int(blocked) == 0 and int(passed) > 0
         return pass_status, result
 
 
@@ -155,19 +156,19 @@ class cheets_AppCompatTest(arc.ArcTest):
         logcat = os.path.join(self.resultsdir, self._logcat)
         return utils.run('grep "%s" %s | grep -c "%s"' %
                         (self._LOG_TAG, logcat, entry),
-                         ignore_status=True).stdout.strip()
+                        ignore_status=True).stdout.strip()
 
 
-    def _get_failed_test_cases(self):
-        """Get the list of test cases that failed from logcat."""
+    def _get_list_of_test_cases(self, status):
+        """Get the list of test cases that are fail/blocked from logcat."""
         logcat = os.path.join(self.resultsdir, self._logcat)
-        failed_tests = []
-        failed_tests_list = utils.run('grep "%s" %s | grep ",FAIL,"' %
-                            (self._LOG_TAG, logcat),
+        fail_or_blocked_tests = []
+        fail_or_blocked_tests_list = utils.run('grep "%s" %s | grep "%s"' %
+                            (self._LOG_TAG, logcat, status),
                             ignore_status=True).stdout.strip().splitlines()
-        for line in failed_tests_list:
-            failed_tests.append(line.split(',')[-4:])
-        return failed_tests
+        for line in fail_or_blocked_tests_list:
+            fail_or_blocked_tests.append(line.split(',')[-4:])
+        return fail_or_blocked_tests
 
 
     def _increase_logcat_buffer(self):
