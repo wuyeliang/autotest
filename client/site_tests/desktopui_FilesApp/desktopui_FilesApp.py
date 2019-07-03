@@ -10,6 +10,7 @@ from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chrome
 from autotest_lib.client.cros.graphics import graphics_utils
+from autotest_lib.client.cros.input_playback import keyboard
 
 
 class desktopui_FilesApp(test.test):
@@ -25,19 +26,24 @@ class desktopui_FilesApp(test.test):
 
     # On screen elements
     _TEXT_FILE = 'text.txt'
+    _IMAGE_FILE = 'screenshot2_reference.png'
+    _IMAGE_DIMENSIONS = '100 x 100'
     _DOWNLOADS = 'Downloads'
     _MY_FILES = 'My files'
     _NEW_FOLDER = 'New folder'
+    _OPEN_FILE = 'Open'
+    _EDIT_IMAGE = 'Edit'
 
 
     def cleanup(self):
         """Remove temporary files created during test."""
-        text_file = os.path.join(self._DOWNLOADS_PATH, self._TEXT_FILE)
-        try:
-            if os.path.exists(text_file):
-                os.remove(text_file)
-        except OSError:
-            logging.info('Failed to delete files in cleanup. Ignoring.')
+        for temp_path in self._temp_file_paths:
+            try:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except OSError:
+                logging.info(
+                    'Failed to delete %s in cleanup. Ignoring' % temp_path)
 
 
     def evaluate_javascript(self, code, retries=3):
@@ -98,6 +104,21 @@ class desktopui_FilesApp(test.test):
                                               name: '%s'}});
             element.doDefault(); """ % (role, name)
         self.evaluate_javascript(click_js)
+
+
+    def _set_navigation_point_on_element(self, role, name):
+        """Set navigation point to an element by role/name combination.
+
+        @param role: The chrome.automation role we want to look for
+        @param name: The chrome.automation name we want to look for
+
+        """
+        focus_js = """
+            element = root.find({attributes: {role: '%s',
+                                              name: '%s'}});
+            element.setSequentialFocusNavigationStartingPoint(); """ %\
+            (role, name)
+        self.evaluate_javascript(focus_js)
 
 
     def _launch_app(self, id):
@@ -169,21 +190,59 @@ class desktopui_FilesApp(test.test):
                                              err_str='New folder item')
 
 
-    def run_once(self):
+    def _open_image_preview(self):
+        """Open the image for a preview."""
+        self._open_downloads()
+
+        # Select the image file
+        self._click_element(self._STATIC_TEXT, self._IMAGE_FILE)
+        self._wait_for_element_to_be_visible(self._BUTTON,
+                                             self._OPEN_FILE,
+                                             err_str='Open button to appear')
+        # Launch image preview
+        with keyboard.Keyboard() as k:
+            self._set_navigation_point_on_element(self._STATIC_TEXT,
+                                                  self._IMAGE_FILE)
+            k.press_key('tab')
+            k.press_key('space')
+            self._wait_for_element_to_be_visible(self._STATIC_TEXT,
+                                                 self._IMAGE_DIMENSIONS,
+                                                 err_str='Image info to appear')
+
+
+    def _setup(self):
+        """Populate DUT with assets and load automation APIs."""
+        text_dest_path = os.path.join(self._DOWNLOADS_PATH, self._TEXT_FILE)
+        image_src_path = os.path.join(self.bindir, 'assets', self._IMAGE_FILE)
+        image_dest_path = os.path.join(self._DOWNLOADS_PATH, self._IMAGE_FILE)
+
+        utils.write_one_line(text_dest_path, 'blahblah')
+        self._temp_file_paths.append(text_dest_path)
+
+        if self._preview_image:
+            utils.force_copy(image_src_path, image_dest_path)
+            self._temp_file_paths.append(image_dest_path)
+
+        self._load_automation_root()
+
+
+    def run_once(self, preview_image=False):
         """Main entry point of test."""
         with chrome.Chrome(autotest_ext=True,
                            disable_default_apps=False) as cr:
             # Setup
             self.cr = cr
-            utils.write_one_line(os.path.join(self._DOWNLOADS_PATH,
-                                              self._TEXT_FILE), 'blahblah')
-            self._load_automation_root()
+            self._preview_image = preview_image
+            self._temp_file_paths = [] # Accumulate temp file paths for cleanup
+            self._setup()
 
             try:
                 # Files app testing
                 self._launch_app(self._FILES_APP_ID)
                 self._open_downloads()
                 self._open_more_options()
+                if self._preview_image:
+                    self._open_image_preview()
             except (ValueError, utils.TimeoutError):
                 logging.exception('Failed to verify Files app is available.')
                 try:
