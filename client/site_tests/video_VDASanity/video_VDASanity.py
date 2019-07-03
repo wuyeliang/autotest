@@ -32,7 +32,7 @@ class video_VDASanity(chrome_binary_test.ChromeBinaryTest):
         # Skip RK3399 boards.
         # TODO(b/35581004): remove the filter once the kernel issue is fixed.
         if utils.get_current_board() in ['bob', 'scarlet', 'gru', 'kevin',
-                                         'nefario', 'rainier']:
+                                         'kevin-arcnext', 'nefario', 'rainier']:
             raise error.TestNAError("Skipping RK3399 board")
 
         for (path, width, height, frame_num, frag_num, profile) in test_cases:
