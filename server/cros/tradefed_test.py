@@ -15,7 +15,6 @@
 # _parse_result() and _dir_size() don't access self and could be functions.
 # pylint: disable=no-self-use
 
-import contextlib
 import errno
 import glob
 import hashlib
@@ -232,24 +231,6 @@ class TradefedTest(test.test):
         self._test_count_factor = len(set(self._get_abilist()) & tradefed_abis)
         # Avoid setting timeout=0 (None) in any cases.
         self._timeout_factor = max(1, self._test_count_factor)
-
-    @contextlib.contextmanager
-    def _login_chrome(self, **cts_helper_kwargs):
-        """Returns Chrome log-in context manager.
-
-        Please see also cheets_StartAndroid for details about how this works.
-        """
-        # TODO(pwang): Chromelogin takes 10+ seconds for it to successfully
-        #              enter. Parallelize if this becomes a bottleneck.
-        instances = []
-        for host in self._hosts:
-            instances.append(login.ChromeLogin(host, cts_helper_kwargs))
-
-        for instance in instances:
-            instance.enter()
-        yield instances
-        for instance in instances:
-            instance.exit()
 
     def _get_adb_targets(self):
         """Get a list of adb targets."""
@@ -1081,9 +1062,12 @@ class TradefedTest(test.test):
             steps += 1
             keep_media = needs_push_media and steps >= 1
             self._run_precondition_scripts(login_precondition_commands, steps)
-            with self._login_chrome(
+            with login.login_chrome(
+                    hosts=self._hosts,
                     board=board,
-                    reboot=self._should_reboot(steps),
+                    dont_override_profile=keep_media,
+                    enable_default_apps=enable_default_apps) as current_logins:
+                if self._should_reboot(steps):
                     # TODO(rohitbm): Evaluate if power cycle really helps with
                     # Bluetooth test failures, and then make the implementation
                     # more strict by first running complete restart and reboot
@@ -1092,10 +1076,10 @@ class TradefedTest(test.test):
                     # Currently, (steps + 1 == self._max_retry) means that
                     # hard_reboot is attempted after "this" cycle failed. Then,
                     # the last remaining 1 step will be run on the rebooted DUT.
-                    hard_reboot_on_failure=(self._hard_reboot_on_failure
-                                     and steps + 1 == self._max_retry),
-                    dont_override_profile=keep_media,
-                    enable_default_apps=enable_default_apps) as current_logins:
+                    hard_reboot = (self._hard_reboot_on_failure
+                        and steps + 1 == self._max_retry)
+                    for current_login in current_logins:
+                        current_login.need_reboot(hard_reboot=hard_reboot)
                 self._ready_arc()
                 self._calculate_test_count_factor(bundle)
                 self._run_precondition_scripts(precondition_commands, steps)
