@@ -159,15 +159,8 @@ class TradefedTest(test.test):
 
     def cleanup(self):
         """Cleans up any dirtied state."""
+        # Kill any lingering adb servers.
         for host in self._hosts:
-            # Reset screen wake lock, which may be set by tests requiring screen
-            # always on (b/129440004).
-            result = host.run('set_power_policy --screen_wake_lock=-1',
-                              ignore_status=True)
-            if result.exit_status != 0:
-                logging.warning("Failed to reset power policy:", result)
-
-            # Kill any lingering adb servers.
             try:
                 self._run_adb_cmd(host, verbose=True, args=('kill-server',))
             except (error.CmdError, AttributeError):
