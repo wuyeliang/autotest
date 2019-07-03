@@ -19,12 +19,6 @@ class camera_V4L2(test.test):
     v4l2_minor_dev_num_min = 0
     v4l2_minor_dev_num_max = 64
 
-    def setup(self):
-        # TODO(jiesun): make binary here when cross compile issue is resolved.
-        os.chdir(self.srcdir)
-        utils.make('clean')
-        utils.make()
-
     def run_once(self, capability=None, test_list=None):
         if capability is not None:
             device_capability.DeviceCapability().ensure_capability(capability)
@@ -66,8 +60,7 @@ class camera_V4L2(test.test):
         return vid.strip() + ":" + pid.strip()
 
     def is_v4l2_capture_device(self, device):
-        executable = os.path.join(self.bindir, "media_v4l2_is_capture_device")
-        cmd = "%s %s" % (executable, device)
+        cmd = ["media_v4l2_is_capture_device", device]
         logging.info("Running %s", cmd)
         return utils.system(cmd, ignore_status=True) == 0
 
@@ -87,25 +80,29 @@ class camera_V4L2(test.test):
             raise error.TestFail("No V4L2 devices found!")
 
     def run_v4l2_unittests(self, device):
-        options = ["--device=%s" % device, "--usb-info=%s" % self.usb_info]
+        cmd = [
+                "media_v4l2_unittest",
+                "--device=%s" % device,
+                "--usb-info=%s" % self.usb_info
+        ]
         if self.test_list:
-            options += ["--test-list=%s" % self.test_list]
-        executable = os.path.join(self.bindir, "media_v4l2_unittest")
-        cmd = "%s %s" % (executable, " ".join(options))
+            cmd.append("--test-list=%s" % self.test_list)
         logging.info("Running %s", cmd)
         stdout = utils.system_output(cmd, retain_output=True)
 
     def run_v4l2_capture_test(self, device):
-        options = ["--device=%s" % device, "--usb-info=%s" % self.usb_info]
+        cmd = [
+                "media_v4l2_test",
+                "--device=%s" % device,
+                "--usb-info=%s" % self.usb_info
+        ]
         if self.test_list:
-            options += ["--test-list=%s" % self.test_list]
+            cmd.append("--test-list=%s" % self.test_list)
 
         # snappy old SKU cannot meet the requirement. Skip the test to avoid
         # alarm. Please see http://crbug.com/737874 for detail.
         if self.dut_board == 'snappy' and self.test_list == 'default':
-            options += ["--gtest_filter='-*MaximumSupportedResolution*'"]
+            cmd.append("--gtest_filter=-*MaximumSupportedResolution*")
 
-        executable = os.path.join(self.bindir, "media_v4l2_test")
-        cmd = "%s %s" % (executable, " ".join(options))
         logging.info("Running %s", cmd)
         stdout = utils.system_output(cmd, retain_output=True)
