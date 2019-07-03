@@ -28,7 +28,7 @@ TEST_TYPE = "Server"
 
 # Load and overwrite args_dict.
 args_dict_json = args_dict['args_dict_json']
-args_dict.update(json.loads(args_dict_json))
+args_dict.update(dynamic_suite.byteify(json.loads(args_dict_json)))
 
 # Inject handle to current job instance.
 args_dict['job'] = job
