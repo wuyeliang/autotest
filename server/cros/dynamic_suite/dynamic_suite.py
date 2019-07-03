@@ -634,3 +634,21 @@ def _stage_artifacts_for_build(devserver, build):
     except dev_server.DevServerException as e:
         # If we can't get the control files, there's nothing to run.
         raise error.AsynchronousBuildFailure(e)
+
+
+# This function is used by the cros_test_platform suite, to unwrap json-decoded
+# arguments from the cros_test_platform recipe and convert them to byte string.
+#
+# It should not be used for other purposes. It exists in this module simply
+# to limit the number of necessary module imports in cros_test_platform.
+def byteify(input):
+    """Walk a json object, turning unicode strings into byte strings."""
+    if isinstance(input, dict):
+        return {byteify(key): byteify(value)
+                for key, value in input.iteritems()}
+    elif isinstance(input, list):
+        return [byteify(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
