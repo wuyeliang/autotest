@@ -107,16 +107,19 @@ class audio_AudioBasicUSBPlaybackRecord(audio_test.AudioTest):
                 logging.info('Start recording from Chameleon.')
                 playback_recorder.start_recording()
                 logging.info('Start recording from Cros device.')
-                record_recorder.start_recording()
+                record_recorder.start_recording(block_size=1024)
 
                 logging.info('Start playing %s on Cros device',
                              golden_file.path)
-                playback_source.start_playback()
+                playback_source.start_playback(block_size=1024)
                 logging.info('Start playing %s on Chameleon',
                              golden_file.path)
                 record_source.start_playback()
 
                 time.sleep(self.RECORD_SECONDS)
+
+                audio_test_utils.dump_cros_audio_logs(
+                        host, audio_facade, self.resultsdir, 'during_recording')
 
                 playback_recorder.stop_recording()
                 logging.info('Stopped recording from Chameleon.')
