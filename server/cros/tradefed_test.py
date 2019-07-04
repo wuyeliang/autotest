@@ -867,15 +867,60 @@ class TradefedTest(test.test):
         logging.warning('Could not establish channel. Using retry=0.')
         return 0
 
-    def _run_precondition_scripts(self, commands, steps):
-        """Run precondition scripts on all the hosts."""
+    def _run_commands(self, commands, **kwargs):
+        """Run commands on all the hosts."""
         for host in self._hosts:
             for command in commands:
-                # Replace {0} (if any) with the retry count.
-                formatted_command = command.format(steps)
-                logging.info('RUN: %s\n', formatted_command)
-                output = host.run(formatted_command, ignore_status=True)
-                logging.info('END: %s\n', output)
+                logging.info('RUN: %s\n', command)
+                output = host.run(command, **kwargs)
+                logging.info('END: %s\n', command)
+                logging.debug(output)
+
+    def _run_precondition_scripts(self, commands, steps):
+        """Run precondition scripts on all the hosts.
+
+        Replaces {0} in commands (if any) with the retry count.
+        """
+        self._run_commands((command.format(steps) for command in commands),
+                           ignore_status=True)
+
+    def _override_powerd_prefs(self):
+        """Overrides powerd prefs to prevent screen from turning off, complying
+        with CTS requirements.
+
+        This is a remote version of PowerPrefChanger which ensures overrided
+        policies won't persist across reboots by bind-mounting onto the config
+        directory.
+        """
+        pref_dir = constants.POWERD_PREF_DIR
+        temp_dir = constants.POWERD_TEMP_DIR
+        commands = (
+                'cp -r %s %s' % (pref_dir, temp_dir),
+                'echo 1 > %s/ignore_external_policy' % temp_dir,
+                'echo 0 | tee %s/{,un}plugged_{dim,off,suspend}_ms' % temp_dir,
+                'mount --bind %s %s' % (temp_dir, pref_dir),
+                'restart powerd',
+        )
+        try:
+            self._run_commands(commands)
+        except (error.CmdError, error.CmdTimeoutError):
+            logging.warning('Failed to override powerd policy, tests depending '
+                            'on screen being always on may fail.')
+
+    def _restore_powerd_prefs(self):
+        """Restores powerd prefs overrided by _override_powerd_prefs()."""
+        pref_dir = constants.POWERD_PREF_DIR
+        temp_dir = constants.POWERD_TEMP_DIR
+        commands = (
+                'umount %s' % pref_dir,
+                'restart powerd',
+                'rm -rf %s' % temp_dir,
+        )
+        try:
+            self._run_commands(commands)
+        except (error.CmdError, error.CmdTimeoutError):
+            logging.warning('Failed to restore powerd policy, overrided policy '
+                            'will persist until device reboot.')
 
     def _run_and_parse_tradefed(self, commands):
         """Kick off the tradefed command.
@@ -1101,8 +1146,12 @@ class TradefedTest(test.test):
                 #              not-excecuted, for instance, by collecting all
                 #              tests on startup (very expensive, may take 30
                 #              minutes).
-                waived_tests, acc = self._run_and_parse_tradefed(
-                    commands)
+                self._override_powerd_prefs()
+                try:
+                    waived_tests, acc = self._run_and_parse_tradefed(
+                        commands)
+                finally:
+                    self._restore_powerd_prefs()
                 self._fail_on_unexpected_media_download()
                 result = self._run_tradefed_list_results()
                 if not result:

@@ -52,3 +52,7 @@ LOGIN_DEFAULT_TIMEOUT = 90
 
 # Approximately assume ChromeOS revision Rdd-xxxxx.y.z with y>=45 as stable.
 APPROXIMATE_STABLE_BRANCH_NUMBER = 45
+
+# Directories for overriding powerd prefs during tests.
+POWERD_PREF_DIR = '/var/lib/power_manager'
+POWERD_TEMP_DIR = '/tmp/autotest_powerd_prefs'
