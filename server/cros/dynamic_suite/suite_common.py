@@ -132,9 +132,9 @@ def stage_build_artifacts(build, hostname=None, artifacts=[]):
     ds_name = ds.hostname
     timings[constants.DOWNLOAD_STARTED_TIME] = _formatted_now()
     try:
-        ds.stage_artifacts(image=build, artifacts=['test_suites'])
-        if artifacts:
-          ds.stage_artifacts(image=build, artifacts=artifacts)
+        artifacts_to_stage = ['test_suites', 'control_files']
+        artifacts_to_stage.extend(artifacts if artifacts else [])
+        ds.stage_artifacts(image=build, artifacts=artifacts_to_stage)
     except dev_server.DevServerException as e:
         raise error.StageControlFileFailure(
                 "Failed to stage %s on %s: %s" % (build, ds_name, e))
