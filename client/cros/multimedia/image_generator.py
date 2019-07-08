@@ -1,10 +1,16 @@
+#!/usr/bin/env python
 # Copyright 2014 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import argparse
+import errno
 import logging
 import os
+import re
 import sys
+
+import common   # pylint: disable=unused-import
 
 from autotest_lib.client.common_lib import utils
 
@@ -82,3 +88,21 @@ class ImageGenerator(object):
             if v > max_value:
                 max_value = v
         return (min_value, max_value)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('output', type=str,
+                        help='filename of the calibration image')
+    args = parser.parse_args()
+
+    matched = re.search(r'image-(\d+)x(\d+).(png|svg)', args.output)
+    if not matched:
+        logging.error('The filename should be like: image-1920x1080.svg')
+        parser.print_help()
+        sys.exit(errno.EINVAL)
+
+    width = int(matched.group(1))
+    height = int(matched.group(2))
+    generator = ImageGenerator()
+    generator.generate_image(width, height, args.output)
