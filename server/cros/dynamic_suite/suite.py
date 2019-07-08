@@ -1328,6 +1328,8 @@ class Suite(_BaseSuite):
             name_in_tag_similarity_predicate)
     test_name_equals_predicate = _deprecated_suite_method(
             test_name_equals_predicate)
+    test_name_in_list_predicate = _deprecated_suite_method(
+            suite_common.test_name_in_list_predicate)
     test_name_matches_pattern_predicate = _deprecated_suite_method(
             test_name_matches_pattern_predicate)
     test_file_matches_pattern_predicate = _deprecated_suite_method(
