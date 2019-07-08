@@ -20,11 +20,13 @@ See topic_common.py for a High Level Design and Algorithm.
 
 """
 import common
+import json
 import random
 import re
 import socket
 
 from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils
+from autotest_lib.cli.skylab_json_utils import process_labels
 from autotest_lib.client.bin import utils as bin_utils
 from autotest_lib.client.common_lib import error, host_protections
 from autotest_lib.server import frontend, hosts
@@ -40,6 +42,11 @@ except ImportError:
 
 
 MIGRATED_HOST_SUFFIX = '-migrated-do-not-use'
+
+
+ID_AUTOGEN_MESSAGE = ("[IGNORED]. Do not edit (crbug.com/950553). ID is "
+                      "auto-generated.")
+
 
 
 class host(topic_common.atest):
@@ -336,6 +343,41 @@ class host_stat(host):
             labels = self._cleanup_labels(labels)
             self.print_by_ids(labels, 'Labels', line_before=True)
             self.print_dict(attributes, 'Host Attributes', line_before=True)
+
+
+
+class host_statjson(host_stat):
+    """atest host statjson --mlist <file>|<hosts>
+
+    exposes the same information that 'atest host stat' does, but in the json
+    format that 'skylab add-dut' expects
+    """
+
+    usage_action = "statjson"
+
+
+    def output(self, results):
+        """Print output of 'atest host stat-skylab-json'"""
+        for row in results:
+            stats, acls, labels, attributes = row
+            # TODO(gregorynisbet): under what circumstances is stats
+            #    not a list of length 1?
+            assert len(stats) == 1
+            stats_map = stats[0]
+            labels = self._cleanup_labels(labels)
+            attrs = [{"key": k, "value": v} for k, v in attributes.iteritems()]
+            out_labels = process_labels(labels, platform=stats_map["platform"])
+            skylab_json = {
+                "common": {
+                    "attributes": attrs,
+                    "environment": "ENVIRONMENT_STAGING",
+                    "hostname": stats_map["hostname"],
+                    "id": ID_AUTOGEN_MESSAGE,
+                    "labels": out_labels,
+                    "serialNumber": attributes["serial_number"],
+                }
+            }
+            print json.dumps(skylab_json, indent=4, sort_keys=True)
 
 
 class host_jobs(host):
