@@ -3,7 +3,9 @@
 # found in the LICENSE file.
 """Code to provide functions for FAFT tests.
 
-These can be exposed via a xmlrpci server running on the DUT.
+These will be exposed via an xmlrpc server running on the DUT.
+
+@note: When adding categories, please also update server/cros/faft/rpc_proxy.pyi
 """
 import httplib
 import os
