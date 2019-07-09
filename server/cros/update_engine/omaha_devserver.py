@@ -4,6 +4,7 @@
 
 import json
 import logging
+import os
 import socket
 import time
 import urllib2
@@ -46,30 +47,27 @@ class OmahaDevserver(object):
     _DEVSERVER_TIMELIMIT_SECONDS = 12 * 60 * 60
 
 
-    def __init__(self, omaha_host, update_payload_staged_url, max_updates=1,
+    def __init__(self, omaha_host, payload_location, max_updates=1,
                  critical_update=True):
         """Starts a private devserver instance, operating at Omaha capacity.
 
         @param omaha_host: host address where the devserver is spawned.
-        @param update_payload_staged_url: URL to provision for update requests.
+        @param payload_location: partial path from static dir to payload.
         @param max_updates: int number of updates this devserver will handle.
                             This is passed to src/platform/dev/devserver.py.
         @param critical_update: Whether to set a deadline in responses.
         """
         self._devserver_dir = '/home/chromeos-test/chromiumos/src/platform/dev'
 
-        if not update_payload_staged_url:
-            raise error.TestError('Missing update payload url')
-
         self._critical_update = critical_update
         self._max_updates = max_updates
         self._omaha_host = omaha_host
         self._devserver_pid = 0
         self._devserver_port = 0  # Determined later from devserver portfile.
-        self._update_payload_staged_url = update_payload_staged_url
 
         self._devserver_ssh = hosts.SSHHost(self._omaha_host,
                                             user='chromeos-test')
+        self._payload_location = payload_location
 
         # Temporary files for various devserver outputs.
         self._devserver_logfile = None
@@ -196,9 +194,6 @@ class OmahaDevserver(object):
             OmahaDevserverFailedToStart: If the time limit is reached and we
                                          cannot connect to the devserver.
         """
-        update_payload_url_base, update_payload_path = self._split_url(
-                self._update_payload_staged_url)
-
         # Allocate temporary files for various server outputs.
         self._devserver_logfile = self._create_tempfile_on_devserver('log')
         self._devserver_stdoutfile = self._create_tempfile_on_devserver(
@@ -215,16 +210,15 @@ class OmahaDevserver(object):
                 'timeout', '-s', 'TERM', '-k', '30',
                 str(self._DEVSERVER_TIMELIMIT_SECONDS),
                 '%s/devserver.py' % self._devserver_dir,
-                '--payload=%s' % update_payload_path,
                 '--port=0',
                 '--pidfile=%s' % self._devserver_pidfile,
                 '--portfile=%s' % self._devserver_portfile,
                 '--logfile=%s' % self._devserver_logfile,
-                '--remote_payload',
-                '--urlbase=%s' % update_payload_url_base,
                 '--max_updates=%s' % self._max_updates,
                 '--host_log',
-                '--static_dir=%s' % self._devserver_static_dir
+                '--static_dir=%s' % self._devserver_static_dir,
+                '--payload=%s' % os.path.join(self._devserver_static_dir,
+                                              self._payload_location),
         ]
 
         if self._critical_update:
@@ -365,16 +359,6 @@ class OmahaDevserver(object):
                     snippet(self._get_devserver_stdout()))
         logging.log(logging_level, "Devserver log file:\n" +
                     snippet(self._get_devserver_log()))
-
-
-    @staticmethod
-    def _split_url(url):
-        """Splits a URL into the URL base and path."""
-        split_url = urlparse.urlsplit(url)
-        url_base = urlparse.urlunsplit(
-                (split_url.scheme, split_url.netloc, '', '', ''))
-        url_path = split_url.path
-        return url_base, url_path.lstrip('/')
 
 
     def stop_devserver(self):
