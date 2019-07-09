@@ -281,7 +281,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
             # re to search the command output instead of
             # send_safe_command_get_output, so we don't have to wait the full
             # timeout if output is dropped.
-            rv = self.send_safe_command_get_output('ccd', ['ccd.*>'])[0]
+            rv = self.send_command_retry_get_output('ccd', ['ccd.*>'],
+                    safe=True)[0]
             matched_output = re.search('.*'.join(self.CCD_FORMAT), rv,
                                        re.DOTALL)
             if matched_output:
@@ -413,21 +414,22 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
     def get_deep_sleep_count(self):
         """Get the deep sleep count from the idle task"""
-        result = self.send_safe_command_get_output('idle', [self.IDLE_COUNT])
+        result = self.send_command_retry_get_output('idle', [self.IDLE_COUNT],
+                                                    safe=True)
         return int(result[0][1])
 
 
     def clear_deep_sleep_count(self):
         """Clear the deep sleep count"""
-        result = self.send_safe_command_get_output('idle c', [self.IDLE_COUNT])
-        if int(result[0][1]):
+        self.send_command('idle c')
+        if self.get_deep_sleep_count():
             raise error.TestFail("Could not clear deep sleep count")
 
 
     def get_board_properties(self):
         """Get information from the version command"""
-        rv = self.send_safe_command_get_output('brdprop',
-                ['properties = (\S+)\s'])
+        rv = self.send_command_retry_get_output('brdprop',
+                ['properties = (\S+)\s'], safe=True)
         return int(rv[0][1], 16)
 
 
@@ -551,13 +553,14 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
     def rolledback(self):
         """Returns true if cr50 just rolled back"""
-        return 'Rollback detected' in self.send_safe_command_get_output(
-                'sysinfo', ['sysinfo.*>'])[0]
+        return 'Rollback detected' in self.send_command_retry_get_output(
+                'sysinfo', ['sysinfo.*>'], safe=True)[0]
 
 
     def get_version_info(self, regexp):
         """Get information from the version command"""
-        return self.send_safe_command_get_output('ver', [regexp])[0][1::]
+        return self.send_command_retry_get_output('ver', [regexp],
+                                                  safe=True)[0][1::]
 
 
     def get_inactive_version_info(self):
@@ -572,8 +575,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
     def using_prod_rw_keys(self):
         """Returns True if the RW keyid is prod"""
-        rv = self.send_safe_command_get_output('sysinfo',
-                ['RW keyid:.*\(([a-z]+)\)'])
+        rv = self.send_command_retry_get_output('sysinfo',
+                ['RW keyid:.*\(([a-z]+)\)'], safe=True)
         logging.info(rv)
         return rv[0][1] == 'prod'
 
@@ -1006,7 +1009,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         @return an integer 1 or 0 based on the gpioget value
         """
         result = self.send_command_retry_get_output('gpioget',
-                ['(0|1)[ \S]*%s' % signal_name], safe=True)
+                    ['(0|1)[ \S]*%s' % signal_name], safe=True)
         return int(result[0][1])
 
 
