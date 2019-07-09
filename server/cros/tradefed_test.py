@@ -53,7 +53,7 @@ class TradefedTest(test.test):
     # parameter in control files can override the count, within the
     # _BRANCH_MAX_RETRY limit below.
     _BRANCH_DEFAULT_RETRY = [(0, 5), (1, 10)]  # dev=5, beta=stable=10
-    _BRANCH_MAX_RETRY = [(0, 5), (1, 10),      # dev=5, beta=10, stable=99
+    _BRANCH_MAX_RETRY = [(0, 5), (1, 30),      # dev=5, beta=30, stable=99
         (constants.APPROXIMATE_STABLE_BRANCH_NUMBER, 99)]
     # TODO(kinaba): betty-arcnext
     _BOARD_MAX_RETRY = {'betty': 0}
