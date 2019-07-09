@@ -88,6 +88,7 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
 
 
     def cleanup(self):
+        """Clean up update_engine autotests."""
         if self._omaha_devserver is not None:
             self._omaha_devserver.stop_devserver()
         if self._host:
@@ -428,6 +429,21 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         return payloads[0]
 
 
+    def _get_partial_path_from_url(self, url):
+        """
+        Strip partial path to payload from GS Url.
+
+        Example: gs://chromeos-image-archive/samus-release/R77-112.0.0/bla.bin
+        returns samus-release/R77-112.0.0/bla.bin.
+
+        @param url: The Google Storage url.
+
+        """
+        gs = dev_server._get_image_storage_server()
+        staged_path = url.partition(gs)
+        return staged_path[2]
+
+
     def _get_staged_file_info(self, staged_url, retries=5):
         """
         Gets the staged files info that includes SHA256 and size.
@@ -707,8 +723,8 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         ds_url, build = tools.get_devserver_build_from_package_url(
             self._job_repo_url)
 
-        # We always stage the payloads on the existing lab devservers.
-        self._autotest_devserver = dev_server.ImageServer(ds_url)
+        # The lab devserver assigned to this test.
+        lab_devserver = dev_server.ImageServer(ds_url)
 
         if public:
             # Get the google storage url of the payload. We will be copying
@@ -721,24 +737,35 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
             return url
 
         if full_payload:
-            self._autotest_devserver.stage_artifacts(build, ['full_payload'])
             if not critical_update:
-                # We can use the same lab devserver to handle the update.
+                # Stage payloads on the lab devserver.
+                self._autotest_devserver = lab_devserver
+                self._autotest_devserver.stage_artifacts(build,
+                                                         ['full_payload'])
+                # Use the same lab devserver to also handle the update.
                 url = self._autotest_devserver.get_update_url(build)
                 logging.info('Full payload, non-critical update URL: %s', url)
                 return url
             else:
-                staged_url = self._autotest_devserver._get_image_url(build)
+                url_to_stage = self._get_payload_url(build, full_payload=True)
         else:
             # We need to stage delta ourselves due to crbug.com/793434.
-            delta_payload = self._get_payload_url(build, full_payload=False)
-            staged_url = self._stage_payload_by_uri(delta_payload)
+            url_to_stage = self._get_payload_url(build, full_payload=False)
 
-        # We need to start our own devserver for the rest of the cases.
+        # Get partial path to payload eg samus-release/R77-113.0,0/blah.bin
+        payload_location = self._get_partial_path_from_url(url_to_stage)
+
+        # We need to start our own devserver instance on the lab devserver
+        # for the rest of the test scenarios.
         self._omaha_devserver = omaha_devserver.OmahaDevserver(
-            self._autotest_devserver.hostname, staged_url,
-            max_updates=max_updates, critical_update=critical_update)
+            lab_devserver.hostname, payload_location, max_updates=max_updates,
+            critical_update=critical_update)
         self._omaha_devserver.start_devserver()
+
+        # Stage the payloads on our new devserver.
+        ds_url = 'http://%s' % self._omaha_devserver.get_netloc()
+        self._autotest_devserver = dev_server.ImageServer(ds_url)
+        self._stage_payload_by_uri(url_to_stage)
         url = self._omaha_devserver.get_update_url()
         logging.info('Update URL: %s', url)
         return url
