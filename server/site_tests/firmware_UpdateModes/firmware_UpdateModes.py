@@ -4,7 +4,6 @@
 import logging
 
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib import utils
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
 
@@ -18,24 +17,9 @@ class firmware_UpdateModes(FirmwareTest):
 
     SHELLBALL = '/usr/sbin/chromeos-firmwareupdate'
 
-    def initialize(self, host, cmdline_args):
-        self._fake_bios = 'fake-bios.bin'
-        super(firmware_UpdateModes, self).initialize(host, cmdline_args)
-
-    def local_run_cmd(self, command):
-        """Execute command on local system.
-
-        @param command: shell command to be executed on local system.
-        @return: command output.
-        """
-        logging.info('Execute %s', command)
-        output = utils.system_output(command)
-        logging.info('Output %s', output)
-        return output
-
-    def get_fake_bios_fwids(self):
-        return self.faft_client.Updater.GetInstalledFwid(
-                'bios', ('ro', 'a', 'b'), self._fake_bios)
+    def get_bios_fwids(self, path=None):
+        """Return the BIOS fwids for the given file"""
+        return self.faft_client.Updater.GetAllInstalledFwids('bios', path)
 
     def run_case(self, mode, write_protected, written, modify_ro=True,
                  should_abort=False):
@@ -50,8 +34,8 @@ class firmware_UpdateModes(FirmwareTest):
         """
         self.faft_client.Updater.ResetShellball()
 
-        fake_bios_path = self.faft_client.Updater.CopyBios(self._fake_bios)
-        before_fwids = {'bios': self.get_fake_bios_fwids()}
+        fake_bios_path = self.faft_client.Updater.CopyBios('fake-bios.bin')
+        before_fwids = {'bios': self.get_bios_fwids(fake_bios_path)}
 
         case_desc = ('chromeos-firmwareupdate --mode=%s --wp=%s'
                      % (mode, write_protected))
@@ -75,7 +59,7 @@ class firmware_UpdateModes(FirmwareTest):
         if should_abort and rc != 0:
             logging.debug('updater aborted as expected')
 
-        after_fwids = {'bios': self.get_fake_bios_fwids()}
+        after_fwids = {'bios': self.get_bios_fwids(fake_bios_path)}
         expected_written = {'bios': written or []}
 
         errors = self.check_fwids_written(
