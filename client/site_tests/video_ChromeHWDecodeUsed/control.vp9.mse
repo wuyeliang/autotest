@@ -22,6 +22,6 @@ BUG_TEMPLATE = {
 DOC = """
 This test verifies VP9 decode acceleration works for MSE videos.
 """
-video = 'http://crosvideo.appspot.com/?codec=vp9&cycle=true&mute=true'
+video = 'http://crosvideo.appspot.com/?codec=vp9&cycle=true&mute=true&resolution=1080'
 job.run_test('video_ChromeHWDecodeUsed', codec='vp9', is_mse=1,
              video_file=video, tag='vp9', capability='hw_dec_vp9_1080_30')
