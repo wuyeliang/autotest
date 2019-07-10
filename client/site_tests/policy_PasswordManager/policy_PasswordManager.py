@@ -49,11 +49,11 @@ class policy_PasswordManager(
                                             isRegex=True,
                                             role='genericContainer')
         button_restricted = self.ui.is_obj_restricted(
-            obj=self.TEST_OBJ,
+            name=self.TEST_OBJ,
             isRegex=True,
             role=self.ROLE)
         button_setting = self.ui.doCommand_on_obj(
-            obj=self.TEST_OBJ,
+            name=self.TEST_OBJ,
             cmd='checked',
             isRegex=True,
             role=self.ROLE)
