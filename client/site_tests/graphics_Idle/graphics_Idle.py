@@ -221,6 +221,7 @@ class graphics_Idle(graphics_utils.GraphicsTest):
 
         exynos_node = '/sys/devices/11800000.mali/'
         rk3288_node = '/sys/devices/ffa30000.gpu/'
+        rk3288_419_node = '/sys/devices/platform/ffa30000.gpu/'
         rk3399_node = '/sys/devices/platform/ff9a0000.gpu/'
         mt8173_node = '/sys/devices/soc/13000000.mfgsys-gpu/'
         mt8183_node = '/sys/devices/platform/soc/13040000.mali/'
@@ -240,6 +241,9 @@ class graphics_Idle(graphics_utils.GraphicsTest):
                 use_devfreq = False
                 enable_node = 'dvfs_enable'
                 enable_value = '1'
+            elif os.path.isdir(rk3288_419_node):
+                node = rk3288_419_node
+                use_devfreq = True
             elif os.path.isdir(rk3399_node):
                 node = rk3399_node
                 use_devfreq = True
