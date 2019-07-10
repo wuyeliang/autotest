@@ -472,6 +472,29 @@ def _is_test_collector(package):
     """
     return TEST_LIST_COLLECTOR in package
 
+def _parse_cts_job_results_file_path(path):
+    """Parse CTS file paths an extract required information from them."""
+
+    # Autotest paths look like:
+    # /317739475-chromeos-test/chromeos4-row9-rack11-host22/
+    # cheets_CTS.android.dpi/results/cts-results/2016.04.28_01.41.44
+
+    # Swarming paths look like:
+    # /swarming-458e3a3a7fc6f210/1/autoserv_test/
+    # cheets_CTS.android.dpi/results/cts-results/2016.04.28_01.41.44
+
+    folders = path.split(os.sep)
+    if 'swarming' in folders[1]:
+        # Swarming job and attempt combined
+        job_id = "%s-%s" % (folders[-7], folders[-6])
+    else:
+        job_id = folders[-6]
+
+    cts_package = folders[-4]
+    timestamp = folders[-1]
+
+    return job_id, cts_package, timestamp
+
 
 def _upload_files(host, path, result_pattern, multiprocessing,
                   result_gs_bucket, apfe_gs_bucket):
@@ -494,10 +517,7 @@ def _upload_files(host, path, result_pattern, multiprocessing,
 
     parent_job_id = str(keyval['parent_job_id'])
 
-    folders = path.split(os.sep)
-    job_id = folders[-6]
-    package = folders[-4]
-    timestamp = folders[-1]
+    job_id, package, timestamp = _parse_cts_job_results_file_path(path)
 
     # Results produced by CTS test list collector are dummy results.
     # They don't need to be copied to APFE bucket which is mainly being used for
