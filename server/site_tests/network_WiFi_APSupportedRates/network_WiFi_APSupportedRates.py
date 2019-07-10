@@ -33,13 +33,19 @@ class network_WiFi_APSupportedRates(wifi_cell_test_base.WiFiCellTestBase):
         # (c) BSSID filter: non-BSSID frames include Ack and BlockAck frames;
         #     these rates tend to match the frames to which they're responding
         #     (i.e., not under DUT's control).
+        # (d) QoS null filter: these frames are short (no data payload), and
+        #     it's more important that they be reliable (e.g., for PS
+        #     transitions) than fast. See b/132825853#comment40,
+        #     for example.
         # Items (b) and (c) wouldn't be much problem if our APs actually
         # respected the Supported Rates IEs that we're configuring, but current
         # (2019-06-28) test AP builds do not appear to.
-        frame_filter = ('wlan.ta==%s and (not wlan.da==%s) and wlan.bssid==%s' %
+        frame_filter = ('wlan.ta==%s and (not wlan.da==%s) and wlan.bssid==%s'
+                        ' and wlan.fc.type_subtype!=%s' %
                         (self.context.client.wifi_mac,
                          self.context.client.wifi_mac,
-                         self.context.router.get_hostapd_mac(0)))
+                         self.context.router.get_hostapd_mac(0),
+                         tcpdump_analyzer.WLAN_QOS_NULL_TYPE))
         frames = tcpdump_analyzer.get_frames(pcap_result.local_pcap_path,
                                              frame_filter, reject_bad_fcs=False)
         if not frames:
