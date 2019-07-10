@@ -242,7 +242,7 @@ class firmware_Mosys(FirmwareTest):
         for line in lines:
             row = line.split(' | ')
             # no need to check if we don't have enough items in the list
-            if len(row) != 4:
+            if len(row) < 4:
                  continue
             if row[1] in emap:
                 emap[row[1]] += 1
