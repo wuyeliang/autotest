@@ -54,67 +54,51 @@ class ChromeLogin(object):
             cmd += ' > /dev/null 2>&1'
         return cmd
 
-    def _login(self, timeout=None, raise_exception=False, verbose=False):
-        """Logs into Chrome."""
-        try:
-            # We used to call cheets_StartAndroid, but it is a little faster to
-            # call a script on the DUT. This also saves CPU time on the server.
-            self._host.run(
-                self._cmd_builder(verbose=verbose),
-                ignore_status=False,
-                verbose=verbose,
-                timeout=timeout)
+    def _login_by_script(self, timeout, verbose):
+        """Runs the autologin.py script on the DUT to log in."""
+        self._host.run(
+            self._cmd_builder(verbose=verbose),
+            ignore_status=False,
+            verbose=verbose,
+            timeout=timeout)
 
-            # Sanity check if Android has really started. When autotest client
-            # installed on the DUT was partially broken, the command may succeed
-            # without actually logging into Chrome/Android. See b/129382439.
-            ret = self._host.run('android-sh -c "ls /data/misc/adb"',
-                ignore_status=True, timeout=9)
-            if ret.exit_status != 0:
-                logging.error('autologin.py succeeded but Android not running. '
-                    'Let us try reinstalling Autotest.')
-                raise autotest.AutodirNotFoundError()
-            return True
-        except autotest.AutodirNotFoundError:
-            # Autotest is not installed (can happen on moblab after image
-            # install). Run dummy_Pass to foce autotest install, before trying
-            # to login again.
-            logging.warning(
-                'Autotest not installed, forcing install using dummy_Pass...')
+    def _login(self, timeout, verbose=False, install_autotest=False):
+        """Logs into Chrome. Raises an exception on failure."""
+        if not install_autotest:
             try:
-                autotest.Autotest(self._host).run_timed_test(
-                    'dummy_Pass',
-                    timeout=2 * timeout,
-                    check_client_result=True)
-                self._host.run(
-                    self._cmd_builder(),
-                    ignore_status=False,
-                    verbose=verbose,
-                    timeout=timeout)
-                return True
-            except:
-                # We were unable to start the browser/Android. Maybe we can
-                # salvage the DUT by rebooting. This can hide some failures.
-                self._reboot()
-                if raise_exception:
-                    raise
-        except:
-            # We were unable to start the browser/Android. Maybe we can
-            # salvage the DUT by rebooting. This can hide some failures.
-            self._reboot()
-            if raise_exception:
-                raise
-        return False
+                # Assume autotest to be already installed.
+                self._login_by_script(timeout=timeout, verbose=verbose)
+            except autotest.AutodirNotFoundError:
+                logging.warning('Autotest not installed, forcing install...')
+                install_autotest = True
+
+        if install_autotest:
+            # Installs the autotest client to the DUT by running a dummy test.
+            autotest.Autotest(self._host).run_timed_test(
+                'dummy_Pass', timeout=2 * timeout, check_client_result=True)
+            # The (re)run the login script.
+            self._login_by_script(timeout=timeout, verbose=verbose)
+
+        # Sanity check if Android has really started. When autotest client
+        # installed on the DUT was partially broken, the script may succeed
+        # without actually logging into Chrome/Android. See b/129382439.
+        self._host.run(
+            'android-sh -c "ls /data/misc/adb"', ignore_status=False, timeout=9)
 
     def enter(self):
         """Logs into Chrome with retry."""
         timeout = self._timeout
-        logging.info('Ensure Android is running (timeout=%d)...', timeout)
-        if not self._login(timeout=timeout):
+        try:
+            logging.info('Ensure Android is running (timeout=%d)...', timeout)
+            self._login(timeout=timeout)
+        except Exception as e:
+            logging.error('Login failed.', exc_info=e)
+            # Retry with more time, with refreshed client autotest installation,
+            # and the DUT cleanup by rebooting. This can hide some failures.
+            self._reboot()
             timeout *= 2
-            # The DUT reboots after unsuccessful login, try with more time.
             logging.info('Retrying failed login (timeout=%d)...', timeout)
-            self._login(timeout=timeout, raise_exception=True, verbose=True)
+            self._login(timeout=timeout, verbose=True, install_autotest=True)
 
     def exit(self):
         """On exit restart the browser or reboot the machine."""
