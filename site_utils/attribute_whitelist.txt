@@ -81,6 +81,7 @@ suite:chameleon_peripherals
 suite:check_setup_cts_N
 suite:check_setup_storage_qual
 suite:chrome-informational
+suite:cros-av-analysis
 suite:crosbolt_arc_perf_nightly
 suite:crosbolt_arc_perf_perbuild
 suite:crosbolt_perf_nightly
