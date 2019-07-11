@@ -370,7 +370,7 @@ class host_statjson(host_stat):
             skylab_json = {
                 "common": {
                     "attributes": attrs,
-                    "environment": "ENVIRONMENT_STAGING",
+                    "environment": "ENVIRONMENT_PROD",
                     "hostname": stats_map["hostname"],
                     "id": ID_AUTOGEN_MESSAGE,
                     "labels": out_labels,
