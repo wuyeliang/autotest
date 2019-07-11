@@ -225,41 +225,6 @@ class FirmwareUpdater(object):
                 fwids[section] = fwid
         return fwids
 
-    def _modify_one_fwid(self, handler, section):
-        """Modify a section's fwid on the handler, adding a tilde and the
-        section name (in caps) to the end: ~RO, ~RW, ~A, ~B.
-
-        @param handler: the handler to act on
-        @param section: the single section to act on
-        @return: the new fwid
-
-        @type handler: flashrom_handler.FlashRomHandler
-        @type section: str
-        @rtype: str
-        """
-
-        fwid = handler.get_section_fwid(section, strip_null=False)
-        fwid_size = len(fwid)
-
-        if not fwid:
-            raise FirmwareUpdaterError(
-                    "FWID (%s, %s) is empty: %s" %
-                    (handler.target.upper(), section.upper(), repr(fwid)))
-
-        fwid = fwid.rstrip('\0')
-        suffix = '~' + section.upper()
-        if suffix in fwid:
-            raise FirmwareUpdaterError(
-                    "FWID (%s, %s) is already modified: %s" %
-                    (handler.target.upper(), section.upper(), repr(fwid)))
-
-        # Append a suffix, after possibly chopping off characters to make room.
-        fwid = fwid[:fwid_size - len(suffix)] + suffix
-
-        padded_fwid = fwid.ljust(fwid_size, '\0')
-        handler.set_section_fwid(section, padded_fwid)
-        return fwid
-
     def modify_fwids(self, target='bios', sections=None):
         """Modify the fwid in the image, but don't flash it.
 
@@ -271,16 +236,13 @@ class FirmwareUpdater(object):
         @type sections: tuple | list
         @rtype: dict
         """
-        # if arg was str, return single section as str
         if sections is None:
             sections = [self._get_default_section(target)]
 
         handler = self._get_handler(target)
         image_fullpath = self._get_image_path(target)
 
-        fwids = {}
-        for section in sections:
-            fwids[section] = self._modify_one_fwid(handler, section)
+        fwids = handler.modify_fwids(sections)
 
         handler.dump_whole(image_fullpath)
         handler.new_image(image_fullpath)
@@ -470,6 +432,10 @@ class FirmwareUpdater(object):
     def reset_shellball(self):
         """Extract shellball, then revert the AP and EC handlers' data."""
         self._setup_temp_dir()
+        self.reload_images()
+
+    def reload_images(self):
+        """Reload handlers from the on-disk images, in case they've changed."""
         bios_file = os.path.join(self._work_path, self._bios_path)
         self._real_bios_handler.deinit()
         self._real_bios_handler.init(bios_file)

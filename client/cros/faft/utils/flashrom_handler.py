@@ -111,6 +111,7 @@ class FlashromHandler(object):
     FW_PRIV_DATA_KEY_FILE_NAME = 'firmware_data_key.vbprivk'
     KERNEL_SUBKEY_FILE_NAME = 'kernel_subkey.vbpubk'
     EC_EFS_KEY_FILE_NAME = 'key_ec_efs.vbprik2'
+    FWID_MOD_DELIMITER = '~'
 
     def __init__(
             self,
@@ -684,3 +685,110 @@ class FlashromHandler(object):
         with open(sig_name, 'r') as sig_f:
             new_sig = sig_f.read()
         self.write_partial(fv_section.get_sig_name(), new_sig, write_through)
+
+    def _modify_section_fwid(self, section):
+        """Modify a section's fwid on the handler, adding a tilde and the
+        section name (in caps) to the end: ~RO, ~RW, ~A, ~B.
+
+        @param section: the single section to act on
+        @return: the new fwid
+
+        @type section: str
+        @rtype: str
+        """
+
+        fwid = self.get_section_fwid(section, strip_null=False)
+
+        if fwid is None:
+            return None
+
+        fwid_size = len(fwid)
+
+        if not fwid:
+            raise FlashromHandlerError(
+                    "FWID (%s, %s) is empty: %s" %
+                    (self.target.upper(), section.upper(), repr(fwid)))
+
+        fwid = fwid.rstrip('\0')
+        suffix = self.FWID_MOD_DELIMITER + section.upper()
+
+        if suffix in fwid:
+            raise FlashromHandlerError(
+                    "FWID (%s, %s) is already modified: %s" %
+                    (self.target.upper(), section.upper(), repr(fwid)))
+
+        # Append a suffix, after possibly chopping off characters to make room.
+        if len(fwid) + len(suffix) > fwid_size:
+            fwid = fwid[:fwid_size - len(suffix)]
+        fwid += suffix
+
+        padded_fwid = fwid.ljust(fwid_size, '\0')
+        self.set_section_fwid(section, padded_fwid)
+        return fwid
+
+    def _strip_section_fwid(self, section, write_through=True):
+        """Modify a section's fwid on the handler, stripping any suffix added
+        by _modify_section_fwid: ~RO, ~RW, ~A, ~B.
+
+        @param section: the single section to act on
+        @param write_through: if True (default), write to flash immediately
+        @return: the suffix that was stripped
+
+        @type section: str
+        @type write_through: bool
+        @rtype: str | None
+        """
+
+        fwid = self.get_section_fwid(section, strip_null=False)
+        if fwid is None:
+            return None
+
+        fwid_size = len(fwid)
+
+        if not fwid:
+            raise FlashromHandlerError(
+                    "FWID (%s, %s) is empty: %s" %
+                    (self.target.upper(), section.upper(), repr(fwid)))
+
+        fwid = fwid.rstrip('\0')
+        mod_indicator = self.FWID_MOD_DELIMITER + section.upper()
+
+        # Remove any suffix, and return the suffix if found.
+        if mod_indicator in fwid:
+            (stripped_fwid, remainder) = fwid.split(mod_indicator, 1)
+
+            padded_fwid = stripped_fwid.ljust(fwid_size, '\0')
+            self.set_section_fwid(section, padded_fwid, write_through)
+
+            return fwid
+        return None
+
+    def modify_fwids(self, sections):
+        """Modify the fwid in the in-memory image.
+
+        @param sections: section(s) to modify.
+        @return: fwids for the modified sections, as {section: fwid}
+
+        @type sections: tuple | list
+        @rtype: dict
+        """
+        fwids = {}
+        for section in sections:
+            fwids[section] = self._modify_section_fwid(section)
+
+        return fwids
+
+    def strip_modified_fwids(self):
+        """Strip any trailing suffixes (from modify_fwids) out of the FWIDs.
+
+        @return: a dict of any fwids that were adjusted, by section (ro, a, b)
+        @rtype: dict
+        """
+
+        suffixes = {}
+        for section in self.fv_sections:
+            suffix = self._strip_section_fwid(section)
+            if suffix is not None:
+                suffixes[section] = suffix
+
+        return suffixes

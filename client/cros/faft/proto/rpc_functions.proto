@@ -55,6 +55,9 @@ service Bios {
   rpc WriteWhole
     (BiosWriteWholeRequest)
     returns (BiosWriteWholeResponse);
+  rpc StripModifiedFwidsRequest
+    (BiosStripModifiedFwidsRequest)
+    returns (BiosStripModifiedFwidsResponse);
 }
 
 service Cgpt {
@@ -100,6 +103,9 @@ service Ec {
   rpc RebootToSwitchSlot
     (EcRebootToSwitchSlotRequest)
     returns (EcRebootToSwitchSlotResponse);
+  rpc StripModifiedFwidsRequest
+    (EcStripModifiedFwidsRequest)
+    returns (EcStripModifiedFwidsResponse);
 }
 
 service Host {
@@ -456,6 +462,16 @@ message BiosWriteWholeRequest {
 }
 message BiosWriteWholeResponse {}
 
+message BiosStripModifiedFwidsRequest {}
+message BiosStripModifiedFwidsResponse {
+  string ro = 1;
+  string a = 2;
+  string b = 3;
+  string rec = 4;
+  string ec_a = 5;
+  string ec_b = 6;
+}
+
 // Cgpt messages
 
 message CgptSection {
@@ -533,6 +549,13 @@ message EcCopyRwResponse {}
 
 message EcRebootToSwitchSlotRequest {}
 message EcRebootToSwitchSlotResponse {}
+
+message EcStripModifiedFwidsRequest {}
+message EcStripModifiedFwidsResponse {
+  string ro = 1;
+  string rw = 2;
+  string rw_b = 3;
+}
 
 // Host messages
 
