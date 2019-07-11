@@ -88,6 +88,10 @@ class firmware_Cr50BID(Cr50Test):
     BID_BASE_TESTS = [
         [None, None, SUCCESS],
 
+        # Cr50 images are board id locked with flags. If we use 0 for the BID
+        # flags, there should be an error.
+        [None, 0, BID_ERROR],
+
         # All 1s in the board id flags should be acceptable no matter the
         # actual image flags
         [None, MAX_BID, SUCCESS],
@@ -117,7 +121,7 @@ class firmware_Cr50BID(Cr50Test):
     ]
 
     def initialize(self, host, cmdline_args, dev_path='', bid_path='',
-                   release_ver=None, test_subset=None, full_args={}):
+                   release_ver=None, basic=False, full_args={}):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
                                                  restore_cr50_state=True,
@@ -141,15 +145,7 @@ class firmware_Cr50BID(Cr50Test):
         cr50_utils.SetRLZ(self.host, '')
 
         # Add tests to the test list based on the running board id infomation
-        self.build_tests()
-
-        # TODO(mruthven): remove once the test becomes more reliable.
-        #
-        # While tests randomly fail, keep this in so we can rerun individual
-        # tests.
-        self.test_subset = None
-        if test_subset:
-            self.test_subset = [int(case) for case in test_subset.split(',')]
+        self.build_tests(basic)
 
 
     def add_test(self, board_id, flags, expected_result):
@@ -235,11 +231,12 @@ class firmware_Cr50BID(Cr50Test):
             self.add_test(self.test_bid_sym, test_flags, self.BID_ERROR)
 
 
-    def build_tests(self):
+    def build_tests(self, basic):
         """Add more test cases based on the image board id, flags, and mask"""
         self.tests = self.BID_BASE_TESTS
-        self.add_flag_tests()
-        self.add_board_id_tests()
+        if not basic:
+            self.add_flag_tests()
+            self.add_board_id_tests()
         logging.info('Running tests %r', self.tests)
 
 
@@ -350,12 +347,13 @@ class firmware_Cr50BID(Cr50Test):
             logging.info('Using %s DBG image for test', ver)
 
         image_bid_info = cr50_utils.GetBoardIdInfoTuple(ver[2])
-        if not image_bid_info:
-            raise error.TestError('Need board id locked image to run test')
         # Save the image board id info
         self.test_bid_int, self.test_mask, self.test_flags = image_bid_info
         self.test_bid_sym = cr50_utils.GetSymbolicBoardId(self.test_bid_int)
         self.test_bid_str = cr50_utils.GetBoardIdInfoString(ver[2])
+        if not self.test_flags:
+            raise error.TestError('Need board id locked image with flags run '
+                    'test. Got %r' % (ver[2]))
         logging.info('Running test with bid locked image %s', ver)
         self.image_versions[self.BID_LOCKED] = ver
 
@@ -508,10 +506,6 @@ class firmware_Cr50BID(Cr50Test):
                 flags = flags if flags != None else self.test_flags
                 message = '%s %d %s:%x %s' % (test_type, i, bid, flags,
                     bid_error)
-
-                if self.test_subset and i not in self.test_subset:
-                    logging.info('Skipped %s', message)
-                    continue
 
                 # Run the test with the given bid, flags, and result
                 try:
