@@ -63,6 +63,20 @@ class firmware_FWupdate(FirmwareTest):
             logging.info('new_pd=%s', self.new_pd)
 
         if not self.images_specified:
+            # TODO(dgoyette): move this into the general FirmwareTest init?
+            stripped_bios = self.faft_client.Bios.StripModifiedFwids()
+            if stripped_bios:
+                logging.warn(
+                        "Fixed the previously modified BIOS FWID(s): %s",
+                        stripped_bios)
+
+            if self.faft_config.chrome_ec:
+                stripped_ec = self.faft_client.Ec.StripModifiedFwids()
+                if stripped_ec:
+                    logging.warn(
+                            "Fixed the previously modified EC FWID(s): %s",
+                            stripped_ec)
+
             self.backup_firmware()
 
         self.set_hardware_write_protect(False)
@@ -89,9 +103,6 @@ class firmware_FWupdate(FirmwareTest):
 
         @param hostname: hostname (not the Host object) to copy to
         """
-        bios_path = None
-        ec_path = None
-        pd_path = None
         if self.new_bios or self.new_ec or self.new_pd:
 
             extract_dir = self.faft_client.Updater.GetWorkPath()
@@ -114,8 +125,6 @@ class firmware_FWupdate(FirmwareTest):
                 pd_path = os.path.join(extract_dir, 'pd.bin')
                 dut_access.CopyToDevice(self.new_pd, pd_path, mode='scp')
 
-        return (bios_path, ec_path, pd_path)
-
     def run_once(self, host):
         """Run chromeos-firmwareupdate with recovery or factory mode.
 
@@ -133,15 +142,19 @@ class firmware_FWupdate(FirmwareTest):
         if self.images_specified:
             # Use new images as-is
             logging.info(
-                    "Applying specified image(s):"
+                    "Using specified image(s):"
                     "new_bios=%s, new_ec=%s, new_pd=%s",
                     self.new_bios, self.new_ec, self.new_pd)
             self.copy_cmdline_images(host.hostname)
+            self.faft_client.Updater.ReloadImages()
             self.faft_client.Updater.RepackShellball(append)
             modded_fwids = self.identify_shellball(include_ec=have_ec)
         else:
             # Modify the stock image
-            logging.info("Applying current firmware with modified fwids")
+            logging.info(
+                    "Using the currently running firmware, with modified fwids")
+            self.setup_firmwareupdate_shellball()
+            self.faft_client.Updater.ReloadImages()
             self.modify_shellball(append, modify_ro=True, modify_ec=have_ec)
             modded_fwids = self.identify_shellball(include_ec=have_ec)
 
@@ -180,8 +193,6 @@ class firmware_FWupdate(FirmwareTest):
             if self.images_specified:
                 self.sync_and_ec_reboot('hard')
             else:
-                if self.faft_config.chrome_ec:
-                    self.faft_client.Ec.Reload()
                 logging.info("Restoring firmware")
                 self.restore_firmware()
 
