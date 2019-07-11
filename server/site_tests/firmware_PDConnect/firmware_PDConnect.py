@@ -38,8 +38,9 @@ class firmware_PDConnect(FirmwareTest):
                     logging.warn('Device does not support disconnect/connect')
                     break
 
-    def initialize(self, host, cmdline_args):
+    def initialize(self, host, cmdline_args, flip_cc=False):
         super(firmware_PDConnect, self).initialize(host, cmdline_args)
+        self.setup_pdtester(flip_cc)
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         self.usbpd.enable_console_channel('usbpd')

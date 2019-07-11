@@ -39,8 +39,9 @@ class firmware_PDResetHard(FirmwareTest):
                     logging.warn('Device cant hard reset ... skipping')
                     break
 
-    def initialize(self, host, cmdline_args):
+    def initialize(self, host, cmdline_args, flip_cc=False):
         super(firmware_PDResetHard, self).initialize(host, cmdline_args)
+        self.setup_pdtester(flip_cc)
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         # Turn off console prints, except for USBPD.

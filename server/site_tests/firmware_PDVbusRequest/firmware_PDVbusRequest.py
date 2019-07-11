@@ -57,8 +57,9 @@ class firmware_PDVbusRequest(FirmwareTest):
             result = 'PASS'
         return result, result_str
 
-    def initialize(self, host, cmdline_args):
+    def initialize(self, host, cmdline_args, flip_cc=False):
         super(firmware_PDVbusRequest, self).initialize(host, cmdline_args)
+        self.setup_pdtester(flip_cc)
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         self.usbpd.send_command('chan 0')

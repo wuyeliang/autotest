@@ -1,14 +1,14 @@
-# Copyright 2016 The Chromium OS Authors. All rights reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 from autotest_lib.server import utils
 
 AUTHOR = "Chrome OS Team"
-NAME = "firmware_PDVbusRequest"
-PURPOSE = "Servo based PD VBUS voltage level test"
+NAME = "firmware_PDTrySrc.flip"
+PURPOSE = "Servo based PD Try.SRC protocol test"
 ATTRIBUTES = "suite:faft_pd"
-CRITERIA = "This test will fail if actual voltage does not meet expected"
+CRITERIA = "This test will fail if a power swap gives unexpected results"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "firmware"
@@ -16,9 +16,12 @@ TEST_TYPE = "server"
 
 DOC = """
 This test checks:
-  - PD Dual role mode is operational in the DUT
-  - Ability to initiate new PD contract with 5/12/20 VBUS value.
-  - Receive Source capabilty messages from PDTester
+  - If the DUT advertises support for dualrole and Try.SRC operation
+  - Runs a series of disconnect/connects with Try.SRC on
+  - Runs a series of disconnect/connects with Try.SRC off
+  - Verifies that with Try.SRC on the DUT connects in SRC mode
+
+This subtest is testing the other CC pin.
 """
 
 args_dict = utils.args_to_dict(args)
@@ -28,7 +31,7 @@ pdtester_args = hosts.CrosHost.get_pdtester_arguments(args_dict)
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args,
                              pdtester_args=pdtester_args)
-    job.run_test("firmware_PDVbusRequest", host=host, cmdline_args=args,
-                 disable_sysinfo=True, flip_cc=False, tag="normal")
+    job.run_test("firmware_PDTrySrc", host=host, cmdline_args=args,
+                 disable_sysinfo=True, flip_cc=True, tag="flip")
 
 parallel_simple(run, machines)

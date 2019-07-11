@@ -39,6 +39,7 @@ class PDTester(chrome_ec.ChromeEC):
         5: 'src5v',
         12: 'src12v',
         20: 'src20v'}
+    USBC_MAX_VOLTAGE = 20
     VBUS_VOLTAGE_MV = 'vbus_voltage'
     VBUS_CURRENT_MA = 'vbus_current'
     VBUS_POWER_MW = 'vbus_power'

@@ -74,8 +74,9 @@ class firmware_PDTrySrc(FirmwareTest):
                      stats[0], stats[1], self.CONNECT_ITERATIONS)
         return stats
 
-    def initialize(self, host, cmdline_args):
+    def initialize(self, host, cmdline_args, flip_cc=False):
         super(firmware_PDTrySrc, self).initialize(host, cmdline_args)
+        self.setup_pdtester(flip_cc)
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         # Turn off console prints, except for USBPD.

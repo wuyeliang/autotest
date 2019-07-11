@@ -412,6 +412,28 @@ class FirmwareTest(FAFTBase):
 
         self.mark_setup_done('usb_check')
 
+    def setup_pdtester(self, flip_cc=False):
+        """Setup the PDTester to a given state.
+
+        @param flip_cc: True to flip CC polarity; False to not flip it.
+        @raise TestError: If Servo v4 not setup properly.
+        """
+        # Servo v4 by default has dts_mode enabled. Enabling dts_mode affects
+        # the behaviors of what PD FAFT tests. So we want it disabled.
+        if 'servo_v4' in self.pdtester.servo_type:
+            self.pdtester.set('servo_v4_dts_mode', 'off')
+
+        self.pdtester.set('usbc_polarity', 'cc2' if flip_cc else 'cc1')
+        # Make it sourcing max voltage.
+        self.pdtester.charge(self.pdtester.USBC_MAX_VOLTAGE)
+
+        # Servo v4 requires an external charger to source power. Make sure
+        # this setup is correct.
+        if ('servo_v4' in self.pdtester.servo_type and
+            self.pdtester.get('servo_v4_role') != 'src'):
+            raise error.TestError('Servo v4 failed sourcing power! Check '
+                    'the "DUT POWER" port connecting a valid charger.')
+
     def setup_usbkey(self, usbkey, host=None, used_for_recovery=None):
         """Setup the USB disk for the test.
 
