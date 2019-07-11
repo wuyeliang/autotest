@@ -682,11 +682,21 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         with metrics.SecondsTimer(
                 'chromeos/autotest/provision/servo_install/install_duration'):
             logging.info('Installing image through chromeos-install.')
-            self.run(
-                'chromeos-install --yes '
-                '--lab_preserve_logs='
-                '"/usr/local/autotest/common_lib/logs_to_collect"',
-                timeout=install_timeout)
+            try:
+                # Re-imaging the DUT with log collecting.
+                self.run(
+                    'chromeos-install --yes '
+                    '--lab_preserve_logs='
+                    '"/usr/local/autotest/common_lib/logs_to_collect"',
+                    timeout=install_timeout)
+            except Exception as e:
+                logging.exception(
+                    'Fail to collect log from DUT.'
+                    'Retry to fix DUT without collecting log.')
+                self.run(
+                    'chromeos-install --yes',
+                    timeout=install_timeout)
+
             self.halt()
 
         logging.info('Power cycling DUT through servo.')
@@ -715,7 +725,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         try:
             local_dir = crashcollect.get_crashinfo_dir(
                 self,
-                self.hostname + '_log'
+                'prior_log'
             )
 
             self.collect_logs(self.DUT_LOG_LOCATION, local_dir)
