@@ -11,6 +11,7 @@ import logging
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import cr50_utils
+from autotest_lib.server.cros import filesystem_util
 from autotest_lib.server.cros.faft.cr50_test import Cr50Test
 
 
@@ -248,7 +249,7 @@ class provision_Cr50Update(Cr50Test):
         # Copy the image onto the DUT. cr50-update uses both cr50.bin.prod and
         # cr50.bin.prepvt in /opt/google/cr50/firmware/, so copy it to both
         # places. Rootfs verification has to be disabled to do the copy.
-        self.rootfs_verification_disable()
+        filesystem_util.make_rootfs_writable(self.host)
         cr50_utils.InstallImage(self.host, self.local_path,
                 cr50_utils.CR50_PREPVT)
         cr50_utils.InstallImage(self.host, self.local_path,
