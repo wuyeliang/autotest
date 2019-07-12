@@ -24,6 +24,7 @@ def get_proper_internal_mic_gain(board):
 INTERNAL_MIC_NODE = {
         ('coral', 'nasher360'): 'FRONT_MIC',
         ('nami', 'vayne'): 'FRONT_MIC',
+        ('octopus', 'bobba360'): 'FRONT_MIC',
 }
 
 def get_internal_mic_node(board, model):
@@ -40,6 +41,7 @@ def get_internal_mic_node(board, model):
 INTERNAL_MIC_NODES = {
         ('coral', 'nasher360'): ['FRONT_MIC', 'REAR_MIC'],
         ('nami', 'vayne'): ['FRONT_MIC'],
+        ('octopus', 'bobba360'): ['FRONT_MIC', 'REAR_MIC'],
 }
 
 def get_plugged_internal_mics(board, model):
