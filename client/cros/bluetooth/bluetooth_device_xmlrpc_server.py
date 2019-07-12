@@ -628,7 +628,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
           ( version, revision )
 
         """
-        return json.dumps(self._control.read_version())
+        #TODO(howardchung): resolve 'cannot allocate memory' error when
+        #                   BluetoothControlSocket idle too long(about 3 secs)
+        #                   (b:137603211)
+        _control = bluetooth_socket.BluetoothControlSocket()
+        return json.dumps(_control.read_version())
 
 
     def read_supported_commands(self):
@@ -638,7 +642,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
           ( commands, events )
 
         """
-        return json.dumps(self._control.read_supported_commands())
+        #TODO(howardchung): resolve 'cannot allocate memory' error when
+        #                   BluetoothControlSocket idle too long(about 3 secs)
+        #                   (b:137603211)
+        _control = bluetooth_socket.BluetoothControlSocket()
+        return json.dumps(_control.read_supported_commands())
 
 
     def read_index_list(self):
@@ -647,7 +655,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         @return the information as a JSON-encoded array of controller indexes.
 
         """
-        return json.dumps(self._control.read_index_list())
+        #TODO(howardchung): resolve 'cannot allocate memory' error when
+        #                   BluetoothControlSocket idle too long(about 3 secs)
+        #                   (b:137603211)
+        _control = bluetooth_socket.BluetoothControlSocket()
+        return json.dumps(_control.read_index_list())
 
 
     def read_info(self):
@@ -659,7 +671,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             name, short_name )
 
         """
-        return json.dumps(self._control.read_info(0))
+        #TODO(howardchung): resolve 'cannot allocate memory' error when
+        #                   BluetoothControlSocket idle too long(about 3 secs)
+        #                   (b:137603211)
+        _control = bluetooth_socket.BluetoothControlSocket()
+        return json.dumps(_control.read_info(0))
 
 
     def add_device(self, address, address_type, action):
@@ -673,7 +689,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
           ( address, address_type ), None on failure.
 
         """
-        return json.dumps(self._control.add_device(
+        #TODO(howardchung): resolve 'cannot allocate memory' error when
+        #                   BluetoothControlSocket idle too long(about 3 secs)
+        #                   (b:137603211)
+        _control = bluetooth_socket.BluetoothControlSocket()
+        return json.dumps(_control.add_device(
                 0, address, address_type, action))
 
 
@@ -687,7 +707,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
           ( address, address_type ), None on failure.
 
         """
-        return json.dumps(self._control.remove_device(
+        #TODO(howardchung): resolve 'cannot allocate memory' error when
+        #                   BluetoothControlSocket idle too long(about 3 secs)
+        #                   (b:137603211)
+        _control = bluetooth_socket.BluetoothControlSocket()
+        return json.dumps(_control.remove_device(
                 0, address, address_type))
 
 
