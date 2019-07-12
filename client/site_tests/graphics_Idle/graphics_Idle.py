@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import glob, logging, os, re, struct, time
+import errno, glob, logging, os, re, struct, sys, time
 
 from autotest_lib.client.bin import test
 from autotest_lib.client.bin import utils
@@ -366,14 +366,25 @@ class graphics_Idle(graphics_utils.GraphicsTest):
         # we can watch for the active values
         with open(param_path, 'r') as psr_info_file:
             match = None
-            for line in psr_info_file:
-                match = re.search(r'Enabled: yes', line)
-                if match:
-                    logging.info('PSR enabled')
-                    break
-            if not match:
-                logging.warning('PSR not enabled')
-                return ''
+            try:
+                for line in psr_info_file:
+                    match = re.search(r'Enabled: yes', line)
+                    if match:
+                        logging.info('PSR enabled')
+                        break
+                if not match:
+                    logging.warning('PSR not enabled')
+                    return ''
+            except IOError as e:
+                num, strerror = e.args
+                # Newer kernels might report ENODEV when PSR not available.
+                if num == errno.ENODEV:
+                    logging.warning('PSR not enabled')
+                    return ''
+                else:
+                    logging.error('While accessing %s', param_path)
+                    logging.error(e)
+                    return self.handle_error('Unexpected PSR read failure. ')
         while not found and tries < 20:
             time.sleep(1)
             with open(param_path, 'r') as psr_info_file:
