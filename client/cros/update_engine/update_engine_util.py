@@ -333,9 +333,8 @@ class UpdateEngineUtil(object):
         @returns: a sequential list of <request> xml blocks or None if none.
 
         """
-        update_log = ''
-        with open(self._UPDATE_ENGINE_LOG) as fh:
-            update_log = fh.read()
+        update_log = self._run('cat %s' %
+                               self._UPDATE_ENGINE_LOG).stdout
 
         # Matches <request ... /request>.  The match can be on multiple
         # lines and the search is not greedy so it only matches one block.
@@ -381,8 +380,8 @@ class UpdateEngineUtil(object):
         """
         try:
             file_location = os.path.join('/tmp', filename)
-            self._host.run('screenshot %s' % file_location)
-            self._host.get_file(file_location, self.resultsdir)
+            self._run('screenshot %s' % file_location)
+            self._get_file(file_location, self.resultsdir)
         except error.AutoservRunError:
             logging.exception('Failed to take screenshot.')
 
