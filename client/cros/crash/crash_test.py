@@ -85,6 +85,7 @@ class CrashTest(test.test):
     _PAUSE_FILE = '/var/lib/crash_sender_paused'
     _SYSTEM_CRASH_DIR = '/var/spool/crash'
     _FALLBACK_USER_CRASH_DIR = '/home/chronos/crash'
+    _EARLY_BOOT_CRASH_DIR = '/mnt/stateful_partition/unencrypted/preserve/crash'
     _USER_CRASH_DIRS = '/home/chronos/u-*/crash'
     _USER_CRASH_DIR_REGEX = re.compile('/home/chronos/u-([a-f0-9]+)/crash')
 
@@ -124,6 +125,7 @@ class CrashTest(test.test):
         This will remove all crash reports which are waiting to be sent.
         """
         utils.system('rm -rf ' + self._SYSTEM_CRASH_DIR)
+        utils.system('rm -rf ' + self._EARLY_BOOT_CRASH_DIR)
         utils.system('rm -rf %s %s' % (self._USER_CRASH_DIRS,
                                        self._FALLBACK_USER_CRASH_DIR))
 
