@@ -201,6 +201,3 @@ CHROME_VERSION = 'CHROME_VERSION'
 
 # Moblab Environment Constants.
 MOBLAB_USER = 'moblab'
-
-# Variant test keyval
-VARIANT_KEY = 'variant_key'

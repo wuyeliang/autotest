@@ -21,7 +21,6 @@ import urllib
 import urllib2
 
 import common
-from autotest_lib.client.cros import constants
 from autotest_lib.tko import utils as tko_utils
 
 _ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -106,8 +105,8 @@ def _gather_presentation_info(config_data, test_name):
 
 
 def _format_for_upload(platform_name, cros_version, chrome_version,
-                       hardware_id, variant_name, hardware_hostname,
-                       perf_data, presentation_info, jobname):
+                       hardware_id, hardware_hostname, perf_data,
+                       presentation_info, jobname):
     """Formats perf data suitable to upload to the perf dashboard.
 
     The perf dashboard expects perf data to be uploaded as a
@@ -122,7 +121,6 @@ def _format_for_upload(platform_name, cros_version, chrome_version,
     @param chrome_version: The string chrome version number.
     @param hardware_id: String that identifies the type of hardware the test was
             executed on.
-    @param variant_name: String that identifies the variant name of the board.
     @param hardware_hostname: String that identifies the name of the device the
             test was executed on.
     @param perf_data: A dictionary of measured perf data as computed by
@@ -136,9 +134,6 @@ def _format_for_upload(platform_name, cros_version, chrome_version,
         to the performance dashboard.
 
     """
-    if variant_name:
-        platform_name += '-' + variant_name
-
     perf_values = perf_data
     # Client side case - server side comes with its own charts data section.
     if 'charts' not in perf_values:
@@ -160,7 +155,6 @@ def _format_for_upload(platform_name, cros_version, chrome_version,
             'default_rev': 'r_cros_version',
             'hardware_identifier': hardware_id,
             'hardware_hostname': hardware_hostname,
-            'variant_name': variant_name,
             'jobname': jobname,
         },
         'chart_data': perf_values,
@@ -306,7 +300,6 @@ def upload_test(job, test, jobname):
         platform_name += '.arc'
     hardware_id = test.attributes.get('hwid', '')
     hardware_hostname = test.machine
-    variant_name = test.attributes.get(constants.VARIANT_KEY, None)
     config_data = _parse_config_file(_PRESENTATION_CONFIG_FILE)
     try:
         shadow_config_data = _parse_config_file(_PRESENTATION_SHADOW_CONFIG_FILE)
@@ -319,8 +312,7 @@ def upload_test(job, test, jobname):
         presentation_info = _gather_presentation_info(config_data, test_name)
         formatted_data = _format_for_upload(
                 platform_name, cros_version, chrome_version, hardware_id,
-                variant_name, hardware_hostname, test.perf_values,
-                presentation_info, jobname)
+                hardware_hostname, test.perf_values, presentation_info, jobname)
         _send_to_dashboard(formatted_data)
     except PerfUploadingError as e:
         tko_utils.dprint('Error when uploading perf data to the perf '

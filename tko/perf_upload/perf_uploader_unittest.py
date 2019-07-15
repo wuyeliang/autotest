@@ -441,7 +441,7 @@ class test_format_for_upload(unittest.TestCase):
         """Verifies format_for_upload generates correct json data."""
         result = perf_uploader._format_for_upload(
                 'platform', '25.1200.0.0', '25.10.1000.0', 'WINKY E2A-F2K-Q35',
-                'i7', 'test_machine', self._perf_data, self._PRESENT_INFO,
+                'test_machine', self._perf_data, self._PRESENT_INFO,
                 '52926644-username/hostname')
         expected_result_string = (
           '{"versions":  {'
@@ -449,7 +449,7 @@ class test_format_for_upload(unittest.TestCase):
              '"chrome_version": "25.10.1000.0"'
           '},'
           '"point_id": 10000000120000000,'
-          '"bot": "cros-platform-i7",'
+          '"bot": "cros-platform",'
           '"chart_data": {'
              '"charts": {'
                '"metric2": {'
@@ -474,8 +474,7 @@ class test_format_for_upload(unittest.TestCase):
              '"hardware_identifier": "WINKY E2A-F2K-Q35",'
              '"jobname": "52926644-username/hostname",'
              '"hardware_hostname": "test_machine",'
-             '"default_rev": "r_cros_version",'
-             '"variant_name": "i7"}'
+             '"default_rev": "r_cros_version"}'
            '}')
         self._verify_result_string(result['data'], expected_result_string)
 
