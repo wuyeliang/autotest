@@ -90,6 +90,10 @@ _TARGET_VERSION = '/run/update_target_version'
 _REBOOT_FAILURE_MESSAGE = 'Host did not return from reboot'
 
 
+DEVSERVER_PORT = '8082'
+GS_CACHE_PORT = '8888'
+
+
 class RootFSUpdateError(error.TestFail):
     """Raised when the RootFS fails to update."""
 
@@ -859,6 +863,52 @@ class ChromiumOSUpdater(object):
         return expected_kernel
 
 
+    def _quick_provision_with_gs_cache(self, provision_command, devserver_name,
+                                       image_name):
+        """Run quick_provision using GsCache server.
+
+        @param provision_command: The path of quick_provision command.
+        @param devserver_name: The devserver name and port (optional).
+        @param image_name: The image to be installed.
+        """
+        logging.info('Try quick provision with gs_cache.')
+        # If enabled, GsCache server listion on different port on the
+        # devserver.
+        gs_cache_server = devserver_name.replace(DEVSERVER_PORT, GS_CACHE_PORT)
+        gs_cache_url = ('http://%s/download/chromeos-image-archive'
+                        % gs_cache_server)
+
+        # Check if GS_Cache server is enabled on the server.
+        try:
+            urllib2.urlopen(gs_cache_url)
+        except urllib2.HTTPError:
+            # GsCache server is listening on this port though it cannot serve.
+            pass
+
+        command = '%s --noreboot %s %s' % (provision_command, image_name,
+                                           gs_cache_url)
+        self._run(command)
+        metrics.Counter(_metric_name('quick_provision')).increment(
+                fields={'devserver': devserver_name, 'gs_cache': True})
+
+
+    def _quick_provision_with_devserver(self, provision_command,
+                                        devserver_name, image_name):
+        """Run quick_provision using legacy devserver.
+
+        @param provision_command: The path of quick_provision command.
+        @param devserver_name: The devserver name and port (optional).
+        @param image_name: The image to be installed.
+        """
+        static_url = 'http://%s/static' % devserver_name
+        command = '%s --noreboot %s %s' % (provision_command, image_name,
+                                           static_url)
+        logging.info('Try quick provision with devserver.')
+        self._run(command)
+        metrics.Counter(_metric_name('quick_provision')).increment(
+                fields={'devserver': devserver_name, 'gs_cache': False})
+
+
     def _install_via_quick_provision(self):
         """Install an updating using the `quick-provision` script.
 
@@ -873,11 +923,14 @@ class ChromiumOSUpdater(object):
         logging.info('Installing image using quick-provision.')
         provision_command = self._get_remote_script(_QUICK_PROVISION_SCRIPT)
         server_name = urlparse.urlparse(self.update_url)[1]
-        static_url = 'http://%s/static' % server_name
-        command = '%s --noreboot %s %s' % (
-                      provision_command, image_name, static_url)
         try:
-            self._run(command)
+            try:
+                self._quick_provision_with_gs_cache(provision_command,
+                                                    server_name, image_name)
+            except Exception:
+                self._quick_provision_with_devserver(provision_command,
+                                                     server_name, image_name)
+
             self._set_target_version()
             return self._verify_kernel_state()
         except Exception:
