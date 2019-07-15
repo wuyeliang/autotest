@@ -28,6 +28,7 @@ def calculate_digest(doc):
             if ( line.startswith('@PJL SET ')
                     or line.startswith('@PJL COMMENT')
                     or line.startswith('@PJL JOB NAME')
+                    or line.startswith('@PJL JOBNAME')
                     or line.startswith('trailer << ')
                     or line.startswith('%%Title:')
                     or line.startswith('%%For:') ):

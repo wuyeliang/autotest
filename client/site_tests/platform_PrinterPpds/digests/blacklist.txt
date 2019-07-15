@@ -132,7 +132,6 @@ Epson-LP-S4500-eplaser-jp.ppd.gz
 Epson-LP-S6500-eplaser-jp.ppd.gz
 Epson-LP-S7500-eplaser-jp.ppd.gz
 Epson-LP-S8100-eplaser-jp.ppd.gz
-Epson-SQ_1170-stcolor.ppd.gz
 Fujitsu-PrintPartner_10V-ljet4.ppd.gz
 Fujitsu-PrintPartner_16DV-ljet4.ppd.gz
 Fujitsu-PrintPartner_20W-ljet4.ppd.gz
