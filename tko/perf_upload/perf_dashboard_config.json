@@ -624,6 +624,10 @@
     "master_name": "ChromeOS_Graphics"
   },
   {
+    "autotest_name": "tast.graphics.WebRTCVideoPlaybackDelay",
+    "master_name": "ChromeOS_Graphics"
+  },
+  {
     "autotest_name": "tast.platform.MemoryPressure",
     "master_name": "ChromeOSTast"
   },
