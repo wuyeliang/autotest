@@ -853,6 +853,12 @@ class Servo(object):
         return self._server.get_version()
 
 
+    def running_through_ccd(self):
+        """Returns True if the setup is using ccd to run."""
+        servo = self._server.get_version()
+        return 'ccd_cr50' in servo and 'servo_micro' not in servo
+
+
     def _initialize_programmer(self, rw_only=False):
         """Initialize the firmware programmer.
 

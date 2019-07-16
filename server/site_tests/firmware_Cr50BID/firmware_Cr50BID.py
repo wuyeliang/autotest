@@ -128,7 +128,7 @@ class firmware_Cr50BID(Cr50Test):
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
                                                  restore_cr50_state=True,
                                                  cr50_dev_path=dev_path)
-        if self.cr50.using_ccd():
+        if self.servo.running_through_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 
         if not self.cr50.has_command('bid'):

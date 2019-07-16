@@ -34,7 +34,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             raise error.TestNAError('Test can only be run on devices with '
                                     'access to the Cr50 console')
 
-        if self.cr50.using_ccd():
+        if self.servo.running_through_ccd():
             raise error.TestNAError('deep sleep tests can only be run with a '
                                     'servo flex')
 

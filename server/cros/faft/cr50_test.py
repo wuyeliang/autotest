@@ -60,7 +60,7 @@ class Cr50Test(FirmwareTest):
 
         logging.info('Test Args: %r', full_args)
 
-        self.can_set_ccd_level = (not self.cr50.using_ccd() or
+        self.can_set_ccd_level = (not self.servo.running_through_ccd() or
             self.cr50.testlab_is_on())
         self.original_ccd_level = self.cr50.get_ccd_level()
         self.original_ccd_settings = self.cr50.get_cap_dict(

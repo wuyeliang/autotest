@@ -23,7 +23,7 @@ class firmware_Cr50Testlab(Cr50Test):
         if not hasattr(self, 'cr50'):
             raise error.TestNAError('Test can only be run on devices with '
                                     'access to the Cr50 console')
-        if self.cr50.using_ccd():
+        if self.servo.running_through_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 
         # Get the current reset count, so we can check that there haven't been

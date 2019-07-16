@@ -152,8 +152,7 @@ class firmware_ECUsbPorts(FirmwareTest):
         if self._port_count == 0:
             raise error.TestNAError("No USB-A port; nothing needs to be tested")
 
-        use_ccd = 'ccd_cr50' in self.servo.get_servo_version()
-        if use_ccd:
+        if self.servo.running_through_ccd():
             logging.info("Using CCD, ignore checking USB port connection.")
         else:
             logging.info("Turn off all USB ports and then turn them on again.")

@@ -159,7 +159,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         @param commands: the command string to send to cr50
         """
-        if not self.using_ccd():
+        if not self._servo.running_through_ccd():
             self.wake_cr50()
         super(ChromeCr50, self).send_command(commands)
 
@@ -349,7 +349,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
                             command output
         @return: A list of matched output
         """
-        if not self.using_ccd():
+        if not self._servo.running_through_ccd():
             self.wake_cr50()
 
         # We have started prepending '\n' to separate cr50 console junk from
@@ -499,7 +499,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         @param cmd: the command to run to reset cr50.
         @param timeout: seconds to wait to detect the reboot.
         """
-        if self.using_ccd():
+        if self._servo.running_through_ccd():
             self.send_command(cmd)
             # Cr50 USB is reset when it reboots. Wait for the CCD connection to
             # go down to detect the reboot.
@@ -616,11 +616,6 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return 'servo_v4' in self._servo.get_servo_version()
 
 
-    def using_ccd(self):
-        """Returns true if the console is being served using CCD"""
-        return 'ccd_cr50' in self._servo.get_servo_version()
-
-
     def ccd_is_enabled(self):
         """Return True if ccd is enabled.
 
@@ -631,7 +626,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         Returns:
         @return: 'off' or 'on' based on whether the cr50 console is working.
         """
-        if self.using_ccd():
+        if self._servo.running_through_ccd():
             return self._servo.get('ccd_state') == 'on'
         else:
             return not bool(self.gpioget('CCD_MODE_L'))
@@ -698,7 +693,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         self._servo.set_nocheck('servo_v4_dts_mode', 'on')
         # If the test is actually running with ccd, wait for USB communication
         # to come up after reset.
-        if self.using_ccd():
+        if self._servo.running_through_ccd():
             time.sleep(self._servo.USB_DETECTION_DELAY)
         self.wait_for_ccd_enable(raise_error=raise_error)
 
@@ -730,7 +725,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         @param state: the desired testlab mode string: 'on' or 'off'
         @raise TestFail: if testlab mode was not changed
         """
-        if self.using_ccd():
+        if self._servo.running_through_ccd():
             raise error.TestError('Cannot set testlab mode with CCD. Use flex '
                     'cable instead.')
 
@@ -795,7 +790,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         testlab_on = self._state_to_bool(self._servo.get('cr50_testlab'))
         req_pp = self._level_change_req_pp(level)
-        has_pp = not self.using_ccd()
+        has_pp = not self._servo.running_through_ccd()
         dbg_en = 'DBG' in self._servo.get('cr50_version')
 
         if req_pp and not has_pp:
