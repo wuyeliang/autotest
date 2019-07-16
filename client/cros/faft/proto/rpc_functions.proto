@@ -22,6 +22,9 @@ service Bios {
   rpc GetSigSha
     (BiosGetSigShaRequest)
     returns (BiosGetSigShaResponse);
+  rpc GetSectionFwid
+    (BiosGetSectionFwidRequest)
+    returns (BiosGetSectionFwidResponse);
   rpc CorruptSig
     (BiosCorruptSigRequest)
     returns (BiosCorruptSigResponse);
@@ -398,6 +401,13 @@ message BiosGetSigShaRequest {
 }
 message BiosGetSigShaResponse {
   string hash = 1;
+}
+
+message BiosGetSectionFwidRequest {
+  string section = 1;
+}
+message BiosGetSectionFwidResponse {
+  string fwid = 1;
 }
 
 message BiosCorruptSigRequest {

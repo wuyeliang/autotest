@@ -76,7 +76,7 @@ class FirmwareTest(FAFTBase):
 
     _ROOTFS_PARTITION_NUMBER = 3
 
-    _backup_firmware_sha = ()
+    _backup_firmware_identity = dict()
     _backup_kernel_sha = dict()
     _backup_cgpt_attr = dict()
     _backup_gbb_flags = None
@@ -1294,42 +1294,56 @@ class FirmwareTest(FAFTBase):
         self._call_action(func, check_status=True)
         logging.info("-[FAFT]-[ end state_checker ]----------------")
 
-    def get_current_firmware_sha(self):
-        """Get current firmware sha of body and vblock.
+    def get_current_firmware_identity(self):
+        """Get current firmware sha and fwids of body and vblock.
 
-        @return: Current firmware sha follows the order (
-                 vblock_a_sha, body_a_sha, vblock_b_sha, body_b_sha)
+        @return: Current firmware checksums and fwids, as a dict
         """
-        current_firmware_sha = (self.faft_client.Bios.GetSigSha('a'),
-                                self.faft_client.Bios.GetBodySha('a'),
-                                self.faft_client.Bios.GetSigSha('b'),
-                                self.faft_client.Bios.GetBodySha('b'))
-        if not all(current_firmware_sha):
-            raise error.TestError('Failed to get firmware sha.')
-        return current_firmware_sha
+
+        # TODO(dgoyette): add a way to avoid hardcoding the keys (section names)
+        current_checksums = {
+            'VBOOTA': self.faft_client.Bios.GetSigSha('a'),
+            'FVMAINA': self.faft_client.Bios.GetBodySha('a'),
+            'VBOOTB': self.faft_client.Bios.GetSigSha('b'),
+            'FVMAINB': self.faft_client.Bios.GetBodySha('b'),
+        }
+        if not all(current_checksums.values()):
+            raise error.TestError(
+                    'Failed to get firmware sha: %s', current_checksums)
+
+        current_fwids = {
+            'RO_FRID': self.faft_client.Bios.GetSectionFwid('ro'),
+            'RW_FWID_A': self.faft_client.Bios.GetSectionFwid('a'),
+            'RW_FWID_B': self.faft_client.Bios.GetSectionFwid('b'),
+        }
+        if not all(current_fwids.values()):
+            raise error.TestError(
+                    'Failed to get firmware fwid(s): %s', current_fwids)
+
+        identifying_info = dict(current_fwids)
+        identifying_info.update(current_checksums)
+        return identifying_info
 
     def is_firmware_changed(self):
-        """Check if the current firmware changed, by comparing its SHA.
+        """Check if the current firmware changed, by comparing its SHA and fwid.
 
-        @return: True if it is changed, otherwise Flase.
+        @return: True if it is changed, otherwise False.
         """
         # Device may not be rebooted after test.
         self.faft_client.Bios.Reload()
 
-        current_sha = self.get_current_firmware_sha()
+        current_info = self.get_current_firmware_identity()
+        prev_info = self._backup_firmware_identity
 
-        if current_sha == self._backup_firmware_sha:
+        if current_info == prev_info:
             return False
         else:
-            corrupt_VBOOTA = (current_sha[0] != self._backup_firmware_sha[0])
-            corrupt_FVMAIN = (current_sha[1] != self._backup_firmware_sha[1])
-            corrupt_VBOOTB = (current_sha[2] != self._backup_firmware_sha[2])
-            corrupt_FVMAINB = (current_sha[3] != self._backup_firmware_sha[3])
-            logging.info('Firmware changed:')
-            logging.info('VBOOTA is changed: %s', corrupt_VBOOTA)
-            logging.info('VBOOTB is changed: %s', corrupt_VBOOTB)
-            logging.info('FVMAIN is changed: %s', corrupt_FVMAIN)
-            logging.info('FVMAINB is changed: %s', corrupt_FVMAINB)
+            changed = set()
+            for section in set(current_info.keys()) | set(prev_info.keys()):
+                if current_info.get(section) != prev_info.get(section):
+                    changed.add(section)
+
+            logging.info('Firmware changed: %s', ', '.join(sorted(changed)))
             return True
 
     def backup_firmware(self, suffix='.original'):
@@ -1353,18 +1367,18 @@ class FirmwareTest(FAFTBase):
         logging.info('Backup firmware stored in %s with suffix %s',
             self.resultsdir, suffix)
 
-        self._backup_firmware_sha = self.get_current_firmware_sha()
+        self._backup_firmware_identity = self.get_current_firmware_identity()
 
     def is_firmware_saved(self):
         """Check if a firmware saved (called backup_firmware before).
 
-        @return: True if the firmware is backuped; otherwise False.
+        @return: True if the firmware is backed up; otherwise False.
         """
-        return self._backup_firmware_sha != ()
+        return bool(self._backup_firmware_identity)
 
     def clear_saved_firmware(self):
         """Clear the firmware saved by the method backup_firmware."""
-        self._backup_firmware_sha = ()
+        self._backup_firmware_identity = {}
 
     def restore_firmware(self, suffix='.original', restore_ec=True):
         """Restore firmware from host in resultsdir.

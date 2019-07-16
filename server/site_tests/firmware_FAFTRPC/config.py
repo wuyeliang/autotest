@@ -306,6 +306,7 @@ RPC_CATEGORIES = [
                 "method_names": [
                     "GetBodySha",
                     "GetSigSha",
+                    "GetSectionFwid",
                     "GetVersion",
                     "GetDatakeyVersion",
                     "GetKernelSubkeyVersion",

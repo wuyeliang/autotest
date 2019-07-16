@@ -275,6 +275,14 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_section_sig_sha(section)
 
+    def GetSectionFwid(self, section=None):
+        """Retrieve the RO or RW fwid.
+
+        @param section: A firmware section, either 'a' or 'b'.
+        @return: A string of the fwid
+        """
+        return self._bios_handler.get_section_fwid(section)
+
     def CorruptSig(self, section):
         """Corrupt the requested firmware section signature.
 
