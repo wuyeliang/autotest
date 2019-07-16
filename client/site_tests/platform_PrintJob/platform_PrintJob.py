@@ -74,27 +74,6 @@ class platform_PrintJob(test.test):
         time.sleep(_SHORT_WAIT)
 
 
-    def _check_printer_in_dialog(self):
-        """Use autotest_private to read discovered printers.
-
-        @raises: error.TestFail if printer is not found in print dialog list.
-        """
-        self.cr.autotest_ext.ExecuteJavaScript(
-                'window.__printers = null; '
-                'chrome.autotestPrivate.getPrinterList(function(printers) {'
-                '    window.__printers = printers'
-                '});')
-        printers = self.cr.autotest_ext.EvaluateJavaScript(
-                'window.__printers;')
-        logging.info(str(printers))
-        printers_number = len(printers)
-        if printers_number != 1:
-            raise error.TestFail('Bad number of printers: %d' % printers_number)
-        if printers[0]['printerName'] != 'Chameleon ' + _PRINTER_NAME+' (USB)':
-            raise error.TestFail('Chameleon printer name not found!')
-        return printers
-
-
     def execute_print_job(self):
         """Using keyboard imput navigate to print dialog and execute a job."""
 
@@ -107,9 +86,6 @@ class platform_PrintJob(test.test):
         self._press_tab()
         self._press_down()
         self._press_enter()
-
-        # Check printer is in the peinter's list
-        self._check_printer_in_dialog()
 
         # Go back to Print button
         self._press_shift_tab()
