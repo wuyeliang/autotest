@@ -50,7 +50,7 @@ class policy_ArcDisableScreenshots(
 
         """
         # Remove any lingering possible screenshots
-        arc.adb_shell('rm -f /sdcard/test.png')
+        arc.adb_shell('rm -f /sdcard/test.png', ignore_status=True)
 
         # Take a screenshot, then check its size
         arc.adb_shell('screencap > /sdcard/test.png', ignore_status=True)
