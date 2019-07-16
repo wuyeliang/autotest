@@ -33,6 +33,8 @@ RUN_BENCHMARK  = 'tools/perf/run_benchmark'
 RSA_KEY = '-i %s' % test_runner_utils.TEST_KEY_PATH
 DUT_CHROME_RESULTS_DIR = '/usr/local/telemetry/src/tools/perf'
 
+DUT_TURBOSTAT_LOG = '/tmp/turbostat.log'
+
 # Result Statuses
 SUCCESS_STATUS = 'SUCCESS'
 WARNING_STATUS = 'WARNING'
@@ -124,9 +126,8 @@ class telemetry_Crosperf(test.test):
         @returns status code for scp command.
         """
         cmd=[]
-        src = ('root@%s:%s/%s' %
+        src = ('root@%s:%s' %
                (dut.hostname if dut else client_ip,
-                DUT_CHROME_RESULTS_DIR,
                 file))
         cmd.extend(['scp', DUT_SCP_OPTIONS, RSA_KEY, '-v',
                     src, host_dir])
@@ -187,6 +188,26 @@ class telemetry_Crosperf(test.test):
         # Run the test. And collect profile if needed.
         stdout = StringIO.StringIO()
         stderr = StringIO.StringIO()
+        turbostat_cmd = (
+            'nohup turbostat --quiet --interval 10 '
+            '--show=CPU,Bzy_MHz,Avg_MHz,TSC_MHz,Busy%%,IRQ,CoreTmp '
+            '1> %s'
+        ) % DUT_TURBOSTAT_LOG
+        cpuinfo_cmd = (
+            'for cpunum in '
+            '   $(awk \'/^processor/ { print $NF ; }\' /proc/cpuinfo ) ; do '
+            ' for i in `ls -d /sys/devices/system/cpu/cpu"${cpunum}"/cpufreq/'
+            '{cpuinfo_cur_freq,scaling_*_freq,scaling_governor} '
+            '     2>/dev/null` ; do '
+            '  echo "${i}"; cat "${i}";'
+            ' done;'
+            'done;'
+            'no_t=/sys/devices/system/cpu/intel_pstate/no_turbo; '
+            'if [[ -e "${no_t}" ]] ; then '
+            ' echo "${no_t}"; cat "${no_t}";'
+            'fi; '
+        )
+        pid = ''
         try:
             # If profiler_args specified, we want to add several more options
             # to the command so that run_benchmark will collect system wide
@@ -196,6 +217,17 @@ class telemetry_Crosperf(test.test):
                            ' --interval-profiling-target=system_wide' \
                            ' --interval-profiler-options="%s"' \
                            % (profiler_args)
+
+            # run turbostat tool in background on dut
+            if dut is not None:
+              logging.info('Running turbostat: %s', turbostat_cmd)
+              pid = dut.run_background(turbostat_cmd)
+              logging.info('turbostat started, pid %s', pid)
+              if not pid.isdigit():
+                # Not a fatal error, report and continue.
+                logging.error('Expected to receive PID, instead received %s',
+                              pid)
+                pid = ''
 
             logging.info('CMD: %s', command)
             result = runner.run(command, stdout_tee=stdout, stderr_tee=stderr,
@@ -216,6 +248,24 @@ class telemetry_Crosperf(test.test):
             exit_code = -1
             raise
         finally:
+            # get cpuinfo when test is done
+            if dut is not None:
+              logging.info('Get cpuinfo: %s', cpuinfo_cmd)
+              with open(os.path.join(self.resultsdir,
+                                     'cpuinfo.log'), 'w') as cpu_log_file:
+                res = dut.run(cpuinfo_cmd, stdout_tee=cpu_log_file)
+              if res.exit_status:
+                logging.error('Get cpuinfo command failed with %d',
+                              res.exit_status)
+              if pid:
+                logging.info("Kill turbostat pid=%s", pid)
+                res = dut.run("if ps -p %s >/dev/null ; then kill %s ; fi"
+                             % (pid, pid))
+                if res.exit_status:
+                  logging.error('Failed to kill turbostat process %d. '
+                                'Exit status %d',
+                                pid, res.exit_status)
+
             stdout_str = stdout.getvalue()
             stderr_str = stderr.getvalue()
             stdout.close()
@@ -223,16 +273,23 @@ class telemetry_Crosperf(test.test):
             logging.info('Telemetry completed with exit code: %d.'
                          '\nstdout:%s\nstderr:%s', exit_code,
                          stdout_str, stderr_str)
+            if dut is not None:
+              scp_res = self.scp_telemetry_results(client_ip, dut,
+                                         DUT_TURBOSTAT_LOG,
+                                         self.resultsdir)
+              if scp_res:
+                logging.error('scp of turbostat logs failed '
+                              'with error %d', scp_res)
 
         # Copy the results-chart.json and histograms.json file into
         # the test_that results directory, if necessary.
         if args.get('run_local', 'false').lower() == 'true':
             result = self.scp_telemetry_results(client_ip, dut,
-                                                'results-chart.json',
-                                                self.resultsdir)
+                os.path.join(DUT_CHROME_RESULTS_DIR, 'results-chart.json'),
+                self.resultsdir)
             result = self.scp_telemetry_results(client_ip, dut,
-                                                'histograms.json',
-                                                self.resultsdir)
+                os.path.join(DUT_CHROME_RESULTS_DIR, 'histograms.json'),
+                self.resultsdir)
         else:
             filepath = os.path.join(self.resultsdir, 'results-chart.json')
             if not os.path.exists(filepath):
