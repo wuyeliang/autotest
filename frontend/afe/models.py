@@ -2066,13 +2066,19 @@ class HostQueueEntry(dbmodels.Model, model_logic.ModelExtensions):
 
         # Associate a user with the host queue entries that we're about
         # to abort so that we can look up who to blame for the aborts.
+        child_ids = [hqe.id for hqe in children]
+        # Get a list of hqe ids that already exists, so we can exclude them when
+        # we do bulk_create later to avoid IntegrityError.
+        existing_hqe_ids = set(AbortedHostQueueEntry.objects.
+                               filter(queue_entry_id__in=child_ids).
+                               values_list('queue_entry_id', flat=True))
         now = datetime.now()
         user = User.current_user()
         aborted_hqes = [AbortedHostQueueEntry(queue_entry=hqe,
-                aborted_by=user, aborted_on=now) for hqe in children]
+                aborted_by=user, aborted_on=now) for hqe in children
+                        if hqe.id not in existing_hqe_ids]
         AbortedHostQueueEntry.objects.bulk_create(aborted_hqes)
         # Bulk update all of the HQEs to set the abort bit.
-        child_ids = [hqe.id for hqe in children]
         HostQueueEntry.objects.filter(id__in=child_ids).update(aborted=True)
 
 
