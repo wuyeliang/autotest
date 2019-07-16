@@ -7,16 +7,12 @@ from autotest_lib.server import utils
 AUTHOR = "namyoon"
 NAME = "firmware_Cr50TpmMode"
 PURPOSE = "Verify set or get TPM mode"
-ATTRIBUTES = ""
+ATTRIBUTES = "suite:faft_cr50_pvt, suite:faft_cr50_prepvt, suite:faft_cr50_tot"
 TIME = "SHORT"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
 
-DOC = """Verify TPM disabling and getting back enabled after reset.
-
-This test should run on a platform where AP firmware requests CR50
-to reset before it enters into Chrome OS if TPM is disabled.
-"""
+DOC = """Verify TPM disabling and getting back enabled after reset."""
 
 if 'args_dict' not in locals():
     args_dict = {}
