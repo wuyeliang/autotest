@@ -318,11 +318,19 @@ class UserCrashTest(crash_test.CrashTest):
         group = grp.getgrgid(stat_info.st_gid).gr_name
         mode = stat.S_IMODE(stat_info.st_mode)
 
-        expected_mode = 0o700
-        if crash_dir == '/var/spool/crash':
+        if crash_dir.startswith('/var/spool/crash'):
+            if stat.S_ISDIR(stat_info.st_mode):
+                utils.system('ls -l %s' % crash_dir)
+                for f in os.listdir(crash_dir):
+                    self._check_crash_directory_permissions(
+                        os.path.join(crash_dir, f))
+                permitted_modes = set([0o2770])
+            else:
+                permitted_modes = set([0o660, 0o640, 0o644])
             expected_user = 'root'
-            expected_group = 'root'
+            expected_group = 'crash-access'
         else:
+            permitted_modes = set([0o700])
             expected_user = 'chronos'
             expected_group = 'chronos'
 
@@ -330,10 +338,10 @@ class UserCrashTest(crash_test.CrashTest):
             raise error.TestFail(
                 'Expected %s.%s ownership of %s (actual %s.%s)' %
                 (expected_user, expected_group, crash_dir, user, group))
-        if mode != expected_mode:
+        if mode not in permitted_modes:
             raise error.TestFail(
-                'Expected %s to have mode %o (actual %o)' %
-                (crash_dir, expected_mode, mode))
+                'Expected %s to have mode in %s (actual %o)' %
+                (crash_dir, ("%o" % m for m in permitted_modes), mode))
 
 
     def _check_minidump_stackwalk(self, minidump_path, basename,

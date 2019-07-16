@@ -269,7 +269,7 @@ class CrashTest(test.test):
                                      directory of the current user session, or
                                      the fallback directory if no sessions.
         """
-        if username == 'root' and not force_user_crash_dir:
+        if username in ('root', 'crash') and not force_user_crash_dir:
             return self._SYSTEM_CRASH_DIR
         else:
             dirs = glob.glob(self._USER_CRASH_DIRS)
