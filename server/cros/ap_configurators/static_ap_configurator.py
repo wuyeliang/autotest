@@ -77,7 +77,9 @@ class StaticAPConfigurator(ap_configurator.APConfiguratorAbstract):
             ap_config.get_bss5() in DHCP_DELAY_DEVICES):
             self._dhcp_delay = 60
 
-        self.rpm_client = xmlrpclib.ServerProxy(RPM_FRONTEND_SERVER, False)
+        self.rpm_client = xmlrpclib.ServerProxy(RPM_FRONTEND_SERVER,
+                                                verbose=False,
+                                                allow_none=True)
 
 
     def __str__(self):
