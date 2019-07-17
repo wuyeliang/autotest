@@ -9,6 +9,7 @@ NAME = "telemetry_AFDOGenerate"
 PURPOSE = "Produce profile (AFDO format) of normal browsing for optimization."
 ATTRIBUTES = "suite:AFDO_record"
 TIME = "LONG"
+MAX_RESULT_SIZE_KB = 512000
 TEST_CATEGORY = "Benchmark"
 TEST_CLASS = "telemetry"
 TEST_TYPE = "server"
