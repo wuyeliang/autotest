@@ -7,6 +7,7 @@ import json
 import logging
 import numpy
 import os
+import re
 import time
 
 from autotest_lib.client.bin import utils
@@ -344,6 +345,15 @@ class power_LoadTest(arc.ArcTest):
                                                       loop_counter,
                                                       test_instance)))
 
+            keyvalues_tracking = self._testServer.add_wait_url(url='/keyvalues')
+
+            self._testServer.add_url_handler(url='/keyvalues',\
+                handler_func=(lambda handler, forms, test_instance=self,
+                              loop_counter=i:\
+                    _extension_key_values_handler(handler, forms,
+                                                  loop_counter,
+                                                  test_instance)))
+
             # setup a handler to simulate waking up the base of a detachable
             # on user interaction. On scrolling, wake for 1s, on page
             # navigation, wake for 10s.
@@ -368,9 +378,9 @@ class power_LoadTest(arc.ArcTest):
 
             low_battery = self._do_wait(self._verbose, self._loop_time,
                                         latch)
-
             script_logging.set()
             pagetime_tracking.set()
+            keyvalues_tracking.set()
 
             self._log_loop_checkpoint(i, start_time, time.time())
 
@@ -773,6 +783,19 @@ class power_LoadTest(arc.ArcTest):
             loop_section = '_' + loop_str + '_' + section
             self._checkpoint_logger.checkpoint(loop_section, s_start, s_end)
 
+def alphanum_key(s):
+    """ Turn a string into a list of string and numeric chunks. This enables a
+        sort function to use this list as a key to sort alphanumeric strings
+        naturally without padding zero digits.
+        "z23a" -> ["z", 23, "a"]
+    """
+    chunks = re.split('([-.0-9]+)', s)
+    for i in range(len(chunks)):
+        try:
+            chunks[i] = float(chunks[i])
+        except ValueError:
+            pass
+    return chunks
 
 def _extension_log_handler(handler, form, loop_number):
     """
@@ -785,8 +808,9 @@ def _extension_log_handler(handler, form, loop_number):
     unused parameter, because httpd passes the server itself
     into the handler.
     """
+
     if form:
-        for field in form.keys():
+        for field in sorted(form.keys(), key=alphanum_key):
             logging.debug("[extension] @ loop_%d %s", loop_number,
             form[field].value)
             # we don't want to add url information to our keyvals.
@@ -807,10 +831,9 @@ def _extension_page_time_info_handler(handler, form, loop_number,
         logging.debug("no page time information returned")
         return
 
-    for field in form.keys():
-        # Format is 'Unique Salt:URL', the ':' is used to delineate them.
-        url = field.split(':', 1)[1]  # Extract the URL component
+    for field in sorted(form.keys(), key=alphanum_key):
         page = json.loads(form[field].value)
+        url = page['url']
 
         logging.debug("[extension] @ loop_%d url: %s start_time: %d",
             loop_number, url, page['start_time'])
@@ -876,3 +899,23 @@ def _extension_page_time_info_handler(handler, form, loop_number,
         message += "\t%s w/ %d ms" % (url, msecs)
 
     logging.debug("%s\n", message)
+
+def _extension_key_values_handler(handler, form, loop_number,
+                                      test_instance):
+    if not form:
+        logging.debug("no key value information returned")
+        return
+
+    for field in sorted(form.keys(), key=alphanum_key):
+        keyval_data = json.loads(form[field].value)
+
+        # Print each key:value pair and associate it with the data
+        for key, value in keyval_data.iteritems():
+            logging.debug("[extension] @ loop_%d key: %s val: %s",
+                loop_number, key, value)
+            # Add the key:values to the _tmp_keyvals set
+            test_instance._tmp_keyvals["loop%d_%s" % (loop_number, key)] = value
+
+        # we don't want to add url information to our keyvals.
+        # httpd adds them automatically so we remove them again
+        del handler.server._form_entries[field]
