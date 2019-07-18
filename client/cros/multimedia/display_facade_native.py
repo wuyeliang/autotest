@@ -267,6 +267,14 @@ class DisplayFacadeNative(object):
                           mode['heightInNativePixels']) for mode in modes]))
 
 
+    def has_internal_display(self):
+        """Returns whether the device has an internal display.
+
+        @return whether the device has an internal display
+        """
+        return len([d for d in self.get_display_info() if d['isInternal']]) > 0
+
+
     def get_internal_display_id(self):
         """Gets the internal display id.
 
