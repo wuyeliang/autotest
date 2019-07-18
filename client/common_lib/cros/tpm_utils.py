@@ -9,13 +9,13 @@ from autotest_lib.client.common_lib import error
 
 
 _PASSWD_FILE = '/var/tmp/tpm_password'
-_RM_DIRS = ('/home/.shadow/* ' +
-            '/home/chronos/.oobe_completed ' +
-            '/home/chronos/Local\ State ' +
-            '/var/cache/app_pack ' +
-            '/var/cache/shill/default.profile ' +
-            '/var/lib/tpm ' +
-            '/var/lib/whitelist/* ')
+_RM_FILES = ['/home/chronos/.oobe_completed',
+             '/home/chronos/Local\ State',
+             '/var/cache/shill/default.profile']
+_RM_DIRS = ['/home/.shadow/*',
+            '/var/lib/whitelist/*',
+            '/var/cache/app_pack',
+            '/var/lib/tpm']
 
 
 class NoTPMPasswordException(Exception):
@@ -124,6 +124,8 @@ def CleanupAndReboot(client):
 
     @param client: client object to run commands on.
     """
-    client.run('sudo rm -rf ' + _RM_DIRS, ignore_status=True)
-    client.run('sync', ignore_status=True)
+    for rm_file in _RM_FILES + _RM_DIRS:
+        client.run('sudo rm -rf ' + rm_file, ignore_status=True)
+        client.run('sync', ignore_status=True)
+        client.run('ls %s' % rm_file, ignore_status=True)
     client.reboot()
