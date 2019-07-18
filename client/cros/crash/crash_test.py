@@ -183,7 +183,7 @@ class CrashTest(test.test):
             utils.open_write_close(temp_file, 'test-consent')
             utils.system('chown chronos:chronos "%s"' % (temp_file))
             shutil.move(temp_file, self._CONSENT_FILE)
-            logging.info('Created ' + self._CONSENT_FILE)
+            logging.info('Created %s', self._CONSENT_FILE)
         else:
             if os.path.isdir(constants.WHITELIST_DIR):
                 # Create policy file that disables metrics/consent.
@@ -200,7 +200,7 @@ class CrashTest(test.test):
     def _set_crash_test_in_progress(self, in_progress):
         if in_progress:
             utils.open_write_close(self._CRASH_TEST_IN_PROGRESS, 'in-progress')
-            logging.info('Created ' + self._CRASH_TEST_IN_PROGRESS)
+            logging.info('Created %s', self._CRASH_TEST_IN_PROGRESS)
         else:
             utils.system('rm -f "%s"' % (self._CRASH_TEST_IN_PROGRESS))
 
@@ -550,10 +550,10 @@ class CrashTest(test.test):
 
         self.wait_for_sender_completion()
         output = self._log_reader.get_logs()
-        logging.debug('Crash sender message output:\n' + output)
+        logging.debug('Crash sender message output:\n %s', output)
 
         if script_output != '':
-            logging.debug('crash_sender stdout/stderr: ' + script_output)
+            logging.debug('crash_sender stdout/stderr: %s', script_output)
 
         if os.path.exists(report):
             report_exists = True
