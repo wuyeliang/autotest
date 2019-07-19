@@ -95,7 +95,7 @@ class CellularTestEnvironment(object):
 
     def __enter__(self):
         try:
-            if upstart.is_running('modemfwd'):
+            if upstart.has_service('modemfwd') and upstart.is_running('modemfwd'):
                 upstart.stop_job('modemfwd')
             # Temporarily disable shill autoconnect to cellular service while
             # the test environment is setup to prevent a race condition
@@ -135,7 +135,8 @@ class CellularTestEnvironment(object):
 
 
     def __exit__(self, exception, value, traceback):
-        upstart.restart_job('modemfwd')
+        if upstart.has_service('modemfwd'):
+            upstart.restart_job('modemfwd')
         if self._nested:
             return self._nested.__exit__(exception, value, traceback)
         self.shill = None
