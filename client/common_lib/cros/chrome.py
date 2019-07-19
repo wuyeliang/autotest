@@ -224,9 +224,11 @@ class Chrome(object):
                 extensions_to_load.append(extension)
             self._extensions_to_load = extensions_to_load
 
+        # TODO(b/137691087): Reenable after the root cause of frequent crash
+        # is identified.
         # Turn on collection of Chrome coredumps via creation of a magic file.
         # (Without this, Chrome coredumps are trashed.)
-        open(constants.CHROME_CORE_MAGIC_FILE, 'w').close()
+        # open(constants.CHROME_CORE_MAGIC_FILE, 'w').close()
 
         self._browser_to_create = browser_finder.FindBrowser(
             finder_options)
