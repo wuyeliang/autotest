@@ -120,12 +120,12 @@ _QUAL_BOOKMARKS = sorted([
 ])
 
 _SMOKE = [
-    'GtsAdminTestCases',
-    'GtsMemoryTestCases',
+    # Non-signed test with non-zero tests running
+    'GtsContactsTest',
 ]
 
 _BVT_ARC = [
-    'GtsMemoryHostTestCases',
+    'GtsContactsTest',
 ]
 
 _BVT_PERBUILD = [
