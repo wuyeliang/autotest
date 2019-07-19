@@ -1146,12 +1146,17 @@ class TradefedTest(test.test):
                 #              not-excecuted, for instance, by collecting all
                 #              tests on startup (very expensive, may take 30
                 #              minutes).
-                self._override_powerd_prefs()
+                # TODO(b/137917339): Only prevent screen from turning off for
+                # media tests. Remove this check once the GPU issue is fixed.
+                if needs_push_media:
+                    self._override_powerd_prefs()
                 try:
                     waived_tests, acc = self._run_and_parse_tradefed(
                         commands)
                 finally:
-                    self._restore_powerd_prefs()
+                    # TODO(b/137917339): ditto
+                    if needs_push_media:
+                        self._restore_powerd_prefs()
                 self._fail_on_unexpected_media_download()
                 result = self._run_tradefed_list_results()
                 if not result:
