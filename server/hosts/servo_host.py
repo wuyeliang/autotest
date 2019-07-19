@@ -186,6 +186,10 @@ class ServoHost(base_servohost.BaseServoHost):
         self.record('INFO', None, None, message)
         try:
             self._repair_strategy.repair(self, silent)
+            # If target is a labstation then try to withdraw any existing
+            # reboot request created by this servo because it passed repair.
+            if self.is_labstation():
+                self.withdraw_reboot_request()
         except:
             self.disconnect_servo()
             raise
@@ -204,8 +208,18 @@ class ServoHost(base_servohost.BaseServoHost):
         """Request servohost to be rebooted when it's safe to by touch a file.
         """
         logging.debug('Request to reboot servohost %s has been created by '
-                      'servo with port %s', self.hostname, self.servo_port)
+                      'servo with port # %s', self.hostname, self.servo_port)
         self.run('touch %s' % self._reboot_file, ignore_status=True)
+
+
+    def withdraw_reboot_request(self):
+        """Withdraw a servohost reboot request if exists by remove the flag
+        file.
+        """
+        logging.debug('Withdrawing request to reboot servohost %s that created'
+                      ' by servo with port # %s if exists.',
+                      self.hostname, self.servo_port)
+        self.run('rm -f %s' % self._reboot_file, ignore_status=True)
 
 
     def _lock(self):
