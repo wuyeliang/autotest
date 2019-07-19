@@ -7,11 +7,11 @@ from autotest_lib.server.cros.bluetooth import advertisements_data
 
 
 AUTHOR = 'rjahagir'
-NAME = 'bluetooth_AdapterLEAdvertising.reboot.stress_50'
+NAME = 'bluetooth_AdapterLEAdvertising.reboot.stress_5'
 PURPOSE = 'Test bluetooth adapter advertising.'
 CRITERIA = 'Adapter should advertise with correct parameters.'
-ATTRIBUTES = ''
-TIME = 'SHORT'  # Takes approximately 4 hours on elm
+ATTRIBUTES = 'suite:bluetooth_stress'
+TIME = 'SHORT'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
@@ -65,6 +65,6 @@ def run(machine):
     host = hosts.create_host(machine)
     job.run_test('bluetooth_AdapterLEAdvertising', host=host,
                  advertisements=advertisements_data.ADVERTISEMENTS,
-                 test_type='reboot', num_iterations=50)
+                 test_type='reboot', num_iterations=5)
 
 parallel_simple(run, machines)

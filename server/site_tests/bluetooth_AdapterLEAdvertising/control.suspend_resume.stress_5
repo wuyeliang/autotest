@@ -7,11 +7,11 @@ from autotest_lib.server.cros.bluetooth import advertisements_data
 
 
 AUTHOR = 'rjahagir'
-NAME = 'bluetooth_AdapterLEAdvertising.reboot.stress_50'
+NAME = 'bluetooth_AdapterLEAdvertising.suspend_resume.stress_5'
 PURPOSE = 'Test bluetooth adapter advertising.'
 CRITERIA = 'Adapter should advertise with correct parameters.'
-ATTRIBUTES = ''
-TIME = 'SHORT'  # Takes approximately 4 hours on elm
+ATTRIBUTES = 'suite:bluetooth_stress'
+TIME = 'SHORT'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
@@ -20,12 +20,13 @@ DEPENDENCIES = 'bluetooth'
 DOC = """
 This test case verifies that the Bluetooth adapter of the DUT can
 behave as a Bluetooth low-energy device and register advertisement
-with data and parameters while suspending and resuming correctly.
+with data and parameters while suspending and resuming correctly multiple times.
 
 This autotest include the following test cases:
-     self.test_case_SI200_RA3_CD_PC_CD_UA3()
-     self.test_case_RA3_CD_SI200_CD_PC_CD_UA3()
-     self.test_case_RA1_CD_SI200_CD_PC_CD_UA1()
+     self.test_case_SI200_RA3_CD_SR_CD_UA3()
+     self.test_case_RA3_CD_SI200_CD_SR_CD_UA3()
+     self.test_case_SI200_RA1_CD_SR_CD_UA1()
+     self.test_case_RA1_CD_SI200_CD_SR_CD_UA1()
 
 Specifically, the subtests included in this autotest verify the
 following operations and parameters.
@@ -65,6 +66,6 @@ def run(machine):
     host = hosts.create_host(machine)
     job.run_test('bluetooth_AdapterLEAdvertising', host=host,
                  advertisements=advertisements_data.ADVERTISEMENTS,
-                 test_type='reboot', num_iterations=50)
+                 test_type='suspend_resume', num_iterations=5)
 
 parallel_simple(run, machines)
