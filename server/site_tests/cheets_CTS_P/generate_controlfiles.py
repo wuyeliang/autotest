@@ -206,6 +206,12 @@ _BVT_PERBUILD = [
     'CtsVoiceSettingsTestCases',
 ]
 
+_HARDWARE_DEPENDENT_MODULES = [
+    'CtsSensorTestCases',
+    'CtsCameraTestCases',
+    'CtsBluetoothTestCases',
+]
+
 # The suite is divided based on the run-time hint in the *.config file.
 VMTEST_INFO_SUITES = collections.OrderedDict()
 # This is the default suite for all the modules that are not specified below.
@@ -686,8 +692,9 @@ def get_suites(modules, abi, is_public):
         return ['suite:cts_P']
 
     # As this is not called for the "all" runs we can safely assume that each
-    # module runs in suite:arc-cts.
-    suites = ['suite:arc-cts']
+    # module runs in suite:arc-cts on boards, and each module runs in
+    # suite:arc-cts-unibuild on selected models.
+    suites = ['suite:arc-cts', 'suite:arc-cts-unibuild']
     for module in modules:
         if module in get_collect_modules(is_public):
             # We collect all tests both in arc-cts and arc-cts-qual as both have
@@ -699,6 +706,9 @@ def get_suites(modules, abi, is_public):
         if module in _SMOKE:
             # Handle VMTest by adding a few jobs to suite:smoke.
             suites += ['suite:smoke']
+        if module in _HARDWARE_DEPENDENT_MODULES:
+            # CTS modules to be run on all unibuild models.
+            suites += ['suite:arc-cts-unibuild-hw']
         if module not in get_collect_modules(is_public) and abi == 'x86':
             # Handle a special builder for running all of CTS in a betty VM.
             # TODO(ihf): figure out if this builder is still alive/needed.
