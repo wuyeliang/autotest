@@ -6,7 +6,7 @@
 
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_P.9.0_r8.arm.CtsSimpleperfTestCases'
-ATTRIBUTES = 'suite:arc-cts, suite:bvt-perbuild'
+ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-unibuild, suite:bvt-perbuild'
 DEPENDENCIES = 'arc'
 JOB_RETRIES = 1
 TEST_TYPE = 'server'

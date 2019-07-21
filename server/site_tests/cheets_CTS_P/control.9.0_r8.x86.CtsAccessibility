@@ -6,7 +6,7 @@
 
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_P.9.0_r8.x86.CtsAccessibility'
-ATTRIBUTES = 'suite:arc-cts, suite:vmtest-informational1'
+ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-unibuild, suite:vmtest-informational1'
 DEPENDENCIES = 'arc, cts_abi_x86'
 JOB_RETRIES = 1
 TEST_TYPE = 'server'
