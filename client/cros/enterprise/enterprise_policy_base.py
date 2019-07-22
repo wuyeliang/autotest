@@ -969,11 +969,12 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                                         arc_mode=arc_mode,
                                         gaia_login=True,
                                         disable_gaia_services=False,
+                                        expect_policy_fetch=True,
                                         disable_arc_opt_in=False,
+                                        disable_default_apps=False,
                                         enterprise_arc_test=True,
                                         autotest_ext=True,
                                         extra_browser_args=extra_flags)
-
             else:
                 self.cr = chrome.Chrome(
                         extra_browser_args=extra_flags,
