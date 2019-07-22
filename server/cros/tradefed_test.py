@@ -903,7 +903,7 @@ class TradefedTest(test.test):
         )
         try:
             self._run_commands(commands)
-        except (error.CmdError, error.CmdTimeoutError):
+        except (error.AutoservRunError, error.AutoservSSHTimeout):
             logging.warning('Failed to override powerd policy, tests depending '
                             'on screen being always on may fail.')
 
@@ -918,7 +918,7 @@ class TradefedTest(test.test):
         )
         try:
             self._run_commands(commands)
-        except (error.CmdError, error.CmdTimeoutError):
+        except (error.AutoservRunError, error.AutoservSSHTimeout):
             logging.warning('Failed to restore powerd policy, overrided policy '
                             'will persist until device reboot.')
 
