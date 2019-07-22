@@ -120,6 +120,15 @@ class BluetoothTesterXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         profile_class = ((class_of_device & 0xFF0000) |
                          (profile_class & 0x00FFFF))
 
+        # Class of Device/Service is set to 0 when only LE is enabled and it is
+        # set when BR_EDR is enabled . So the first byte of class_of_device will
+        # differ when adapter is changed from LE only to BR_EDR + LE.
+        # Ignore difference in first byte of class_of_device if that is the case
+        # Check if we are changing from LE to BREDR
+        le_to_bredr = bool((current_settings & bluetooth_socket.MGMT_SETTING_LE)
+                           and (profile_settings
+                                & bluetooth_socket.MGMT_SETTING_BREDR))
+
         # Before beginning, force the adapter power off, even if it's already
         # off; this is enough to persuade an AP-mode Intel chip to accept
         # settings.
@@ -274,10 +283,16 @@ class BluetoothTesterXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         if profile_settings & bluetooth_socket.MGMT_SETTING_BREDR:
             if class_of_device != profile_class:
                 if class_of_device & 0x00ffff == profile_class & 0x00ffff:
-                    logging.warning('Class of device matched that set, but '
-                                    'Service Class field did not: %x != %x '
-                                    'Reboot Tester? ',
-                                    class_of_device, profile_class)
+                    if not le_to_bredr:
+                        logging.warning('Class of device matched that set, but '
+                                        'Service Class field did not: %x != %x '
+                                        'Reboot Tester? ',
+                                        class_of_device, profile_class)
+                    else:
+                        logging.debug('Service Class field differs but it is'
+                                      'expected since adapter changed from'
+                                      'LE only to BR/EDR')
+                        return True
                 else:
                     logging.warning('Class of device did not match that set: '
                                     '%x != %x', class_of_device, profile_class)
