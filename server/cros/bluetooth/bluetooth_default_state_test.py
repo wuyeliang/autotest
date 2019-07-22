@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import logging
+import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros.bluetooth import bluetooth_socket
@@ -242,6 +243,9 @@ class bluetooth_Sanity_DefaultStateTest(
             # Remove the device again, and make sure the PSCAN flag goes away.
             self.remove_device(DEVICE_ADDRESS, ADDRESS_TYPE)
 
+            # PSCAN is still enabled for a few seconds after remove device
+            # on older devices. Wait for few second before reading the settigs
+            time.sleep(3)
             current_settings = self.read_info()[4]
             self._log_settings("After remove device", current_settings)
 
