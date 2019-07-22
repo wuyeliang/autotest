@@ -101,13 +101,9 @@ _COLLECT = 'tradefed-run-collect-tests-only-internal'
 _PUBLIC_COLLECT = 'tradefed-run-collect-tests-only'
 _CTS_QUAL_RETRIES = 9
 _CTS_MAX_RETRIES = {
-    # TODO(ihf): Remove all once Nocturne stable.
-    'CtsAccessibilityServiceTestCases':  12,
-    'CtsActivityManagerDeviceTestCases': 12,
-    'CtsDeqpTestCases':   _CTS_QUAL_RETRIES,
-    'CtsGraphicsTestCases':              12,
-    'CtsIncidentHostTestCases':          12,
-    'CtsSensorTestCases':                30,  # TODO(ihf): Lower this once flakes are fixed.
+    'CtsDeqpTestCases':         15,  # TODO(b/126787654)
+    'CtsIncidentHostTestCases': 30,  # TODO(b/128695132)
+    'CtsSensorTestCases':       30,  # TODO(b/124528412)
 }
 
 # TODO(ihf): Update timeouts once P is more stable.
