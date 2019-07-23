@@ -53,10 +53,12 @@ class firmware_Cr50BID(Cr50Test):
     UNIVERSAL = 'universal'
     # The board id locked can only run on devices with the right chip board id.
     BID_LOCKED = 'board_id_locked'
-    # BID support was added in 0.0.21. Support for keeping the rollback state
-    # after AP boot was added in 0.3.4. Any version after 0.3.4 should be ok to
-    # use to detect rollback. Use 0.3.9 to get more bug fixes.
-    BID_SUPPORT = '0.3.9'
+    # Full support required for this test was added in different MP releases.
+    # - BID support was added in 0.0.21.
+    # - Keeping the rollback state after AP boot was added in 0.3.4.
+    # - Complete support for SPI PLT_RST straps was added in 0.3.18
+    # Use 3.18, so the test can detect rollback and run on any board.
+    BID_SUPPORT = '0.3.18'
 
     # Board id locked debug files will use the board id, mask, and flags in the
     # gs filename
