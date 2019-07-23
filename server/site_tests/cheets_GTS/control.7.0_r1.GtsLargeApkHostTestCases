@@ -24,7 +24,7 @@ def run_GTS(machine):
         test_name='cheets_GTS.7.0_r1.GtsLargeApkHostTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsLargeApkHostTestCases', '--ignore-business-logic-failure'],
-        retry_template=['run', 'commandAndExit', 'retry', '--ignore-business-logic-failure', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsLargeApkHostTestCases',
         target_plan=None,
         uri='gs://chromeos-arc-images/cts/bundle/android-gts-7.0_r1-5731058.zip',

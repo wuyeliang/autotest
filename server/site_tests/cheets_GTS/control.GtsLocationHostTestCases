@@ -24,7 +24,7 @@ def run_GTS(machine):
         tag='GtsLocationHostTestCases',
         test_name='cheets_GTS.GtsLocationHostTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsLocationHostTestCases', '--ignore-business-logic-failure'],
-        retry_template=['run', 'commandAndExit', 'retry', '--ignore-business-logic-failure', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsLocationHostTestCases',
         target_plan=None,
         retry_manual_tests=True,

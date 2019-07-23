@@ -24,7 +24,7 @@ def run_GTS(machine):
         tag='GtsUsageStatsTestCases',
         test_name='cheets_GTS.GtsUsageStatsTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsUsageStatsTestCases', '--ignore-business-logic-failure'],
-        retry_template=['run', 'commandAndExit', 'retry', '--ignore-business-logic-failure', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsUsageStatsTestCases',
         target_plan=None,
         retry_manual_tests=True,

@@ -24,7 +24,7 @@ def run_GTS(machine):
         tag='GtsGameDeviceHostTestCases',
         test_name='cheets_GTS.GtsGameDeviceHostTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsGameDeviceHostTestCases', '--ignore-business-logic-failure'],
-        retry_template=['run', 'commandAndExit', 'retry', '--ignore-business-logic-failure', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsGameDeviceHostTestCases',
         target_plan=None,
         retry_manual_tests=True,

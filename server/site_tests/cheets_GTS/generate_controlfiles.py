@@ -532,11 +532,11 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
     elif modules and not retry:
         for module in sorted(modules):
             cmd += ['--include-filter', module]
-    # We handle media download ourselves in the lab, as lazy as possible.
-    cmd.append('--ignore-business-logic-failure')
     if retry:
         cmd.append('--retry')
         cmd.append('{session_id}')
+    else:
+        cmd.append('--ignore-business-logic-failure')
     return cmd
 
 

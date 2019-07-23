@@ -24,7 +24,7 @@ def run_GTS(machine):
         tag='GtsYouTubeTestCases',
         test_name='cheets_GTS.GtsYouTubeTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsYouTubeTestCases', '--ignore-business-logic-failure'],
-        retry_template=['run', 'commandAndExit', 'retry', '--ignore-business-logic-failure', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsYouTubeTestCases',
         target_plan=None,
         retry_manual_tests=True,
