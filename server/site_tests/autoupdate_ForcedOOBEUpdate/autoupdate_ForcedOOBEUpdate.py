@@ -35,16 +35,22 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         Repeated check status of update. It should move from DOWNLOADING to
         FINALIZING to COMPLETE (then reboot) to IDLE.
         """
-        # 20 minute timeout.
-        timeout_minutes = 20
+        timeout_minutes = 10
         timeout = time.time() + 60 * timeout_minutes
+        boot_id = self._host.get_boot_id()
+
         while True:
             status = self._get_update_engine_status(timeout=10)
 
             # During reboot, status will be None
-            if status is not None:
-                if self._UPDATE_STATUS_IDLE == status[self._CURRENT_OP]:
-                    break
+            if status is None:
+                # Checking only for the status to change to IDLE can hide
+                # errors that occurred between status checks. When the forced
+                # update is complete, it will automatically reboot the device.
+                # So we wait for an explict reboot. We will verify that the
+                # update completed successfully later in verify_update_events()
+                self._host.test_wait_for_boot(boot_id)
+                break
             time.sleep(1)
             if time.time() > timeout:
                 raise error.TestFail('OOBE update did not finish in %d '

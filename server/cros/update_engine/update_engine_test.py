@@ -593,8 +593,15 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         """
         hostlog = self._omaha_devserver.get_hostlog(self._host.ip,
                                                     wait_for_reboot_events=True)
-        logging.info('Hostlog: %s', hostlog)
+        if hostlog is None:
+            err_str = 'Timed out getting the hostlog from the devserver.'
+            err_code = self._get_last_error_string()
+            if err_code is not None:
+                err_str = ('%s Last error in update_engine.log: %s' %
+                          (err_str, err_code))
+            raise error.TestError(err_str)
 
+        logging.info('Hostlog: %s', hostlog)
         # File names to save the hostlog events to.
         rootfs_hostlog = os.path.join(self.resultsdir, 'hostlog_rootfs')
         reboot_hostlog = os.path.join(self.resultsdir, 'hostlog_reboot')

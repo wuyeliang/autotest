@@ -46,15 +46,25 @@ class autoupdate_StartOOBEUpdate(update_engine_test.UpdateEngineTest):
         # Start chrome instance to interact with OOBE.
         self._chrome = chrome.Chrome(auto_login=False)
         self._oobe = self._chrome.browser.oobe
-
         self._skip_to_oobe_update_screen()
+
+        timeout = 180
+        err_str = 'Update did not start within %d seconds.' % timeout
         try:
             utils.poll_for_condition(self._is_update_started,
-                                     error.TestFail('Update did not start.'),
-                                     timeout=180)
+                                     error.TestFail(err_str),
+                                     timeout=timeout)
         except error.TestFail as e:
             if self._critical_update:
-                raise e
+                if not self._get_update_requests():
+                    raise error.TestFail('%s There were no update requests in'
+                                         ' update_engine.log. OOBE update'
+                                         ' screen was missed.' % err_str)
+                err_code = self._get_last_error_string()
+                if err_code is not None:
+                    raise error.TestFail('%s %s' % (err_str, err_code))
+                else:
+                    raise e
 
 
     def run_once(self, image_url, cellular=False, payload_info=None,

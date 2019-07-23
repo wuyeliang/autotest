@@ -319,10 +319,8 @@ class OmahaDevserver(object):
             ['http', self.get_netloc(), '/api/hostlog',
              'ip=' + ip, ''])
 
-        # 4 rootfs and 1 post reboot
-        expected_events_count = 5
-        # 10 minute timeout.
-        timeout = time.time() + 60 * 10
+        # Wait for a few minutes for the post-reboot update check.
+        timeout = time.time() + 60 * 3
         while True:
             try:
                 conn = urllib2.urlopen(omaha_hostlog_url)
@@ -344,7 +342,7 @@ class OmahaDevserver(object):
                 else:
                     time.sleep(5)
                     if time.time() > timeout:
-                        raise error.TestError('Timed out getting hostlog.')
+                        return None
                     continue
             else:
                 return hostlog
