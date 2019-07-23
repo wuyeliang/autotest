@@ -4,6 +4,8 @@
 
 """This module provides the test utilities for audio spec."""
 
+import collections
+
 _BOARD_TYPE_CHROMEBOX = 'CHROMEBOX'
 _BOARD_TYPE_CHROMEBIT = 'CHROMEBIT'
 _BOARD_WITHOUT_SOUND_CARD = ['gale', 'veyron_rialto']
@@ -63,3 +65,32 @@ def has_hotwording(board_name, model_name):
     if board_name in ['coral', 'eve', 'kevin', 'nami', 'pyro', 'rammus', 'samus']:
         return True
     return False
+
+
+BoardInfo = collections.namedtuple('BoardInfo', ['board', 'model', 'sku'])
+
+BORADS_WITH_TWO_INTERNAL_MICS = [
+        BoardInfo('coral', 'nasher360', ''),
+        BoardInfo('octopus', 'bobba360', '9'),
+        BoardInfo('octopus', 'bobba360', '10'),
+]
+
+def get_num_internal_microphone(board, model, sku):
+    """Gets the number of internal microphones.
+
+    @param board: board name of the DUT.
+    @param model: model name of the DUT.
+    @param sku: sku number string of the DUT.
+
+    @returns: The number of internal microphones.
+
+    """
+    if not has_internal_microphone(board):
+        return 0
+
+    for b in BORADS_WITH_TWO_INTERNAL_MICS:
+        if b.board == board and b.model == model:
+            if b.sku == '' or b.sku == sku:
+                return 2
+
+    return 1

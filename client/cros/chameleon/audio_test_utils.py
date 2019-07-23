@@ -21,6 +21,7 @@ from autotest_lib.client.cros.audio import audio_spec
 from autotest_lib.client.cros.audio import audio_data
 from autotest_lib.client.cros.audio import audio_helper
 from autotest_lib.client.cros.audio import audio_quality_measurement
+from autotest_lib.client.cros.audio import cras_configs
 from autotest_lib.client.cros.chameleon import chameleon_audio_ids
 
 CHAMELEON_AUDIO_IDS_TO_CRAS_NODE_TYPES = {
@@ -766,3 +767,33 @@ def check_hp_or_lineout_plugged(audio_facade):
     if 'HEADPHONE' in output_nodes:
         return 'HEADPHONE'
     raise error.TestFail('Can not detect line-out or headphone')
+
+
+def get_internal_mic_node(host):
+    """Return the expected internal microphone node.
+
+    @param host: The CrosHost object.
+
+    @returns: The name of the expected internal microphone nodes.
+    """
+    board = host.get_board().split(':')[1]
+    model = host.get_platform()
+    sku = host.host_info_store.get().device_sku
+    num_mics = audio_spec.get_num_internal_microphone(board, model, sku)
+
+    return cras_configs.get_internal_mic_node(board, model, num_mics)
+
+
+def get_plugged_internal_mics(host):
+    """Return a list of all the plugged internal microphone nodes.
+
+    @param host: The CrosHost object.
+
+    @returns: A list of all the plugged internal microphone nodes.
+    """
+    board = host.get_board().split(':')[1]
+    model = host.get_platform()
+    sku = host.host_info_store.get().device_sku
+    num_mics = audio_spec.get_num_internal_microphone(board, model, sku)
+
+    return cras_configs.get_plugged_internal_mics(board, model, num_mics)

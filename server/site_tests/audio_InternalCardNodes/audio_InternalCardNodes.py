@@ -9,7 +9,6 @@ import time
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.chameleon import audio_test_utils
 from autotest_lib.server.cros.audio import audio_test
-from autotest_lib.client.cros.audio import cras_configs
 from autotest_lib.client.cros.audio import audio_spec
 from autotest_lib.server.cros.multimedia import remote_facade_factory
 
@@ -26,6 +25,11 @@ class audio_InternalCardNodes(audio_test.AudioTest):
     DELAY_AFTER_UNPLUGGING = 2
 
     def run_once(self, host):
+        """Runs InternalCardNodes test.
+
+        @param host: device under test CrosHost.
+
+        """
         chameleon_board = host.chameleon
         factory = remote_facade_factory.RemoteFacadeFactory(
                 host, results_dir=self.resultsdir)
@@ -58,8 +62,8 @@ class audio_InternalCardNodes(audio_test.AudioTest):
                     'INTERNAL_SPEAKER')
 
         if audio_test_utils.has_internal_microphone(host):
-            expected_internal_mics = cras_configs.get_plugged_internal_mics(
-                    board_name, model_name)
+            expected_internal_mics = audio_test_utils.get_plugged_internal_mics(
+                    host)
             expected_plugged_nodes_without_audio_jack[1].extend(
                     expected_internal_mics)
             expected_plugged_nodes_with_audio_jack[1].extend(

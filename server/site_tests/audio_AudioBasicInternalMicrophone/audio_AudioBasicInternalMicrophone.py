@@ -9,7 +9,6 @@ import os
 import time
 
 from autotest_lib.client.cros.audio import audio_test_data
-from autotest_lib.client.cros.audio import cras_configs
 from autotest_lib.client.cros.chameleon import audio_test_utils
 from autotest_lib.client.cros.chameleon import chameleon_audio_helper
 from autotest_lib.client.cros.chameleon import chameleon_audio_ids
@@ -69,8 +68,8 @@ class audio_AudioBasicInternalMicrophone(audio_test.AudioTest):
             audio_test_utils.dump_cros_audio_logs(
                     host, audio_facade, self.resultsdir, 'after_binding')
 
-            expected_internal_mic_node = cras_configs.get_internal_mic_node(
-                    audio_test_utils.get_board_name(host), host.get_platform())
+            expected_internal_mic_node = audio_test_utils.get_internal_mic_node(
+                    host)
             if not cfm_speaker:
                 audio_test_utils.check_audio_nodes(audio_facade,
                         (None, [expected_internal_mic_node]))

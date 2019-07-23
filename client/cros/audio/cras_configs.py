@@ -22,35 +22,39 @@ def get_proper_internal_mic_gain(board):
     return INTERNAL_MIC_GAIN_100DB.get(board, None)
 
 INTERNAL_MIC_NODE = {
-        ('coral', 'nasher360'): 'FRONT_MIC',
         ('nami', 'vayne'): 'FRONT_MIC',
-        ('octopus', 'bobba360'): 'FRONT_MIC',
 }
 
-def get_internal_mic_node(board, model):
+def get_internal_mic_node(board, model, num_mics):
     """Return the expected internal microphone node for given board name and
        model name.
 
     @param board: board name of the DUT.
     @param model: model name of the DUT.
+    @param mic_num: number of internal mics.
 
     @returns: The name of the expected internal microphone nodes.
     """
+    if num_mics == 2:
+        return 'FRONT_MIC'
+
     return INTERNAL_MIC_NODE.get((board, model), 'INTERNAL_MIC')
 
 INTERNAL_MIC_NODES = {
-        ('coral', 'nasher360'): ['FRONT_MIC', 'REAR_MIC'],
         ('nami', 'vayne'): ['FRONT_MIC'],
-        ('octopus', 'bobba360'): ['FRONT_MIC', 'REAR_MIC'],
 }
 
-def get_plugged_internal_mics(board, model):
+def get_plugged_internal_mics(board, model, num_mics):
     """Return a list of all the plugged internal microphone nodes for given
        board name and model name.
 
     @param board: board name of the DUT.
     @param model: model name of the DUT.
+    @param mic_num: number of internal mics.
 
     @returns: A list of all the plugged internal microphone nodes.
     """
+    if num_mics == 2:
+        return ['FRONT_MIC', 'REAR_MIC']
+
     return INTERNAL_MIC_NODES.get((board, model), ['INTERNAL_MIC'])
