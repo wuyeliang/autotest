@@ -189,12 +189,12 @@ def create_host(machine, host_class=None, connectivity_class=None, **args):
     detected_args = _get_host_arguments(machine)
     hostname = detected_args.pop('hostname')
     afe_host = detected_args['afe_host']
+    info_store = detected_args['host_info_store'].get()
     args.update(detected_args)
-
     host_os = None
     full_os_prefix = constants.OS_PREFIX + ':'
     # Let's grab the os from the labels if we can for host class detection.
-    for label in afe_host.labels:
+    for label in info_store.labels:
         if label.startswith(full_os_prefix):
             host_os = label[len(full_os_prefix):]
             break
