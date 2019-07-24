@@ -307,8 +307,10 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
             self._host, self._autotest_devserver, self.job.resultdir)
 
         # Install source image
-        cros_device.install_source_image(test_conf['source_payload_uri'])
-        cros_device.check_login_after_source_update()
+        source_payload_uri = test_conf['source_payload_uri']
+        if source_payload_uri is not None:
+            cros_device.install_source_image(source_payload_uri)
+            cros_device.check_login_after_source_update()
 
         # Start the update to the target image.
         try:

@@ -503,6 +503,7 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
                          staged_stateful)
             return staged_uri, staged_stateful
 
+        return None, None
 
     def _payload_to_stateful_uri(self, payload_uri):
         """Given a payload GS URI, returns the corresponding stateful URI."""
