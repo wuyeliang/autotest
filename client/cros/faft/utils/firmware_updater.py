@@ -237,8 +237,7 @@ class FirmwareUpdater(object):
         @type filename: str
         @rtype: dict
         """
-        handler = flashrom_handler.FlashromHandler(
-                self.os_if, self.pubkey_path, target=target)
+        handler = self._create_handler(target, 'installed')
         if filename:
             filename = os.path.join(self._temp_path, filename)
         handler.new_image(filename)

@@ -79,12 +79,22 @@ class firmware_FWupdate(FirmwareTest):
 
             self.backup_firmware()
 
-        self.set_hardware_write_protect(False)
+        if 'wp' in dict_args:
+            self.wp = int(dict_args['wp'])
+        else:
+            self.wp = None
+
+        self.set_hardware_write_protect(self.wp)
 
         self.mode = dict_args.get('mode', 'recovery')
 
         if self.mode not in ('factory', 'recovery'):
             raise error.TestError('Unhandled mode: %s' % self.mode)
+
+        if self.mode == 'factory' and self.wp:
+            # firmware_UpdateModes already checks this case, so skip it here.
+            raise error.TestNAError(
+                    "This test doesn't handle mode=factory with wp=1")
 
     def get_installed_versions(self):
         """Get the installed versions of BIOS and EC firmware.
@@ -125,12 +135,62 @@ class firmware_FWupdate(FirmwareTest):
                 pd_path = os.path.join(extract_dir, 'pd.bin')
                 dut_access.CopyToDevice(self.new_pd, pd_path, mode='scp')
 
+    def run_case(self, append, write_protected, before_fwids, modded_fwids):
+        """Run chromeos-firmwareupdate with given sub-case
+
+        @param append: additional piece to add to shellball name
+        @param write_protected: is the flash write protected (--wp)?
+        @param before_fwids: fwids before flashing ('bios' and 'ec' as keys)
+        @param modded_fwids: fwids in image ('bios' and 'ec' as keys)
+        @return: a list of failure messages for the case
+        """
+
+        self.set_hardware_write_protect(write_protected)
+        cmd_desc = ('chromeos-firmwareupdate --mode=%s --wp=%s'
+                    % (self.mode, write_protected))
+
+        expected_written = {}
+        written_desc = []
+
+        if write_protected:
+            bios_written = ['a', 'b']
+            ec_written = []  # EC write is all-or-nothing
+
+        else:
+            bios_written = ['ro', 'a', 'b']
+            ec_written = ['ro', 'rw']
+
+        expected_written['bios'] = bios_written
+        written_desc += ['bios %s' % '+'.join(bios_written)]
+
+        if self.faft_config.chrome_ec and ec_written:
+            expected_written['ec'] = ec_written
+            written_desc += ['ec %s' % '+'.join(ec_written)]
+
+        written_desc = '(should write %s)' % ', '.join(written_desc)
+        logging.info("Run %s %s", cmd_desc, written_desc)
+
+        # make sure we restore firmware after the test, if it tried to flash.
+        self.flashed = True
+        self.faft_client.Updater.RunFirmwareupdate(
+                self.mode, append, ['--wp', str(write_protected)])
+
+        after_fwids = self.get_installed_versions()
+
+        errors = self.check_fwids_written(
+                before_fwids, modded_fwids, after_fwids, expected_written)
+
+        if errors:
+            logging.debug('%s', '\n'.join(errors))
+            return ["%s: %s\n%s" % (cmd_desc, written_desc, '\n'.join(errors))]
+        else:
+            return []
+
     def run_once(self, host):
         """Run chromeos-firmwareupdate with recovery or factory mode.
 
         @param host: host to run on
         """
-        mode = self.mode
         append = 'new'
         have_ec = bool(self.faft_config.chrome_ec)
 
@@ -158,28 +218,24 @@ class firmware_FWupdate(FirmwareTest):
             self.modify_shellball(append, modify_ro=True, modify_ec=have_ec)
             modded_fwids = self.identify_shellball(include_ec=have_ec)
 
-        case_desc = 'chromeos-firmwareupdate --mode=%s --wp=0' % mode
+        fail_msg = "Section contents didn't show the expected changes."
 
-        logging.info("Run %s", case_desc)
+        errors = []
+        if self.wp is not None:
+            # try only the specified wp= value
+            errors += self.run_case(append, self.wp, before_fwids, modded_fwids)
 
-        # make sure we restore firmware after the test, if it tried to flash.
-        self.flashed = True
-        self.faft_client.Updater.RunFirmwareupdate(mode, append, ['--wp=0'])
+        elif self.images_specified:
+            # apply images with wp=0 by default
+            errors += self.run_case(append, 0, before_fwids, modded_fwids)
 
-        after_fwids = self.get_installed_versions()
+        else:
+            # no args specified, so check both wp=1 and wp=0
+            errors += self.run_case(append, 1, before_fwids, modded_fwids)
+            errors += self.run_case(append, 0, before_fwids, modded_fwids)
 
-        errors = self.check_fwids_written(
-                before_fwids, modded_fwids, after_fwids,
-                {'bios': ['ro', 'a', 'b'], 'ec': ['ro', 'rw']})
-
-        if not errors:
-            logging.debug('versions correct: %s', after_fwids)
-
-        if len(errors) == 1:
-            raise error.TestFail(errors[0])
-        elif errors:
-            errors.insert(0, "%s: %s problems" % (case_desc, len(errors)))
-            raise error.TestFail('\n'.join(errors))
+        if errors:
+            raise error.TestFail("%s\n%s" % (fail_msg, '\n'.join(errors)))
 
     def cleanup(self):
         """
