@@ -11,7 +11,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chrome
 from autotest_lib.client.cros.graphics import graphics_utils
 from autotest_lib.client.cros.input_playback import keyboard
-
+from telemetry.internal.backends.chrome_inspector import devtools_http
 
 class desktopui_FilesApp(test.test):
     """Smoke test of Files app using chrome.automation API."""
@@ -43,7 +43,7 @@ class desktopui_FilesApp(test.test):
                     os.remove(temp_path)
             except OSError:
                 logging.info(
-                    'Failed to delete %s in cleanup. Ignoring' % temp_path)
+                    'Failed to delete %s in cleanup. Ignoring', temp_path)
 
 
     def evaluate_javascript(self, code, retries=3):
@@ -61,12 +61,14 @@ class desktopui_FilesApp(test.test):
             try:
                 result = self.cr.autotest_ext.EvaluateJavaScript(code)
                 return result
-            except KeyError as e:
+            except KeyError:
                 logging.exception('Could not find autotest_ext')
+            except devtools_http.DevToolsClientUrlError:
+                logging.exception('Could not connect to DevTools')
 
             time.sleep(1)
 
-        raise error.TestFail('Could not execute "%s" in %d retires' %
+        raise error.TestFail('Could not execute "%s" in %d retries' %
                              (code, retries))
 
 
