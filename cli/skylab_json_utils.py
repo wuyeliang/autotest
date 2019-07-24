@@ -178,8 +178,10 @@ def process_labels(labels, platform):
             "touchpad": l.get_bool("touchpad"),
             "webcam": l.get_bool("webcam"),
             # string keys in capabilities
+            "brand": l.get_string("brand-code", default=None),
             "modem": l.get_string("modem", default=""),
             "power": l.get_string("power", default=None),
+            "sku": l.get_string("sku", default=None),
             "storage": l.get_string("storage", default=None),
             "telephony": l.get_string("telephony", default=""),
             # enum keys in capabilities
