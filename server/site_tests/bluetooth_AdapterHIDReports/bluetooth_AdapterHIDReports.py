@@ -22,9 +22,9 @@ class bluetooth_AdapterHIDReports(
     later.
     """
 
-    TEST_SLEEP_SECS = 5
+    HID_TEST_SLEEP_SECS = 5
 
-    def _run_mouse_tests(self, device):
+    def run_mouse_tests(self, device):
         """Run all bluetooth mouse reports tests.
 
         @param device: the bluetooth HID device.
@@ -38,6 +38,64 @@ class bluetooth_AdapterHIDReports(
         self.test_mouse_scroll_down(device, 70)
         self.test_mouse_scroll_up(device, 40)
         self.test_mouse_click_and_drag(device, 90, 30)
+
+    def run_hid_reports_test(self, device, suspend_resume=False, reboot=False):
+        """Running Bluetooth HID reports tests."""
+        logging.info("run hid reports test")
+        # Reset the adapter and set it pairable.
+        self.test_reset_on_adapter()
+        self.test_pairable()
+
+        # Let the adapter pair, and connect to the target device.
+        time.sleep(self.HID_TEST_SLEEP_SECS)
+        self.test_discover_device(device.address)
+        time.sleep(self.HID_TEST_SLEEP_SECS)
+        self.test_pairing(device.address, device.pin, trusted=True)
+        time.sleep(self.HID_TEST_SLEEP_SECS)
+        self.test_connection_by_adapter(device.address)
+
+        if suspend_resume:
+            self.suspend_resume()
+
+            time.sleep(self.HID_TEST_SLEEP_SECS)
+            self.test_device_is_paired(device.address)
+
+            # After a suspend/resume, we should check if the device is
+            # connected.
+            # NOTE: After a suspend/resume, the RN42 kit remains connected.
+            #       However, this is not expected behavior for all bluetooth
+            #       peripherals.
+            time.sleep(self.HID_TEST_SLEEP_SECS)
+            self.test_device_is_connected(device.address)
+
+            time.sleep(self.HID_TEST_SLEEP_SECS)
+            self.test_device_name(device.address, device.name)
+
+        if reboot:
+            self.host.reboot()
+
+            # NOTE: We need to recreate the bluetooth_facade after a reboot.
+            factory = remote_facade_factory.RemoteFacadeFactory(self.host)
+            self.bluetooth_facade = factory.create_bluetooth_hid_facade()
+            self.input_facade = factory.create_input_facade()
+
+            time.sleep(self.HID_TEST_SLEEP_SECS)
+            self.test_device_is_paired(device.address)
+
+            time.sleep(self.HID_TEST_SLEEP_SECS)
+            self.test_connection_by_device(device)
+
+            time.sleep(self.HID_TEST_SLEEP_SECS)
+            self.test_device_name(device.address, device.name)
+
+        # Run tests about mouse reports.
+        if device.device_type.endswith('MOUSE'):
+            self.run_mouse_tests(device)
+
+        # Disconnect the device, and remove the pairing.
+        self.test_disconnection_by_adapter(device.address)
+        self.test_remove_pairing(device.address)
+
 
 
     def run_once(self, host, device_type, num_iterations=1, min_pass_count=1,
@@ -64,59 +122,7 @@ class bluetooth_AdapterHIDReports(
             # Get the bluetooth device object.
             device = self.get_device(device_type)
 
-            # Reset the adapter and set it pairable.
-            self.test_reset_on_adapter()
-            self.test_pairable()
-
-            # Let the adapter pair, and connect to the target device.
-            time.sleep(self.TEST_SLEEP_SECS)
-            self.test_discover_device(device.address)
-            time.sleep(self.TEST_SLEEP_SECS)
-            self.test_pairing(device.address, device.pin, trusted=True)
-            time.sleep(self.TEST_SLEEP_SECS)
-            self.test_connection_by_adapter(device.address)
-
-            if suspend_resume:
-                self.suspend_resume()
-
-                time.sleep(self.TEST_SLEEP_SECS)
-                self.test_device_is_paired(device.address)
-
-                # After a suspend/resume, we should check if the device is
-                # connected.
-                # NOTE: After a suspend/resume, the RN42 kit remains connected.
-                #       However, this is not expected behavior for all bluetooth
-                #       peripherals.
-                time.sleep(self.TEST_SLEEP_SECS)
-                self.test_device_is_connected(device.address)
-
-                time.sleep(self.TEST_SLEEP_SECS)
-                self.test_device_name(device.address, device.name)
-
-            if reboot:
-                self.host.reboot()
-
-                # NOTE: We need to recreate the bluetooth_facade after a reboot.
-                self.bluetooth_facade = factory.create_bluetooth_hid_facade()
-                self.input_facade = factory.create_input_facade()
-
-                time.sleep(self.TEST_SLEEP_SECS)
-                self.test_device_is_paired(device.address)
-
-                time.sleep(self.TEST_SLEEP_SECS)
-                self.test_connection_by_device(device)
-
-                time.sleep(self.TEST_SLEEP_SECS)
-                self.test_device_name(device.address, device.name)
-
-            # Run tests about mouse reports.
-            if device_type.endswith('MOUSE'):
-                self._run_mouse_tests(device)
-
-            # Disconnect the device, and remove the pairing.
-            self.test_disconnection_by_adapter(device.address)
-            self.test_remove_pairing(device.address)
-
+            self.run_hid_reports_test(device, suspend_resume, reboot)
             if bool(self.fails):
                 self.total_fails['Round %d' % iteration] = self.fails
             else:
