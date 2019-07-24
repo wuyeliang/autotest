@@ -1,7 +1,9 @@
 # pylint: disable-msg=C0111
 #!/usr/bin/python
 #
-# Copyright 2008 Google Inc. All Rights Reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file
 """Test for skylab json utils."""
 
 from __future__ import unicode_literals
