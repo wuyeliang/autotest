@@ -44,7 +44,7 @@ class bluetooth_AdapterAudioLink(
                               x, is_connected)
                 #Fail the test if the link was lost
                 if not is_connected:
-                     raise error.TestNAError("Failure: BT link diconnection")
+                     raise error.TestFail("Failure: BT link diconnection")
                 file_path = '/usr/local/autotest/cros/audio/fix_440_16.raw'
                 audio_facade.playback(client_path=file_path,
                                       data_format={'file_type': 'raw',
