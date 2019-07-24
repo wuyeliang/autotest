@@ -93,7 +93,7 @@ class BaseServoHost(ssh_host.SSHHost):
         """
         if self._is_labstation is None:
             board = self.get_board()
-            self._is_labstation = True if 'labstation' in board else False
+            self._is_labstation = board is not None and 'labstation' in board
 
         return self._is_labstation
 
