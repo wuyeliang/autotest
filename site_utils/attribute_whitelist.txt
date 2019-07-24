@@ -201,12 +201,6 @@ suite:storage_qual_quick
 suite:storage_qual_temp
 suite:storagequal
 suite:stress
-suite:stress-experimental
-suite:stress2
-suite:stress3
-suite:stress4
-suite:stress5
-suite:stress_experimental
 suite:telemetry_unit
 suite:telemetry_unit_server
 suite:tendo_experimental
