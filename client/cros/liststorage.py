@@ -21,6 +21,8 @@ import logging, os, re
 # contains only the client/ subtree), on a normal autotest
 # installation/repository or as a python module used on a client-side test.
 import common
+
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 
 INFO_PATH = "/sys/block"
@@ -46,7 +48,7 @@ def read_file(path_to_file, host=None):
 
     if not os.path.isfile(path_to_file):
         raise error.TestError("No such file or directory %s" % path_to_file)
-    return utils.read_file(path_to_file)
+    return utils.read_file(path_to_file).strip()
 
 
 def system_output(command, host=None, ignore_status=False):
