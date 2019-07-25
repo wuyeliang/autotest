@@ -12,7 +12,7 @@ import time
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error, utils
 from autotest_lib.client.common_lib.cros import cr50_utils, tpm_utils
-from autotest_lib.server.cros import debugd_dev_tools, gsutil_wrapper
+from autotest_lib.server.cros import filesystem_util, gsutil_wrapper
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
 
@@ -251,17 +251,6 @@ class Cr50Test(FirmwareTest):
                                 '%r', i, e)
 
 
-    def _rootfs_verification_is_disabled(self):
-        """Returns true if rootfs verification is enabled."""
-        # Clear the TPM owner before trying to check rootfs verification
-        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
-        self.rootfs_tool = debugd_dev_tools.RootfsVerificationTool()
-        self.rootfs_tool.initialize(self.host)
-        # rootfs_tool.is_enabled is True, that means rootfs verification is
-        # disabled.
-        return self.rootfs_tool.is_enabled()
-
-
     def _restore_original_image_and_board_id(self):
         """Restore the original cr50 related device state."""
         if not (self._saved_state & self.IMAGES):
@@ -274,7 +263,7 @@ class Cr50Test(FirmwareTest):
             self.host.run('rm %s' % cr50_utils.CR50_PREPVT)
         # If rootfs verification has been disabled, copy the cr50 device image
         # back onto the DUT.
-        if self._rootfs_verification_is_disabled():
+        if filesystem_util.is_rootfs_writable(self.host):
             cr50_utils.InstallImage(self.host, self._device_prod_image,
                     cr50_utils.CR50_PROD)
             # Install the prepvt image if there was one.
