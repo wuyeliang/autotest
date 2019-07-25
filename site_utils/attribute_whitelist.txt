@@ -45,10 +45,14 @@ suite:bluestreak-partners
 suite:bluestreak-pre-cq
 suite:bluetooth
 suite:bluetooth_chameleon
+suite:bluetooth_e2e
+suite:bluetooth_flaky
 suite:bluetooth_qualification
 suite:bluetooth_quicksanity
 suite:bluetooth_sanity
+suite:bluetooth_standalone
 suite:bluetooth_stress
+suite:bluetooth_wifi_coex
 suite:brillo-bvt
 suite:brillo-presubmit
 suite:brillo-pts

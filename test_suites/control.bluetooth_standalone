@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = "Chrome OS Team"
-NAME = "bluetooth"
+NAME = "bluetooth_standalone"
 PURPOSE = "Automated testing of Bluetooth."
 
 TIME = "LONG"
@@ -12,10 +12,8 @@ TEST_CLASS = "suite"
 TEST_TYPE = "Server"
 
 DOC = """
-This suite runs the complete set of stable Bluetooth functional tests for our hardware and
-software.
+This suite runs set of bluetooth test which does not need a peer device or wificell.
 
-suite:bluetooth is a combination of suite:bluetooth_standalone and suite:bluetooth_e2e
 """
 
 import common

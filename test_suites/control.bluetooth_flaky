@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = "Chrome OS Team"
-NAME = "bluetooth"
+NAME = "bluetooth_flaky"
 PURPOSE = "Automated testing of Bluetooth."
 
 TIME = "LONG"
@@ -12,10 +12,8 @@ TEST_CLASS = "suite"
 TEST_TYPE = "Server"
 
 DOC = """
-This suite runs the complete set of stable Bluetooth functional tests for our hardware and
-software.
-
-suite:bluetooth is a combination of suite:bluetooth_standalone and suite:bluetooth_e2e
+This suite contains flaky bluetooth tests. The test will be moved to other suites
+as they are fixed and becomes stable
 """
 
 import common
