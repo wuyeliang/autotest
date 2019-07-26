@@ -18,57 +18,57 @@ class power_VideoPlayback(power_test.power_Test):
     """
     version = 1
 
-    _BASE_URL='http://commondatastorage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/perf/'
+    _BASE_URL='http://commondatastorage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/power/30s/'
 
     # list of video name and url.
     _VIDEOS = [
         ('h264_1080_30fps',
-         _BASE_URL + 'h264/1080p_30fps_300frames_20181225.h264.mp4'
+         _BASE_URL + '1080p30fpsH264_foodmarket_sync_30s.mp4'
         ),
         ('h264_1080_60fps',
-         _BASE_URL + 'h264/1080p_60fps_600frames_20181225.h264.mp4'
+         _BASE_URL + '1080p60fpsH264_boat_sync_30s.mp4'
         ),
         ('h264_4k_30fps',
-         _BASE_URL + 'h264/2160p_30fps_300frames_20181225.h264.mp4'
+         _BASE_URL + '4k30fpsH264_foodmarket_sync_vod_30s.mp4'
         ),
         ('h264_4k_60fps',
-         _BASE_URL + 'h264/2160p_60fps_600frames_20181225.h264.mp4'
+         _BASE_URL + '4k60fpsH264_boat_sync_vod_30s.mp4'
         ),
         ('vp8_1080_30fps',
-         _BASE_URL + 'vp8/1080p_30fps_300frames_20181225.vp8.webm'
+         _BASE_URL + '1080p30fpsVP8_foodmarket_sync_30s.webm'
         ),
         ('vp8_1080_60fps',
-         _BASE_URL + 'vp8/1080p_60fps_600frames_20181225.vp8.webm'
+         _BASE_URL + '1080p60fpsVP8_boat_sync_30s.webm'
         ),
         ('vp8_4k_30fps',
-         _BASE_URL + 'vp8/2160p_30fps_300frames_20181225.vp8.webm'
+         _BASE_URL + '4k30fpsVP8_foodmarket_sync_30s.webm'
         ),
         ('vp8_4k_60fps',
-         _BASE_URL + 'vp8/2160p_60fps_600frames_20181225.vp8.webm'
+         _BASE_URL + '4k60fpsVP8_boat_sync_30s.webm'
         ),
         ('vp9_1080_30fps',
-         _BASE_URL + 'vp9/1080p_30fps_300frames_20181225.vp9.webm'
+         _BASE_URL + '1080p30fpsVP9_foodmarket_sync_30s.webm'
         ),
         ('vp9_1080_60fps',
-         _BASE_URL + 'vp9/1080p_60fps_600frames_20181225.vp9.webm'
+         _BASE_URL + '1080p60fpsVP9_boat_sync_30s.webm'
         ),
         ('vp9_4k_30fps',
-         _BASE_URL + 'vp9/2160p_30fps_300frames_20181225.vp9.webm'
+         _BASE_URL + '4k30fpsVP9_foodmarket_sync_30s.webm'
         ),
         ('vp9_4k_60fps',
-         _BASE_URL + 'vp9/2160p_60fps_600frames_20181225.vp9.webm'
+         _BASE_URL + '4k60fpsVP9_boat_sync_30s.webm'
         ),
         ('av1_720_30fps',
-         _BASE_URL + 'av1/720p_30fps_300frames_20190305.av1.mp4'
+         _BASE_URL + '720p30fpsAV1_foodmarket_sync_30s.mp4'
         ),
         ('av1_720_60fps',
-         _BASE_URL + 'av1/720p_60fps_600frames_20190305.av1.mp4'
+         _BASE_URL + '720p60fpsAV1_boat_sync_30s.mp4'
         ),
         ('av1_1080_30fps',
-         _BASE_URL + 'av1/1080p_30fps_300frames_20190305.av1.mp4'
+         _BASE_URL + '1080p30fpsAV1_foodmarket_sync_30s.mp4'
         ),
         ('av1_1080_60fps',
-         _BASE_URL + 'av1/1080p_60fps_600frames_20190305.av1.mp4'
+         _BASE_URL + '1080p60fpsAV1_boat_sync_30s.mp4'
         ),
     ]
 
