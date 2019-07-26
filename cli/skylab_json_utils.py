@@ -153,11 +153,15 @@ def process_labels(labels, platform):
         # boolean keys in label
         "arc": l.get_bool("arc"),
         # string keys in label
+        "brand": l.get_string("brand-code", default=None),
         "board": l.get_string("board", default=None),
         "cr50Phase": _cr50_phase(l),
         "model": l.get_string("model", default=None),
         "platform": platform,
         "referenceDesign": l.get_string("reference_design"),
+        # NOTE: the autotest label corresponding to "sku" is
+        # "device-sku", not "sku"
+        "sku": l.get_string("device-sku", default=None),
         # enum keys
         "ecType": _ec_type(l),
         "osType": l.get_enum("os", prefix="OS_TYPE_"),
@@ -178,10 +182,8 @@ def process_labels(labels, platform):
             "touchpad": l.get_bool("touchpad"),
             "webcam": l.get_bool("webcam"),
             # string keys in capabilities
-            "brand": l.get_string("brand-code", default=None),
             "modem": l.get_string("modem", default=""),
             "power": l.get_string("power", default=None),
-            "sku": l.get_string("sku", default=None),
             "storage": l.get_string("storage", default=None),
             "telephony": l.get_string("telephony", default=""),
             # enum keys in capabilities
