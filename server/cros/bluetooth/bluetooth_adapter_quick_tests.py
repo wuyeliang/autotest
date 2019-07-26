@@ -227,6 +227,9 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 if test_name is not None:
                     single_test_method = getattr(self,  test_name)
                     single_test_method()
+
+                    if self.fails:
+                        raise error.TestFail(self.fails)
                 else:
                     for iter in xrange(1,num_iterations+1):
                         self.quick_test_batch_start(batch_name, iter)
