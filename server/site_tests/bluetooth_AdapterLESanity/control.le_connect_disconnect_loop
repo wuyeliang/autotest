@@ -4,11 +4,11 @@
 
 from autotest_lib.server import utils
 
-AUTHOR = 'chromeos-chameleon'
+AUTHOR = 'chromeos-bluetooth'
 NAME = 'bluetooth_AdapterLESanity.le_connect_disconnect_loop'
 PURPOSE = ('Batch of Bluetooth LE sanity tests')
 CRITERIA = 'Pass all sanity test'
-ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity, suite:bluetooth_e2e'
 TIME = 'MEDIUM'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'

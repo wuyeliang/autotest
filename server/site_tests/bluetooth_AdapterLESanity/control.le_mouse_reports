@@ -4,11 +4,11 @@
 
 from autotest_lib.server import utils
 
-AUTHOR = 'chromeos-chameleon'
+AUTHOR = 'chromeos-bluetooth'
 NAME = 'bluetooth_AdapterLESanity.le_mouse_reports'
 PURPOSE = ('Batch of Bluetooth LE sanity tests')
 CRITERIA = 'Pass all sanity test'
-ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_quicksanity, suite:bluetooth_e2e'
 TIME = 'MEDIUM'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
@@ -16,14 +16,28 @@ TEST_TYPE = 'server'
 DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
-    A Batch of Bluetooth LE sanity tests. This test is written as a batch
-    of tests in order to reduce test time, since auto-test ramp up time is
-    costy. The batch is using BluetoothAdapterQuickTests wrapper methods to
-    start and end a test and a batch of tests.
 
-    This class can be called to run the entire test batch or to run a
-    specific test only - todo http://b/132199238 [autotest BT quick sanity]
-    add support for running a single test in quick test
+     Server side bluetooth tests about sending bluetooth HID reports.
+
+     This test tries to send HID reports to a DUT and verifies if the DUT
+     could receive the reports correctly. For the time being, only bluetooth
+     mouse events are tested. Bluetooth keyboard events will be supported
+     later.
+
+
+    - test_pairing
+    - test_connection_by_adapter
+    - test_mouse_left_click
+    - test_mouse_right_click
+    - test_mouse_move_in_x
+    - test_mouse_move_in_y
+    - test_mouse_move_in_xy
+    - test_mouse_scroll_down
+    - test_mouse_scroll_up
+    - test_mouse_click_and_drag
+    - test_disconnection_by_adapter
+    - test_remove_pairing
+
     """
 
 args_dict = utils.args_to_dict(args)
