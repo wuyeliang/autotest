@@ -5,11 +5,12 @@
 from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
-AUTHOR = 'chromeos-chameleon'
+AUTHOR = 'chromeos-bluetooth'
 NAME = 'bluetooth_AdapterSASanity.sa_adapter_pairable_timeout_test'
 PURPOSE = 'Test PairableTimout Property'
 CRITERIA = 'Controller should become not pairable after timeout'
-ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_sanity'
+ATTRIBUTES = ('suite:bluetooth, suite:bluetooth_sanity,'
+              'suite:bluetooth_standalone')
 TIME = 'MEDIUM'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'

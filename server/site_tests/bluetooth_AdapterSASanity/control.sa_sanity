@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
-AUTHOR = 'chromeos-chameleon'
+AUTHOR = 'chromeos-bluetooth'
 NAME = 'bluetooth_AdapterSASanity'
 PURPOSE = ('batch of Bluetooth stand along sanity tests')
 CRITERIA = 'Pass all sanity test'
