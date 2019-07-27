@@ -9,7 +9,7 @@ NAME = 'bluetooth_AdapterHIDReports.ble_mouse'
 PURPOSE = ('Test bluetooth adapter receiving reports from '
            'BLE HID devices.')
 CRITERIA = 'Adapter should receive BLE HID events correctly.'
-ATTRIBUTES = 'suite:bluetooth'
+ATTRIBUTES = 'suite:bluetooth_flaky'
 TIME = 'SHORT' # This test takes about 3 minutes
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
