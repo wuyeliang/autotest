@@ -9,7 +9,7 @@ NAME = 'bluetooth_AdapterHIDReports.mouse.suspend_resume'
 PURPOSE = ('Test bluetooth adapter receiving reports from '
            'bluetooth HID devices.')
 CRITERIA = 'Adapter should receive HID events correctly after a suspend resume.'
-ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_chameleon'
+ATTRIBUTES = 'suite:bluetooth_flaky, suite:bluetooth_chameleon'
 TIME = 'SHORT'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
