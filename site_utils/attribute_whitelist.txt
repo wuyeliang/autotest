@@ -51,7 +51,6 @@ suite:bluetooth_chameleon
 suite:bluetooth_e2e
 suite:bluetooth_flaky
 suite:bluetooth_qualification
-suite:bluetooth_quicksanity
 suite:bluetooth_sanity
 suite:bluetooth_standalone
 suite:bluetooth_stress
