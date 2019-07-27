@@ -47,7 +47,6 @@ suite:av_webcam
 suite:bluestreak-partners
 suite:bluestreak-pre-cq
 suite:bluetooth
-suite:bluetooth_chameleon
 suite:bluetooth_e2e
 suite:bluetooth_flaky
 suite:bluetooth_qualification
