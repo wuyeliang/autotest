@@ -1568,13 +1568,21 @@ class FirmwareTest(FAFTBase):
                 count = count + 1
             self.faft_client.System.SetTryFwB(count)
 
-    def identify_shellball(self, include_ec=True):
+    def identify_shellball(self, include_ec=None):
         """Get the FWIDs of all targets and sections in the shellball
 
+        @param include_ec: if True, get EC fwids.
+                           If None (default), assume True if board has an EC
         @return: the dict of versions in the shellball
         """
         fwids = dict()
         fwids['bios'] = self.faft_client.Updater.GetAllFwids('bios')
+
+        if include_ec is None:
+            if self.faft_config.platform == 'Samus':
+                include_ec = False  # no ec.bin in shellball
+            else:
+                include_ec = self.faft_config.chrome_ec
 
         if include_ec:
             fwids['ec'] = self.faft_client.Updater.GetAllFwids('ec')

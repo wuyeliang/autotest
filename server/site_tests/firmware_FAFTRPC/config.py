@@ -598,7 +598,7 @@ RPC_CATEGORIES = [
                     ("ec", "foo"),
                 ],
                 "expected_return_type": str,
-                "allow_error_msg": "is empty",
+                "allow_error_msg": r"is empty|does not contain",
             },
             {
                 "method_names": [
@@ -614,7 +614,9 @@ RPC_CATEGORIES = [
                     ("foo", ),
                 ],
                 "expected_return_type": dict,
-                "allow_error_msg": r"is already modified|is empty",
+                "allow_error_msg": (r"is already modified|"
+                                    r"is empty|"
+                                    r"does not contain"),
             },
             {
                 "method_name": "ModifyFwids",
@@ -631,7 +633,9 @@ RPC_CATEGORIES = [
                     ("ec", ("foo", )),
                 ],
                 "expected_return_type": dict,
-                "allow_error_msg": r"is already modified|is empty",
+                "allow_error_msg": (r"is already modified|"
+                                    r"is empty|"
+                                    r"does not contain"),
             },
             {
                 "method_name": "ResignFirmware",

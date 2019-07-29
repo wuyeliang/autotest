@@ -173,6 +173,10 @@ class FirmwareUpdater(object):
         if section is None:
             section = self._get_default_section(target)
         image_path = self._get_image_path(target)
+        if target == 'ec' and not os.path.isfile(image_path):
+            # If the EC image is missing, report a specific error message.
+            raise FirmwareUpdaterError("Shellball does not contain ec.bin")
+
         handler = self._get_handler(target)
         handler.new_image(image_path)
         fwid = handler.get_section_fwid(section)
@@ -188,9 +192,13 @@ class FirmwareUpdater(object):
         @return: fwid for the sections
 
         @type target: str
-        @rtype: dict
+        @rtype: dict | None
         """
         image_path = self._get_image_path(target)
+        if target == 'ec' and not os.path.isfile(image_path):
+            # If the EC image is missing, report a specific error message.
+            raise FirmwareUpdaterError("Shellball does not contain ec.bin")
+
         handler = self._get_handler(target)
         handler.new_image(image_path)
 
@@ -239,9 +247,12 @@ class FirmwareUpdater(object):
         if sections is None:
             sections = [self._get_default_section(target)]
 
-        handler = self._get_handler(target)
         image_fullpath = self._get_image_path(target)
+        if target == 'ec' and not os.path.isfile(image_fullpath):
+            # If the EC image is missing, report a specific error message.
+            raise FirmwareUpdaterError("Shellball does not contain ec.bin")
 
+        handler = self._get_handler(target)
         fwids = handler.modify_fwids(sections)
 
         handler.dump_whole(image_fullpath)
