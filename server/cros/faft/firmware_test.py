@@ -1403,9 +1403,10 @@ class FirmwareTest(FAFTBase):
 
         @param suffix: a string appended to backup file name
         @param restore_ec: True to restore the ec firmware; False not to do.
+        @return: True if firmware needed to be restored
         """
         if not self.is_firmware_changed():
-            return
+            return False
 
         # Backup current corrupted firmware.
         self.backup_firmware(suffix='.corrupt')
@@ -1426,6 +1427,7 @@ class FirmwareTest(FAFTBase):
 
         self.switcher.mode_aware_reboot()
         logging.info('Successfully restored firmware.')
+        return True
 
     def setup_firmwareupdate_shellball(self, shellball=None):
         """Setup a shellball to use in firmware update test.
