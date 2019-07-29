@@ -5,6 +5,7 @@ import logging
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
+from autotest_lib.server.cros.faft.firmware_test import ConnectionError
 
 
 class firmware_UpdateModes(FirmwareTest):
@@ -16,6 +17,24 @@ class firmware_UpdateModes(FirmwareTest):
     version = 1
 
     SHELLBALL = '/usr/sbin/chromeos-firmwareupdate'
+
+    def initialize(self, host, cmdline_args, ec_wp=None):
+        """
+        During initialization, back up the firmware, in case --emulate ever
+        breaks in a way that causes real writes.
+        """
+        super(firmware_UpdateModes, self).initialize(host, cmdline_args, ec_wp)
+        self.backup_firmware()
+
+    def cleanup(self):
+        """Restore the original firmware, if it was somehow overwritten."""
+        try:
+            if self.is_firmware_saved():
+                self.restore_firmware()
+        except ConnectionError:
+            logging.error("ERROR: DUT did not come up after firmware restore!")
+        finally:
+            super(firmware_UpdateModes, self).cleanup()
 
     def get_bios_fwids(self, path=None):
         """Return the BIOS fwids for the given file"""
@@ -72,6 +91,12 @@ class firmware_UpdateModes(FirmwareTest):
             msg = ("...updater: with current mode and write-protect value, "
                    "should abort (rc!=0) and not modify anything")
             errors.insert(0, msg)
+
+        if self.restore_firmware():
+            # If real writes happen, fail immediately to avoid flash wear.
+            raise error.TestFail(
+                    'With chromeos-firmwareupdate --emulate, real flash device '
+                    'was unexpectedly modified.')
 
         if errors:
             case_message = '%s:\n%s' % (case_desc, '\n'.join(errors))
