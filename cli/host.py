@@ -423,6 +423,15 @@ class host_statjson(host_stat):
             #    not a list of length 1?
             assert len(stats) == 1
             stats_map = stats[0]
+
+            # Stripping the MIGRATED_HOST_SUFFIX makes it possible to
+            # migrate a DUT from autotest to skylab even after its hostname
+            # has been changed.
+            # This enables the steps (renaming the host,
+            # copying the inventory information to skylab) to be doable in
+            # either order.
+            hostname = _remove_hostname_suffix(stats_map["hostname"],
+                MIGRATED_HOST_SUFFIX)
             labels = self._cleanup_labels(labels)
             attrs = [{"key": k, "value": v} for k, v in attributes.iteritems()]
             out_labels = process_labels(labels, platform=stats_map["platform"])
@@ -430,7 +439,7 @@ class host_statjson(host_stat):
                 "common": {
                     "attributes": attrs,
                     "environment": "ENVIRONMENT_PROD",
-                    "hostname": stats_map["hostname"],
+                    "hostname": hostname,
                     "id": ID_AUTOGEN_MESSAGE,
                     "labels": out_labels,
                     "serialNumber": attributes["serial_number"],
