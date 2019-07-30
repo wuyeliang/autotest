@@ -8,10 +8,12 @@ from __future__ import print_function
 import collections
 import datetime
 import io
+import json
 import os
 import subprocess
 import tempfile
 import time
+import shutil
 import sys
 
 import common
@@ -324,6 +326,8 @@ class AtestCmd(object):
 class SkylabCmd(object):
     """Helper functions for executing Skylab commands"""
 
+    ADD_MANY_DUTS_CMD = (_SKYLAB_EXE, 'quick-add-duts')
+
     @staticmethod
     def add_one_dut_cmd():
         """Create the skylab command line invocation for adding a single DUT."""
@@ -348,6 +352,34 @@ class SkylabCmd(object):
         """Command line for assigning a single DUT to a randomly chosen drone."""
         # by default, skylab assign-dut will pick a random drone
         return [_SKYLAB_EXE, 'assign-dut', '--', hostname]
+
+    @staticmethod
+    def add_many_duts(dut_contents):
+        """Add multiple DUTs to skylab at once.
+
+        @param dut_contents: a sequence of JSON-like objects describing DUTs as
+                             used by `skylab add-dut` and `skylab quick-add-dut`
+
+        @returns : nothing
+        """
+        # TODO(gregorynisbet) -- how fine-grained does the error reporting need
+        #                        to be? is it possible for some duts to be
+        #                        successfully migrated and others not?
+        #                        The action performed by `skylab quick-add-duts`
+        #                        is idempotent, so trying multiple times is not
+        #                        necessarily a problem.
+        td = tempfile.mkdtemp()
+        try:
+            paths = []
+            for i, dut_content in enumerate(dut_contents):
+                path_ = os.path.join(td, str(i))
+                with open(path_, 'w') as fh:
+                    json.dump(dut_contents, fh)
+                paths.append(path_)
+            cmd = list(SkylabCmd.ADD_MANY_DUTS_CMD) + paths
+            subprocess.call(cmd)
+        finally:
+            shutil.rmtree(td, ignore_errors=True)
 
     @staticmethod
     def assign_one_dut(hostname=None):

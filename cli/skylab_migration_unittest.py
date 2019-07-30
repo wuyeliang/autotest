@@ -15,6 +15,7 @@ import os.path
 import subprocess
 import tempfile
 import unittest
+import shutil
 
 import mock
 
@@ -35,6 +36,7 @@ class MigrationUnittest(unittest.TestCase):
 
     def setUp(self):
         super(MigrationUnittest, self).setUp()
+        self._tempdir = tempfile.mkdtemp()
         self.__patches = {
             'call_with_tempfile':
                 mock.patch.object(
@@ -43,10 +45,12 @@ class MigrationUnittest(unittest.TestCase):
                 mock.patch('subprocess.Popen', new=None),
             'check_call':
                 mock.patch.object(subprocess, 'check_call', new=None),
+            'call':
+                mock.patch.object(subprocess, 'call', new=None),
             'check_output':
                 mock.patch.object(subprocess, 'check_output', new=None),
-            'tempdir':
-                mock.patch.object(tempfile, 'tempdir', new=None),
+            'mkdtemp':
+                mock.patch.object(tempfile, 'mkdtemp', new=None),
             'mkstemp':
                 mock.patch.object(tempfile, 'mkstemp', new=None),
             'NamedTemporaryFile':
@@ -58,6 +62,7 @@ class MigrationUnittest(unittest.TestCase):
     def tearDown(self):
         for x in self.__patches.values():
             x.stop()
+        shutil.rmtree(self._tempdir, ignore_errors=True)
         super(MigrationUnittest, self).tearDown()
 
     def test_find_atest(self):
@@ -186,6 +191,24 @@ class MigrationUnittest(unittest.TestCase):
         ]
         actual = skylab_migration.SkylabCmd.add_one_dut_cmd()
         self.assertEqual(expected, actual)
+
+    def test_add_many_duts(self):
+        def mkdtemp_impl(*args, **kwargs):
+            return self._tempdir
+
+        def call_impl(cmd):
+            self.assertEqual(cmd, [
+                skylab_migration._SKYLAB_EXE, 'quick-add-duts',
+                os.path.join(self._tempdir, '0'),
+                os.path.join(self._tempdir, '1'),
+                os.path.join(self._tempdir, '2'),
+                os.path.join(self._tempdir, '3')
+            ])
+
+        with mock.patch.object(tempfile, 'mkdtemp', new=mkdtemp_impl):
+            with mock.patch.object(subprocess, 'call', new=call_impl):
+                skylab_migration.SkylabCmd.add_many_duts(
+                    [None, None, None, None])
 
     def test_assign_one_dut_cmd(self):
         expected = [skylab_migration._SKYLAB_EXE, 'assign-dut', '--', 'HHH']
