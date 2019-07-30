@@ -22,20 +22,33 @@ class audio_AudioSanityCheck(test.test):
     SUSPEND_SECONDS = 30
     RPC_RECONNECT_TIMEOUT = 60
 
-    def run_once(self, host):
-        factory = remote_facade_factory.RemoteFacadeFactory(
-                host, results_dir=self.resultsdir)
-        audio_facade = factory.create_audio_facade()
-
-        # Check if the chrome.audio API is available
+    def verify_chrome_audio(self, audio_facade):
+        """"Verify if chrome.audio API is available"""
         if not audio_facade.get_chrome_audio_availablity():
             raise error.TestFail("chrome.audio API is not available")
 
-        # chrome.audio API should remain available after a suspension
+    def verify_suspend(self, host, factory):
+        """"Verify and trigger a suspension"""
         audio_test_utils.suspend_resume(host, self.SUSPEND_SECONDS)
         utils.poll_for_condition(condition=factory.ready,
                                  timeout=self.RPC_RECONNECT_TIMEOUT,
                                  desc='multimedia server reconnect')
-        if not audio_facade.get_chrome_audio_availablity():
-            raise error.TestFail(
-                    "chrome.audio API is not available after suspend")
+
+    def run_once(self, host, suspend_only=False):
+        factory = remote_facade_factory.RemoteFacadeFactory(
+                host, results_dir=self.resultsdir)
+        audio_facade = factory.create_audio_facade()
+
+        # The suspend_only flag is for crbug:978593, which causes sanity check
+        # to always fail. however, we still want to check the suspend operation
+        # as it also potentially fails the audio tests. This should be removed
+        # once the blocker is fixed
+        if suspend_only:
+            self.verify_suspend(host, factory)
+            return
+
+        # Check if the chrome.audio API is available
+        self.verify_chrome_audio(audio_facade)
+        # chrome.audio API should remain available after a suspension
+        self.verify_suspend(host, factory)
+        self.verify_chrome_audio(audio_facade)
