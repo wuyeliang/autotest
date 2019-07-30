@@ -17,6 +17,12 @@ EC_TYPE_ATEST_TO_SK = {
     "cros": "EC_TYPE_CHROME_OS",
 }
 
+REQUIRED_LABELS = ["board", "model", "sku", "brand"]
+
+
+class SkylabMissingLabelException(Exception):
+    pass
+
 
 class Labels(object):
     """a queryable interface to labels taken from autotest"""
@@ -79,8 +85,7 @@ class Labels(object):
             return prefix + raw.upper()
 
     def bool_keys_starting_with(self, prefix):
-        """get the boolean keys beginning with
-        a certain prefix.
+        """get the boolean keys beginning with a certain prefix.
 
         Takes time proportional to the number of boolean keys.
         """
@@ -134,6 +139,25 @@ def _video_acceleration(l):
 
 def _platform(l):
     return l.get_string("platform") or l.get_string("Platform")
+
+
+def validate_required_fields_for_skylab(skylab_fields):
+    """Does 'skylab_fields' have all required fields to add a DUT?
+
+    Throw a SkylabMissingLabelException if any mandatory field is not present
+
+    @param skylab_fields : a DUT description to be handed to 'skylab add-dut'
+    @returns: Nothing
+    """
+    try:
+        labels = skylab_fields["common"]["labels"]
+    except (KeyError, TypeError, ValueError):
+        raise ValueError(
+            'skylab_fields["common"]["labels"] = { ... } is not present')
+    for label in REQUIRED_LABELS:
+        if label not in labels:
+            raise SkylabMissingLabelException(label)
+    return
 
 
 def process_labels(labels, platform):

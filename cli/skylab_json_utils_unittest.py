@@ -11,7 +11,9 @@ from __future__ import unicode_literals
 import unittest
 
 import common
+#TODO(gregorynisbet): remove renamed import of skylab_json_utils
 from autotest_lib.cli import skylab_json_utils as sky
+from autotest_lib.cli import skylab_json_utils
 
 basic_labels = sky.Labels()
 basic_labels._add_label("key1:value1")
@@ -567,6 +569,83 @@ class skylab_json_utils_unittest(unittest.TestCase):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["testCoverageHints"]["usbDetect"], False)
+
+    def test_validate_fields_smoke_test(self):
+        with self.assertRaises(ValueError):
+            skylab_json_utils.validate_required_fields_for_skylab(47)
+
+    def test_validate_fields_no_common(self):
+        with self.assertRaises(ValueError):
+            skylab_json_utils.validate_required_fields_for_skylab({})
+
+    def test_validate_fields_no_labels(self):
+        with self.assertRaises(ValueError):
+            skylab_json_utils.validate_required_fields_for_skylab(
+                {"common": None})
+
+    def test_validate_fields_no_board(self):
+        with self.assertRaises(
+                skylab_json_utils.SkylabMissingLabelException) as ctx:
+            skylab_json_utils.validate_required_fields_for_skylab(
+                {"common": {
+                    "labels": []
+                }})
+        e = ctx.exception
+        self.assertEqual(e.message, "board")
+
+    def test_validate_fields_no_model(self):
+        with self.assertRaises(
+                skylab_json_utils.SkylabMissingLabelException) as ctx:
+            skylab_json_utils.validate_required_fields_for_skylab(
+                {"common": {
+                    "labels": {
+                        "board": None
+                    }
+                }})
+        e = ctx.exception
+        self.assertEqual(e.message, "model")
+
+    def test_validate_fields_no_sku(self):
+        with self.assertRaises(
+                skylab_json_utils.SkylabMissingLabelException) as ctx:
+            skylab_json_utils.validate_required_fields_for_skylab(
+                {"common": {
+                    "labels": {
+                        "board": None,
+                        "model": None
+                    }
+                }})
+        e = ctx.exception
+        self.assertEqual(e.message, "sku")
+
+    def test_validate_fields_no_brand(self):
+        with self.assertRaises(
+                skylab_json_utils.SkylabMissingLabelException) as ctx:
+            skylab_json_utils.validate_required_fields_for_skylab({
+                "common": {
+                    "labels": {
+                        "board": None,
+                        "model": None,
+                        "sku": None
+                    }
+                }
+            })
+        e = ctx.exception
+        self.assertEqual(e.message, "brand")
+
+    def test_validate_fields_pass(self):
+        item = {
+            "common": {
+                "labels": {
+                    "board": None,
+                    "model": None,
+                    "sku": None,
+                    "brand": None
+                }
+            }
+        }
+        # should complete without throwing exception
+        skylab_json_utils.validate_required_fields_for_skylab(item)
 
 
 if __name__ == "__main__":
