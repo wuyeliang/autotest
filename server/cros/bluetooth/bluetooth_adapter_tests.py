@@ -131,6 +131,11 @@ def get_bluetooth_emulated_device(host, device_type):
             else:
                 logging.info('%s successful', description)
 
+        #try it last time after fix it by last action
+        result = _run_method(getattr(device, method_name), method_name)
+        if _is_successful(result, legal_falsy_values):
+            return result
+
         raise error.TestError('Failed to execute %s. Bluetooth peer device is'
                               'not working' % method_name)
 
