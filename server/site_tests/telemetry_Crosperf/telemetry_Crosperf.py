@@ -207,7 +207,7 @@ class telemetry_Crosperf(test.test):
             ' echo "${no_t}"; cat "${no_t}";'
             'fi; '
         )
-        pid = ''
+        turbostat_pid = ''
         try:
             # If profiler_args specified, we want to add several more options
             # to the command so that run_benchmark will collect system wide
@@ -219,15 +219,16 @@ class telemetry_Crosperf(test.test):
                            % (profiler_args)
 
             # run turbostat tool in background on dut
-            if dut is not None:
+            if (args.get('turbostat', 'False') == 'True' and
+                dut is not None):
               logging.info('Running turbostat: %s', turbostat_cmd)
-              pid = dut.run_background(turbostat_cmd)
-              logging.info('turbostat started, pid %s', pid)
-              if not pid.isdigit():
+              turbostat_pid = dut.run_background(turbostat_cmd)
+              logging.info('turbostat started, pid %s', turbostat_pid)
+              if not turbostat_pid.isdigit():
                 # Not a fatal error, report and continue.
                 logging.error('Expected to receive PID, instead received %s',
-                              pid)
-                pid = ''
+                              turbostat_pid)
+                turbostat_pid = ''
 
             logging.info('CMD: %s', command)
             result = runner.run(command, stdout_tee=stdout, stderr_tee=stderr,
@@ -257,14 +258,14 @@ class telemetry_Crosperf(test.test):
               if res.exit_status:
                 logging.error('Get cpuinfo command failed with %d',
                               res.exit_status)
-              if pid:
-                logging.info("Kill turbostat pid=%s", pid)
+              if turbostat_pid:
+                logging.info("Kill turbostat pid=%s", turbostat_pid)
                 res = dut.run("if ps -p %s >/dev/null ; then kill %s ; fi"
-                             % (pid, pid))
+                             % (turbostat_pid, turbostat_pid))
                 if res.exit_status:
                   logging.error('Failed to kill turbostat process %d. '
                                 'Exit status %d',
-                                pid, res.exit_status)
+                                turbostat_pid, res.exit_status)
 
             stdout_str = stdout.getvalue()
             stderr_str = stderr.getvalue()
@@ -273,7 +274,8 @@ class telemetry_Crosperf(test.test):
             logging.info('Telemetry completed with exit code: %d.'
                          '\nstdout:%s\nstderr:%s', exit_code,
                          stdout_str, stderr_str)
-            if dut is not None:
+            if (args.get('turbostat', 'False') == 'True' and
+                dut is not None):
               scp_res = self.scp_telemetry_results(client_ip, dut,
                                          DUT_TURBOSTAT_LOG,
                                          self.resultsdir)

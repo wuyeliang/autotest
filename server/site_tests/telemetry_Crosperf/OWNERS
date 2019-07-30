@@ -1,1 +1,1 @@
-include chromiumos/third_party/toolchain-utils:OWNERS.toolchain
+include chromiumos/third_party/toolchain-utils:/OWNERS.toolchain
