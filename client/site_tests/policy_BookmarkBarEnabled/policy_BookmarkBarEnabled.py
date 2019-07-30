@@ -46,11 +46,11 @@ class policy_BookmarkBarEnabled(
         tab = self.navigate_to_url(self.TEST_URL)
         tab.WaitForDocumentReadyStateToBeComplete()
 
-        self.ui.doDefault_on_obj(role='button', obj='Bookmark this page')
+        self.ui.doDefault_on_obj(role='button', name='Bookmark this page')
 
         # Wait for the button dialog to load.
         self.ui.wait_for_ui_obj('Done', role='button')
-        self.ui.doDefault_on_obj(role='button', obj='Done')
+        self.ui.doDefault_on_obj(role='button', name='Done')
 
     def run_once(self, case):
         """

@@ -24,10 +24,10 @@ class policy_TranslateEnabled(
         """
         self.cr.browser.tabs[0].Navigate(self.TEST_URL)
         if case is False:
-            if not self.ui.did_obj_not_load(element='Translate'):
+            if not self.ui.did_obj_not_load(name='Translate'):
                 raise error.TestError('Translate loaded when disabled.')
         else:
-            self.ui.wait_for_ui_obj(element='Translate', role='button')
+            self.ui.wait_for_ui_obj(name='Translate', role='button')
 
     def _start_dependencies(self):
         self.TEST_FILE = 'translate_page.html'
