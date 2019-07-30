@@ -345,6 +345,11 @@ class firmware_Cr50U2fCommands(test.test):
                     HASH_TO_SIGN, '00', VENDOR_CMD_RESPONSE_PASSWORD_REQUIRED)
 
   def __test_sign_invalid_kh(self):
+    # U2F asserts presence by checking for a power button press within the
+    # last 10 seconds, sleep so that we are sure there was not one.
+
+    time.sleep(11)
+
     self.__u2f_sign(
         APP_ID,
         USER_SECRET_1,
@@ -352,6 +357,32 @@ class firmware_Cr50U2fCommands(test.test):
         HASH_TO_SIGN,
         '00',
         VENDOR_CMD_RESPONSE_PASSWORD_REQUIRED)
+
+    self.__u2f_sign(
+        APP_ID,
+        USER_SECRET_1,
+        RANDOM_32 + RANDOM_32,  # KH is 64 bytes long
+        HASH_TO_SIGN,
+        '02',  # G2F_CONSUME
+        VENDOR_CMD_RESPONSE_PASSWORD_REQUIRED)
+
+  def __test_sign_invalid_kh_with_presence(self):
+    registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
+
+    self.servo.power_short_press()
+
+    # Should return invalid KH error, without consuming presence.
+    self.__u2f_sign(
+        APP_ID,
+        USER_SECRET_1,
+        RANDOM_32 + RANDOM_32,  # KH is 64 bytes long
+        HASH_TO_SIGN,
+        '02',  # G2F_CONSUME
+        VENDOR_CMD_RESPONSE_PASSWORD_REQUIRED)
+
+    # Check presence was not consumed.
+    self.__u2f_sign(APP_ID, USER_SECRET_1, registration['keyHandle'],
+                    HASH_TO_SIGN, '00', VENDOR_CMD_RESPONSE_SUCCESS)
 
   def __test_sign_check_only(self):
     registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
