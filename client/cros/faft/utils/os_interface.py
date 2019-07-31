@@ -41,7 +41,8 @@ class Crossystem(object):
         if name in ('os_if', ):
             self.__dict__[name] = value
         else:
-            self.os_if.run_shell_command('crossystem "%s=%s"' % (name, value))
+            self.os_if.run_shell_command(
+                    'crossystem "%s=%s"' % (name, value), modifies_device=True)
 
     def request_recovery(self):
         """Request recovery mode next time the target reboots."""

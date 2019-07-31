@@ -509,7 +509,8 @@ class EcServicer(object):
 
     def RebootToSwitchSlot(self):
         """Reboot EC to switch the active RW slot."""
-        self._os_if.run_shell_command('ectool reboot_ec cold switch-slot')
+        self._os_if.run_shell_command(
+                'ectool reboot_ec cold switch-slot', modifies_device=True)
 
     def StripModifiedFwids(self):
         """Strip any trailing suffixes (from modify_fwids) out of the FWIDs."""
