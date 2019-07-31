@@ -29,6 +29,9 @@ class firmware_FWupdate(FirmwareTest):
 
     """
 
+    # Region to use for flashrom wp-region commands
+    WP_REGION = 'WP_RO'
+
     def initialize(self, host, cmdline_args):
 
         self.images_specified = False
@@ -62,6 +65,8 @@ class firmware_FWupdate(FirmwareTest):
                                       % self.new_pd)
             logging.info('new_pd=%s', self.new_pd)
 
+        self._old_bios_wp = self.faft_client.Bios.GetWriteProtectStatus()
+
         if not self.images_specified:
             # TODO(dgoyette): move this into the general FirmwareTest init?
             stripped_bios = self.faft_client.Bios.StripModifiedFwids()
@@ -84,7 +89,9 @@ class firmware_FWupdate(FirmwareTest):
         else:
             self.wp = None
 
-        self.set_hardware_write_protect(self.wp)
+        self.set_hardware_write_protect(False)
+        self.faft_client.Bios.SetWriteProtectRegion(self.WP_REGION, True)
+        self.set_hardware_write_protect(True)
 
         self.mode = dict_args.get('mode', 'recovery')
 
@@ -145,9 +152,17 @@ class firmware_FWupdate(FirmwareTest):
         @return: a list of failure messages for the case
         """
 
-        self.set_hardware_write_protect(write_protected)
-        cmd_desc = ('chromeos-firmwareupdate --mode=%s --wp=%s'
+        cmd_desc = ('chromeos-firmwareupdate --mode=%s [wp=%s]'
                     % (self.mode, write_protected))
+
+        # Unlock the protection of the wp-enable and wp-range registers
+        self.set_hardware_write_protect(False)
+
+        if write_protected:
+            self.faft_client.Bios.SetWriteProtectRegion(self.WP_REGION, True)
+            self.set_hardware_write_protect(True)
+        else:
+            self.faft_client.Bios.SetWriteProtectRegion(self.WP_REGION, False)
 
         expected_written = {}
         written_desc = []
@@ -172,8 +187,7 @@ class firmware_FWupdate(FirmwareTest):
 
         # make sure we restore firmware after the test, if it tried to flash.
         self.flashed = True
-        self.faft_client.Updater.RunFirmwareupdate(
-                self.mode, append, ['--wp', str(write_protected)])
+        self.faft_client.Updater.RunFirmwareupdate(self.mode, append)
 
         after_fwids = self.get_installed_versions()
 
@@ -245,11 +259,20 @@ class firmware_FWupdate(FirmwareTest):
         No EC reboot is needed in that case, because the test didn't actually
         reboot the EC with the new firmware.
         """
+        self.set_hardware_write_protect(False)
+        self.faft_client.Bios.SetWriteProtectRange(0, 0, False)
+
         if self.flashed:
             if self.images_specified:
                 self.sync_and_ec_reboot('hard')
             else:
                 logging.info("Restoring firmware")
                 self.restore_firmware()
+
+        # Restore the old write-protection value at the end of the test.
+        self.faft_client.Bios.SetWriteProtectRange(
+                self._old_bios_wp['start'],
+                self._old_bios_wp['length'],
+                self._old_bios_wp['enabled'])
 
         super(firmware_FWupdate, self).cleanup()
