@@ -246,9 +246,9 @@ class ChromeCr50(chrome_ec.ChromeConsole):
                  True if current state is to follow batt presence atboot,
                  True if write protect is enabled atboot)
         """
-        rv = self.send_command_get_output('wp',
+        rv = self.send_command_retry_get_output('wp',
                 ['Flash WP: (forced )?(enabled|disabled).*at boot: (forced )?'
-                 '(follow|enabled|disabled)'])[0]
+                 '(follow|enabled|disabled)'], safe=True)[0]
         _, forced, enabled, _, atboot = rv
         logging.debug(rv)
         return (not forced, enabled =='enabled',
@@ -933,8 +933,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         @return:  True if TPM is enabled, False otherwise.
         """
-        result = self.send_command_get_output('sysinfo',
-                ['(?i)TPM\s+MODE:\s+(enabled|disabled)'])[0][1]
+        result = self.send_command_retry_get_output('sysinfo',
+                ['(?i)TPM\s+MODE:\s+(enabled|disabled)'], safe=True)[0][1]
         logging.debug(result)
 
         return result.lower() == 'enabled'
@@ -945,8 +945,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         @return: True if H1 Key Ladder is enabled. False otherwise.
         """
-        result = self.send_command_get_output('sysinfo',
-                ['(?i)Key\s+Ladder:\s+(enabled|disabled)'])[0][1]
+        result = self.send_command_retry_get_output('sysinfo',
+                ['(?i)Key\s+Ladder:\s+(enabled|disabled)'], safe=True)[0][1]
         logging.debug(result)
 
         return result.lower() == 'enabled'
@@ -1039,9 +1039,9 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         # The bpforce command is very similar to the wp command. It just
         # substitutes 'connected' for 'enabled' and 'disconnected' for
         # 'disabled'.
-        rv = self.send_command_get_output('bpforce',
+        rv = self.send_command_retry_get_output('bpforce',
                 ['batt pres: (forced )?(con|dis).*at boot: (forced )?'
-                 '(follow|discon|con)'])[0]
+                 '(follow|discon|con)'], safe=True)[0]
         _, forced, connected, _, atboot = rv
         logging.info(rv)
         return (not forced, connected == 'con', atboot == 'follow',
