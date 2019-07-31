@@ -45,10 +45,55 @@ class PDConsoleUtils(object):
     PD_STATE_DICT = {
         'port': 'Port\s+([\w]+)',
         'role': 'Role:\s+([\w]+-[\w]+)',
-        'pd_state': 'State:\s+([\w]+_[\w]+)',
+        'pd_state': 'State:\s+([\d\w()_]+)',
         'flags': 'Flags:\s+([\w]+)',
         'polarity': '(CC\d)'
     }
+
+    # Regex to match PD state name; work for both old and new formats
+    RE_PD_STATE = r"(\d+)?\(?([\w_]+)?\)?"
+    # Copied from ec repo: common/usb_pd_protocol.c
+    PD_STATE_NAMES = [
+        "DISABLED",                   # index: 0
+        "SUSPENDED",
+        "SNK_DISCONNECTED",
+        "SNK_DISCONNECTED_DEBOUNCE",
+        "SNK_HARD_RESET_RECOVER",
+        "SNK_DISCOVERY",              # index: 5
+        "SNK_REQUESTED",
+        "SNK_TRANSITION",
+        "SNK_READY",
+        "SNK_SWAP_INIT",
+        "SNK_SWAP_SNK_DISABLE",       # index: 10
+        "SNK_SWAP_SRC_DISABLE",
+        "SNK_SWAP_STANDBY",
+        "SNK_SWAP_COMPLETE",
+        "SRC_DISCONNECTED",
+        "SRC_DISCONNECTED_DEBOUNCE",  # index: 15
+        "SRC_HARD_RESET_RECOVER",
+        "SRC_STARTUP",
+        "SRC_DISCOVERY",
+        "SRC_NEGOCIATE",
+        "SRC_ACCEPTED",               # index: 20
+        "SRC_POWERED",
+        "SRC_TRANSITION",
+        "SRC_READY",
+        "SRC_GET_SNK_CAP",
+        "DR_SWAP",                    # index: 25
+        "SRC_SWAP_INIT",
+        "SRC_SWAP_SNK_DISABLE",
+        "SRC_SWAP_SRC_DISABLE",
+        "SRC_SWAP_STANDBY",
+        "VCONN_SWAP_SEND",            # index: 30
+        "VCONN_SWAP_INIT",
+        "VCONN_SWAP_READY",
+        "SOFT_RESET",
+        "HARD_RESET_SEND",
+        "HARD_RESET_EXECUTE",         # index: 35
+        "BIST_RX",
+        "BIST_TX",
+        "DRP_AUTO_TOGGLE",
+    ]
 
     # Dictionary for PD control message types
     PD_CONTROL_MSG_MASK = 0x1f
@@ -142,6 +187,7 @@ class PDConsoleUtils(object):
         @param port: Type C PD port 0 or 1
 
         @returns: A dict with the 5 fields listed above
+        @raises: TestFail if any field not found
         """
         cmd = 'pd'
         subcmd = 'state'
@@ -157,9 +203,38 @@ class PDConsoleUtils(object):
             if value:
                 state_result[key] = value.group(1)
             else:
-                raise error.TestFail('pd 0/1 state: %r value not found' % (key))
+                raise error.TestFail('pd %d state: %r value not found' %
+                                     (port, key))
 
         return state_result
+
+    def _normalize_pd_state(self, state):
+        """Normalize the PD state name which handles both old and new formats.
+
+        The old format is like: "SNK_READY"
+        The new format is like: "8()" if debug_level == 0, or
+                                "8(SNK_READY)" if debug_level > 0
+
+        This method will convert the new format to the old one.
+
+        @param state: The raw PD state text
+
+        @returns: The normalized PD state name
+        @raises: TestFail if unexpected PD state format
+        """
+        m = re.match(self.RE_PD_STATE, state)
+        if m and any(m.groups()):
+            state_index, state_name = m.groups()
+            if state_index is None:
+                # The old format: return the name
+                return state_name
+            # The new format: map the index to a name
+            mapped_name = self.PD_STATE_NAMES[int(state_index)]
+            if state_name is not None:
+                assert mapped_name == state_name
+            return mapped_name
+        else:
+            raise error.TestFail('Unexpected PD state format: %s' % state)
 
     def get_pd_state(self, port):
         """Get the current PD state
@@ -169,7 +244,7 @@ class PDConsoleUtils(object):
         """
 
         pd_dict = self.execute_pd_state_cmd(port)
-        return pd_dict['pd_state']
+        return self._normalize_pd_state(pd_dict['pd_state'])
 
     def get_pd_port(self, port):
         """Get the current PD port
