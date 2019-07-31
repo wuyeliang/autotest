@@ -115,12 +115,13 @@ def _create_test_task(test_spec, suite_id=None, dry_run=False):
     dimensions = _compute_dimensions(test_spec.test.dependencies)
     keyvals_flat = _compute_job_keyvals_flat(test_spec.keyvals, suite_id)
 
+    for dim in dimensions:
+        cmd += ['-dim', dim]
     for tag in tags:
         cmd += ['-tag', tag]
     for keyval in keyvals_flat:
         cmd += ['-keyval', keyval]
     cmd += [test_spec.test.name]
-    cmd += dimensions
 
     if dry_run:
         logging.info('Would have created task with command %s', cmd)
