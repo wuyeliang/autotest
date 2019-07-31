@@ -383,6 +383,12 @@ _PUBLIC_EXTRA_MODULES = {
         'CtsDeqpTestCases.dEQP-VK.spirv_assembly',
         'CtsDeqpTestCases.dEQP-VK.ssbo',
         'CtsDeqpTestCases.dEQP-VK.subgroups',
+        'CtsDeqpTestCases.dEQP-VK.subgroups.b',
+        'CtsDeqpTestCases.dEQP-VK.subgroups.s',
+        'CtsDeqpTestCases.dEQP-VK.subgroups.vote',
+        'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic',
+        'CtsDeqpTestCases.dEQP-VK.subgroups.clustered',
+        'CtsDeqpTestCases.dEQP-VK.subgroups.quad',
         'CtsDeqpTestCases.dEQP-VK.synchronization',
         'CtsDeqpTestCases.dEQP-VK.tessellation',
         'CtsDeqpTestCases.dEQP-VK.texture',
@@ -512,6 +518,33 @@ _EXTRA_COMMANDLINE = {
     'CtsDeqpTestCases.dEQP-VK.subgroups': [
         '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
         '--test', 'dEQP-VK.subgroups.*'
+    ],
+    # Splitting VK.subgroups to smaller pieces to workaround b/138622686.
+    # TODO(kinaba,haddowk): remove them once the root cause is fixed, or
+    # reconsider the sharding strategy.
+    'CtsDeqpTestCases.dEQP-VK.subgroups.b': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.b*'
+    ],
+    'CtsDeqpTestCases.dEQP-VK.subgroups.s': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.s*'
+    ],
+    'CtsDeqpTestCases.dEQP-VK.subgroups.vote': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.vote#*'
+    ],
+    'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.arithmetic#*'
+    ],
+    'CtsDeqpTestCases.dEQP-VK.subgroups.clustered': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.clustered#*'
+    ],
+    'CtsDeqpTestCases.dEQP-VK.subgroups.quad': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.quad#*'
     ],
     'CtsDeqpTestCases.dEQP-VK.synchronization': [
         '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
