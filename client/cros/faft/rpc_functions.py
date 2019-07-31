@@ -368,6 +368,32 @@ class BiosServicer(object):
         """
         return self._bios_handler.strip_modified_fwids()
 
+    def SetWriteProtectRegion(self, region, enabled=None):
+        """Modify software write protect region and flag in one operation.
+
+        @param region: Region to set (usually WP_RO)
+        @param enabled: If True, run --wp-enable; if False, run --wp-disable.
+                        If None (default), don't specify either one.
+        """
+        self._bios_handler.set_write_protect_region(region, enabled)
+
+    def SetWriteProtectRange(self, start, length, enabled=None):
+        """Modify software write protect range and flag in one operation.
+
+        @param start: offset (bytes) from start of flash to start of range
+        @param length: offset (bytes) from start of range to end of range
+        @param enabled: If True, run --wp-enable; if False, run --wp-disable.
+                        If None (default), don't specify either one.
+        """
+        self._bios_handler.set_write_protect_range(start, length, enabled)
+
+    def GetWriteProtectStatus(self):
+        """Get a dict describing the status of the write protection
+
+        @return: {'enabled': True/False, 'start': '0x0', 'length': '0x0', ...}
+        @rtype: dict
+        """
+        return self._bios_handler.get_write_protect_status()
 
 class CgptServicer(object):
     """Class to service all CGPT RPCs"""

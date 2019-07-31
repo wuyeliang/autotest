@@ -336,6 +336,26 @@ RPC_CATEGORIES = [
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
                 "expected_return_type": dict
+            },
+            {
+                "method_name": "SetWriteProtectRegion",
+                "passing_args": [
+                    ("WP_RO",),
+                    ("WP_RO", None),
+                    ("WP_RO", True),
+                    ("WP_RO", False)
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    (None,),
+                    ("WP_RO", None, "EXTRA")
+                ],
+            },
+            {
+                "method_name": "GetWriteProtectStatus",
+                "passing_args": [NO_ARGS],
+                "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
+                "expected_return_type": dict
             }
         ],
     },

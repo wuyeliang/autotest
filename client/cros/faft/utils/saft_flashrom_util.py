@@ -19,6 +19,8 @@ Currently the tool supports multiple partial write but not partial read.
 In the saft_flashrom_util, we provide read and partial write abilities.
 For more information, see help(saft_flashrom_util.flashrom_util).
 """
+import re
+
 
 class TestError(Exception):
     """Represents an internal error, such as invalid arguments."""
@@ -63,6 +65,7 @@ class LayoutScraper(object):
             "RW_FWID": "RW_FWID",
             "RW_LEGACY": "RW_LEGACY",
     }
+
 
     def __init__(self, os_if):
         self.image = None
@@ -330,14 +333,105 @@ class flashrom_util(object):
         self.firmware_layout = scraper.get_layout(file_name)
 
     def enable_write_protect(self):
-        """Enable the write pretection of the flash chip."""
+        """Enable the write protection of the flash chip."""
+
+        # For MTD devices, this will fail: need both --wp-range and --wp-enable.
+        # See: https://crrev.com/c/275381
+
         cmd = 'flashrom %s --wp-enable' % self._target_command
         self.os_if.run_shell_command(cmd, modifies_device=True)
 
     def disable_write_protect(self):
-        """Disable the write pretection of the flash chip."""
+        """Disable the write protection of the flash chip."""
         cmd = 'flashrom %s --wp-disable' % self._target_command
         self.os_if.run_shell_command(cmd, modifies_device=True)
+
+    def set_write_protect_region(self, image_file, region, enabled=None):
+        """
+        Set write protection region, using specified image's layout.
+
+        The name should match those seen in `futility dump_fmap <image>`, and
+        is not checked against self.firmware_layout, due to different naming.
+
+        @param image_file: path of the image file to read regions from
+        @param region: Region to set (usually WP_RO)
+        @param enabled: if True, run --wp-enable; if False, run --wp-disable.
+        """
+        cmd = 'flashrom %s --image %s --wp-region %s' % (
+                self._target_command, image_file, region)
+        if enabled is not None:
+            cmd += ' '
+            cmd += '--wp-enable' if enabled else '--wp-disable'
+
+        self.os_if.run_shell_command(cmd, modifies_device=True)
+
+    def set_write_protect_range(self, start, length, enabled=None):
+        """
+        Set write protection range by offset, using current image's layout.
+
+        @param start: offset (bytes) from start of flash to start of range
+        @param length: offset (bytes) from start of range to end of range
+        @param enabled: If True, run --wp-enable; if False, run --wp-disable.
+                        If None (default), don't specify either one.
+        """
+        cmd = 'flashrom %s --wp-range %s %s' % (
+                self._target_command, start, length)
+        if enabled is not None:
+            cmd += ' '
+            cmd += '--wp-enable' if enabled else '--wp-disable'
+
+        self.os_if.run_shell_command(cmd, modifies_device=True)
+
+    def get_write_protect_status(self):
+        """Get a dict describing the status of the write protection
+
+        @return: {'enabled': True/False, 'start': '0x0', 'length': '0x0', ...}
+        @rtype: dict
+        """
+        # https://crrev.com/8ebbd500b5d8da9f6c1b9b44b645f99352ef62b4/writeprotect.c
+
+        status_pattern = re.compile(
+                r'WP: status: (.*)')
+        enabled_pattern = re.compile(
+                r'WP: write protect is (\w+)\.?')
+        range_pattern = re.compile(
+                r'WP: write protect range: start=(\w+), len=(\w+)')
+        range_err_pattern = re.compile(
+                r'WP: write protect range: (.+)')
+
+        output = self.os_if.run_shell_command_get_output(
+                'flashrom %s --wp-status' % self._target_command)
+
+        wp_status = {}
+        for line in output:
+            if not line.startswith('WP: '):
+                continue
+
+            found_enabled = re.match(enabled_pattern, line)
+            if found_enabled:
+                status_word = found_enabled.group(1)
+                wp_status['enabled'] = (status_word == 'enabled')
+                continue
+
+            found_range = re.match(range_pattern, line)
+            if found_range:
+                (start, length) = found_range.groups()
+                wp_status['start'] = int(start, 16)
+                wp_status['length'] = int(length, 16)
+                continue
+
+            found_range_err = re.match(range_err_pattern, line)
+            if found_range_err:
+                # WP: write protect range: (cannot resolve the range)
+                wp_status['error'] = found_range_err.group(1)
+                continue
+
+            found_status = re.match(status_pattern, line)
+            if found_status:
+                wp_status['status'] = found_status.group(1)
+                continue
+
+        return wp_status
 
     def dump_flash(self, filename):
         """Read the flash device's data into a file, but don't parse it."""

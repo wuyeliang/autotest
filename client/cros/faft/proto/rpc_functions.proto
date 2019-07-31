@@ -61,6 +61,15 @@ service Bios {
   rpc StripModifiedFwids
     (BiosStripModifiedFwidsRequest)
     returns (BiosStripModifiedFwidsResponse);
+  rpc SetWriteProtectRegion
+    (BiosSetWriteProtectRegionRequest)
+    returns (BiosSetWriteProtectRegionResponse);
+  rpc SetWriteProtectRange
+      (BiosSetWriteProtectRangeRequest)
+      returns (BiosSetWriteProtectRangeResponse);
+  rpc GetWriteProtectStatus
+      (BiosGetWriteProtectStatusRequest)
+      returns (BiosGetWriteProtectStatusResponse);
 }
 
 service Cgpt {
@@ -482,6 +491,29 @@ message BiosStripModifiedFwidsResponse {
   string rec = 4;
   string ec_a = 5;
   string ec_b = 6;
+}
+
+message BiosSetWriteProtectRegionRequest {
+  string region = 1;
+  bool enabled = 2; // optional
+}
+message BiosSetWriteProtectRegionResponse {}
+
+message BiosSetWriteProtectRangeRequest {
+  string start = 1;
+  string length = 2;
+  bool enabled = 3; // optional
+}
+message BiosSetWriteProtectRangeResponse {}
+
+
+message BiosGetWriteProtectStatusRequest {}
+message BiosGetWriteProtectStatusResponse {
+  bool enabled = 1;
+  int32 start = 2;
+  int32 length = 3;
+  string error = 4;
+  string status = 5;
 }
 
 // Cgpt messages
