@@ -177,8 +177,7 @@ _QUAL_BOOKMARKS = sorted([
 ])
 
 _SMOKE = [
-    'CtsAccountManagerTestCases',
-    'CtsAdminTestCases',
+    'CtsUsbTests',
 ]
 
 _BVT_ARC = [
@@ -703,7 +702,7 @@ def get_suites(modules, abi, is_public):
         if module in _EXTRA_ATTRIBUTES:
             # Special cases come with their own suite definitions.
             suites += _EXTRA_ATTRIBUTES[module]
-        if module in _SMOKE:
+        if module in _SMOKE and abi == 'arm':
             # Handle VMTest by adding a few jobs to suite:smoke.
             suites += ['suite:smoke']
         if module in _HARDWARE_DEPENDENT_MODULES:
