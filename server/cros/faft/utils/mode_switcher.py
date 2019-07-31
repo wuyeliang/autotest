@@ -461,7 +461,7 @@ class _BaseModeSwitcher(object):
         if sync_before_boot:
             self.faft_framework.blocking_sync()
         if to_mode == 'rec':
-            self._enable_rec_mode_and_reboot(usb_state='dut')
+            self.enable_rec_mode_and_reboot(usb_state='dut')
             if wait_for_dut_up:
                 self.wait_for_client()
 
@@ -574,7 +574,7 @@ class _BaseModeSwitcher(object):
                      reboot_type, reboot_method.__name__)
 
 
-    def _enable_rec_mode_and_reboot(self, usb_state=None):
+    def enable_rec_mode_and_reboot(self, usb_state=None):
         """Switch to rec mode and reboot.
 
         This method emulates the behavior of the old physical recovery switch,
@@ -714,7 +714,7 @@ class _KeyboardDevSwitcher(_BaseModeSwitcher):
         logging.info("Enabling keyboard controlled developer mode")
         # Rebooting EC with rec mode on. Should power on AP.
         # Plug out USB disk for preventing recovery boot without warning
-        self._enable_rec_mode_and_reboot(usb_state='host')
+        self.enable_rec_mode_and_reboot(usb_state='host')
         self.wait_for_client_offline()
         self.bypasser.trigger_rec_to_dev()
 
@@ -733,7 +733,7 @@ class _JetstreamSwitcher(_BaseModeSwitcher):
     def _enable_dev_mode_and_reboot(self):
         """Switch to developer mode and reboot."""
         logging.info("Enabling Jetstream developer mode")
-        self._enable_rec_mode_and_reboot(usb_state='host')
+        self.enable_rec_mode_and_reboot(usb_state='host')
         self.wait_for_client_offline()
         self.bypasser.trigger_rec_to_dev()
 
@@ -742,7 +742,7 @@ class _JetstreamSwitcher(_BaseModeSwitcher):
         """Switch to normal mode and reboot."""
         logging.info("Disabling Jetstream developer mode")
         self.servo.disable_development_mode()
-        self._enable_rec_mode_and_reboot(usb_state='host')
+        self.enable_rec_mode_and_reboot(usb_state='host')
         time.sleep(self.faft_config.firmware_screen)
         self._disable_rec_mode_and_reboot(usb_state='host')
 
@@ -762,7 +762,7 @@ class _TabletDetachableSwitcher(_BaseModeSwitcher):
                  Language
         """
         logging.info('Enabling tablets/detachable recovery mode')
-        self._enable_rec_mode_and_reboot(usb_state='host')
+        self.enable_rec_mode_and_reboot(usb_state='host')
         self.wait_for_client_offline()
         self.bypasser.trigger_rec_to_dev()
 
