@@ -9,7 +9,6 @@ import subprocess
 
 from autotest_lib.client.common_lib import error, utils
 from autotest_lib.client.common_lib.cros import tpm_utils
-from autotest_lib.server import autotest
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
 
@@ -30,6 +29,8 @@ class firmware_IntegratedU2F(FirmwareTest):
             self.host.run('rm /var/lib/u2f/force/u2f.force')
             # Restart u2fd so that flag change takes effect.
             self.host.run('restart u2fd')
+
+        # Put the device back to a known state; also restarts the device.
         tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
 
         super(firmware_IntegratedU2F, self).cleanup()
@@ -54,17 +55,10 @@ class firmware_IntegratedU2F(FirmwareTest):
     def setup_u2fd(self):
         """Start u2fd on the host"""
 
-        # Login
-        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
-
         # Wait for cryptohome to show the TPM is ready before logging in.
         if not utils.wait_for_value(self.cryptohome_ready, True,
                                     timeout_sec=60):
             raise error.TestError('Cryptohome did not start')
-
-
-        client_at = autotest.Autotest(self.host)
-        client_at.run_test('login_LoginSuccess')
 
         # Wait for the owner key to exist before trying to start u2fd.
         if not utils.wait_for_value(self.owner_key_exists, True,
@@ -150,7 +144,13 @@ class firmware_IntegratedU2F(FirmwareTest):
         if not self.host.path_exists(self.U2FTEST_PATH):
             raise error.TestNAError('Device does not have U2FTest support')
 
-        # Login and start u2fd
+        # Put the device into a known good state.
+        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
+
+        # u2fd reads files from the user's home dir, so we need to log in.
+        self.host.run('/usr/local/autotest/bin/autologin.py')
+
+        # Start u2fd and find the virtual USB device.
         self.setup_u2fd()
         device = self.get_u2f_device()
 
