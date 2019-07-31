@@ -30,7 +30,7 @@ def run_faftrpc(machine):
                  host=host,
                  cmdline_args=args,
                  disable_sysinfo=True,
-                 category_under_test="ec",
+                 category_under_test="Ec",
                  reboot_after_completion=True
                  )
 

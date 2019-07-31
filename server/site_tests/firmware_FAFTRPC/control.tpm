@@ -30,7 +30,7 @@ def run_faftrpc(machine):
                  host=host,
                  cmdline_args=args,
                  disable_sysinfo=True,
-                 category_under_test="tpm"
+                 category_under_test="Tpm"
                  )
 
 parallel_simple(run_faftrpc, machines)
