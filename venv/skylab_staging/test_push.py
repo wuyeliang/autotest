@@ -185,7 +185,7 @@ def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
   """
   mins_remaining = int((deadline - time.time())/60)
   cmd = [
-    _skylab_tool(), 'create-suite',
+    _skylab_tool(), 'create-suite', '-bb=False',
     # test_push always runs in dev instance of skylab
     '-dev',
     '-board', dut_board,
@@ -202,7 +202,7 @@ def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
   _logger.info('Triggered suite %s. Task id: %s', suite, task_id)
 
   cmd = [
-    _skylab_tool(), 'wait-task',
+    _skylab_tool(), 'wait-task', '-bb=False',
     '-dev',
     '-service-account-json', service_account_json,
     task_id

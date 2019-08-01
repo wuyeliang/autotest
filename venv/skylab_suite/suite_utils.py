@@ -85,7 +85,7 @@ def _create_test_task(test_spec, suite_id=None, dry_run=False):
     skylab_tool_path = os.environ.get('SKYLAB_TOOL', SKYLAB_TOOL)
 
     cmd = [
-        skylab_tool_path, 'create-test',
+        skylab_tool_path, 'create-test', '-bb=False',
         '-board', test_spec.board,
         '-image', test_spec.build,
         '-service-account-json', os.environ['SWARMING_CREDS'],
