@@ -1,0 +1,77 @@
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+"""
+
+Helper file for handling policy fetching/parsing/formatting. This file has
+working unitests located in ${THIS_FILE_NAME}_unittest.py. If you modify this
+file, add/fix/adjust the unittests for proper code coverage and
+re-run.
+
+Read instructions in the unittest file on how to run.
+
+"""
+import json
+from autotest_lib.client.common_lib import error
+# Default settings for managed user policies
+
+def get_all_policies(autotest_ext, local=False):
+    """Returns a dict of all the policies on the device."""
+
+    policy_data = _get_pol_from_api(autotest_ext, local)
+    if not policy_data:
+        raise error.TestError('API did not return policy data!')
+    _reformat_policies(policy_data)
+
+    return policy_data
+
+
+def _get_pol_from_api(autotest_ext, promise=False):
+    """Call the getAllPolicies API, return raw result, clear stored data."""
+    autotest_ext.ExecuteJavaScript('''
+        chrome.autotestPrivate.getAllEnterprisePolicies(function(save_pol) {
+          result = save_pol;
+        });
+    ''')
+    policy_data = autotest_ext.EvaluateJavaScript('result')
+
+    # Ensure that a test does not attempt to get stale results.
+    autotest_ext.ExecuteJavaScript('delete(result)')
+    return policy_data
+
+
+def _reformat_policies(policy_dict):
+    """
+    Reformats visually formatted dicts to type dict (and not unicode).
+
+    Given a dict, check if 'value' is a key in the value field. If so, check
+    if the data of ['value'] is unicode. If it is, attempt to load it as json.
+    If not, but the value field is a dict, recursively call this function to
+    check again.
+
+    @param: policy_dict, a policy dictionary.
+
+    """
+    for k, v in policy_dict.items():
+        if not v:
+            # No data
+            continue
+        if 'value' in v:
+            if type(v['value']) == unicode:
+                _remove_visual_formatting(v)
+        elif isinstance(v, dict):
+            _reformat_policies(v)
+
+
+def _remove_visual_formatting(policy_value):
+    """
+    Attempt to remove any visual formatting.
+
+    Note: policy_value can be either unicode dict or string. If json.loads()
+    raises a ValueError, it is a string, and we do not need to format.
+
+    """
+    try:
+        policy_value['value'] = json.loads(policy_value['value'])
+    except ValueError:
+        return
