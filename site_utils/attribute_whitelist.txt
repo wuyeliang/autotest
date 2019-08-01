@@ -32,6 +32,8 @@ suite:arc-cts-qual
 suite:arc-cts-stable
 suite:arc-cts-terra
 suite:arc-cts-test
+suite:arc-cts-unibuild
+suite:arc-cts-unibuild-hw
 suite:arc-gts
 suite:arc-gts-perbuild
 suite:arc-gts-qual
