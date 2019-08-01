@@ -42,9 +42,6 @@ class ChromeLogin(object):
         # getting the autodir will raise an exception.
         cmd = autotest.Autotest.get_installed_autodir(self._host)
         cmd += '/bin/autologin.py --arc'
-        # We want to suppress the Google doodle as it is not part of the image
-        # and can be different content every day interacting with testing.
-        cmd += ' --no-startup-window'
         if self._dont_override_profile:
             logging.info('Starting Chrome with a possibly reused profile.')
             cmd += ' --dont_override_profile'
