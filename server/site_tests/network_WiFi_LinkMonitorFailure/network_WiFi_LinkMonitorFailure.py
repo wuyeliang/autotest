@@ -39,13 +39,15 @@ class network_WiFi_LinkMonitorFailure(wifi_cell_test_base.WiFiCellTestBase):
         self.context.assert_connect_wifi(client_config)
         self.context.assert_ping_from_dut()
 
-        # Restart local server with a different address index. This will
-        # simulate the disappearance of the network link from the client's
-        # point of view.
-        logging.info("Restart local server with different address")
-        self.context.router.change_server_address_index()
         with self.context.client.iw_runner.get_event_logger() as logger:
             logger.start()
+
+            # Restart local server with a different address index. This will
+            # simulate the disappearance of the network link from the client's
+            # point of view.
+            logging.info("Restart local server with different address")
+            self.context.router.change_server_address_index()
+
             # wait for the timeout seconds for link failure and reassociation
             # to complete.
             time.sleep(self.LINK_FAILURE_MAX_SECONDS +
