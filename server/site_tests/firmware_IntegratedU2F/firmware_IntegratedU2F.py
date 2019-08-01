@@ -16,19 +16,22 @@ class firmware_IntegratedU2F(FirmwareTest):
     """Verify U2F using the on-board cr50 firmware works."""
     version = 1
 
-    U2FTEST_PATH = '/usr/local/bin/U2FTest'
-    U2FFORCE_PATH = '/var/lib/u2f/force/u2f.force'
+    U2F_TEST_PATH = '/usr/local/bin/U2FTest'
+
+    U2F_FORCE_PATH = '/var/lib/u2f/force/u2f.force'
+    G2F_FORCE_PATH = '/var/lib/u2f/force/g2f.force'
+    USER_KEYS_FORCE_PATH = '/var/lib/u2f/force/user_keys.force'
 
     VID = '18D1'
     PID = '502C'
     SHORT_WAIT = 1
 
     def cleanup(self):
-        """Remove u2f.force"""
-        if self.create_u2f_force:
-            self.host.run('rm /var/lib/u2f/force/u2f.force')
-            # Restart u2fd so that flag change takes effect.
-            self.host.run('restart u2fd')
+        """Remove *.force files"""
+        self.host.run('rm -f /var/lib/u2f/force/*.force')
+
+        # Restart u2fd so that flag change takes effect.
+        self.host.run('restart u2fd')
 
         # Put the device back to a known state; also restarts the device.
         tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
@@ -52,7 +55,7 @@ class firmware_IntegratedU2F(FirmwareTest):
         return self.host.path_exists('/var/lib/whitelist/owner.key')
 
 
-    def setup_u2fd(self):
+    def wait_for_policy(self):
         """Start u2fd on the host"""
 
         # Wait for cryptohome to show the TPM is ready before logging in.
@@ -65,14 +68,23 @@ class firmware_IntegratedU2F(FirmwareTest):
                                     timeout_sec=120):
             raise error.TestError('Device did not create owner key')
 
-        self.create_u2f_force = not self.host.path_exists(self.U2FFORCE_PATH)
-        if self.create_u2f_force:
-            logging.info('Creating %s', self.U2FFORCE_PATH)
-            self.host.run('touch %s' % self.U2FFORCE_PATH)
-            # Restart u2fd so that flag change takes effect.
-            self.host.run('restart u2fd')
 
-        self.host.run('trunks_send --u2f_cert --crt=/tmp/cert0.crt')
+    def set_u2fd_flags(self, u2f, g2f, user_keys):
+        # Start by removing all flags.
+        self.host.run('rm -f /var/lib/u2f/force/*.force')
+
+        if u2f:
+          self.host.run('touch %s' % self.U2F_FORCE_PATH)
+
+        if g2f:
+          self.host.run('touch %s' % self.G2F_FORCE_PATH)
+
+        if user_keys:
+          self.host.run('touch %s' % self.USER_KEYS_FORCE_PATH)
+
+        # Restart u2fd so that flag change takes effect.
+        self.host.run('restart u2fd')
+
         # Make sure it is still running
         if not self.u2fd_is_running():
             raise error.TestFail('could not start u2fd')
@@ -94,7 +106,7 @@ class firmware_IntegratedU2F(FirmwareTest):
         return len(self.device)
 
 
-    def get_u2f_device(self):
+    def update_u2f_device_path(self):
         """Get the integrated u2f device."""
         start_time = time.time()
         utils.wait_for_value(self.find_u2f_device, max_threshold=1,
@@ -102,14 +114,14 @@ class firmware_IntegratedU2F(FirmwareTest):
         wait_time = int(time.time() - start_time)
         if wait_time:
             logging.info('Took %ss to find device', wait_time)
-        return '/dev/' + self.device
+        self.dev_path = '/dev/' + self.device
 
 
     def check_u2ftest_and_press_power_button(self):
         """Check stdout and press the power button if prompted
 
         Returns:
-            True if the process is still running.
+            True if the process has terminated.
         """
         time.sleep(self.SHORT_WAIT)
         self.output += self.get_u2ftest_output()
@@ -134,28 +146,13 @@ class firmware_IntegratedU2F(FirmwareTest):
         self.last_len = self.stdout.len
         return output
 
-
-    def run_once(self, host):
-        """Run U2FTest"""
-        self.host = host
+    def run_u2ftest(self):
+        """Run U2FTest with the U2F device"""
         self.last_len = 0
         self.output = ''
 
-        if not self.host.path_exists(self.U2FTEST_PATH):
-            raise error.TestNAError('Device does not have U2FTest support')
-
-        # Put the device into a known good state.
-        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
-
-        # u2fd reads files from the user's home dir, so we need to log in.
-        self.host.run('/usr/local/autotest/bin/autologin.py')
-
-        # Start u2fd and find the virtual USB device.
-        self.setup_u2fd()
-        device = self.get_u2f_device()
-
-        # Run U2FTest with the U2F device
-        u2ftest_cmd = utils.sh_escape('%s %s' % (self.U2FTEST_PATH, device))
+        u2ftest_cmd = utils.sh_escape('%s %s' % (self.U2F_TEST_PATH,
+                                                 self.dev_path))
         full_ssh_command = '%s "%s"' % (self.host.ssh_command(options='-tt'),
             u2ftest_cmd)
         self.stdout = StringIO.StringIO()
@@ -185,3 +182,38 @@ class firmware_IntegratedU2F(FirmwareTest):
         if exit_status:
             logging.error('stderr of U2FTest:\n%s', self.output)
             raise error.TestError('U2FTest: %s' % self.output)
+
+
+    def run_once(self, host):
+        """Run U2FTest"""
+        self.host = host
+
+        if not self.host.path_exists(self.U2F_TEST_PATH):
+            raise error.TestNAError('Device does not have U2FTest support')
+
+        # u2fd reads files from the user's home dir, so we need to log in.
+        self.host.run('/usr/local/autotest/bin/autologin.py')
+
+        # u2fd needs the policy file to exist.
+        self.wait_for_policy()
+
+        logging.info("testing u2fd --u2f")
+        self.set_u2fd_flags(True, False, False)
+        # Setting the flags restarts u2fd, which will re-create the u2f device.
+        self.update_u2f_device_path()
+        self.run_u2ftest();
+
+        logging.info("testing u2fd --g2f")
+        self.set_u2fd_flags(False, True, False)
+        self.update_u2f_device_path()
+        self.run_u2ftest();
+
+        logging.info("testing u2fd --u2f --user_keys")
+        self.set_u2fd_flags(True, False, True)
+        self.update_u2f_device_path()
+        self.run_u2ftest();
+
+        logging.info("testing u2fd --g2f --user_keys")
+        self.set_u2fd_flags(False, True, True)
+        self.update_u2f_device_path()
+        self.run_u2ftest();
