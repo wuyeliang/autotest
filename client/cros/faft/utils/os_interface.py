@@ -4,7 +4,6 @@
 """A module to provide interface to OS services."""
 
 import datetime
-import errno
 import os
 import re
 import struct
@@ -23,7 +22,7 @@ class Crossystem(object):
     # Code dedicated for user triggering recovery mode through crossystem.
     USER_RECOVERY_REQUEST_CODE = '193'
 
-    def init(self, os_if):
+    def __init__(self, os_if):
         """Init the instance. If running on Mario - adjust the map."""
         self.os_if = os_if
 
@@ -55,49 +54,40 @@ class OSInterface(object):
 
     ANDROID_TESTER_FILE = '/mnt/stateful_partition/.android_faft_tester'
 
-    def __init__(self, state_dir='/var/tmp/faft', log_file='faft_client.log'):
-        """Object construction time initialization.
+    def __init__(self, state_dir=None, log_file=None):
+        """Object initialization (side effect: creates the state_dir)
 
-        @param state_dir: the name of the directory (as defined by the caller).
+        @param state_dir: the name of the directory to use for storing state.
                             The contents of this directory persist over system
                             restarts and power cycles.
         @param log_file: the name of the log file kept in the state directory.
         """
         # We keep the state of FAFT test in a permanent directory over reboots.
-        self.state_dir = state_dir
-        self.log_file = log_file
-        self.cs = Crossystem()
         self.is_android = os.path.isfile(self.ANDROID_TESTER_FILE)
         self.test_mode = False
+
+        if state_dir is None:
+            state_dir = '/var/tmp/faft'
+
+        if log_file is None:
+            log_file = 'faft_client.log'
+
+        if not os.path.isabs(log_file):
+            log_file = os.path.join(state_dir, log_file)
+
+        self.state_dir = state_dir
+        self.log_file = log_file
+
         if self.is_android:
-            self.shell = shell_wrapper.AdbShell()
-            self.host_shell = shell_wrapper.LocalShell()
+            self.shell = shell_wrapper.AdbShell(self)
+            self.host_shell = shell_wrapper.LocalShell(self)
         else:
-            self.shell = shell_wrapper.LocalShell()
+            self.shell = shell_wrapper.LocalShell(self)
             self.host_shell = None
 
-    def init(self):
-        """Initialize the OS interface object.  This creates the log directory,
-        and initializes the CrosSystem object and the shell.
-        """
-        # TODO(dgoyette): Convert most init() methods into __init__().
-        # Affected: Crossystem, LocalShell, and many others.
-        self.cs.init(self)
+        self.create_dir(self.state_dir)
 
-        if self.state_dir:
-            try:
-                os.mkdir(self.state_dir)
-            except EnvironmentError as err:
-                if err.errno != errno.EEXIST:
-                    raise OSInterfaceError(err)
-            if self.log_file:
-                if not os.path.isabs(self.log_file):
-                    self.log_file = os.path.join(self.state_dir, self.log_file)
-
-        # Initialize the shell. Should be after creating the log file.
-        self.shell.init(self)
-        if self.host_shell:
-            self.host_shell.init(self)
+        self.cs = Crossystem(self)
 
     def has_host(self):
         """Return True if a host is connected to DUT."""

@@ -20,7 +20,7 @@ class UnsupportedSuccessToken(Exception):
 class LocalShell(object):
     """An object to wrap the local shell environment."""
 
-    def init(self, os_if):
+    def __init__(self, os_if):
         """Initialize the LocalShell object."""
         self._os_if = os_if
 
@@ -127,11 +127,10 @@ class AdbShell(object):
     via "adb shell".
     """
 
-    def init(self, os_if):
+    def __init__(self, os_if):
         """Initialize the AdbShell object."""
         self._os_if = os_if
-        self._host_shell = LocalShell()
-        self._host_shell.init(os_if)
+        self._host_shell = LocalShell(os_if)
         self._root_granted = False
 
     def _run_command(self, cmd):

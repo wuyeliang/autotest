@@ -30,8 +30,8 @@ def main():
     print '[%s] XMLRPC Server: Spinning up FAFT server' % str(datetime.now())
     # Launch the XMLRPC server to provide FAFTClient commands.
     os_if = os_interface.OSInterface()
-    os_if.init()
     os.chdir(os_if.state_dir)
+
     router = rpc_functions.RPCRouter(os_if)
 
     server = SimpleXMLRPCServer(('localhost', options.port),

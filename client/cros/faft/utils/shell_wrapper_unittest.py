@@ -17,8 +17,8 @@ class TestLocalShell(unittest.TestCase):
         mock_process = mock.Mock()
         mock_process.stdout = StringIO.StringIO('sucessfully executed foo')
         mock_subproc_popen.return_value = mock_process
-        local_shell = shell_wrapper.LocalShell()
-        local_shell._os_if = mock.Mock()
+        os_if = mock.Mock()
+        local_shell = shell_wrapper.LocalShell(os_if)
         self.assertFalse(
                 local_shell.run_command_check_output(cmd, success_token))
 
@@ -30,8 +30,8 @@ class TestLocalShell(unittest.TestCase):
         mock_process.stdout = StringIO.StringIO(
                 'successfully executed bar. expected is expected.')
         mock_subproc_popen.return_value = mock_process
-        local_shell = shell_wrapper.LocalShell()
-        local_shell._os_if = mock.Mock()
+        os_if = mock.Mock()
+        local_shell = shell_wrapper.LocalShell(os_if)
         self.assertTrue(
                 local_shell.run_command_check_output(cmd, success_token))
 
@@ -42,8 +42,8 @@ class TestLocalShell(unittest.TestCase):
         mock_process = mock.Mock()
         mock_process.stdout = StringIO.StringIO('successfully executed baz')
         mock_subproc_popen.return_value = mock_process
-        local_shell = shell_wrapper.LocalShell()
-        local_shell._os_if = mock.Mock()
+        os_if = mock.Mock()
+        local_shell = shell_wrapper.LocalShell(os_if)
         self.assertRaises(shell_wrapper.UnsupportedSuccessToken,
                           local_shell.run_command_check_output, cmd,
                           success_token)
