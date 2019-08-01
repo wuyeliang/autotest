@@ -306,12 +306,24 @@ class telemetry_Crosperf(test.test):
         # if necessary. It always comes from DUT.
         if profiler_args:
             filepath = os.path.join(self.resultsdir, 'artifacts')
+            if not os.path.isabs(filepath):
+                raise RuntimeError('Expected absolute path of '
+                                   'arfifacts: %s' % filepath)
             perf_exist = False
-            for filename in os.listdir(filepath):
-                if filename.endswith('perf.data'):
-                    perf_exist = True
-                    shutil.copyfile(os.path.join(filepath, filename),
-                                    os.path.join(self.profdir, 'perf.data'))
+            for root, dirs, files in os.walk(filepath):
+                for f in files:
+                    if f.endswith('.perf.data'):
+                        perf_exist = True
+                        src_file = os.path.join(root, f)
+                        # results-cache.py in crosperf supports multiple
+                        # perf.data files, but only if they are named exactly
+                        # so. Therefore, create a subdir for each perf.data
+                        # file.
+                        dst_dir = os.path.join(self.profdir,
+                                               ''.join(f.split('.')[:-2]))
+                        os.makedirs(dst_dir)
+                        dst_file = os.path.join(dst_dir, 'perf.data')
+                        shutil.copyfile(src_file, dst_file)
             if not perf_exist:
                 exit_code = -1
                 raise error.TestFail('Error: No profiles collected, test may '
