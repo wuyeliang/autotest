@@ -640,7 +640,7 @@ def _test_dut_ssh_connection(ip):
 
     @return: True if the ssh connection is good False else
     """
-    cmd = ('ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no '
+    cmd = ('ssh -o ConnectTimeout=3 -o StrictHostKeyChecking=no '
             "root@%s 'timeout 2 cat /etc/lsb-release'") % ip
     try:
         release = subprocess.check_output(cmd, shell=True)
