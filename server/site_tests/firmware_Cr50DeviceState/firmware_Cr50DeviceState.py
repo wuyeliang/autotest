@@ -250,7 +250,7 @@ class firmware_Cr50DeviceState(Cr50Test):
         irq_list = list(self.irqs)
         irq_list.sort()
 
-        irq_diff = ['%23s' % 'step' + ''.join(self.step_names)]
+        irq_diff = ['%24s' % 'step' + ''.join(self.step_names)]
         step_errors = [ [] for i in range(num_steps) ]
 
         cr50_times = self.get_irq_step_counts(self.KEY_TIME)
@@ -291,8 +291,13 @@ class firmware_Cr50DeviceState(Cr50Test):
                     rv = self.check_increase(irq_key, name, count,
                             expected_range)
                     if rv:
-                        logging.info('Unexpected count for %s %s', state, rv)
-                        step_errors[step].append(rv)
+                        step_name = self.step_names[step].strip()
+                        logging.info('Unexpected count in %s test: %s %s',
+                                     state, step_name, rv)
+                        # Running commands can take a while and cr50 may not be
+                        # idle. Ignore irq counts while running AP commands.
+                        if 'cmd done' not in step_name:
+                            step_errors[step].append(rv)
 
                 irq_progress_str.append(' %2s %7d' % (event, count))
 
@@ -353,6 +358,7 @@ class firmware_Cr50DeviceState(Cr50Test):
             elif state == 'G3':
                 full_command = 'poweroff'
             self.faft_client.System.RunShellCommand(full_command)
+            self.stage_irq_add(self.get_irq_counts(), 'cmd done')
 
         time.sleep(self.SHORT_WAIT);
         # check state transition
