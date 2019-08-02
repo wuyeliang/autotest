@@ -239,6 +239,7 @@ def get_partition_info(part_path, bus, model, partid=None, fstype=None,
                     # replacing ' ' (space).
                     # Following '.decode('unicode-escape')' handles the same
                     dev['mountpoint'] = mount.decode('unicode-escape')
+                    dev['is_removable'] = is_removable
                     dev['usb_type'], dev['serial'] = \
                             get_usbdevice_type_and_serial(dev['device'],
                                                           lsusb_info=lsusb_info,
@@ -266,6 +267,7 @@ def get_partition_info(part_path, bus, model, partid=None, fstype=None,
                 dev['fstype'] = fstype
                 dev['is_mounted'] = False
                 dev['mountpoint'] = "/media/removable/%s" % label
+                dev['is_removable'] = is_removable
                 dev['usb_type'], dev['serial'] = \
                         get_usbdevice_type_and_serial(dev['device'],
                                                       lsusb_info=lsusb_info,
