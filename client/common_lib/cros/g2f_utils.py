@@ -2,7 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import logging
 import time
+
+from autotest_lib.client.common_lib import error
+
+# USB ID for the virtual U2F HID Device.
+U2F_VID = '18D1'
+U2F_PID = '502C'
+
+QUERY_U2F_DEVICE_ATTEMPTS=5
+QUERY_U2F_RETRY_DELAY_SEC=1
 
 def ChromeOSLogin(client):
     """Logs in to ChromeOS, so that u2fd can start up."""
@@ -17,24 +27,19 @@ def StartU2fd(client):
 
     @param client: client object to run commands on.
     """
-    client.run('stop u2fd', ignore_status=True)
-    old_dev = client.run('ls /dev/hidraw*',
-                          ignore_status=True).stdout.strip().split('\n')
-
     client.run('touch /var/lib/u2f/force/u2f.force')
-    client.run('start u2fd')
+    client.run('restart u2fd')
 
-    # TODO(louiscollard): Replace this with something less fragile.
-    cr50_dev = set()
-    timeout_count = 0
-    while (len(cr50_dev) == 0 and timeout_count < 5):
-      time.sleep(1)
-      timeout_count += 1
-      new_dev = client.run('ls /dev/hidraw*',
-                            ignore_status=True).stdout.strip().split('\n')
-      cr50_dev = set(new_dev) - set(old_dev)
-
-    return cr50_dev.pop()
+    path = '/sys/bus/hid/devices/*:%s:%s.*/hidraw' % (U2F_VID, U2F_PID)
+    attempts = 0
+    while attempts < QUERY_U2F_DEVICE_ATTEMPTS:
+      attempts += 1
+      try:
+        return '/dev/' + client.run('ls ' + path).stdout.strip()
+      except error.AutoservRunError, e:
+        logging.info('Could not find U2F device on attempt ' +
+                     str(attempts))
+      time.sleep(QUERY_U2F_RETRY_DELAY_SEC)
 
 def G2fRegister(client, dev, challenge, application, p1=0):
     """Returns a dictionary with TPM status.
