@@ -972,6 +972,14 @@ class UpdaterServicer(object):
         """Modify ecid, put it to AP firmware, and flash it to the system."""
         self._updater.modify_ecid_and_flash_to_bios()
 
+    def CorruptDiagnosticsImage(self, local_filename):
+        """Corrupts a diagnostics image in the CBFS working directory.
+
+        @param local_filename: Filename for storing the diagnostics image in the
+            CBFS working directory
+        """
+        self._updater.corrupt_diagnostics_image(local_filename)
+
     def GetEcHash(self):
         """Return the hex string of the EC hash."""
         blob = self._updater.get_ec_hash()
@@ -1050,6 +1058,24 @@ class UpdaterServicer(object):
         @return: Boolean success status.
         """
         return self._updater.cbfs_extract_chip(fw_name)
+
+    def CbfsExtractDiagnostics(self, diag_name, local_filename):
+        """Runs cbfstool to extract a diagnostics image.
+
+        @param diag_name: Name of the diagnostics image in CBFS
+        @param local_filename: Filename for storing the diagnostics image in the
+            CBFS working directory
+        """
+        self._updater.cbfs_extract_diagnostics(diag_name, local_filename)
+
+    def CbfsReplaceDiagnostics(self, diag_name, local_filename):
+        """Runs cbfstool to replace a diagnostics image in the firmware image.
+
+        @param diag_name: Name of the diagnostics image in CBFS
+        @param local_filename: Filename for storing the diagnostics image in the
+            CBFS working directory
+        """
+        self._updater.cbfs_replace_diagnostics(diag_name, local_filename)
 
     def CbfsGetChipHash(self, fw_name):
         """Gets the chip firmware hash blob.

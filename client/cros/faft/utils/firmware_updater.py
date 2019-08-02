@@ -5,6 +5,7 @@
 
 See FirmwareUpdater object below.
 """
+import array
 import json
 import os
 
@@ -307,6 +308,29 @@ class FirmwareUpdater(object):
         # Resign and flash the AP firmware back to the system
         self.cbfs_sign_and_flash()
 
+    def corrupt_diagnostics_image(self, local_filename):
+        """Corrupts a diagnostics image in the CBFS working directory.
+
+        @param local_filename: Filename for storing the diagnostics image in the
+            CBFS working directory
+        """
+        local_path = os.path.join(self._cbfs_work_path, local_filename)
+
+        # Invert the last few bytes of the image. Note that cbfstool will
+        # silently ignore bytes added after the end of the ELF, and it will
+        # refuse to use an ELF with noticeably corrupted headers as a payload.
+        num_bytes = 4
+        with open(local_path, 'rb+') as image:
+            image.seek(-num_bytes, os.SEEK_END)
+            last_bytes = array.array('B')
+            last_bytes.fromfile(image, num_bytes)
+
+            for i in range(len(last_bytes)):
+                last_bytes[i] = last_bytes[i] ^ 0xff
+
+            image.seek(-num_bytes, os.SEEK_END)
+            last_bytes.tofile(image)
+
     def resign_firmware(self, version=None, work_path=None):
         """Resign firmware with version.
 
@@ -549,6 +573,20 @@ class FirmwareUpdater(object):
 
         return True
 
+    def cbfs_extract_diagnostics(self, diag_name, local_filename):
+        """Runs cbfstool to extract a diagnostics image.
+
+        @param diag_name: Name of the diagnostics image in CBFS
+        @param local_filename: Filename for storing the diagnostics image in the
+            CBFS working directory
+        """
+        bios_path = os.path.join(self._cbfs_work_path, self._bios_path)
+        cbfs_extract = '%s %s extract -m x86 -r RW_LEGACY -n %s -f %s' % (
+                self.CBFSTOOL, bios_path, diag_name,
+                os.path.join(self._cbfs_work_path, local_filename))
+
+        self.os_if.run_shell_command(cbfs_extract)
+
     def cbfs_get_chip_hash(self, fw_name):
         """Returns chip firmware hash blob.
 
@@ -632,6 +670,41 @@ class FirmwareUpdater(object):
                      'continuing without "truncate" support') % self.CBFSTOOL)
 
         return True
+
+    def cbfs_replace_diagnostics(self, diag_name, local_filename):
+        """Runs cbfstool to replace a diagnostics image in the firmware image.
+
+        @param diag_name: Name of the diagnostics image in CBFS
+        @param local_filename: Filename for storing the diagnostics image in the
+            CBFS working directory
+        """
+        bios_path = os.path.join(self._cbfs_work_path, self._bios_path)
+        rm_cmd = '%s %s remove -r RW_LEGACY -n %s' % (
+                self.CBFSTOOL, bios_path, diag_name)
+        expand_cmd = '%s %s expand -r RW_LEGACY' % (self.CBFSTOOL, bios_path)
+        add_cmd = ('%s %s add-payload -r RW_LEGACY -c lzma -n %s -f %s') % (
+                self.CBFSTOOL, bios_path, diag_name,
+                os.path.join(self._cbfs_work_path, local_filename))
+        truncate_cmd = '%s %s truncate -r RW_LEGACY' % (
+                self.CBFSTOOL, bios_path)
+
+        self.os_if.run_shell_command(rm_cmd)
+
+        try:
+            self.os_if.run_shell_command(expand_cmd)
+        except shell_wrapper.ShellError:
+            self.os_if.log(
+                    '%s may be too old, continuing without "expand" support'
+                    % self.CBFSTOOL)
+
+        self.os_if.run_shell_command(add_cmd)
+
+        try:
+            self.os_if.run_shell_command(truncate_cmd)
+        except shell_wrapper.ShellError:
+            self.os_if.log(
+                    '%s may be too old, continuing without "truncate" support'
+                    % self.CBFSTOOL)
 
     def cbfs_sign_and_flash(self):
         """Signs CBFS (bios.bin) and flashes it."""

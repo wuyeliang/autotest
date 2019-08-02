@@ -20,7 +20,6 @@ In the saft_flashrom_util, we provide read and partial write abilities.
 For more information, see help(saft_flashrom_util.flashrom_util).
 """
 
-
 class TestError(Exception):
     """Represents an internal error, such as invalid arguments."""
     pass
@@ -62,6 +61,7 @@ class LayoutScraper(object):
             "EC_RW": "EC_RW",
             "EC_RW_B": "EC_RW_B",
             "RW_FWID": "RW_FWID",
+            "RW_LEGACY": "RW_LEGACY",
     }
 
     def __init__(self, os_if):
