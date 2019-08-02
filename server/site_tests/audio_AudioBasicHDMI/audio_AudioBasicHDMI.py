@@ -69,6 +69,11 @@ class audio_AudioBasicHDMI(audio_test.AudioTest):
         # Stop audio playback by closing the browser tab.
         if while_playback:
             browser_facade.close_tab(tab_descriptor)
+
+        # Explicitly select the node as there is a known issue
+        # that the selected node might change after a suspension.
+        # We should remove this after the issue is addressed(crbug:987529).
+        audio_facade.set_selected_node_types(['HDMI'], None)
         audio_test_utils.check_audio_nodes(audio_facade,
                                         (['HDMI'], None))
 

@@ -91,6 +91,10 @@ class audio_AudioBasicUSBPlaybackRecord(audio_test.AudioTest):
                             host, audio_facade, self.resultsdir,
                             'after_suspend')
 
+                    # Explicitly select the node as there is a known issue
+                    # that the selected node might change after a suspension.
+                    # We should remove this after the issue is addressed
+                    # (crbug:987529).
                     # Directly select the node through cras
                     # Should switch to check_and_set_chrome_active_node_types
                     # to set the active node through chrome.audio API when
