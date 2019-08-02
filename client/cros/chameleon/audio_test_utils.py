@@ -99,6 +99,34 @@ def check_audio_nodes(audio_facade, audio_nodes):
                 'expected: %s' % (str(curr_out_nodes), str(out_audio_nodes)))
 
 
+def check_plugged_nodes_contain(audio_facade, audio_nodes):
+    """Checks the nodes needed to be plugged on Cros device are plugged.
+
+    @param audio_facade: A RemoteAudioFacade to access audio functions on
+                         Cros device.
+
+    @param audio_nodes: A tuple (out_audio_nodes, in_audio_nodes) containing
+                        expected plugged output and input nodes.
+
+    @raises: error.TestFail if the plugged nodes on Cros device are not plugged.
+
+    """
+    curr_out_nodes, curr_in_nodes = audio_facade.get_plugged_node_types()
+    out_audio_nodes, in_audio_nodes = audio_nodes
+    if in_audio_nodes != None:
+        for node in in_audio_nodes:
+            if node not in curr_in_nodes:
+                raise error.TestFail('Wrong input node(s) plugged: %s '
+                        'expected %s to be plugged!' % (str(curr_in_nodes),
+                                                        str(in_audio_nodes)))
+    if out_audio_nodes != None:
+        for node in out_audio_nodes:
+            if node not in curr_out_nodes:
+                raise error.TestFail('Wrong output node(s) plugged: %s '
+                        'expected %s to be plugged!' % (str(curr_out_nodes),
+                                                        str(out_audio_nodes)))
+
+
 def check_plugged_nodes(audio_facade, audio_nodes):
     """Checks the nodes that are currently plugged on Cros device are correct.
 
