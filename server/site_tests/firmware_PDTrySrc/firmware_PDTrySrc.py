@@ -43,7 +43,8 @@ class firmware_PDTrySrc(FirmwareTest):
 
         @param usbpd_dev: PD device object of DUT
         @param pdtester_dev: PD device object of PDTester
-        @param trysrc: Enable TrySrc or not
+        @param trysrc: True to enable TrySrc before disconnect/connect,
+                       False to disable TrySrc, None to do nothing.
 
         @returns list with number of SNK and SRC connections
         """
@@ -56,7 +57,8 @@ class firmware_PDTrySrc(FirmwareTest):
                 disc_time = self.PD_DISCONNECT_TIME + random.random()
                 logging.info('Disconnect time = %.2f seconds', disc_time)
                 # Set the TrySrc value on DUT
-                usbpd_dev.try_src(trysrc)
+                if trysrc is not None:
+                    usbpd_dev.try_src(trysrc)
                 # Force disconnect/connect
                 pdtester_dev.cc_disconnect_connect(disc_time)
                 # Wait for connection to be reestablished
@@ -120,8 +122,7 @@ class firmware_PDTrySrc(FirmwareTest):
                 d_idx = side ^ 1
 
         try:
-            # Both devices must support dualrole mode for this test. In addtion,
-            # DUT must support Try.SRC mode.
+            # Both devices must support dualrole mode for this test.
             for port in port_pair:
                 try:
                     if not port.drp_set('on'):
@@ -129,45 +130,54 @@ class firmware_PDTrySrc(FirmwareTest):
                 except NotImplementedError:
                     raise error.TestFail('Both devices must support DRP')
 
-            # Make sure that DUT supports Try.SRC mode
-            if not port_pair[d_idx].try_src(True):
-                raise error.TestFail('DUT does not support Try.SRC feature')
+            # Check to see if DUT supports Try.SRC mode
+            try_src_supported = port_pair[d_idx].try_src(True)
 
-            # Run disconnect/connect sequence with Try.SRC enabled
-            stats_on = self._execute_connect_sequence(
-                    usbpd_dev=port_pair[d_idx],
-                    pdtester_dev=port_pair[p_idx],
-                    trysrc=True)
+            if not try_src_supported:
+                logging.warn('DUT does not support Try.SRC feature. '
+                             'Skip running Try.SRC-enabled test case.')
+            else:
+                # Run disconnect/connect sequence with Try.SRC enabled
+                stats_on = self._execute_connect_sequence(
+                        usbpd_dev=port_pair[d_idx],
+                        pdtester_dev=port_pair[p_idx],
+                        trysrc=True)
+
             # Run disconnect/connect sequence with Try.SRC disabled
             stats_off = self._execute_connect_sequence(
                     usbpd_dev=port_pair[d_idx],
                     pdtester_dev=port_pair[p_idx],
-                    trysrc=False)
+                    trysrc=(False if try_src_supported else None))
+
+            # Compute SNK/(SNK+SRC) ratio (percentage) for Try.SRC off case
+            total_off = float(stats_off[self.SNK] + stats_off[self.SRC])
+            trysrc_off = float(stats_off[self.SNK]) / total_off * 100.0
+            logging.info('SNK ratio with Try.SRC disabled = %.1f%%', trysrc_off)
+
+            # When Try.SRC is off, ideally the SNK/SRC ratio will be close to
+            # 50%. However, in practice there is a wide range related to the
+            # dualrole swap timers in firmware.
+            if (trysrc_off < self.TRYSRC_OFF_THRESHOLD or
+                trysrc_off > 100 - self.TRYSRC_OFF_THRESHOLD):
+                raise error.TestFail('SRC %% = %.1f: Must be > %.1f & < %.1f' %
+                                     (trysrc_off, self.TRYSRC_OFF_THRESHOLD,
+                                      100 - self.TRYSRC_OFF_THRESHOLD))
+
+            if try_src_supported:
+                # Compute SNK/(SNK+SRC) ratio (percentage) for Try.SRC on case
+                total_on = float(stats_on[self.SNK] + stats_on[self.SRC])
+                trysrc_on = float(stats_on[self.SNK]) / total_on * 100.0
+                logging.info('SNK ratio with Try.SRC enabled = %.1f%%',
+                             trysrc_on)
+
+                # When Try.SRC is on, the SRC/SNK, the DUT should connect in SRC
+                # mode nearly 100% of the time.
+                if trysrc_on < self.TRYSRC_ON_THRESHOLD:
+                    raise error.TestFail('SRC %% = %.1f: Must be >  %.1f' %
+                                         (trysrc_on, self.TRYSRC_ON_THRESHOLD))
         finally:
             # Reenable Try.SRC mode
             port_pair[d_idx].try_src(True)
             # Restore the original dualrole settings
             for side in xrange(len(port_pair)):
                 port_pair[side].drp_set(original_drp[side])
-
-        # Compute SRC connect ratio/percent for Try.SRC on and off cases
-        total_on = float(stats_on[self.SNK] + stats_on[self.SRC])
-        total_off = float(stats_off[self.SNK] + stats_off[self.SRC])
-        trysrc_on = float(stats_on[self.SNK]) / total_on * 100.0
-        trysrc_off = float(stats_off[self.SNK]) / total_off * 100.0
-        logging.info('DUT Try.SRC on = %.1f%%: off = %.1f%%',
-                      trysrc_on, trysrc_off)
-
-        # When Try.SRC is off, ideally the SNK/SRC ratio will be close to
-        # 50%. However, in practice there is a wide range related to the
-        # dualrole swap timers in firmware.
-        if (trysrc_off < self.TRYSRC_OFF_THRESHOLD or
-            trysrc_off > 100 - self.TRYSRC_OFF_THRESHOLD):
-            raise error.TestFail('SRC %% = %.1f: Must be > %.1f & < %.1f' %
-                                 (trysrc_off, self.TRYSRC_OFF_THRESHOLD,
-                                  100 - self.TRYSRC_OFF_THRESHOLD))
-        # When Try.SRC is on, the SRC/SNK, the DUT should connect in SRC
-        # mode nearly 100% of the time.
-        if trysrc_on < self.TRYSRC_ON_THRESHOLD:
-            raise error.TestFail('SRC %% = %.1f: Must be >  %.1f' %
-                                 (trysrc_on, self.TRYSRC_ON_THRESHOLD))
