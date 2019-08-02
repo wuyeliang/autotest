@@ -4,6 +4,14 @@
 
 import time
 
+def ChromeOSLogin(client):
+    """Logs in to ChromeOS, so that u2fd can start up."""
+    client.run('/usr/local/autotest/bin/autologin.py')
+
+def ChromeOSLogout(client):
+    """Logs out of ChromeOS, to return the device to a known state."""
+    client.run('restart ui')
+
 def StartU2fd(client):
     """Starts u2fd on the client.
 

@@ -6,7 +6,6 @@ import hashlib
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import g2f_utils
 from autotest_lib.client.common_lib.cros import tpm_utils
-from autotest_lib.server import autotest
 from autotest_lib.server import test
 
 U2F_AUTH_ENFORCE=3
@@ -37,8 +36,8 @@ class firmware_Cr50U2fPowerwash(test.test):
         # Start by clearing TPM to make sure the device is in a known state.
         tpm_utils.ClearTPMOwnerRequest(self.client, wait_for_ready=True)
 
-        client_at = autotest.Autotest(self.client)
-        client_at.run_test('login_LoginSuccess')
+        # u2fd reads files from the user's home dir, so we need to log in.
+        g2f_utils.ChromeOSLogin(self.client);
 
         # U2fd does will not start normally if the device has not gone
         # through OOBE. Force it to startup.
@@ -81,8 +80,8 @@ class firmware_Cr50U2fPowerwash(test.test):
         # key handle after this.
         tpm_utils.ClearTPMOwnerRequest(self.client, wait_for_ready=True)
 
-        client_at = autotest.Autotest(self.client)
-        client_at.run_test('login_LoginSuccess')
+        # u2fd reads files from the user's home dir, so we need to log in.
+        g2f_utils.ChromeOSLogin(self.client)
 
         # U2fd does will not start normally if the device has not gone
         # through OOBE. Force it to startup.
@@ -100,3 +99,10 @@ class firmware_Cr50U2fPowerwash(test.test):
 
         if g2f_auth_clear.exit_status == 0:
           raise error.TestError('Authenticate succeeded; should have failed')
+
+
+    def cleanup(self):
+        """Leave the device in a predictable state"""
+        g2f_utils.ChromeOSLogout(self.client)
+
+        super(firmware_Cr50U2fPowerwash, self).cleanup()
