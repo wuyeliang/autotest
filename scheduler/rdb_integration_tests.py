@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 #pylint: disable-msg=C0111
 
 # Copyright (c) 2014 The Chromium OS Authors. All rights reserved.

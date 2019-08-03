@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 #pylint: disable-msg=C0111
 
 """Tests for autotest_lib.scheduler.drones."""

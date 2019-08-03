@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # Takes a list of hostnames (via file) and schedules host repair
 # jobs based on the delay specified in order to throttle the jobs
 # and not overwhelm the system.
