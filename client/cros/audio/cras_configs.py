@@ -58,3 +58,16 @@ def get_plugged_internal_mics(board, model, num_mics):
         return ['FRONT_MIC', 'REAR_MIC']
 
     return INTERNAL_MIC_NODES.get((board, model), ['INTERNAL_MIC'])
+
+HEADPHONE_NODE = {
+    ('sarien'): 'LINEOUT',
+}
+
+def get_headphone_node(board):
+    """Return the expected headphone node for given board name.
+
+    @param board: board name of the DUT.
+
+    @returns: The name of the expected headphone node.
+    """
+    return HEADPHONE_NODE.get((board), 'HEADPHONE')
