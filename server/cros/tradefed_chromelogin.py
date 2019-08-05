@@ -45,6 +45,8 @@ class ChromeLogin(object):
         # We want to suppress the Google doodle as it is not part of the image
         # and can be different content every day interacting with testing.
         cmd += ' --no-startup-window'
+        # Disable several forms of auto-installation to stablize the tests.
+        cmd += ' --no-arc-syncs'
         if self._dont_override_profile:
             logging.info('Starting Chrome with a possibly reused profile.')
             cmd += ' --dont_override_profile'

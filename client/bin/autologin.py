@@ -35,6 +35,8 @@ def main(args):
                         help='Log in with provided password.')
     parser.add_argument('-w', '--no-startup-window', action='store_true',
                         help='Prevent startup window from opening (no doodle).')
+    parser.add_argument('--no-arc-syncs', action='store_true',
+                        help='Prevent ARC sync behavior as much as possible.')
     args = parser.parse_args(args)
 
     if args.password:
@@ -50,6 +52,8 @@ def main(args):
     chrome.Chrome(
         extra_browser_args=browser_args,
         arc_mode=('enabled' if args.arc else None),
+        disable_app_sync=args.no_arc_syncs,
+        disable_play_auto_install=args.no_arc_syncs,
         username=args.username,
         password=(password if args.username else None),
         gaia_login=(args.username is not None),
