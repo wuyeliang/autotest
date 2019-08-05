@@ -430,8 +430,11 @@ class host_statjson(host_stat):
             # This enables the steps (renaming the host,
             # copying the inventory information to skylab) to be doable in
             # either order.
-            hostname = _remove_hostname_suffix(stats_map["hostname"],
-                MIGRATED_HOST_SUFFIX)
+            hostname = _remove_hostname_suffix_if_present(
+                stats_map["hostname"],
+                MIGRATED_HOST_SUFFIX
+            )
+
             labels = self._cleanup_labels(labels)
             attrs = [{"key": k, "value": v} for k, v in attributes.iteritems()]
             out_labels = process_labels(labels, platform=stats_map["platform"])
@@ -1108,14 +1111,12 @@ def _add_hostname_suffix(hostname, suffix):
     return hostname + suffix
 
 
-def _remove_hostname_suffix(hostname, suffix):
+def _remove_hostname_suffix_if_present(hostname, suffix):
     """Remove the suffix from the hostname."""
-    if not hostname.endswith(suffix):
-        raise InvalidHostnameError(
-                'Cannot remove "%s" as it doesn\'t contain the suffix.' %
-                suffix)
-
-    return hostname[:len(hostname) - len(suffix)]
+    if hostname.endswith(suffix):
+        return hostname[:len(hostname) - len(suffix)]
+    else:
+        return hostname
 
 
 class host_rename(host):
