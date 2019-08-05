@@ -126,14 +126,20 @@ class platform_StageAndRecover(test.test):
         self.wait_for_dut_ping_after('RECOVERY', self._INSTALL_DELAY_TIMEOUT)
         self.verify_recovery_log()
 
-        self.stage_copy_recover_with('test_image')
+        try:
+            # Post-recovery exception handling : Test image installation is
+            # out of scope of the test verification and these failures should
+            # not be a reason to error out.
+            self.stage_copy_recover_with('test_image')
 
-        # Install the test image back on DUT and reboot
-        if self.wait_for_dut_ping_after('TEST_IMAGE RECOVERY BOOT FROM USB',
-                                        self._TEST_IMAGE_BOOT_DELAY):
-            self.host.run('chromeos-install --yes',
-                        timeout=self._INSTALL_DELAY_TIMEOUT)
-            self.host.reboot()
+            # Install the test image back on DUT and reboot
+            if self.wait_for_dut_ping_after('TEST_IMAGE RECOVERY BOOT FROM USB',
+                                            self._TEST_IMAGE_BOOT_DELAY):
+                self.host.run('chromeos-install --yes', ignore_status=True,
+                              timeout=self._INSTALL_DELAY_TIMEOUT)
+                self.host.reboot()
+        except error.AutotestError:
+            pass
 
         if self.error_messages:
             raise error.TestFail('Failures: %s' % ' '.join(self.error_messages))
