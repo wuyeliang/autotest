@@ -56,12 +56,17 @@ class network_WiFi_LinkMonitorFailure(wifi_cell_test_base.WiFiCellTestBase):
 
             # Link failure detection time.
             link_failure_time = logger.get_time_to_disconnected()
-            if (link_failure_time is None or
-                link_failure_time > self.LINK_FAILURE_MAX_SECONDS):
+            if link_failure_time is None:
+                # Some drivers perform a true Reassociation, without disconnect.
+                # See also https://crbug.com/990012.
+                logging.info('Failed to disconnect within timeout; '
+                             'this is expected for some drivers')
+            elif link_failure_time > self.LINK_FAILURE_MAX_SECONDS:
                 raise error.TestFail(
                         'Failed to detect link failure within given timeout')
-            logging.info('Link failure detection time: %.2f seconds',
-                         link_failure_time)
+            else:
+                logging.info('Link failure detection time: %.2f seconds',
+                             link_failure_time)
 
             # Reassociation time.
             reassociate_time = logger.get_reassociation_time()
