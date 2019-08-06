@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = "Chrome OS Team"
-NAME = "firmware_UpdateModes"
+NAME = "firmware_UpdaterModes"
 TIME = "MEDIUM"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "firmware"
@@ -21,6 +21,6 @@ servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 def run_firmwareupdate(machine):
     # Setup the client machine.
     host = hosts.create_host(machine, servo_args=servo_args)
-    job.run_test('firmware_UpdateModes', host=host, cmdline_args=args)
+    job.run_test('firmware_UpdaterModes', host=host, cmdline_args=args)
 
 parallel_simple(run_firmwareupdate, machines)

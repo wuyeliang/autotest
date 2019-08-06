@@ -8,7 +8,7 @@ from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 from autotest_lib.server.cros.faft.firmware_test import ConnectionError
 
 
-class firmware_UpdateModes(FirmwareTest):
+class firmware_UpdaterModes(FirmwareTest):
     """RO+RW firmware update using chromeos-firmwareupdate with various modes.
 
     This test uses --emulate, to avoid writing repeatedly to the flash.
@@ -23,7 +23,7 @@ class firmware_UpdateModes(FirmwareTest):
         During initialization, back up the firmware, in case --emulate ever
         breaks in a way that causes real writes.
         """
-        super(firmware_UpdateModes, self).initialize(host, cmdline_args, ec_wp)
+        super(firmware_UpdaterModes, self).initialize(host, cmdline_args, ec_wp)
         self.backup_firmware()
 
     def cleanup(self):
@@ -34,7 +34,7 @@ class firmware_UpdateModes(FirmwareTest):
         except ConnectionError:
             logging.error("ERROR: DUT did not come up after firmware restore!")
         finally:
-            super(firmware_UpdateModes, self).cleanup()
+            super(firmware_UpdaterModes, self).cleanup()
 
     def get_bios_fwids(self, path=None):
         """Return the BIOS fwids for the given file"""
