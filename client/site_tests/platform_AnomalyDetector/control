@@ -10,6 +10,7 @@ TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "Platform"
 TEST_TYPE = "Client"
+ATTRIBUTES = "suite:bvt-perbuild"
 
 DOC = """
 This checks that the anomaly detector is operational by generating
