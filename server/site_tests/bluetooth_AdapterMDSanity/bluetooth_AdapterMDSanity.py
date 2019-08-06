@@ -4,6 +4,7 @@
 
 """A Batch of Bluetooth Multiple Devices sanity tests"""
 
+import time
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
      BluetoothAdapterQuickTests
 
@@ -22,6 +23,26 @@ class bluetooth_AdapterMDSanity(BluetoothAdapterQuickTests):
     batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
 
 
+    @test_wrapper('Two connections', devices=['MOUSE', 'BLE_MOUSE'])
+    def md_two_connections_test(self):
+        devices = [self.devices['MOUSE'], self.devices['BLE_MOUSE']]
+
+        """test whether DUT can connect to classic mouse and ble mouse at the
+           same time
+        """
+        for device in devices:
+            self.test_discover_device(device.address)
+            self.bluetooth_facade.stop_discovery()
+            time.sleep(self.TEST_SLEEP_SECS)
+            self.test_pairing(device.address, device.pin, trusted=True)
+            time.sleep(self.TEST_SLEEP_SECS)
+            self.test_connection_by_adapter(device.address)
+
+        #test whether DUT can disconnect and remove pairing to both devices
+        for device in devices:
+            self.test_disconnection_by_adapter(device.address)
+            self.test_remove_pairing(device.address)
+
     @batch_wrapper('Multiple Devices Sanity')
     def md_sanity_batch_run(self, num_iterations=1, test_name=None):
         """Run the multiple devices sanity test batch or a specific given test.
@@ -35,6 +56,7 @@ class bluetooth_AdapterMDSanity(BluetoothAdapterQuickTests):
            @param test_name: specifc test to run otherwise None to run the
                              whole batch
         """
+        self.md_two_connections_test()
 
     def run_once(self, host, num_iterations=1, test_name=None):
         """Run the batch of Bluetooth stand sanity tests
@@ -43,7 +65,7 @@ class bluetooth_AdapterMDSanity(BluetoothAdapterQuickTests):
         @param num_iterations: the number of rounds to execute the test
         """
         # Initialize and run the test batch or the requested specific test
-        self.quick_test_init(host)
+        self.quick_test_init(host, use_chameleon=True)
         self.md_sanity_batch_run(num_iterations, test_name)
         self.quick_test_cleanup()
 
