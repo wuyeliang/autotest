@@ -132,14 +132,32 @@ class desktopui_FilesApp(test.test):
         """
         launch_js = "chrome.autotestPrivate.launchApp('%s', function(){})" % id
         self.evaluate_javascript(launch_js)
+        self._files_app = None
+        self._foreground_page = None
 
         def check_open():
             """Check if the app is running."""
             try:
-                self.cr.browser.extensions.GetByExtensionId(id)
+                if self._files_app is None or len(self._files_app) <= 1:
+                    self._files_app = \
+                        self.cr.browser.extensions.GetByExtensionId(id)
+                if len(self._files_app) > 1:
+                    if self._foreground_page is None:
+                        # Figure out which of the pages is the foreground one.
+                        for ext in self._files_app:
+                            url = ext.EvaluateJavaScript('location.href;')
+                            if url.endswith('main.html'):
+                                self._foreground_page = ext
+                                break
+                    loaded_js = """document.body.hasAttribute('loaded');"""
+                    try:
+                        return self._foreground_page.EvaluateJavaScript(
+                            loaded_js)
+                    except:
+                        return False
+                return False
             except KeyError:
                 return False
-            return True
 
         try:
             utils.poll_for_condition(condition=check_open, timeout=60)
