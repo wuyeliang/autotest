@@ -102,7 +102,6 @@ class ShillProxy(object):
     SERVICE_PROPERTY_STRENGTH = 'Strength'
     SERVICE_PROPERTY_STATE = 'State'
     SERVICE_PROPERTY_STATIC_IP_CONFIG = 'StaticIPConfig'
-    SERVICE_PROPERTY_STATIC_IP_NAMESERVERS = 'StaticIP.NameServers'
     SERVICE_PROPERTY_TYPE = 'Type'
 
     # EAP related properties.
@@ -163,7 +162,6 @@ class ShillProxy(object):
         SERVICE_PROPERTY_FT_ENABLED: (dbus.Boolean, {}),
         SERVICE_PROPERTY_STATIC_IP_CONFIG: (dbus.Dictionary,
                                             {'signature' : 'sv'}),
-        SERVICE_PROPERTY_STATIC_IP_NAMESERVERS: (dbus.String, {}),
 
         SERVICE_PROPERTY_EAP_EAP: (dbus.String, {}),
         SERVICE_PROPERTY_EAP_INNER_EAP: (dbus.String, {}),

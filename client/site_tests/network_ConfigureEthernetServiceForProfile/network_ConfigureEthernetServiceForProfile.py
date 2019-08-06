@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import dbus
 import errno
 import os
 
@@ -32,10 +33,12 @@ class network_ConfigureEthernetServiceForProfile(test.test):
         if shill is None:
             raise error.TestFail('Could not connect to shill')
 
-        path = shill.configure_service_for_profile('/profile/default', {
-                shill.SERVICE_PROPERTY_TYPE: 'ethernet',
-                shill.SERVICE_PROPERTY_STATIC_IP_NAMESERVERS: '8.8.8.8',
-                })
+        name_servers = [ '8.8.8.8' ]
+        config = {'NameServers' : name_servers}
+        shill.configure_service_for_profile('/profile/default', {
+            shill.SERVICE_PROPERTY_TYPE: 'ethernet',
+            shill.SERVICE_PROPERTY_STATIC_IP_CONFIG : config,
+            })
 
         with shill_context.stopped_shill():
             # We don't actually need to do anything while shill is
@@ -46,8 +49,8 @@ class network_ConfigureEthernetServiceForProfile(test.test):
             raise error.TestFail('Could not connect to shill')
 
         service = shill.find_object('Service', {
-                'Name': 'Ethernet',
-                shill.SERVICE_PROPERTY_STATIC_IP_NAMESERVERS: '8.8.8.8',
+                shill.SERVICE_PROPERTY_NAME : 'Ethernet',
+                shill.SERVICE_PROPERTY_STATIC_IP_CONFIG : config,
                 })
         if not service:
             raise error.TestFail('Network not found after restart.')
