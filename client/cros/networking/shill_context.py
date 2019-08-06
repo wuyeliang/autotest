@@ -4,6 +4,7 @@
 
 """A collection of context managers for working with shill objects."""
 
+import dbus
 import errno
 import logging
 import os
@@ -229,3 +230,33 @@ def stopped_shill():
     yield
     utils.start_service('shill')
     os.remove(SHILL_START_LOCK_PATH)
+
+
+class StaticIPContext(object):
+    """StaticIPConfig context manager class.
+
+    Set a StaticIPConfig to the given service.
+
+    """
+    def __init__(self, service, config):
+        self._service = service
+        self._config = config
+
+
+    def __enter__(self):
+        """Configure the StaticIP parameters for the Service and apply those
+        parameters to the interface by forcing a re-connect."""
+        self._service.SetProperty(
+            shill_proxy.ShillProxy.SERVICE_PROPERTY_STATIC_IP_CONFIG,
+            dbus.Dictionary(self._config, signature='sv'))
+        self._service.Disconnect()
+        self._service.Connect()
+
+
+    def __exit__(self, exception, value, traceback):
+        """Clear configuration of StaticIP parameters for the Service and force
+        a re-connect."""
+        self._service.ClearProperty(
+            shill_proxy.ShillProxy.SERVICE_PROPERTY_STATIC_IP_CONFIG)
+        self._service.Disconnect()
+        self._service.Connect()

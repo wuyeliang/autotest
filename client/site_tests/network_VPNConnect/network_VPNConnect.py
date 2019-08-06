@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-
 from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
@@ -12,38 +11,8 @@ from autotest_lib.client.cros import certificate_util
 from autotest_lib.client.cros import shill_temporary_profile
 from autotest_lib.client.cros import tpm_store
 from autotest_lib.client.cros import vpn_server
+from autotest_lib.client.cros.networking import shill_context
 from autotest_lib.client.cros.networking import shill_proxy
-
-# TODO(matthewmwang): remove this after shill Ethernet issues are fixed
-class StaticIPContext(object):
-    """Static IP context manager class.
-
-    Sets a static IP address and prefix length to the given service.
-
-    """
-    def __init__(self, service, address, prefix_len):
-        self._service = service
-        self._address = address
-        self._prefix_len = prefix_len
-
-
-    def __enter__(self):
-        """Configures the Static IP parameters for the Ethernet service and
-        applies those parameters to the interface by forcing a re-connect."""
-        self._service.SetProperty('StaticIP.Address', self._address)
-        self._service.SetProperty('StaticIP.Prefixlen', self._prefix_len)
-        self._service.Disconnect()
-        self._service.Connect()
-
-
-    def __exit__(self, exception, value, traceback):
-        """Clears configuration of Static IP parameters for the Ethernet service
-        and forces a re-connect."""
-        self._service.ClearProperty('StaticIP.Address')
-        self._service.ClearProperty('StaticIP.Prefixlen')
-        self._service.Disconnect()
-        self._service.Connect()
-
 
 class network_VPNConnect(test.test):
     """The VPN authentication class.
@@ -261,9 +230,10 @@ class network_VPNConnect(test.test):
                     # the static IP address through shill.
                     service = self.find_ethernet_service(
                             self.CLIENT_INTERFACE_NAME)
-                    with StaticIPContext(service,
-                                         self.CLIENT_ADDRESS,
-                                         self.NETWORK_PREFIX):
+                    static_ip_config = {'Address' : self.CLIENT_ADDRESS,
+                                        'Prefixlen' : self.NETWORK_PREFIX}
+                    with shill_context.StaticIPContext(service,
+                                                       static_ip_config):
                         if self.connect_vpn():
                             res = utils.ping(server.SERVER_IP_ADDRESS, tries=3,
                                              user='chronos')
