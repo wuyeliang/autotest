@@ -15,7 +15,12 @@ Fails if any of the following conditions occur:
   - crash is sent without user consent
 """
 ATTRIBUTES = "suite:bvt-cq, suite:smoke"
-TIME = "SHORT"
+# TODO(sarthakkukreti): cleanup-reboot is suspected to not work properly
+# (crbug.com/829219). Once we know this is fixed, change TIME = "SHORT".
+# logging_UserCrash locks the user pattern during its final test.
+# Changing time to "fast" ensures that the udev crash test is scheduled
+# before the core_pattern is locked.
+TIME = "FAST"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "logging"
 TEST_TYPE = "client"
