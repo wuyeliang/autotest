@@ -4,7 +4,8 @@
 
 AUTHOR = 'chromeos-gfx'
 NAME = "graphics_Idle_P"
-ATTRIBUTES = "suite:bvt-inline, suite:graphics, suite:graphics_per-day, suite:graphics_system"
+# TODO(ihf): move back to bvt-inline.
+ATTRIBUTES = "suite:bvt-perbuild, suite:graphics, suite:graphics_per-day, suite:graphics_system"
 PURPOSE = "Verify that graphics behaves as expected on idle."
 CRITERIA = """
 This test will fail if we don't see the appropriate GPU idle states.
@@ -14,7 +15,6 @@ TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "graphics"
 TEST_TYPE = "client"
-JOB_RETRIES = 2
 BUG_TEMPLATE = {
     'components': ['OS>Kernel>Graphics'],
 }
