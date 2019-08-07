@@ -12,6 +12,7 @@ import urlparse
 
 from autotest_lib.client.bin import utils as client_utils
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib import global_config
 from autotest_lib.client.common_lib.cros import dev_server
 from autotest_lib.server import hosts
 
@@ -48,7 +49,7 @@ class OmahaDevserver(object):
 
 
     def __init__(self, omaha_host, payload_location, max_updates=1,
-                 critical_update=True):
+                 critical_update=True, moblab=False):
         """Starts a private devserver instance, operating at Omaha capacity.
 
         @param omaha_host: host address where the devserver is spawned.
@@ -56,17 +57,18 @@ class OmahaDevserver(object):
         @param max_updates: int number of updates this devserver will handle.
                             This is passed to src/platform/dev/devserver.py.
         @param critical_update: Whether to set a deadline in responses.
+        @param moblab: True if we are running on moblab.
+
         """
-        self._devserver_dir = '/home/chromeos-test/chromiumos/src/platform/dev'
+        self._devserver_dir = global_config.global_config.get_config_value(
+            'CROS', 'devserver_dir',
+            default='/home/chromeos-test/chromiumos/src/platform/dev')
 
         self._critical_update = critical_update
         self._max_updates = max_updates
         self._omaha_host = omaha_host
         self._devserver_pid = 0
         self._devserver_port = 0  # Determined later from devserver portfile.
-
-        self._devserver_ssh = hosts.SSHHost(self._omaha_host,
-                                            user='chromeos-test')
         self._payload_location = payload_location
 
         # Temporary files for various devserver outputs.
@@ -75,6 +77,11 @@ class OmahaDevserver(object):
         self._devserver_portfile = None
         self._devserver_pidfile = None
         self._devserver_static_dir = None
+
+        # Figure out the correct user for sshing to devserver.
+        ssh_user = 'moblab' if moblab else 'chromeos-test'
+        self._devserver_ssh = hosts.SSHHost(self._omaha_host,
+                                            user=ssh_user)
 
 
     def _cleanup_devserver_files(self):

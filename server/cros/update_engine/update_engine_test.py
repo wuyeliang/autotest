@@ -763,11 +763,15 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         # Get partial path to payload eg samus-release/R77-113.0,0/blah.bin
         payload_location = self._get_partial_path_from_url(url_to_stage)
 
+        # Are we on moblab?
+        lsb = self._host.run('cat /etc/lsb-release').stdout
+        moblab = lsbrelease_utils.is_moblab(lsb)
+
         # We need to start our own devserver instance on the lab devserver
         # for the rest of the test scenarios.
         self._omaha_devserver = omaha_devserver.OmahaDevserver(
             lab_devserver.hostname, payload_location, max_updates=max_updates,
-            critical_update=critical_update)
+            critical_update=critical_update, moblab=moblab)
         self._omaha_devserver.start_devserver()
 
         # Stage the payloads on our new devserver.
