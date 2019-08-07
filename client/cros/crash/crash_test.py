@@ -402,10 +402,9 @@ class CrashTest(test.test):
             'service_failure',
         )
 
-        # TODO(crbug.com/923200): clean up and make more robust.
         def crash_sender_search(regexp, output):
             """Narrow search to lines from crash_sender."""
-            return re.search(r'crash_sender.*' + regexp, output)
+            return re.search(r'crash_sender\[\d+\]:\s+' + regexp, output)
 
         before_first_crash = None
         while True:
