@@ -424,7 +424,7 @@ class Cr50Test(FirmwareTest):
         while not self.host.ping_wait_up(
                 self.faft_config.delay_reboot_to_ping):
             if time.time() > end_time:
-                logging.warn('DUT is unresponsive at end of test')
+                logging.warn('DUT is unresponsive after trying to bring it up')
                 return
             self.servo.get_power_state_controller().reset()
             logging.info('DUT did not respond. Resetting it.')
@@ -757,6 +757,7 @@ class Cr50Test(FirmwareTest):
             raise
         finally:
             self._close_ccd_open_job()
+            self._try_to_bring_dut_up()
         logging.info(self.cr50.get_ccd_info())
 
 
