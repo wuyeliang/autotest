@@ -8,6 +8,7 @@ import utils
 
 from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.cros.power import sys_power
 
 class network_ShillInitScripts(test.test):
     """ Test that shill init scripts perform as expected.  Use the
@@ -89,9 +90,8 @@ class network_ShillInitScripts(test.test):
 
     def start_test(self):
         """ Setup the start of the test.  Stop shill and create test harness."""
-        # Stop a system process on test duts for keeping connectivity up.
-        ret = utils.stop_service('recover_duts', ignore_status=True)
-        self.recover_duts_stopped = (ret == 0);
+        # Prevent recover_duts service from thinking we're losing connectivity.
+        sys_power.pause_check_network_hook()
 
         self.stop_shill()
 
@@ -153,8 +153,6 @@ class network_ShillInitScripts(test.test):
     def restart_system_processes(self):
         """ Restart vital system services at the end of the test. """
         utils.start_service('shill', ignore_status=True)
-        if self.recover_duts_stopped:
-            utils.start_service('recover_duts', ignore_status=True)
 
 
     def assure(self, must_be_true, assertion_name):

@@ -131,6 +131,22 @@ def check_wakeup(estimated_alarm):
         raise SpuriousWakeupError('Woke from suspend early')
 
 
+def pause_check_network_hook():
+    """Stop check_ethernet.hook from running until the test exits.
+    """
+    # If this function is called multiple times, we intentionally re-assign
+    # this global, which closes out the old lock and grabs it anew.
+    # We intentionally "touch" the file to update its mtime, so we can judge
+    # how long locks are held.
+    global pause_ethernet_file
+    pause_ethernet_file = open(PAUSE_ETHERNET_HOOK_FILE, 'w+')
+    try:
+        # This is a blocking call unless an error occurs.
+        fcntl.flock(pause_ethernet_file, fcntl.LOCK_SH)
+    except IOError:
+        pass
+
+
 def do_suspend(suspend_seconds, delay_seconds=0):
     """Do a suspend using the power manager.
 
@@ -143,19 +159,7 @@ def do_suspend(suspend_seconds, delay_seconds=0):
     @param delay_seconds: Number of seconds wait before suspending the DUT.
 
     """
-
-    # Stop check_ethernet.hook from running until the test exits. If this
-    # function is called multiple times, we intentionally re-assign this
-    # global, which closes out the old lock and grabs it anew.
-    # We intentionally "touch" the file to update its mtime, so we can judge
-    # how long locks are held
-    global pause_ethernet_file
-    pause_ethernet_file = open(PAUSE_ETHERNET_HOOK_FILE, 'w+')
-    try:
-        # This is a blocking call unless an error occurs.
-        fcntl.flock(pause_ethernet_file, fcntl.LOCK_SH)
-    except IOError:
-        pass
+    pause_check_network_hook()
 
     estimated_alarm, wakeup_count = prepare_wakeup(suspend_seconds)
     upstart.ensure_running('powerd')
