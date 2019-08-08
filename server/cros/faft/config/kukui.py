@@ -12,3 +12,4 @@ class Values(object):
     ec_capability = ['arm', 'battery', 'charging']
     mode_switcher_type = 'tablet_detachable_switcher'
     fw_bypasser_type = 'tablet_detachable_bypasser'
+    ec_reboot_to_g3_delay = 10

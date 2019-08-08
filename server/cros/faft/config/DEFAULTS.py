@@ -64,6 +64,9 @@ class Values(object):
     # EC, if present, supports 'powerbtn' console command
     ec_has_powerbtn_cmd = True
 
+    # Delay for waiting EC turning off the AP
+    ec_reboot_to_g3_delay = 0
+
     # Delay of EC software sync hash calculating time
     software_sync = 6
 
