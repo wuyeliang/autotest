@@ -759,9 +759,9 @@ class Servo(object):
         self._server.hwinit()
         self._power_state.power_off()
 
-        # Set up Servo's usb mux.
-        self.switch_usbkey('host')
         if image_path:
+            # Set up Servo's usb mux.
+            self.switch_usbkey('host')
             logging.info('Searching for usb device and copying image to it. '
                          'Please wait a few minutes...')
             if not self._server.download_image_to_usb(image_path):
@@ -795,6 +795,10 @@ class Servo(object):
                 after installation.
         """
         self.image_to_servo_usb(image_path, make_image_noninteractive)
+        # Give the DUT some time to power_off if we skip
+        # download image to usb. (crbug.com/982993)
+        if not image_path:
+            time.sleep(10)
         self.boot_in_recovery_mode()
 
 
