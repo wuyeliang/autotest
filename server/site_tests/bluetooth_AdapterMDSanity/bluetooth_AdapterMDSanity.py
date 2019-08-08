@@ -23,9 +23,9 @@ class bluetooth_AdapterMDSanity(BluetoothAdapterQuickTests):
     batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
 
 
-    @test_wrapper('Two connections', devices=['MOUSE', 'BLE_MOUSE'])
+    @test_wrapper('Two connections', devices={'MOUSE':1, 'BLE_MOUSE':1})
     def md_two_connections_test(self):
-        devices = [self.devices['MOUSE'], self.devices['BLE_MOUSE']]
+        devices = [self.devices['MOUSE'][0], self.devices['BLE_MOUSE'][0]]
 
         """test whether DUT can connect to classic mouse and ble mouse at the
            same time

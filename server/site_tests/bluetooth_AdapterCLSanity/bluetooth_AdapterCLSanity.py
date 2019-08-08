@@ -26,34 +26,34 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
     test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
     batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
 
-    @test_wrapper('Pairing Test', devices=['MOUSE'])
+    @test_wrapper('Pairing Test', devices={"MOUSE":1})
     def cl_adapter_pairing_test(self):
-        device = self.devices['MOUSE']
+        device = self.devices['MOUSE'][0]
         self.pairing_test(device)
 
-    @test_wrapper('Pairing Suspend Resume Test', devices=['MOUSE'])
+    @test_wrapper('Pairing Suspend Resume Test', devices={"MOUSE":1})
     def cl_adapter_pairing_suspend_resume_test(self):
-        device = self.devices['MOUSE']
+        device = self.devices['MOUSE'][0]
         self.pairing_test(device, suspend_resume=True)
 
-    @test_wrapper('HID Reports Test', devices=['MOUSE'])
+    @test_wrapper('HID Reports Test', devices={"MOUSE":1})
     def cl_HID_reports_test(self):
-        device = self.devices['MOUSE']
+        device = self.devices['MOUSE'][0]
         self.run_hid_reports_test(device)
 
-    @test_wrapper('HID Reports Suspend Resume Test', devices=['MOUSE'])
+    @test_wrapper('HID Reports Suspend Resume Test', devices={"MOUSE":1})
     def cl_HID_reports_suspend_resume_test(self):
-        device = self.devices['MOUSE']
+        device = self.devices['MOUSE'][0]
         self.run_hid_reports_test(device, suspend_resume=True)
 
-    @test_wrapper('HID Reports Reboot Test', devices=['MOUSE'])
+    @test_wrapper('HID Reports Reboot Test', devices={"MOUSE":1})
     def cl_HID_reports_reboot_test(self):
-        device = self.devices['MOUSE']
+        device = self.devices['MOUSE'][0]
         self.run_hid_reports_test(device, reboot=True)
 
-    @test_wrapper('Connect Disconnect Loop Test', devices=['MOUSE'])
+    @test_wrapper('Connect Disconnect Loop Test', devices={"MOUSE":1})
     def cl_connect_disconnect_loop_test(self):
-        device = self.devices['MOUSE']
+        device = self.devices['MOUSE'][0]
         self.connect_disconnect_loop(device=device, loops=3)
 
     @batch_wrapper('Classic Sanity')
@@ -73,7 +73,7 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         self.cl_adapter_pairing_suspend_resume_test()
         self.cl_HID_reports_test()
         self.cl_HID_reports_suspend_resume_test()
-        self.cl_HID_reports_reboot_test()
+        #self.cl_HID_reports_reboot_test()
         self.cl_connect_disconnect_loop_test()
 
     def run_once(self, host, num_iterations=1, test_name=None):

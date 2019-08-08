@@ -243,7 +243,7 @@ class ChameleonLabel(base_label.BaseLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        return host._chameleon_host is not None
+        return len(host._chameleon_host_list) > 0
 
 
 class ChameleonConnectionLabel(base_label.StringPrefixLabel):
@@ -252,11 +252,11 @@ class ChameleonConnectionLabel(base_label.StringPrefixLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        return host._chameleon_host is not None
+        return len(host._chameleon_host_list) > 0
 
 
     def generate_labels(self, host):
-        return [host.chameleon.get_label()]
+        return [[chameleon.get_label()] for chameleon in host.chameleon_list]
 
 
 class ChameleonPeripheralsLabel(base_label.StringPrefixLabel):
@@ -272,33 +272,50 @@ class ChameleonPeripheralsLabel(base_label.StringPrefixLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        return host._chameleon_host is not None
+        return len(host._chameleon_host_list) > 0
 
 
     def generate_labels(self, host):
-        labels = []
-        try:
-            bt_hid_device = host.chameleon.get_bluetooth_hid_mouse()
-            if bt_hid_device.CheckSerialConnection():
-                labels.append('bt_hid')
-        except:
-            logging.error('Error with initializing bt_hid_mouse')
-        try:
-            ble_hid_device = host.chameleon.get_ble_mouse()
-            if ble_hid_device.CheckSerialConnection():
-                labels.append('bt_ble_hid')
-        except:
-            logging.error('Error with initializing bt_ble_hid')
-        try:
-            bt_a2dp_sink = host.chameleon.get_bluetooth_a2dp_sink()
-            if bt_a2dp_sink.CheckSerialConnection():
-                labels.append('bt_a2dp_sink')
-        except:
-            logging.error('Error with initializing bt_a2dp_sink')
-        if labels != []:
-            labels.append('bt_peer')
-        logging.info('Bluetooth labels are %s', labels)
-        return labels
+        labels_list = []
+
+        for chameleon, chameleon_host in \
+                        zip(host.chameleon_list, host._chameleon_host_list):
+            labels = []
+            try:
+                bt_hid_device = chameleon.get_bluetooth_hid_mouse()
+                if bt_hid_device.CheckSerialConnection():
+                    labels.append('bt_hid')
+            except:
+                logging.error('Error with initializing bt_hid_mouse on '
+                              'chameleon %s', chameleon_host.hostname)
+
+            try:
+                ble_hid_device = chameleon.get_ble_mouse()
+                if ble_hid_device.CheckSerialConnection():
+                    labels.append('bt_ble_hid')
+            except:
+                logging.error('Error with initializing ble_hid_mouse on '
+                              'chameleon %s', chameleon_host.hostname)
+
+            try:
+                bt_a2dp_sink = chameleon.get_bluetooth_a2dp_sink()
+                if bt_a2dp_sink.CheckSerialConnection():
+                    labels.append('bt_a2dp_sink')
+            except:
+                logging.error('Error with initializing bt_a2dp_sink on '
+                              'chameleon %s', chameleon_host.hostname)
+
+            if labels != []:
+                labels.append('bt_peer')
+
+            if host.multi_chameleon:
+                labels_list.append(labels)
+            else:
+                labels_list.extend(labels)
+
+
+        logging.info('Bluetooth labels are %s', labels_list)
+        return labels_list
 
 
 

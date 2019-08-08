@@ -23,9 +23,9 @@ Event = recorder.Event
 
 # Delay binding the methods since host is only available at run time.
 SUPPORTED_DEVICE_TYPES = {
-    'MOUSE': lambda host: host.chameleon.get_bluetooth_hid_mouse,
-    'BLE_MOUSE': lambda host: host.chameleon.get_ble_mouse,
-    'A2DP_SINK': lambda host: host.chameleon.get_bluetooth_a2dp_sink,
+    'MOUSE': lambda chameleon: chameleon.get_bluetooth_hid_mouse,
+    'BLE_MOUSE': lambda chameleon: chameleon.get_ble_mouse,
+    'A2DP_SINK': lambda chameleon: chameleon.get_bluetooth_a2dp_sink,
 }
 
 
@@ -64,11 +64,11 @@ def _run_method(method, method_name, *args, **kwargs):
     return result
 
 
-def get_bluetooth_emulated_device(host, device_type):
+def get_bluetooth_emulated_device(chameleon, device_type):
     """Get the bluetooth emulated device object.
 
-    @param host: the DUT, usually a chromebook
-    @param device_type : the bluetooth HID device type, e.g., 'MOUSE'
+    @param chameleon: the chameleon host
+    @param device_type : the bluetooth device type, e.g., 'MOUSE'
 
     @returns: the bluetooth device object
 
@@ -126,7 +126,7 @@ def get_bluetooth_emulated_device(host, device_type):
 
             logging.error('%s failed the %s time. Attempting to %s',
                           method_name,i,description)
-            if not fix_serial_device(host, device, action):
+            if not fix_serial_device(chameleon, device, action):
                 logging.info('%s failed', description)
             else:
                 logging.info('%s successful', description)
@@ -145,7 +145,7 @@ def get_bluetooth_emulated_device(host, device_type):
                               device_type)
 
     # Get the bluetooth device object and query some important properties.
-    device = SUPPORTED_DEVICE_TYPES[device_type](host)()
+    device = SUPPORTED_DEVICE_TYPES[device_type](chameleon)()
 
     # Get some properties of the kit
     # NOTE: Strings updated here must be kept in sync with Chameleon.
@@ -242,7 +242,7 @@ def _check_device_init(device, operation):
     logging.info('The device is created successfully after %s.', operation)
     return True
 
-def _reboot_chameleon(host, device):
+def _reboot_chameleon(chameleon, device):
     """ Reboot chameleond host
 
     Also power cycle the device since reboot may not do that.."""
@@ -258,7 +258,7 @@ def _reboot_chameleon(host, device):
     device.PowerCycle()
     time.sleep(RESET_SLEEP_SECS)
     logging.info('rebooting chameleon...')
-    host.chameleon.reboot()
+    chameleon.reboot()
 
     # Every chameleon reboot would take a bit more than REBOOT_SLEEP_SECS.
     # Sleep REBOOT_SLEEP_SECS and then begin probing the chameleon board.
@@ -298,7 +298,7 @@ def _is_successful(result, legal_falsy_values=[]):
     return truthiness_of_result or result in legal_falsy_values
 
 
-def fix_serial_device(host, device, operation='reset'):
+def fix_serial_device(chameleon, device, operation='reset'):
     """Fix the serial device.
 
     This function tries to fix the serial device by
@@ -312,8 +312,8 @@ def fix_serial_device(host, device, operation='reset'):
     the state on the peripheral which might cause test failures. Please use
     reset/reboot only before or after a test.
 
-    @param host: the DUT, usually a chromebook
-    @param device: the bluetooth HID device.
+    @param chameleon: the chameleon host
+    @param device: the bluetooth device.
     @param operation: Recovery operation to perform 'recreate/reset/reboot'
 
     @returns: True if the serial device is fixed. False otherwise.
@@ -343,7 +343,7 @@ def fix_serial_device(host, device, operation='reset'):
     elif operation == 'reboot':
         # Reboot the chameleon host.
         # The device is power cycled before rebooting chameleon host
-        return _reboot_chameleon(host, device)
+        return _reboot_chameleon(chameleon, device)
 
     else:
         logging.error('fix_serial_device Invalid operation %s', operation)
@@ -373,14 +373,18 @@ def retry(test_method, instance, *args, **kwargs):
     # the test.
     logging.info('%s: retry the 2nd time.', test_method.__name__)
     time.sleep(1)
-    if not hasattr(instance, 'device_type'):
+
+
+    if getattr(instance, 'use_chameleon') is False:
         return _is_successful(_run_method(test_method, test_method.__name__,
                                           instance, *args, **kwargs))
-
-    host = instance.host
-    device = instance.devices[instance.device_type]
-    if not fix_serial_device(host, device, "recreate"):
-        return False
+    for device_type in SUPPORTED_DEVICE_TYPES:
+        for device_list in getattr(instance, 'devices')[device_type]:
+            for device in device_list:
+                #fix_serial_device in 'recreate' mode doesn't require chameleon
+                #so just pass None for convinent.
+                if not fix_serial_device(None, device, "recreate"):
+                    return False
 
     logging.info('%s: retry the 2nd time.', test_method.__name__)
     return _is_successful(_run_method(test_method, test_method.__name__,
@@ -529,19 +533,62 @@ class BluetoothAdapterTests(test.test):
             'GAP_UUID': '00001800-0000-1000-8000-00805f9b34fb'}
 
 
+    def group_chameleons_type(self):
+        """Group all chameleons by the type of their detected device
+        """
+
+        def chameleon_device_type(chameleon, idx):
+            for device_type,gen_device_func in SUPPORTED_DEVICE_TYPES.items():
+                try:
+                    device = gen_device_func(chameleon)()
+                    if device.CheckSerialConnection():
+                        return device_type
+                except:
+                    logging.debug('Error with initializing %s on %d-th'
+                                  'chameleon', device_type, idx)
+            logging.error('No device is detected on %d-th chameleon', idx)
+            return None
+
+        for device_type in SUPPORTED_DEVICE_TYPES:
+            self.chameleon_group[device_type] = list()
+
+        for idx,chameleon in enumerate(self.host.chameleon_list):
+            chameleon_type = chameleon_device_type(chameleon, idx)
+            self.chameleon_group[chameleon_type].append(chameleon)
+            logging.info('%d-th chameleon find device %s', idx, chameleon_type)
+
+    def get_device_rasp(self, device_num):
+        """Get all bluetooth device objects from chameleons.
+        This method should be called only after group_chameleons_type
+        @param device_num : dict of {device_type:number}, to specify the number
+                            of device needed for each device_type.
+        @returns: True if Success.
+        """
+
+        for device_type, number in device_num.items():
+            if len(self.chameleon_group[device_type]) < number:
+                logging.error('Number of chameleon with device type'
+                      '%s is %d, which is less then needed %d', device_type,
+                      len(self.chameleon_group[device_type]), number)
+
+            for chameleon in self.chameleon_group[device_type][:number]:
+                device = get_bluetooth_emulated_device(chameleon, device_type)
+                self.devices[device_type].append(device)
+
+        return True
+
+
     def get_device(self, device_type):
         """Get the bluetooth device object.
 
-        @param device_type : the bluetooth HID device type, e.g., 'MOUSE'
+        @param device_type : the bluetooth device type, e.g., 'MOUSE'
 
         @returns: the bluetooth device object
 
         """
-        self.device_type = device_type
-        if self.devices[device_type] is None:
-            self.devices[device_type] = get_bluetooth_emulated_device(
-                    self.host, device_type)
-        return self.devices[device_type]
+        self.devices[device_type].append(get_bluetooth_emulated_device(\
+                                    self.host.chameleon, device_type))
+        return self.devices[device_type][-1]
 
 
     def suspend_resume(self, suspend_time=SUSPEND_TIME_SECS):
@@ -2398,7 +2445,7 @@ class BluetoothAdapterTests(test.test):
         # Some tests may instantiate a peripheral device for testing.
         self.devices = dict()
         for device_type in SUPPORTED_DEVICE_TYPES:
-            self.devices[device_type] = None
+            self.devices[device_type] = list()
 
         # The count of registered advertisements.
         self.count_advertisements = 0
@@ -2446,6 +2493,11 @@ class BluetoothAdapterTests(test.test):
         #           if bool(self.devices[device_type]):
         #       Otherwise, it would try to invoke bluetooth_mouse.__nonzero__()
         #       which just does not exist.
+        for device_name, device_list  in self.devices.items():
+            for device in device_list:
+                if device is not None:
+                    device.Close()
+
+        self.devices = dict()
         for device_type in SUPPORTED_DEVICE_TYPES:
-            if self.devices[device_type] is not None:
-                self.devices[device_type].Close()
+            self.devices[device_type] = list()
