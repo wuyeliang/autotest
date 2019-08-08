@@ -26,7 +26,7 @@ import re
 import socket
 import time
 
-from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils
+from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, skylab_migration
 from autotest_lib.cli import fair_partition
 from autotest_lib.client.bin import utils as bin_utils
 from autotest_lib.cli.skylab_json_utils import process_labels
@@ -56,8 +56,8 @@ ID_AUTOGEN_MESSAGE = ("[IGNORED]. Do not edit (crbug.com/950553). ID is "
 
 class host(topic_common.atest):
     """Host class
-    atest host [create|delete|list|stat|mod|jobs|rename|migrate] <options>"""
-    usage_action = '[create|delete|list|stat|mod|jobs|rename|migrate]'
+    atest host [create|delete|list|stat|mod|jobs|rename|migrate|skylab_migrate|statjson] <options>"""
+    usage_action = '[create|delete|list|stat|mod|jobs|rename|migrate|skylab_migrate|statjson]'
     topic = msg_topic = 'host'
     msg_items = '<hosts>'
 
@@ -1507,3 +1507,136 @@ class host_migrate(action_common.atest_list, host):
                         print('%s' % message)
         else:
             print('No hosts were migrated.')
+
+
+class host_skylab_migrate(action_common.atest_list, host):
+    usage_action = 'skylab_migrate'
+
+    def __init__(self):
+        super(host_skylab_migrate, self).__init__()
+        self.parser.add_option('--dry-run',
+                               help='Dry run. Show only candidate hosts.',
+                               action='store_true',
+                               dest='dry_run')
+        self.parser.add_option('--ratio',
+                               help='ratio of hosts to migrate as number from 0 to 1.',
+                               type=float,
+                               dest='ratio',
+                               default=1)
+        self.parser.add_option('--bug-number',
+                               help='bug number for tracking purposes.',
+                               dest='bug_number',
+                               default=None)
+        self.parser.add_option('--board',
+                               help='Board of the hosts to migrate',
+                               dest='board',
+                               default=None)
+        self.parser.add_option('--model',
+                               help='Model of the hosts to migrate',
+                               dest='model',
+                               default=None)
+        self.parser.add_option('--pool',
+                               help='Pool of the hosts to migrate',
+                               dest='pool',
+                               default=None)
+
+    def parse(self):
+        (options, leftover) = super(host_skylab_migrate, self).parse()
+        self.dry_run = options.dry_run
+        self.ratio = options.ratio
+        self.bug_number = options.bug_number
+        self.model = options.model
+        self.pool = options.pool
+        self.board = options.board
+        self._reason = "migration to skylab: %s" % self.bug_number
+        return (options, leftover)
+
+
+    def _host_skylab_migrate_get_hostnames(self, model=None, pool=None, board=None):
+        """
+        @params : in 'model', 'pool', 'board'
+
+        """
+        # TODO(gregorynisbet)
+        # this just gets all the hostnames, it doesn't filter by
+        # presence or absence of migrated-do-not-use.
+        labels = []
+        for key, value in {'model': model, 'board': board, 'pool': pool}:
+            if value:
+                labels.append(key + ":" + value)
+        filters = {}
+        check_results = {}
+        # Copy the filter and check_results initialization logic from
+        # the 'execute' method of the class 'host_migrate'.
+        if not labels:
+            return []
+        elif len(labels) == 1:
+            filters['labels__name__in'] = labels
+            check_results['labels__name__in'] = None
+        elif len(labels) > 1:
+            filters['multiple_labels'] = labels
+            check_results['multiple_labels'] = None
+        else:
+            assert False
+
+        results = super(host_skylab_migrate, self).execute(
+            op='get_hosts', filters=filters, check_results=check_results)
+        return [result['hostname'] for result in results]
+
+
+    def _validate_one_hostname_source(self):
+        """Validate that hostname source is explicit hostnames or valid query.
+
+        Hostnames must either be provided explicitly or be the result of a
+        query defined by 'model', 'board', and 'pool'.
+
+        @returns : whether the hostnames come from exactly one valid source.
+        """
+        has_criteria = any([(self.model and self.board), self.board, self.pool])
+        has_command_line_hosts = bool(self.hosts)
+        if has_criteria != has_command_line_hosts:
+            # all good, one data source
+            return True
+        if has_criteria and has_command_line_hosts:
+            self.failure(
+                '--model/host/board and explicit hostnames are alternatives. Provide exactly one.',
+                item='cli',
+                what_failed='user')
+            return False
+        self.failure(
+            'no explicit hosts and no criteria provided.',
+            item='cli',
+            what_failed='user')
+        return False
+
+
+    def execute(self):
+        if not self._validate_one_hostname_source():
+            return None
+        if self.hosts:
+            hostnames = self.hosts
+        else:
+            hostnames = self.__get_hostnames(
+                model=self.model,
+                board=self.board,
+                pool=self.pool,
+            )
+        if self.dry_run:
+            return hostnames
+        if not hostnames:
+            return {'error': 'no hosts to migrate'}
+        res = skylab_migration.migrate(
+            ratio=self.ratio,
+            reason=self._reason,
+            hostnames=hostnames,
+            max_duration=10 * 60,
+            interval_len=2,
+            min_ready_intervals=10,
+            immediately=True,
+        )
+        return res
+
+
+    def output(self, result):
+        if result is not None:
+            print json.dumps(result, indent=4, sort_keys=True)
