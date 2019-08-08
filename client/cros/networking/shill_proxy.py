@@ -57,6 +57,7 @@ class ShillProxy(object):
     MANAGER_PROPERTY_UNINITIALIZED_TECHNOLOGIES = 'UninitializedTechnologies'
     MANAGER_PROPERTY_PROFILES = 'Profiles'
     MANAGER_PROPERTY_SERVICES = 'Services'
+    MANAGER_PROPERTY_DEFAULT_SERVICE = 'DefaultService'
     MANAGER_PROPERTY_ALL_SERVICES = 'ServiceCompleteList'
     MANAGER_PROPERTY_DHCPPROPERTY_HOSTNAME = 'DHCPProperty.Hostname'
     MANAGER_PROPERTY_DHCPPROPERTY_VENDORCLASS = 'DHCPProperty.VendorClass'
@@ -722,3 +723,23 @@ class ShillProxy(object):
                 service, self.SERVICE_PROPERTY_STATE, ['idle'],
                 timeout_seconds=timeout_seconds)
         return success
+
+
+    def get_default_interface_name(self):
+        """Retrieve the name of the default interface.
+
+        Default interface is determined via the Manager's default service.
+
+        @return Device name string, or None.
+        """
+        service_path = self.get_dbus_property(self.manager,
+                self.MANAGER_PROPERTY_DEFAULT_SERVICE)
+        if not service_path:
+            return None
+        service = self.get_dbus_object(self.DBUS_TYPE_SERVICE, service_path)
+        device_path = self.get_dbus_property(service,
+                self.SERVICE_PROPERTY_DEVICE)
+        if not device_path:
+            return None
+        device = self.get_dbus_object(self.DBUS_TYPE_DEVICE, device_path)
+        return self.get_dbus_property(device, self.DEVICE_PROPERTY_INTERFACE)

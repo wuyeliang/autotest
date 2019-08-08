@@ -7,6 +7,7 @@ import logging, numpy, random, time
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros.network import interface
+from autotest_lib.client.cros.networking import shill_proxy
 from autotest_lib.client.cros.power import power_suspend, sys_power
 
 class power_SuspendStress(test.test):
@@ -57,18 +58,10 @@ class power_SuspendStress(test.test):
         return time.time() >= self._endtime
 
     def _get_default_network_interface(self):
-        interface_choices={}
-        with open('/proc/net/route') as fh:
-            for line in fh:
-                fields = line.strip().split()
-                if fields[1] != '00000000' or not int(fields[3], 16) & 2:
-                    continue
-                interface_choices[fields[0]] = int(fields[6])
-        if not interface_choices:
+        iface = shill_proxy.ShillProxy().get_default_interface_name()
+        if not iface:
             return None
-
-        return interface.Interface(min(interface_choices,
-            key=interface_choices.get))
+        return interface.Interface(iface)
 
     def run_once(self):
         time.sleep(self._init_delay)
