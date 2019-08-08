@@ -49,12 +49,8 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
     #    Different drivers may handle restart in different ways, but this
     #    method should at least ensure the network device is available before
     #    returning.
-    #  @need_reboot: (optional) return True if the driver was left in a bad
-    #    state such that we should reboot the system (e.g., the driver failed
-    #    to recover the network device).
     DriverReset = collections.namedtuple('DriverReset', ['supported',
-                                                         'do_reset',
-                                                         'need_reboot'])
+                                                         'do_reset'])
 
 
     @property
@@ -138,17 +134,14 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
             self.DriverReset(
                 supported=self.mwifiex_reset_exists,
                 do_reset=self.mwifiex_reset,
-                need_reboot=lambda: not self.mwifiex_reset_exists(),
             ),
             self.DriverReset(
                 supported=self.ath10k_reset_exists,
                 do_reset=self.ath10k_reset,
-                need_reboot=lambda: not self.ath10k_reset_exists(),
             ),
             self.DriverReset(
                 supported=self.iwlwifi_reset_exists,
                 do_reset=self.iwlwifi_reset,
-                need_reboot=lambda: not self.iwlwifi_reset_exists(),
             ),
         ]
 
@@ -160,6 +153,7 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
 
     def run_once(self):
         """Body of the test."""
+        self._passed = False
 
         client = self.context.client
 
@@ -186,6 +180,8 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
             client.host.test_wait_for_resume(self.boot_id)
             client.wait_for_connection(ssid)
 
+        self._passed = True
+
     def cleanup(self):
         """Performs cleanup at exit. May reboot the DUT, to keep the system
         functioning for the next test.
@@ -196,8 +192,9 @@ class network_WiFi_Reset(wifi_cell_test_base.WiFiCellTestBase):
         # (e.g., not to assume a persistent xmlrpc connection in cleanup()).
         # But cleanup() is not absolutely critical -- subsequent tests should
         # handle re-initializing state.
-        if hasattr(self, 'reset_driver') and self.reset_driver.need_reboot():
-            logging.info("Test left DUT in bad state; rebooting")
+        if not self._passed:
+            logging.info('Test failed: may have left DUT in bad state; '
+                         'rebooting')
             self.context.client.reboot(timeout=60)
         elif self.context.client.host.get_boot_id() == self.boot_id:
             super(network_WiFi_Reset, self).cleanup()
