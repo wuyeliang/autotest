@@ -1138,7 +1138,11 @@ class FirmwareTest(FAFTBase):
 
         This will cause the AP to ignore power button presses sent by the EC.
         """
-        self.faft_client.System.RunShellCommand("stop powerd")
+        powerd_running = self.faft_client.System.RunShellCommandCheckOutput(
+                'status powerd', 'start/running')
+        if powerd_running:
+            logging.debug('Stopping powerd')
+            self.faft_client.System.RunShellCommand("stop powerd")
 
     def _modify_usb_kernel(self, usb_dev, from_magic, to_magic):
         """Modify the kernel header magic in USB stick.
