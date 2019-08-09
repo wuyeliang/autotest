@@ -63,9 +63,9 @@ class desktopui_FilesApp(test.test):
                 return result
             except KeyError:
                 logging.exception('Could not find autotest_ext')
-            except devtools_http.DevToolsClientUrlError:
+            except (devtools_http.DevToolsClientUrlError,
+                    devtools_http.DevToolsClientConnectionError):
                 logging.exception('Could not connect to DevTools')
-
             time.sleep(1)
 
         raise error.TestFail('Could not execute "%s" in %d retries' %
