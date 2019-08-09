@@ -15,7 +15,8 @@ class DrmTest(object):
     def __init__(self, name, command=None, **kargs):
         """
         @param name(str)
-        @param command(str): The shell command to run. If None, then reuse 'name'.
+        @param command(str): The shell command to run. If None, then reuse
+                             'name'.
         @param kargs: Test options
         """
 
@@ -44,6 +45,7 @@ class DrmTest(object):
         """Indicate if the test should be run on current configuration."""
         supported_apis = graphics_utils.GraphicsApiHelper().get_supported_apis()
         num_displays = graphics_utils.get_num_outputs_on()
+        cpu = utils.get_cpu_soc_family()
         gpu_type = utils.get_gpu_family()
         kernel_version = os.uname()[2]
         if num_displays == 0 and self._opts['display_required']:
@@ -67,6 +69,13 @@ class DrmTest(object):
         if self.name == 'atomictest' and gpu_type == 'baytrail':
             logging.warning('Baytrail is on kernel v4.4, but there is no '
                             'intention to enable atomic.')
+            return False
+        if self.name == 'vk_glow' and cpu == 'amd':
+            logging.warning('VK_EXT_image_drm_format_modifier needs to be '
+                            'implemented for AMD/radv, skipping.')
+            return False
+        if self.name == 'vgem_test' and cpu == 'amd':
+            logging.warning('vgem_test needs to be fixed on AMD, skipping.')
             return False
         return True
 
