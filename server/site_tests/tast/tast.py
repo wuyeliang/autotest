@@ -21,6 +21,20 @@ from autotest_lib.server.hosts import servo_host
 _UNIX_EPOCH = dateutil.parser.parse('1970-01-01T00:00:00Z')
 
 
+def _encode_utf8_json(j):
+    """Takes JSON object parsed by json.load() family, and encode each unicode
+    strings into utf-8.
+    """
+    if isinstance(j, unicode):
+        return j.encode('utf-8')
+    if isinstance(j, list):
+        return [_encode_utf8_json(x) for x in j]
+    if isinstance(j, dict):
+        return dict((_encode_utf8_json(k), _encode_utf8_json(v))
+                    for k, v in j.iteritems())
+    return j
+
+
 class tast(test.test):
     """Autotest server test that runs a Tast test suite.
 
@@ -315,7 +329,8 @@ class tast(test.test):
             args.append('-downloadprivatebundles=true')
         result = self._run_tast('list', args, self._LIST_TIMEOUT_SEC)
         try:
-            self._tests_to_run = json.loads(result.stdout.strip())
+            self._tests_to_run = _encode_utf8_json(
+                json.loads(result.stdout.strip()))
         except ValueError as e:
             raise error.TestFail('Failed to parse tests: %s' % str(e))
         if len(self._tests_to_run) == 0:
@@ -391,7 +406,7 @@ class tast(test.test):
                 if not line:
                     continue
                 try:
-                    test = json.loads(line)
+                    test = _encode_utf8_json(json.loads(line))
                 except ValueError as e:
                     raise error.TestFail('Failed to parse %s: %s' % (path, e))
                 self._test_results.append(test)

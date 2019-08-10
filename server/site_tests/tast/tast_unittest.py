@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 # Copyright 2018 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -483,6 +484,14 @@ class TastTest(unittest.TestCase):
         self.assertEqual('', msg(['t1'], []))
         self.assertEqual('1 missing: t1', msg([], ['t1']))
         self.assertEqual('1 missing: t2', msg(['t1'], ['t2']))
+
+    def testNonAsciiFailureMessage(self):
+        """Tests that non-ascii failure message should be handled correctly"""
+        tests = [TestInfo('pkg.Test', 0, 2, errors=[('失敗', 1)])]
+        self._init_tast_commands(tests)
+        self._run_test(ignore_test_failures=True)
+        self.assertEqual(status_string(get_status_entries_from_tests(tests)),
+                         status_string(self._job.status_entries))
 
     def testRunPrivateTests(self):
         """Tests running private tests."""
