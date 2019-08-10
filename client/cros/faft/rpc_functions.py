@@ -938,19 +938,30 @@ class UpdaterServicer(object):
         @type os_if: os_interface.OSInterface
         """
         self._os_if = os_if
-        self._updater = firmware_updater.FirmwareUpdater(self._os_if)
+        self._real_updater = firmware_updater.FirmwareUpdater(self._os_if)
+
+    @property
+    def _updater(self):
+        """Handler for the updater
+
+        @rtype: firmware_updater.FirmwareUpdater
+        """
+        if not self._real_updater.initialized:
+            self._real_updater.init()
+        return self._real_updater
 
     def Cleanup(self):
         """Clean up the temporary directory"""
-        self._updater.cleanup_temp_dir()
+        # Use the updater directly, to avoid initializing it just to clean it up
+        self._real_updater.cleanup_temp_dir()
 
     def StopDaemon(self):
         """Stop update-engine daemon."""
-        return self._updater.stop_daemon()
+        return self._real_updater.stop_daemon()
 
     def StartDaemon(self):
         """Start update-engine daemon."""
-        return self._updater.start_daemon()
+        return self._real_updater.start_daemon()
 
     def GetSectionFwid(self, target='bios', section=None):
         """Retrieve shellball's RW or RO fwid."""
