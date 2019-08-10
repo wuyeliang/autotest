@@ -37,7 +37,7 @@ class video_JDAPerf(chrome_binary_test.ChromeBinaryTest):
     perf_jpeg_decode_times = 6000
 
     binary = 'jpeg_decode_accelerator_unittest'
-    jda_filter = 'MjpegDecodeAcceleratorTest.PerfJDA'
+    jda_filter = 'MjpegDecodeAcceleratorTest.PerfJDA/SHMEM'
     sw_filter = 'MjpegDecodeAcceleratorTest.PerfSW'
 
     def initialize(self):
