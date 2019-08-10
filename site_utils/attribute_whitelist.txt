@@ -115,13 +115,11 @@ suite:faft_cr50_prepvt
 suite:faft_cr50_pvt
 suite:faft_cr50_tot
 suite:faft_dev
-suite:faft_dev_ryu
 suite:faft_ec
 suite:faft_ec3po
 suite:faft_ec_au_1
 suite:faft_ec_au_2
 suite:faft_ec_au_3
-suite:faft_ec_ryu
 suite:faft_ec_tot
 suite:faft_ec_wp
 suite:faft_infra
@@ -132,7 +130,6 @@ suite:faft_lv3
 suite:faft_lv4
 suite:faft_lv5
 suite:faft_normal
-suite:faft_normal_ryu
 suite:faft_pd
 suite:faft_setup
 suite:faft_smoke
