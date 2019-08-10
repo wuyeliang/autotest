@@ -30,11 +30,13 @@ class FirmwareUpdater(object):
     DAEMON = 'update-engine'
     CBFSTOOL = 'cbfstool'
     HEXDUMP = 'hexdump -v -e \'1/1 "0x%02x\\n"\''
+
+    DEFAULT_SUBDIR = 'autest'  # subdirectory of /var/tmp/faft/
     DEFAULT_SECTION_FOR_TARGET = {'bios': 'a', 'ec': 'rw'}
 
     def __init__(self, os_if):
         self.os_if = os_if
-        self._temp_path = '/var/tmp/faft/autest'
+        self._temp_path = self.os_if.state_dir_file(self.DEFAULT_SUBDIR)
         self._cbfs_work_path = os.path.join(self._temp_path, 'cbfs')
         self._keys_path = os.path.join(self._temp_path, 'keys')
         self._work_path = os.path.join(self._temp_path, 'work')
@@ -78,18 +80,25 @@ class FirmwareUpdater(object):
         else:
             raise FirmwareUpdaterError("Unhandled target: %r" % target)
 
-    def _create_handler(self, target):
+    def _create_handler(self, target, suffix=None):
         """Return a new (not pre-populated) handler for the given target,
         such as for use in checking installed versions.
 
         @param target: image type ('bios' or 'ec')
+        @param suffix: additional piece for subdirectory of handler
+                       Example: 'tmp' -> 'autest/<target>.tmp/'
         @return: a new handler for that target
 
         @type target: str
         @rtype: flashrom_handler.FlashromHandler
         """
+        if suffix:
+            subdir = '%s/%s.%s' % (self.DEFAULT_SUBDIR, target, suffix)
+        else:
+            subdir = '%s/%s' % (self.DEFAULT_SUBDIR, target)
         return flashrom_handler.FlashromHandler(
-                self.os_if, self.pubkey_path, self._keys_path, target=target)
+                self.os_if, self.pubkey_path, self._keys_path, target=target,
+                subdir=subdir)
 
     def _get_image_path(self, target):
         """Return the handler for the given target
@@ -514,7 +523,7 @@ class FirmwareUpdater(object):
             # if in test mode, forcibly use --emulate, if not already used.
             fake_bios = os.path.join(self._temp_path, 'rpc-test-fake-bios.bin')
             if not os.path.exists(fake_bios):
-                bios_reader = self._create_handler('bios')
+                bios_reader = self._create_handler('bios', 'tmp')
                 bios_reader.dump_flash(fake_bios)
             options = ['--emulate', fake_bios] + options
 

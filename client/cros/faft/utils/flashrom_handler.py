@@ -119,6 +119,7 @@ class FlashromHandler(object):
             pub_key_file=None,
             dev_key_path='./',
             target='bios',
+            subdir=None
     ):
         """The flashrom handler is not fully initialized upon creation
 
@@ -128,6 +129,8 @@ class FlashromHandler(object):
         @param dev_key_path: path to directory containing *.vpubk and *.vbprivk
                              files, for use in signing
         @param target: flashrom target ('bios' or 'ec')
+        @param subdir: name of subdirectory of state dir, to use for sections
+                    Default: same as target, resulting in '/var/tmp/faft/bios'
         @type os_if: client.cros.faft.utils.os_interface.OSInterface
         @type pub_key_file: str | None
         @type dev_key_path: str
@@ -138,6 +141,10 @@ class FlashromHandler(object):
         self.os_if = os_if
         self.initialized = False
         self._available = None
+
+        if subdir is None:
+            subdir = target
+        self.subdir = subdir
 
         self.pub_key_file = pub_key_file
         self.dev_key_path = dev_key_path
@@ -176,6 +183,20 @@ class FlashromHandler(object):
             self._available = self.fum.check_target()
         return self._available
 
+    def section_file(self, *paths):
+        """
+        Return a full path for the given basename, in this handler's subdir.
+        Example: subdir 'bios' -> '/var/tmp/faft/bios/FV_GBB'
+
+        @param paths: variable number of path pieces, same as in os.path.join
+        @return: an absolute path from this handler's subdir and the pieces.
+        """
+        if any(os.path.isabs(x) for x in paths):
+            raise FlashromHandlerError(
+                    "Absolute paths are not allowed in section_file()")
+
+        return os.path.join(self.os_if.state_dir, self.subdir, *paths)
+
     def init(self, image_file=None, allow_fallback=False):
         """Initialize the object, by reading the image.
 
@@ -209,6 +230,7 @@ class FlashromHandler(object):
     def deinit(self):
         """Clear the in-memory image data, and mark self uninitialized."""
         self.image = ''
+        self.os_if.remove_dir(self.section_file())
         self.initialized = False
 
     def dump_flash(self, target_filename):
@@ -239,13 +261,15 @@ class FlashromHandler(object):
         else:
             self.image = self.fum.read_whole()
 
+        self.os_if.create_dir(self.section_file())
+
         for section in self.fv_sections.itervalues():
             for subsection_name in section.names():
                 if not subsection_name:
                     continue
                 blob = self.fum.get_section(self.image, subsection_name)
                 if blob:
-                    blob_filename = self.os_if.state_dir_file(subsection_name)
+                    blob_filename = self.section_file(subsection_name)
                     with open(blob_filename, 'wb') as blob_f:
                         blob_f.write(blob)
 
@@ -329,9 +353,9 @@ class FlashromHandler(object):
         for section in self.fv_sections.itervalues():
             if section.get_sig_name():
                 cmd = 'vbutil_firmware --verify %s --signpubkey %s  --fv %s' % (
-                        self.os_if.state_dir_file(
-                                section.get_sig_name()), self.pub_key_file,
-                        self.os_if.state_dir_file(section.get_body_name()))
+                        self.section_file(section.get_sig_name()),
+                        self.pub_key_file,
+                        self.section_file(section.get_body_name()))
                 self.os_if.run_shell_command(cmd)
 
     def _modify_section(self,
@@ -490,8 +514,8 @@ class FlashromHandler(object):
                                               blob)
 
         if write_through:
-            self.dump_partial(subsection_name,
-                              self.os_if.state_dir_file(subsection_name))
+            self.dump_partial(
+                    subsection_name, self.section_file(subsection_name))
             self.fum.write_partial(self.image, (subsection_name, ))
 
     def dump_whole(self, filename):
@@ -658,15 +682,14 @@ class FlashromHandler(object):
                     'Attempt to set version %d on section %s' % (version,
                                                                  section))
         fv_section = self.fv_sections[section]
-        sig_name = self.os_if.state_dir_file(fv_section.get_sig_name())
+        sig_name = self.section_file(fv_section.get_sig_name())
         sig_size = os.path.getsize(sig_name)
 
         # Construct the command line
         args = ['--vblock %s' % sig_name]
         args.append('--keyblock %s' % os.path.join(self.dev_key_path,
                                                    self.FW_KEYBLOCK_FILE_NAME))
-        args.append('--fv %s' % self.os_if.state_dir_file(
-                fv_section.get_body_name()))
+        args.append('--fv %s' % self.section_file(fv_section.get_body_name()))
         args.append('--version %d' % version)
         args.append('--kernelkey %s' % os.path.join(
                 self.dev_key_path, self.KERNEL_SUBKEY_FILE_NAME))
