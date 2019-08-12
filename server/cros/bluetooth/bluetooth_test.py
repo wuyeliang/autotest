@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import logging
+
 from autotest_lib.server import test
 from autotest_lib.server.cros import interactive_client
 from autotest_lib.server.cros.bluetooth import bluetooth_device
@@ -56,3 +58,25 @@ class BluetoothTest(test.test):
             self.tester.close()
 
         super(BluetoothTest, self).cleanup()
+
+def newblue_enable_disable(host, newblue_enable=False):
+    """Enable or disable newblue for the kernal
+    :param host: the host DUT
+    :param newblue_enable: parsed command line arg
+    :return: none
+    """
+    if newblue_enable:
+        logging.info('Test will perform with newblue ENABLED')
+        host.run_background("crosh<<<'newblue enable'")
+    else:
+        logging.info('Test will perform with newblue DISABLED')
+        host.run_background("crosh<<<'newblue disable'")
+
+    # crosh usually exit with an unrelated error (see below), but it will abort
+    # the test. Ignore the status here.
+    # mktemp: failed to create file via template '/root/.crosh_history.XXXXXX':
+    # Read-only file system
+    crosh_out = host.run(command="crosh<<<newblue", ignore_status=True)
+    if 'reboot' in str(crosh_out):
+        logging.info('Reboot is required for newblue setting to take effect')
+        host.reboot()
