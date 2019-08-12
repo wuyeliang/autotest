@@ -162,18 +162,11 @@ class _Uart(object):
         """
         logging.debug('%s capturing %s UART.', 'Start' if start else 'Stop',
                       uart)
-        try:
-            self._servo.set('%s_uart_capture' % uart,
-                            'on' if start else 'off')
-        except error.TestFail as err:
-            if 'No control named' in str(err):
-                logging.debug("The servod doesn't support %s_uart_capture.",
-                              uart)
-            else:
-                logging.debug("Can't caputre UART for %s: %s", uart, err)
-            return False
-
-        return True
+        uart_cmd = '%s_uart_capture' % uart
+        if self._servo.has_control(uart_cmd):
+            self._servo.set(uart_cmd, 'on' if start else 'off')
+            return True
+        return False
 
     def start_capture(self):
         """Start capturing UART streams."""
@@ -345,19 +338,14 @@ class Servo(object):
             self._power_state.reset()
         logging.debug('Servo initialized, version is %s',
                       self._server.get_version())
-        try:
+        if self.has_control('init_keyboard'):
+            # This indicates the servod version does not
+            # have explicit keyboard initialization yet.
+            # Ignore this.
             # TODO(coconutruben): change this back to set() about a month
             # after crrev.com/c/1586239 has been merged (or whenever that
             # logic is in the labstation images).
             self.set_nocheck('init_keyboard','on')
-        except error.TestFail as err:
-            if 'No control named' in str(err):
-                # This indicates the servod version does not
-                # have explicit keyboard initialization yet.
-                # Ignore this.
-                pass
-            else:
-                raise err
 
 
     def is_localhost(self):
@@ -802,19 +790,14 @@ class Servo(object):
         # to do to the device after hotplug.  To avoid surprises,
         # force the DUT to be off.
         self._server.hwinit()
-        try:
+        if self.has_control('init_keyboard'):
+            # This indicates the servod version does not
+            # have explicit keyboard initialization yet.
+            # Ignore this.
             # TODO(coconutruben): change this back to set() about a month
             # after crrev.com/c/1586239 has been merged (or whenever that
             # logic is in the labstation images).
             self.set_nocheck('init_keyboard','on')
-        except error.TestFail as err:
-            if 'No control named' in str(err):
-                # This indicates the servod version does not
-                # have explicit keyboard initialization yet.
-                # Ignore this.
-                pass
-            else:
-                raise err
         self._power_state.power_off()
 
         if image_path:

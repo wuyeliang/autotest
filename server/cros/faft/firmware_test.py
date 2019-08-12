@@ -22,6 +22,7 @@ from autotest_lib.server.cros.faft.utils.faft_checkers import FAFTCheckers
 from autotest_lib.server.cros.servo import chrome_base_ec
 from autotest_lib.server.cros.servo import chrome_cr50
 from autotest_lib.server.cros.servo import chrome_ec
+from autotest_lib.server.cros.servo import servo
 
 ConnectionError = mode_switcher.ConnectionError
 
@@ -778,43 +779,28 @@ class FirmwareTest(FAFTBase):
             self.servo.set('cr50_uart_capture', 'on')
             self.cr50_uart_file = os.path.join(self.resultsdir, 'cr50_uart.txt')
             self.cr50 = chrome_cr50.ChromeCr50(self.servo, self.faft_config)
+        except servo.ControlUnavailableError:
+            logging.warn('cr50 console not supported.')
         except error.TestFail as e:
-            if 'No control named' in str(e):
-                logging.warn('cr50 console not supported.')
-        if self.faft_config.chrome_ec:
-            try:
-                self.servo.set('ec_uart_capture', 'on')
-                self.ec_uart_file = os.path.join(self.resultsdir, 'ec_uart.txt')
-            except error.TestFail as e:
-                if 'No control named' in str(e):
-                    logging.warn('The servod is too old that ec_uart_capture '
-                                 'not supported.')
+            logging.warn('Unknown cr50 uart capture error: %s', str(e))
+        if (self.faft_config.chrome_ec and
+            self.servo.has_control('ec_uart_capture')):
+            self.servo.set('ec_uart_capture', 'on')
+            self.ec_uart_file = os.path.join(self.resultsdir, 'ec_uart.txt')
             # Log separate PD console if supported
-            if self.check_ec_capability(['usbpd_uart'], suppress_warning=True):
-                try:
-                    self.servo.set('usbpd_uart_capture', 'on')
-                    self.usbpd_uart_file = os.path.join(self.resultsdir,
-                                                        'usbpd_uart.txt')
-                except error.TestFail as e:
-                    if 'No control named' in str(e):
-                        logging.warn('The servod is too old that '
-                                     'usbpd_uart_capture is not supported.')
+            if (self.check_ec_capability(['usbpd_uart'], suppress_warning=True)
+                and self.servo.has_control('usb_pd_uart_capture')):
+                self.servo.set('usbpd_uart_capture', 'on')
+                self.usbpd_uart_file = os.path.join(self.resultsdir,
+                                                    'usbpd_uart.txt')
         else:
             logging.info('Not a Google EC, cannot capture ec console output.')
-        try:
-            self.servo.set('servo_micro_uart_capture', 'on')
-            self.servo_micro_uart_file = os.path.join(self.resultsdir,
-                                                      'servo_micro_uart.txt')
-        except error.TestFail as e:
-            if 'No control named' in str(e):
-                logging.warn('servo micro console not supported.')
-        try:
-            self.servo.set('servo_v4_uart_capture', 'on')
-            self.servo_v4_uart_file = os.path.join(self.resultsdir,
-                                                   'servo_v4_uart.txt')
-        except error.TestFail as e:
-            if 'No control named' in str(e):
-                logging.warn('servo v4 console not supported.')
+
+        for servo_console in ['servo_micro', 'servo_v4']:
+            capture_cmd = '%s_uart_capture' % servo_console
+            self.servo.set(capture_cmd, 'on')
+            outfile = '%s_uart.txt' % servo_console
+            self.servo_micro_uart_file = os.path.join(self.resultsdir, outfile)
 
     def _record_uart_capture(self):
         """Record the CPU/EC/PD UART output stream to files."""

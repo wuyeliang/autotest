@@ -12,6 +12,7 @@ from autotest_lib.server.cros.dark_resume_utils import DarkResumeUtils
 from autotest_lib.server.cros.faft.config.config import Config as FAFTConfig
 from autotest_lib.server.cros.servo import chrome_ec
 
+
 # Possible states base can be forced into.
 BASE_STATE = enum.Enum('ATTACH', 'DETACH', 'RESET')
 
@@ -101,18 +102,7 @@ class power_WakeSources(test.test):
         }
 
         ec_cmd += ec_arg[base_state]
-
-        try:
-            self._ec.send_command(ec_cmd)
-        except error.TestFail as e:
-            if 'No control named' in str(e):
-                # Since the command is added recently, this might not exist on
-                # every board.
-                logging.warning('basestate command does not exist on the EC. '
-                                'Please verify the base state manually.')
-                return False
-            else:
-                raise e
+        self._ec.send_command(ec_cmd)
         return True
 
     def _is_valid_wake_source(self, wake_source):

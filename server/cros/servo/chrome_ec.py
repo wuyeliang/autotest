@@ -11,6 +11,7 @@ import time
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import ec
+from autotest_lib.server.cros.servo import servo
 
 # Hostevent codes, copied from:
 #     ec/include/ec_commands.h
@@ -88,15 +89,11 @@ class ChromeConsole(object):
         if isinstance(commands, list):
             try:
                 self._servo.set_nocheck(self.uart_multicmd, ';'.join(commands))
-            except error.TestFail as e:
-                if 'No control named' in str(e):
-                    logging.warning(
-                            'The servod is too old that uart_multicmd '
-                            'not supported. Use uart_cmd instead.')
-                    for command in commands:
-                        self._servo.set_nocheck(self.uart_cmd, command)
-                else:
-                    raise
+            except servo.ControlUnavailableError:
+                logging.warning('The servod is too old that uart_multicmd not '
+                                'supported. Use uart_cmd instead.')
+                for command in commands:
+                    self._servo.set_nocheck(self.uart_cmd, command)
         else:
             self._servo.set_nocheck(self.uart_cmd, commands)
 
