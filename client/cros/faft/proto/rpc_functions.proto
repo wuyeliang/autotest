@@ -58,7 +58,7 @@ service Bios {
   rpc WriteWhole
     (BiosWriteWholeRequest)
     returns (BiosWriteWholeResponse);
-  rpc StripModifiedFwidsRequest
+  rpc StripModifiedFwids
     (BiosStripModifiedFwidsRequest)
     returns (BiosStripModifiedFwidsResponse);
 }
@@ -106,7 +106,7 @@ service Ec {
   rpc RebootToSwitchSlot
     (EcRebootToSwitchSlotRequest)
     returns (EcRebootToSwitchSlotResponse);
-  rpc StripModifiedFwidsRequest
+  rpc StripModifiedFwids
     (EcStripModifiedFwidsRequest)
     returns (EcStripModifiedFwidsResponse);
 }
@@ -286,15 +286,20 @@ service Updater {
   rpc StartDaemon
     (UpdaterStartDaemonRequest)
     returns (UpdaterStartDaemonResponse);
-  rpc GetSectionFwid (UpdaterGetSectionFwidRequest)
+  rpc GetSectionFwid
+    (UpdaterGetSectionFwidRequest)
     returns (UpdaterGetSectionFwidResponse);
-  rpc GetAllFwids (UpdaterGetAllFwidsRequest)
+  rpc GetAllFwids
+    (UpdaterGetAllFwidsRequest)
     returns (UpdaterGetAllFwidsResponse);
-  rpc ModifyFwids (UpdaterModifyFwidsRequest)
+  rpc ModifyFwids
+    (UpdaterModifyFwidsRequest)
     returns (UpdaterModifyFwidsResponse);
-  rpc GetAllInstalledFwids (UpdaterGetAllInstalledFwidsRequest)
+  rpc GetAllInstalledFwids
+    (UpdaterGetAllInstalledFwidsRequest)
     returns (UpdaterGetAllInstalledFwidsResponse);
-  rpc ModifyEcidAndFlashToBios (UpdaterModifyEcidAndFlashToBiosRequest)
+  rpc ModifyEcidAndFlashToBios
+    (UpdaterModifyEcidAndFlashToBiosRequest)
     returns (UpdaterModifyEcidAndFlashToBiosResponse);
   rpc GetEcHash
     (UpdaterGetEcHashRequest)
