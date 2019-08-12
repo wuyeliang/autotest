@@ -4,11 +4,14 @@
 
 """Server side bluetooth adapter subtests."""
 
-import inspect
 import functools
+import inspect
 import logging
+import os
 import re
 import time
+
+import bluetooth_test_utils
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.bin.input import input_event_recorder as recorder
@@ -20,10 +23,17 @@ from autotest_lib.client.bin.input.linux_input import (
 
 Event = recorder.Event
 
+# Useful locations for handling HID keyboard data traces used by
+# test_keyboard_input_from_trace
+AUTO_TEST_LOCATION = 'trunk/src/third_party/autotest/files'
+TRACE_LOCATION = '/server/cros/bluetooth/input_traces/keyboard'
+INPUT_TRACE_LOCATION = AUTO_TEST_LOCATION + TRACE_LOCATION
+BASE_DIR = os.path.join(os.path.expanduser('~'))
 
 # Delay binding the methods since host is only available at run time.
 SUPPORTED_DEVICE_TYPES = {
     'MOUSE': lambda chameleon: chameleon.get_bluetooth_hid_mouse,
+    'KEYBOARD': lambda chameleon: chameleon.get_bluetooth_hid_keyboard,
     'BLE_MOUSE': lambda chameleon: chameleon.get_ble_mouse,
     'A2DP_SINK': lambda chameleon: chameleon.get_bluetooth_a2dp_sink,
 }
@@ -2413,6 +2423,81 @@ class BluetoothAdapterTests(test.test):
                 'actual_events': map(str, actual_events),
                 'expected_events': map(str, expected_events)}
         return actual_events == expected_events
+
+
+    # -------------------------------------------------------------------
+    # Bluetooth keyboard related tests
+    # -------------------------------------------------------------------
+
+    # TODO may be deprecated as stated in b:140515628
+    @_test_retry_and_log
+    def test_keyboard_input_from_string(self, device, string_to_send):
+        """Test that the keyboard's key events could be received correctly.
+
+        @param device: the meta device containing a bluetooth HID device
+        @param string_to_send: the set of keys that will be pressed one-by-one
+
+        @returns: True if the report received by the host matches the
+                  expected one. False otherwise.
+
+        """
+
+        gesture = lambda: device.KeyboardSendString(string_to_send)
+
+        actual_events = self._record_input_events(device, gesture)
+
+        resulting_string = bluetooth_test_utils.reconstruct_string(
+                           actual_events)
+
+        return string_to_send == resulting_string
+
+
+    @_test_retry_and_log
+    def test_keyboard_input_from_trace(self, device, trace_name):
+        """ Tests that keyboard events can be transmitted and received correctly
+
+        @param device: the meta device containing a bluetooth HID device
+        @param trace_name: string name for keyboard activity trace to be used
+                           in the test i.e. "simple_text"
+
+        @returns: true if the recorded output matches the expected output
+                  false otherwise
+        """
+
+        # Read data from trace I/O files
+        input_trace = bluetooth_test_utils.parse_trace_file(os.path.join(
+                      BASE_DIR, INPUT_TRACE_LOCATION,
+                      '{}_input.txt'.format(trace_name)))
+        output_trace = bluetooth_test_utils.parse_trace_file(os.path.join(
+                      BASE_DIR, INPUT_TRACE_LOCATION,
+                      '{}_output.txt'.format(trace_name)))
+
+        if not input_trace or not output_trace:
+            logging.error('Failure in using trace')
+            return False
+
+        # Disregard timing data for now
+        input_scan_codes = [tup[1] for tup in input_trace]
+        predicted_events = [Event(*tup[1]) for tup in output_trace]
+
+        # Create and run this trace as a gesture
+        gesture = lambda: device.KeyboardSendTrace(input_scan_codes)
+        rec_events = self._record_input_events(device, gesture)
+
+        # Filter out any input events that were not from the keyboard
+        rec_key_events = [ev for ev in rec_events if ev.type == EV_KEY]
+
+        # Fail if we didn't record the correct number of events
+        if len(rec_key_events) != len(input_scan_codes):
+            return False
+
+        for idx, predicted in enumerate(predicted_events):
+            recorded = rec_key_events[idx]
+
+            if not predicted == recorded:
+                return False
+
+        return True
 
 
     def is_newer_kernel_version(self, version, minimum_version):

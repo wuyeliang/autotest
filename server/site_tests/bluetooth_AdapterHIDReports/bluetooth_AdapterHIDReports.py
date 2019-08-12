@@ -39,6 +39,17 @@ class bluetooth_AdapterHIDReports(
         self.test_mouse_scroll_up(device, 40)
         self.test_mouse_click_and_drag(device, 90, 30)
 
+
+    def run_keyboard_tests(self, device):
+        """Run all bluetooth mouse reports tests.
+
+        @param device: the bluetooth HID device.
+
+        """
+
+        self.test_keyboard_input_from_trace(device, "simple_text")
+
+
     def run_hid_reports_test(self, device, suspend_resume=False, reboot=False):
         """Running Bluetooth HID reports tests."""
         logging.info("run hid reports test")
@@ -92,10 +103,12 @@ class bluetooth_AdapterHIDReports(
         if device.device_type.endswith('MOUSE'):
             self.run_mouse_tests(device)
 
+        if device.device_type.endswith('KEYBOARD'):
+            self.run_keyboard_tests(device)
+
         # Disconnect the device, and remove the pairing.
         self.test_disconnection_by_adapter(device.address)
         self.test_remove_pairing(device.address)
-
 
 
     def run_once(self, host, device_type, num_iterations=1, min_pass_count=1,

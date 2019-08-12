@@ -342,6 +342,14 @@ class ChameleonBoard(object):
         return self._chameleond_proxy.bluetooth_mouse
 
 
+    def get_bluetooth_hid_keyboard(self):
+        """Gets the emulated Bluetooth (BR/EDR) HID keyboard on Chameleon.
+
+        @return: A BluetoothHIDKeyboardFlow object.
+        """
+        return self._chameleond_proxy.bluetooth_keyboard
+
+
     def get_bluetooth_ref_controller(self):
         """Gets the emulated BluetoothRefController.
 
