@@ -107,16 +107,18 @@ class platform_LogoutPerf(arc.ArcTest):
 
 
     def run_once(self):
+        """Main entry point of test."""
         # Validate the current GAIA login session
         self._validate()
 
         # Get old logout start timestamp
         logout_started = self._get_latest_uptime(_LOGOUT_STARTED_TIME)
 
-        # Start signing out the session, wait until the new event of
-        # 'login-prompt-visible'.
-        self.keyboard.press_key('ctrl+shift+q')
-        self.keyboard.press_key('ctrl+shift+q')
+        # Logout hotkey: pressing ctrl+shift+q twice. Double ctrl+shift+q might
+        # be interrupted by window transition, sending extra keys to reduce test
+        # flakiness.
+        for _ in range(4):
+            self.keyboard.press_key('ctrl+shift+q')
 
         # Poll for logout start timestamp update
         utils.poll_for_condition(
