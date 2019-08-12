@@ -361,8 +361,8 @@ class TestAutoUpdater2(unittest.TestCase):
 
         updater.run_update()
         host.run.assert_any_call(
-                '/usr/local/bin/quick-provision --noreboot %s %s/static' %
-                (image, devserver))
+            '/usr/local/bin/quick-provision --noreboot %s '
+            '%s/download/chromeos-image-archive' % (image, devserver))
 
 
 if __name__ == '__main__':

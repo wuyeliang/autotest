@@ -880,11 +880,7 @@ class ChromiumOSUpdater(object):
                         % gs_cache_server)
 
         # Check if GS_Cache server is enabled on the server.
-        try:
-            urllib2.urlopen(gs_cache_url)
-        except urllib2.HTTPError:
-            # GsCache server is listening on this port though it cannot serve.
-            pass
+        self._run('curl -s -o /dev/null %s' % gs_cache_url)
 
         command = '%s --noreboot %s %s' % (provision_command, image_name,
                                            gs_cache_url)
