@@ -67,10 +67,14 @@ TELEMETRY_AFDO_BENCHMARKS = (
 GCC_BOARDS = ['lumpy']
 
 # Should be disjoint with GCC_BOARDS
-LLVM_BOARDS = ['chell', 'samus']
+LLVM_BOARDS = ['chell']
 
-# Only used by Async AFDO generation builder
-LLVM_BOARDS_ASYNC = ['eve']
+# FIXME(tcwang): only used for testing Async AFDO generation builders.
+# Remove this after testing is done.
+# Due to crbug.com/991299 and crbug.com/992539, AFDO profiles generated
+# by samus is not suitable for production in both master and branch.
+# So it's suitable to test generation profiles but not actually use it.
+LLVM_BOARDS_ASYNC = ['samus']
 
 class telemetry_AFDOGenerate(test.test):
     """
