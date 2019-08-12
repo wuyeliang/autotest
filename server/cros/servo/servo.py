@@ -23,6 +23,14 @@ from autotest_lib.server.cros.servo import firmware_programmer
 _USB_PROBE_TIMEOUT = 40
 
 
+# Regex to match XMLRPC errors due to a servod control not existing.
+NO_CONTROL_RE = re.compile(r'No control named (\w*\.?\w*)')
+
+class ControlUnavailableError(error.TestFail):
+    """Custom error class to indicate a control is unavailable on servod."""
+    pass
+
+
 def _extract_image_from_tarball(tarball, dest_dir, image_candidates):
     """Try extracting the image_candidates from the tarball.
 
@@ -634,19 +642,47 @@ class Servo(object):
         """
         return re.sub('^.*>:', '', xmlexc.faultString)
 
+    def has_control(self, control):
+        """Query servod server to determine if |control| is a valid control.
+
+        @param control: str, control name to query
+
+        @returns: true if |control| is a known control, false otherwise.
+        """
+        assert control
+        try:
+            # If the control exists, doc() will work.
+            self._server.doc(control)
+            return True
+        except xmlrpclib.Fault as e:
+            if re.search('No control %s' % control,
+                         self._get_xmlrpclib_exception(e)):
+                return False
+            raise e
 
     def get(self, gpio_name):
         """Get the value of a gpio from Servod.
 
         @param gpio_name Name of the gpio.
+
+        @returns: server response to |gpio_name| request.
+
+        @raise ControlUnavailableError: if |gpio_name| not a known control.
+        @raise error.TestFail: for all other failures doing get().
         """
         assert gpio_name
         try:
             return self._server.get(gpio_name)
         except  xmlrpclib.Fault as e:
-            err_msg = "Getting '%s' :: %s" % \
-                (gpio_name, self._get_xmlrpclib_exception(e))
-            raise error.TestFail(err_msg)
+            err_str = self._get_xmlrpclib_exception(e)
+            err_msg = "Getting '%s' :: %s" % (gpio_name, err_str)
+            unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
+            if unknown_ctrl:
+                raise ControlUnavailableError('No control named %r' %
+                                              unknown_ctrl[0])
+            else:
+                logging.error(err_msg)
+                raise error.TestFail(err_msg)
 
 
     def set(self, gpio_name, gpio_value):
@@ -672,6 +708,9 @@ class Servo(object):
 
         @param gpio_name Name of the gpio.
         @param gpio_value New setting for the gpio.
+
+        @raise ControlUnavailableError: if |gpio_name| not a known control.
+        @raise error.TestFail: for all other failures doing set().
         """
         # The real danger here is to pass a None value through the xmlrpc.
         assert gpio_name and gpio_value is not None
@@ -679,9 +718,15 @@ class Servo(object):
         try:
             self._server.set(gpio_name, gpio_value)
         except  xmlrpclib.Fault as e:
-            err_msg = "Setting '%s' to %r :: %s" % \
-                (gpio_name, gpio_value, self._get_xmlrpclib_exception(e))
-            raise error.TestFail(err_msg)
+            err_str = self._get_xmlrpclib_exception(e)
+            err_msg = "Setting '%s' :: %s" % (gpio_name, err_str)
+            unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
+            if unknown_ctrl:
+                raise ControlUnavailableError('No control named %r' %
+                                              unknown_ctrl[0])
+            else:
+                logging.error(err_msg)
+                raise error.TestFail(err_msg)
 
 
     def set_get_all(self, controls):
