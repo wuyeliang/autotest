@@ -85,7 +85,7 @@ class firmware_FWMPDisableCCD(Cr50Test):
 
         start_state = self.cr50.get_ccd_info()['TPM']
         if ('fwmp_lock' in start_state) != fwmp_disabled_ccd:
-            raise error.TestFail('Unexpected fwmp state with flags %x' % flags)
+            raise error.TestFail('Unexpected fwmp state with flags %s' % flags)
 
         logging.info('Flags are set to %s ccd is%s permitted', flags,
                      ' not' if fwmp_disabled_ccd else '')
