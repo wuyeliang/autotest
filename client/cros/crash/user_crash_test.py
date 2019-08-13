@@ -153,10 +153,6 @@ class UserCrashTest(crash_test.CrashTest):
         # Crash reason:  SIGSEGV /0x00000000
         match = re.search(r'Crash reason:\s+([^\s]*)', stack)
         expected_address = '0x16'
-        if from_crash_reporter:
-            # We cannot yet determine the crash address when coming
-            # through core files via crash_reporter.
-            expected_address = '0x0'
         if not match or match.group(1) != 'SIGSEGV':
             raise error.TestFail('Did not identify SIGSEGV cause')
         match = re.search(r'Crash address:\s+(.*)', stack)
