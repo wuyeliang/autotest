@@ -404,7 +404,7 @@ class telemetry_AFDOGenerate(test.test):
         GS_GCC_DEST = 'gs://chromeos-prebuilt/afdo-job/canonicals/%s'
         GS_LLVM_DEST = 'gs://chromeos-prebuilt/afdo-job/llvm/%s'
         GS_LLVM_ASYNC_DEST = \
-            'gs://chromeos-prebuilt/afdo-job/llvm/benchmarks/%s'
+            'gs://chromeos-throw-away-bucket/afdo-job/llvm/benchmarks/%s'
         GS_TEST_DEST = 'gs://chromeos-throw-away-bucket/afdo-job/canonicals/%s'
         GS_ACL = 'project-private'
 
@@ -418,6 +418,7 @@ class telemetry_AFDOGenerate(test.test):
             gs_dest = GS_LLVM_DEST
         elif board in LLVM_BOARDS_ASYNC:
             gs_dest = GS_LLVM_ASYNC_DEST
+            GS_ACL = 'public-read'
         else:
             raise error.TestFail('This test cannot be run on board %s' % board)
 
