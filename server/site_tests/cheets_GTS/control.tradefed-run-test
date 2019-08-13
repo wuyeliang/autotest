@@ -59,13 +59,10 @@ if not gts_module or not gts_revision or not gts_test:
 # And we are getting ready for tradefed.
 uri = ('gs://chromeos-arc-images/cts/bundle/android-gts-' + gts_revision + '.zip')
 run_template = ['run', 'commandAndExit', 'gts',
-                '--include-filter', gts_module,
-                '--module', gts_module,
-                '--test', gts_test,
+                '--include-filter', gts_module + ' ' + gts_test,
                 '--ignore-business-logic-failure']
 retry_template = ['run', 'commandAndExit', 'retry',
-                  '--retry', '{session_id}',
-                  '--ignore-business-logic-failure']
+                  '--retry', '{session_id}']
 # Unfortunately super long test names can cause problems. Try to get the
 # rightmost element and use that as a simplified name.
 # TODO(ihf): fix pipeline so it works with super long names.

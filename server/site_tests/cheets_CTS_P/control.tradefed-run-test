@@ -63,9 +63,7 @@ if not cts_abi or not cts_module or not cts_revision or not cts_test:
 uri = ('gs://chromeos-arc-images/cts/bundle/P/android-cts-' + cts_revision +
        '-linux_x86-' + cts_abi + '.zip')
 run_template = ['run', 'commandAndExit', 'cts',
-                '--include-filter', cts_module,
-                '--module', cts_module,
-                '--test', cts_test,
+                '--include-filter', cts_module + ' ' + cts_test,
                 '--logcat-on-failure']
 retry_template = ['run', 'commandAndExit', 'retry',
                   '--retry', '{session_id}']

@@ -62,11 +62,9 @@ if not cts_abi or not cts_module or not cts_revision or not cts_test:
 uri = ('gs://chromeos-arc-images/cts/bundle/N/android-cts-' + cts_revision +
        '-linux_x86-' + cts_abi + '.zip')
 run_template = ['run', 'commandAndExit', 'cts',
-                '--include-filter', cts_module,
-                '--module', cts_module,
-                '--test', cts_test,
+                '--include-filter', cts_module + ' ' + cts_test,
                 '--logcat-on-failure']
-retry_template = ['run', 'commandAndExit', 'retry',
+retry_template = ['run', 'commandAndExit', 'cts',
                   '--disable-reboot', '--skip-device-info',
                   '--retry', '{session_id}']
 # Unfortunately super long test names can cause problems. Try to get the
