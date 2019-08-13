@@ -220,7 +220,6 @@ class ShillProxy(object):
     TECHNOLOGY_ETHERNET = 'ethernet'
     TECHNOLOGY_VPN = 'vpn'
     TECHNOLOGY_WIFI = 'wifi'
-    TECHNOLOGY_WIMAX = 'wimax'
 
     VALUE_POWERED_ON = True
     VALUE_POWERED_OFF = False
@@ -247,7 +246,6 @@ class ShillProxy(object):
         TECHNOLOGY_ETHERNET: LOG_SCOPES_FOR_TEST_COMMON + ['ethernet'],
         TECHNOLOGY_VPN: LOG_SCOPES_FOR_TEST_COMMON + ['vpn'],
         TECHNOLOGY_WIFI: LOG_SCOPES_FOR_TEST_COMMON + ['wifi'],
-        TECHNOLOGY_WIMAX: LOG_SCOPES_FOR_TEST_COMMON + ['wimax']
     }
 
     UNKNOWN_METHOD = 'org.freedesktop.DBus.Error.UnknownMethod'
