@@ -666,7 +666,7 @@ class CrashTest(test.test):
                         test_names,
                         initialize_crash_reporter=False,
                         clear_spool_first=True,
-                        must_run_all=False,
+                        must_run_all=True,
                         lock_core_pattern=False):
         """Run crash tests defined in this class.
 
