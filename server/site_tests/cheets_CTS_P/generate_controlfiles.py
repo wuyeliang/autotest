@@ -396,6 +396,15 @@ _PUBLIC_EXTRA_MODULES = {
         'CtsDeqpTestCases.dEQP-VK.ycbcr'
     ]
 }
+# TODO(haddowk,kinaba): Hack for b/138622686. Clean up later.
+_EXTRA_SUBMODULE_OVERRIDE = {
+    'x86': {
+         'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic': [
+             'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic.32',
+             'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic.64',
+         ]
+    }
+}
 
 _EXTRA_COMMANDLINE = {
     'CtsDeqpTestCases.dEQP-EGL': [
@@ -536,6 +545,16 @@ _EXTRA_COMMANDLINE = {
     'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic': [
         '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
         '--test', 'dEQP-VK.subgroups.arithmetic#*'
+    ],
+    # TODO(haddowk,kinaba): Hack for b/138622686. Clean up later.
+    'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic.32': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.arithmetic#*', '--abi', 'x86'
+    ],
+    # TODO(haddowk,kinaba): Hack for b/138622686. Clean up later.
+    'CtsDeqpTestCases.dEQP-VK.subgroups.arithmetic.64': [
+        '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
+        '--test', 'dEQP-VK.subgroups.arithmetic#*', '--abi', 'x86_64'
     ],
     'CtsDeqpTestCases.dEQP-VK.subgroups.clustered': [
         '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases',
@@ -1009,23 +1028,32 @@ def get_retry_template(modules, is_public):
     return get_run_template(modules, is_public, retry=True)
 
 
-def get_extra_modules_dict(is_public):
+def get_extra_modules_dict(is_public, abi):
     if is_public:
+        if abi in _EXTRA_SUBMODULE_OVERRIDE:
+            new_dict  = dict()
+            for module, submodules in _PUBLIC_EXTRA_MODULES.items():
+                submodules = submodules[:]
+                for old, news in _EXTRA_SUBMODULE_OVERRIDE[abi].items():
+                    submodules.remove(old)
+                    submodules.extend(news)
+                new_dict[module] = submodules
+            return new_dict
         return _PUBLIC_EXTRA_MODULES
     return _EXTRA_MODULES
 
 
-def get_extra_modules(is_public):
-    extra_modules_dict = get_extra_modules_dict(is_public)
+def get_extra_modules(is_public, abi):
+    extra_modules_dict = get_extra_modules_dict(is_public, abi)
     modules = []
     for _, extra_modules in extra_modules_dict.items():
         modules += extra_modules
     return set(modules)
 
 
-def get_modules_to_remove(is_public):
+def get_modules_to_remove(is_public, abi):
     if is_public:
-        return get_extra_modules_dict(is_public).keys()
+        return get_extra_modules_dict(is_public, abi).keys()
     return []
 
 
@@ -1105,7 +1133,7 @@ def get_controlfile_content(combined,
     target_module = None
     if combined not in get_collect_modules(is_public):
         target_module = combined
-    for target, m in get_extra_modules_dict(is_public).items():
+    for target, m in get_extra_modules_dict(is_public, abi).items():
         if combined in m:
             target_module = target
     return _CONTROLFILE_TEMPLATE.render(
@@ -1139,7 +1167,7 @@ def get_controlfile_content(combined,
         camera_facing=camera_facing)
 
 
-def get_tradefed_data(path, is_public):
+def get_tradefed_data(path, is_public, abi):
     """Queries tradefed to provide us with a list of modules.
 
     Notice that the parsing gets broken at times with major new CTS drops.
@@ -1178,7 +1206,7 @@ def get_tradefed_data(path, is_public):
             logging.warning('Ignoring "%s"', line)
     p.kill()
     p.wait()
-    for module in get_modules_to_remove(is_public):
+    for module in get_modules_to_remove(is_public, abi):
         modules.remove(module)
     return modules, build, revision
 
@@ -1398,7 +1426,7 @@ def write_extra_deqp_controlfiles(_modules, abi, revision, build, uri,
     This is used in particular by moblab to load balance. A similar approach
     was also used during bringup of grunt to split media tests.
     """
-    submodules = get_extra_modules_dict(is_public)['CtsDeqpTestCases']
+    submodules = get_extra_modules_dict(is_public, abi)['CtsDeqpTestCases']
     suites = ['suite:arc-cts-deqp', 'suite:graphics_per-day']
     if is_public:
         suites = ['suite:cts_P']
@@ -1435,7 +1463,7 @@ def main(uris, is_public):
             bundle = os.path.join(tmp, os.path.basename(uri))
             logging.info('Extracting %s.', bundle)
             unzip(bundle, tmp)
-            modules, build, revision = get_tradefed_data(tmp, is_public)
+            modules, build, revision = get_tradefed_data(tmp, is_public, abi)
             if not revision:
                 raise Exception('Could not determine revision.')
 
