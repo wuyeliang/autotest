@@ -90,16 +90,13 @@ class camera_V4L2(test.test):
         stdout = utils.system_output(cmd, retain_output=True)
 
     def run_v4l2_capture_test(self, device):
-        # The command line arguments are temporarily inconsistent with
-        # run_v4l2_unittests (test-list/test_list) during migration. These two
-        # binaries would be consolidate in the future.
         cmd = [
                 "media_v4l2_test",
-                "--device=%s" % device,
-                "--usb-info=%s" % self.usb_info
+                "--device_path=%s" % device,
+                "--usb_info=%s" % self.usb_info
         ]
         if self.test_list:
-            cmd.append("--test-list=%s" % self.test_list)
+            cmd.append("--test_list=%s" % self.test_list)
 
         # snappy old SKU cannot meet the requirement. Skip the test to avoid
         # alarm. Please see http://crbug.com/737874 for detail.
