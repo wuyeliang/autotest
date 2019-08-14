@@ -30,6 +30,10 @@ class AllPolicies(object):
 
     def __init__(self, isConfiguredPolicies=False):
         self.extension_configured_data = {}
+        # Because Extensions have a different "displayed" value than the
+        # configured, the extension_displayed_values will be used when the
+        # policy group is "configured" to represent what the "displayed" policy
+        # values SHOULD be.
         self.extension_displayed_values = {}
         self.local = {}
         self.chrome = {}
