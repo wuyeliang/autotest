@@ -87,6 +87,8 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             self.input_facade = factory.create_input_facade()
             self.check_chameleon()
 
+        self.test_iter = None
+
         self.bat_tests_results = []
         self.bat_pass_count = 0
         self.bat_fail_count = 0
@@ -152,6 +154,9 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
     def quick_test_test_end(self):
         """Log and track the test results"""
         result_msgs = []
+
+        if self.test_iter is not None:
+            result_msgs += ['Test Iter: ' + str(self.test_iter)]
 
         if self.bat_iter is not None:
             result_msgs += ['Batch Iter: ' + str(self.bat_iter)]
@@ -226,7 +231,9 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 """
                 if test_name is not None:
                     single_test_method = getattr(self,  test_name)
-                    single_test_method()
+                    for iter in xrange(1,num_iterations+1):
+                        self.test_iter = iter
+                        single_test_method()
 
                     if self.fails:
                         raise error.TestFail(self.fails)
