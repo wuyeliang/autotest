@@ -16,6 +16,24 @@ from autotest_lib.client.cros.faft.utils import (flashrom_handler,
 
 class FirmwareUpdaterError(Exception):
     """Error in the FirmwareUpdater module."""
+    pass
+
+
+class BrokenShellballError(FirmwareUpdaterError):
+    """Error in the shellball"""
+    pass
+
+
+class InvalidManifestError(FirmwareUpdaterError):
+    """Error in the manifest, specifically"""
+    def __init__(self, shellball, description):
+        if shellball:
+            shellball = os.path.basename(shellball)
+            msg = ('Invalid output from %s --manifest: %s'
+                   % (shellball, description))
+        else:
+            msg = 'Invalid contents in manifest.json: %s' % description
+        super(InvalidManifestError, self).__init__(msg)
 
 
 class FirmwareUpdater(object):
@@ -390,11 +408,17 @@ class FirmwareUpdater(object):
             manifest_file = os.path.join(self._work_path, 'manifest.json')
             manifest_text = self.os_if.read_file(manifest_file)
 
-        if manifest_text:
+        if not (manifest_text and manifest_text.strip()):
+            raise InvalidManifestError(
+                    shellball,
+                    'data is an empty string: %r' % manifest_text)
+
+        try:
             return json.loads(manifest_text)
-        else:
-            # TODO(dgoyette): Perhaps raise an exception for empty manifest?
-            return None
+        except ValueError as e:
+            raise InvalidManifestError(
+                    shellball,
+                    "json is malformed: %s\n%s" % (e, manifest_text))
 
     def _detect_image_paths(self, shellball=None):
         """Scans shellball manifest to find correct bios and ec image paths.
@@ -409,26 +433,81 @@ class FirmwareUpdater(object):
         if not model_result:
             return
 
-        model_name = model_result[0]
+        model = model_result[0]
 
-        if not model_name:
+        if not model:
             return
 
-        manifest = self._read_manifest(shellball)
+        manifest_dict = self._read_manifest(shellball)
 
-        if manifest:
-            model_info = manifest.get(model_name)
-            if model_info:
+        # Manifest must not be empty
+        if not manifest_dict:
+            raise InvalidManifestError(
+                    shellball,
+                    'manifest is empty: %r' % manifest_dict)
 
-                try:
-                    self._bios_path = model_info['host']['image']
-                except KeyError:
-                    pass
+        # Model must be present
+        if model not in manifest_dict:
+            models = ','.join(sorted(manifest_dict.keys()))
+            raise InvalidManifestError(
+                    shellball,
+                    'model %r not found in manifest keys: %s'
+                    % (model, models))
 
-                try:
-                    self._ec_path = model_info['ec']['image']
-                except KeyError:
-                    pass
+        model_dict = manifest_dict[model]
+
+        # Host section is mandatory, and must have an image
+        if 'host' in model_dict:
+            host_dict = model_dict['host']
+            if 'image' not in host_dict:
+                raise InvalidManifestError(
+                        shellball,
+                        "model %r has a 'host' with no 'image': %s"
+                        % (model, host_dict))
+            if not host_dict['image']:
+                raise InvalidManifestError(
+                        shellball,
+                        "model %r has a 'host' with empty 'image': %s"
+                        % (model, host_dict))
+            self._bios_path = host_dict['image']
+        else:
+            raise InvalidManifestError(
+                    shellball,
+                    "model %r has no 'host': %s" % (model, model_dict))
+
+        # EC section is optional, but if present, it must have an image
+        if 'ec' in model_dict:
+            ec_dict = model_dict['ec']
+            if 'image' not in ec_dict:
+                raise InvalidManifestError(
+                        shellball,
+                        "model %r has an 'ec' with no 'image': %s"
+                        % (model, ec_dict))
+            if not ec_dict['image']:
+                raise InvalidManifestError(
+                        shellball,
+                        "model %r has an 'ec' with empty 'image': %s"
+                        % (model, ec_dict))
+            self._ec_path = ec_dict['image']
+
+    def _check_shellball(self, shellball, description='shellball'):
+        """Check the size of the shellball, to make sure it's properly formed.
+
+        @param shellball: path of the shellball file
+        @param description: partial phrase to describe the shellball
+        """
+        stat_output = self.os_if.run_shell_command_get_output(
+                'stat -c %%s %s' % shellball)
+        if not stat_output:
+            raise FirmwareUpdaterError(
+                    'The %s does not exist: %s'
+                    % (description, shellball))
+
+        shellball_size = int(stat_output[0].strip())
+        if not shellball_size:
+            raise BrokenShellballError(
+                    "The %s is empty (zero bytes): %s"
+                    % (description, shellball))
 
     def extract_shellball(self, append=None):
         """Extract the working shellball.
@@ -444,6 +523,8 @@ class FirmwareUpdater(object):
                                          'chromeos-firmwareupdate')
         if append:
             working_shellball = working_shellball + '-%s' % append
+
+        self._check_shellball(working_shellball, 'shellball to be extracted')
 
         self.os_if.run_shell_command(
                 'sh %s --sb_extract %s' % (working_shellball, self._work_path))
@@ -474,6 +555,8 @@ class FirmwareUpdater(object):
 
         self.os_if.run_shell_command(
                 'sh %s --sb_repack %s' % (working_shellball, self._work_path))
+
+        self._check_shellball(working_shellball, 'repacked shellball')
 
         # use the shellball that was repacked, to catch repacking problems.
         self._detect_image_paths(working_shellball)
@@ -517,6 +600,8 @@ class FirmwareUpdater(object):
         updater = os.path.join(self._temp_path, 'chromeos-firmwareupdate')
         if append:
             updater = '%s-%s' % (updater, append)
+
+        self._check_shellball(updater, 'shellball to be executed')
 
         if options is None:
             options = []
