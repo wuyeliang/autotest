@@ -907,13 +907,27 @@ class Servo(object):
                                     args=args).stdout.strip()
 
 
-    def get_servo_version(self):
+    def get_servo_version(self, active=False):
         """Get the version of the servo, e.g., servo_v2 or servo_v3.
 
+        @param active: Only return the servo type with the active device.
         @return: The version of the servo.
 
         """
-        return self._server.get_version()
+        servo_type = self._server.get_version()
+        if '_and_' not in servo_type or not active:
+            return servo_type
+
+        # If servo v4 is using ccd and servo micro, modify the servo type to
+        # reflect the active device.
+        active_device = self.get('active_v4_device')
+        if active_device in servo_type:
+            logging.info('%s is active', active_device)
+            return 'servo_v4_with_' + active_device
+
+        logging.warn("%s is active even though it's not in servo type",
+                     active_device)
+        return servo_type
 
 
     def running_through_ccd(self):
