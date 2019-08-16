@@ -34,7 +34,7 @@ class policy_ArcExternalStorageDisabled(
 
         arc_dirs = set(arc.adb_shell('ls /storage').split())
 
-        base_dirs = set(['emulated', 'self'])
+        base_dirs = set(['emulated', 'self', 'MyFiles'])
 
         usb_parts = arc_dirs - base_dirs
         if policy_value:
