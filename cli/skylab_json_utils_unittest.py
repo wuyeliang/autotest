@@ -23,6 +23,8 @@ basic_labels._add_label("key6")
 
 
 class skylab_json_utils_unittest(unittest.TestCase):
+    def test_labels_disjoint(self):
+        self.assertEqual(len(set(sky.MANAGED_POOLS).intersection(sky.UNMANAGED_POOLS)), 0)
 
     def test_label_empty(self):
         self.assertFalse(sky.Labels().bools)
@@ -166,7 +168,7 @@ class skylab_json_utils_unittest(unittest.TestCase):
     def test_critical_pool_absent(self):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
-        self.assertEqual(out["criticalPools"], [])
+        self.assertFalse("criticalPools" in out)
 
     def test_cts_abi_present(self):
         l = sky.Labels()
@@ -449,12 +451,14 @@ class skylab_json_utils_unittest(unittest.TestCase):
 
     def test_wificell_present(self):
         l = sky.Labels()
+        l._add_label("pool:bvt")
         l._add_label("wificell")
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["peripherals"]["wificell"], True)
 
     def test_wificell_absent(self):
         l = sky.Labels()
+        l._add_label("pool:bvt")
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["peripherals"]["wificell"], False)
 

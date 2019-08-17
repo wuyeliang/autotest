@@ -4,14 +4,40 @@ from __future__ import unicode_literals
 #       send everything else to SUITES
 #
 # This decision has to be made on a pool by pool basis.
-POOL_ATEST_TO_SK = {
+
+MANAGED_POOLS = {
     "bvt": "DUT_POOL_BVT",
     "suites": "DUT_POOL_SUITES",
-    "labstation_main": "DUT_POOL_SUITES",
-    "lab_automation": "DUT_POOL_SUITES",
-    "cts": "DUT_POOL_SUITES",
-    "wificell": "DUT_POOL_SUITES",
+    "cts": "DUT_POOL_CTS",
 }
+
+UNMANAGED_POOLS = {
+    "labstation_main",
+    "lab_automation",
+    "wificell",
+}
+
+
+def _normalize_pools(l):
+    """take in the list of pools and distribute them between criticalPools and
+    self_serve_pools"""
+    pools = l.get_all_strings("pool")
+    out = {"criticalPools": [], "self_serve_pools": []}
+    for pool in pools:
+        if pool in MANAGED_POOLS:
+            # convert name to prototype enum for skylab-managed pools
+            out["criticalPools"].append(MANAGED_POOLS[pool])
+        elif pool in UNMANAGED_POOLS:
+            # for unmanaged pools preserve the name
+            out["self_serve_pools"].append(pool)
+        else:
+            raise ValueError("pool '%s' is not recognized" % pool)
+    #TODO(gregorynisbet): reject empty pools too.
+    if len(out["criticalPools"]) + len(out["self_serve_pools"]) > 1:
+        raise ValueError("multiple pools %s" % pools)
+    return out
+
+
 
 EC_TYPE_ATEST_TO_SK = {
     "cros": "EC_TYPE_CHROME_OS",
@@ -94,14 +120,6 @@ class Labels(object):
                 yield x
 
 
-def _critical_pools(l):
-    atest_pools = l.get_all_strings("pool")
-    out = []
-    for value in atest_pools:
-        out.append(POOL_ATEST_TO_SK[value])
-    return out
-
-
 def _cr50_phase(l):
     return l.get_enum("cr50", prefix="CR50_PHASE_")
 
@@ -117,6 +135,10 @@ def _cts_abi(l):
             out.append(abi.upper())
     return out
 
+
+def _os_type(l):
+    """Get the operating system type"""
+    return l.get_enum("os", prefix="OS_TYPE_")
 
 def _ec_type(l):
     """Get the ec type."""
@@ -167,13 +189,15 @@ def process_labels(labels, platform):
     """
     l = Labels(labels)
 
+    pools = _normalize_pools(l)
+
     # The enum-type keys below default to None
     # except for 'telephony' and 'modem', which default to ''
     # This is intentional.
     # This function will always return a json-like Python data object,
     # even in cases where some normally required fields are missing.
     # The explicit None is there as an explicit placeholder.
-    return {
+    out = {
         # boolean keys in label
         "arc": l.get_bool("arc"),
         # string keys in label
@@ -188,11 +212,13 @@ def process_labels(labels, platform):
         "sku": l.get_string("device-sku", default=None),
         # enum keys
         "ecType": _ec_type(l),
-        "osType": l.get_enum("os", prefix="OS_TYPE_"),
+        "osType": _os_type(l),
         "phase": l.get_enum("phase", prefix="PHASE_"),
         # list of enum keys
-        "criticalPools": _critical_pools(l),
+        "criticalPools": pools["criticalPools"],
         "ctsAbi": _cts_abi(l),
+        # list of string keys
+        "self_serve_pools": pools["self_serve_pools"],
         # capabilities substructure
         "capabilities": {
             # boolean keys in capabilities
@@ -240,3 +266,11 @@ def process_labels(labels, platform):
             "usbDetect": l.get_bool("usb_detect"),
         },
     }
+
+    if not out["criticalPools"]:
+        del out["criticalPools"]
+
+    if not out["self_serve_pools"]:
+        del out["self_serve_pools"]
+
+    return out
