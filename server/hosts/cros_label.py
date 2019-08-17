@@ -309,6 +309,29 @@ class AudioLoopbackDongleLabel(base_label.BaseLabel):
     _NAME = 'audio_loopback_dongle'
 
     def exists(self, host):
+        # Based on crbug.com/991285, AudioLoopbackDongle sometimes flips.
+        # Ensure that AudioLoopbackDongle.exists returns True
+        # forever, after it returns True *once*.
+        if self._cached_exists(host):
+            # If the current state is True, return it, don't run the command on
+            # the DUT and potentially flip the state.
+            return True
+        # If the current state is not True, run the command on
+        # the DUT. The new state will be set to whatever the command
+        # produces.
+        return self._host_run_exists(host)
+
+    def _cached_exists(self, host):
+        """Get the state of AudioLoopbackDongle in the data store"""
+        info = host.host_info_store.get()
+        for label in info.labels:
+            if label.startswith(self._NAME):
+                return True
+        return False
+
+    def _host_run_exists(self, host):
+        """Detect presence of audio_loopback_dongle by physically
+        running a command on the DUT."""
         nodes_info = host.run(command=cras_utils.get_cras_nodes_cmd(),
                               ignore_status=True).stdout
         if (cras_utils.node_type_is_plugged('HEADPHONE', nodes_info) and
