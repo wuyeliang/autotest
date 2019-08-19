@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import logging, os, tempfile, shutil, stat, time, posix
+import logging, os, tempfile, shutil, stat, time
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 
@@ -259,7 +259,7 @@ class platform_EncryptedStateful(test.test):
         # Perform post-mount sanity checks (and handle unfinalized devices).
         encstate.check_sizes(finalized=os.path.exists(encstate.key))
 
-    def factory_key(self):
+    def encstateful_reclamation_check(self):
         # Create test root directory.
         encstate = EncryptedStateful()
 
@@ -269,11 +269,12 @@ class platform_EncryptedStateful(test.test):
         chk.check(not os.path.exists(encstate.block),
                   "%s does not exist" % (encstate.block))
 
-        # Mount a fresh encrypted stateful, with factory static key.
-        encstate.mount("factory")
+        # Mount a fresh encrypted stateful, following the default workflow to
+        # get the system key.
+        encstate.mount()
 
         # Perform post-mount sanity checks.
-        encstate.check_sizes()
+        encstate.check_sizes(finalized=os.path.exists(encstate.key))
 
         # Check disk reclamation for kernels that support PUNCH_HOLE.
         if self.is_punch_hole_supported():
@@ -307,6 +308,5 @@ class platform_EncryptedStateful(test.test):
         # Do a no-write, no-TPM test with sanity checks.
         self.no_tpm()
 
-        # There is no interactively controllable TPM mock yet for
-        # mount-encrypted, so we can only test the static key currently.
-        self.factory_key()
+        # Do a reclamation check against the encrypted stateful partition.
+        self.encstateful_reclamation_check()
