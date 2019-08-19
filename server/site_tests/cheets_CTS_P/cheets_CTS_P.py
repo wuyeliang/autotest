@@ -28,8 +28,8 @@ _CTS_TIMEOUT_SECONDS = 3600
 _PUBLIC_CTS = 'https://dl.google.com/dl/android/cts/'
 _PARTNER_CTS = 'gs://chromeos-partner-cts/'
 _CTS_URI = {
-    'arm': _PUBLIC_CTS + 'android-cts-9.0_r8-linux_x86-arm.zip',
-    'x86': _PUBLIC_CTS + 'android-cts-9.0_r8-linux_x86-x86.zip',
+    'arm': _PUBLIC_CTS + 'android-cts-9.0_r9-linux_x86-arm.zip',
+    'x86': _PUBLIC_CTS + 'android-cts-9.0_r9-linux_x86-x86.zip',
     'media': _PUBLIC_CTS + 'android-cts-media-1.4.zip',
 }
 
