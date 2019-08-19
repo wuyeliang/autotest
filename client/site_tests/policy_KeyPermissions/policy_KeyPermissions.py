@@ -59,17 +59,14 @@ class policy_KeyPermissions(
             - removeCertificate
 
         """
-        self.wait_for_extension()
-
-        self.click_button('generate')
-        error_id = 'generate-error'
-
-        # Wait for the API to return 'OK' and raise an error if it doesn't.
-        utils.poll_for_condition(
-            lambda: 'OK' in self.field_value(error_id),
-            timeout=10,
-            exception=error.TestFail(
-                'API error: %s' % self.field_value(error_id)))
+        try:
+            self._click_generate()
+        except error.TestFail:
+            # On specific devices the very first time the extension page is
+            # loaded, it will not load the certs. This is a small workaround to
+            # fix that.
+            self.navigate_to_url('https://google.com', self.tab)
+            self._click_generate()
 
         # Click all the buttons needed to get the cert ready.
         self.click_button('sign')
@@ -83,6 +80,18 @@ class policy_KeyPermissions(
             self.ui.wait_for_ui_obj('Certificate information')
         else:
             self.ui.did_obj_not_load('Certificate information')
+
+    def _click_generate(self):
+        self.wait_for_extension()
+
+        self.click_button('generate')
+        error_id = 'generate-error'
+
+        utils.poll_for_condition(
+            lambda: 'OK' in self.field_value(error_id),
+            timeout=10,
+            exception=error.TestFail(
+                'API error: %s' % self.field_value(error_id)))
 
     def run_once(self, case=None):
         """Setup and run the test configured for the specified test case."""
