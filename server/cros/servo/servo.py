@@ -1007,7 +1007,10 @@ class Servo(object):
 
         @raise: TestError if cannot extract firmware from the tarball.
         """
-        dest_dir = os.path.dirname(tarball_path)
+        dest_dir = os.path.join(os.path.dirname(tarball_path), firmware_name)
+        # Create the firmware_name subdirectory if it doesn't exist.
+        if not os.path.exists(dest_dir):
+            os.mkdir(dest_dir)
         image = _extract_image_from_tarball(tarball_path, dest_dir,
                                             image_candidates)
         if not image:

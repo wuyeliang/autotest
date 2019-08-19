@@ -131,14 +131,19 @@ class FlashromProgrammer(_BaseProgrammer):
         super(FlashromProgrammer, self).__init__(servo, ['flashrom',])
         self._keep_ro = keep_ro
         self._fw_path = None
-        self._tmp_path = '/tmp'
+        self.init_section_paths('/tmp')
+        self._servo_version = self._servo.get_servo_version(active=True)
+        self._servo_serials = self._servo._server.get_servo_serials()
+
+
+    def init_section_paths(self, tmp_path):
+        """Update section paths to use the tmp directory"""
+        self._tmp_path = tmp_path
         self._fw_main = os.path.join(self._tmp_path, 'fw_main')
         self._wp_ro = os.path.join(self._tmp_path, 'wp_ro')
         self._ro_vpd = os.path.join(self._tmp_path, 'ro_vpd')
         self._rw_vpd = os.path.join(self._tmp_path, 'rw_vpd')
         self._gbb = os.path.join(self._tmp_path, 'gbb')
-        self._servo_version = self._servo.get_servo_version(active=True)
-        self._servo_serials = self._servo._server.get_servo_serials()
 
 
     def program(self):
@@ -228,6 +233,7 @@ class FlashromProgrammer(_BaseProgrammer):
         @param path: a string, name of the file containing the firmware image.
         """
         self._fw_path = path
+        self.init_section_paths(os.path.dirname(path))
 
         # If servo is running with servo v4, there may be two programming
         # devices. Determine the programmer based on the active one.
