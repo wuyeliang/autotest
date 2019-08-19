@@ -88,6 +88,10 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         if self.use_chameleon:
             self.input_facade = factory.create_input_facade()
             self.check_chameleon()
+
+            # Query connected devices on our chameleon at init time
+            self.available_devices = self.list_devices_available()
+
             if self.host.multi_chameleon:
                 self.chameleon_group = dict()
                 self.group_chameleons_type()
@@ -127,6 +131,14 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
             @functools.wraps(test_method)
             def wrapper(self):
+                # Check that chameleon has all required devices before running
+                for device_type, number in devices.items():
+                    if self.available_devices.get(device_type, 0) < number:
+                        logging.info('SKIPPING TEST {}'.format(test_name))
+                        logging.info('{} not available'.format(device_type))
+                        self._print_delimiter()
+                        return
+
                 self.quick_test_test_start(test_name, devices)
                 test_method(self)
                 self.quick_test_test_end()

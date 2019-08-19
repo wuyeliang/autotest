@@ -590,6 +590,43 @@ class BluetoothAdapterTests(test.test):
         return self.devices[device_type][-1]
 
 
+    def is_device_available(self, chameleon, device_type):
+        """Determines if the named device is available on the linked chameleon
+
+        @param device_type: the bluetooth HID device type, e.g., 'MOUSE'
+
+        @returns: True if it is able to resolve the device, false otherwise
+        """
+
+        device = SUPPORTED_DEVICE_TYPES[device_type](chameleon)()
+        try:
+            # The proxy prevents us from checking if the object is None directly
+            # so instead we call a fast method that any peripheral must support.
+            # This will fail if the object over the proxy doesn't exist
+            getattr(device, 'GetCapabilities')()
+
+        except Exception as e:
+            return False
+
+        return True
+
+
+    def list_devices_available(self):
+        """Queries which devices are available on chameleon/s
+
+        @returns: dict mapping HID device types to number of supporting peers
+                  available, e.g. {'MOUSE':1, 'KEYBOARD':1}
+        """
+        devices_available = {}
+        for device_type in SUPPORTED_DEVICE_TYPES:
+            for chameleon in self.host.chameleon_list:
+                if self.is_device_available(chameleon, device_type):
+                    devices_available[device_type] = \
+                        devices_available.get(device_type, 0) + 1
+
+        return devices_available
+
+
     def suspend_resume(self, suspend_time=SUSPEND_TIME_SECS):
         """Suspend the DUT for a while and then resume.
 
