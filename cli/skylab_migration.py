@@ -689,8 +689,6 @@ class Migration(object):
         @param interval_len : length of time between checks for DUT readiness
         @param max_duration : the grace period to allow DUTs to finish their
         tasks
-        @param atest : path to atest command
-        @param skylab : path to skylab command
         @param min_ready_intervals : minimum number of intervals before a device
                 is healthy
 
@@ -702,7 +700,15 @@ class Migration(object):
         assert immediately is not None
         reason = reason if isinstance(reason,
                                       unicode) else reason.decode('utf-8')
+        # log the parameters of the migration
         stderr_log('begin migrate', time.time(), _humantime())
+        stderr_log('number of hostnames', len(hostnames), time.time(), _humantime())
+        stderr_log('ratio', ratio, time.time(), _humantime())
+        stderr_log('max_duration', max_duration, time.time(), _humantime())
+        stderr_log('atest', _ATEST_EXE, time.time(), _humantime())
+        stderr_log('skylab', _SKYLAB_EXE, time.time(), _humantime())
+        stderr_log('minimum number of intervals', min_ready_intervals, time.time(), _humantime())
+        stderr_log('immediately', immediately, time.time(), _humantime())
         all_hosts = tuple(hostnames)
         plan = Migration.migration_plan(ratio=ratio, hostnames=all_hosts)
         Migration.lock(hostnames=plan.transfer, reason=reason)
