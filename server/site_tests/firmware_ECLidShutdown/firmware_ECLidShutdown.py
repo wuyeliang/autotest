@@ -71,6 +71,11 @@ class firmware_ECLidShutdown(FirmwareTest):
         self.servo.set('lid_open', 'no')
         time.sleep(self.LID_POWER_STATE_DELAY)
         self.switcher.simple_reboot(sync_before_boot=False)
+        # Some boards may reset the lid_open state when AP reboot,
+        # check b/137612865
+        if self.servo.get('lid_open') != 'no':
+            self.servo.set('lid_open', 'no')
+            time.sleep(self.LID_POWER_STATE_DELAY)
         time.sleep(self.faft_config.firmware_screen)
         if not self.wait_power_state('G3', self.POWER_STATE_CHECK_TRIES):
             raise error.TestFail('The device did not stay in a mechanical off '
@@ -103,6 +108,9 @@ class firmware_ECLidShutdown(FirmwareTest):
                     'with powerd ignoring lid state.  Maybe userspace power '
                     'management behaviors have changed.')
         self.switcher.simple_reboot(sync_before_boot=False)
+        if self.servo.get('lid_open') != 'no':
+            self.servo.set('lid_open', 'no')
+            time.sleep(self.LID_POWER_STATE_DELAY)
         logging.info('The screen will remain black, even though we are at a '
                      'recovery screen.')
         time.sleep(self.faft_config.firmware_screen)
