@@ -189,8 +189,8 @@ class FlashromProgrammer(_BaseProgrammer):
             # Save needed sections from current firmware
             for section in preserved_sections + gbb_section:
                 self._servo_host.run(' '.join([
-                    'flashrom', '-V', '-p', programmer,
-                    '-r', self._fw_main, '-i', '%s:%s' % section]),
+                    'flashrom', '-V', '-p', programmer, '-r',
+                    '-i', '%s:%s' % section]),
                     timeout=FIRMWARE_PROGRAM_TIMEOUT_SEC)
 
             # Pack the saved VPD into new firmware
