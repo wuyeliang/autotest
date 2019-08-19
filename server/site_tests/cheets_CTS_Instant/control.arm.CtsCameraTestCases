@@ -7,7 +7,7 @@
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_Instant.arm.CtsCameraTestCases'
 ATTRIBUTES = 'suite:cts_P'
-DEPENDENCIES = 'arc, lighting'
+DEPENDENCIES = 'arc, cts_cpu_arm, lighting'
 JOB_RETRIES = 1
 TEST_TYPE = 'server'
 TIME = 'LONG'
