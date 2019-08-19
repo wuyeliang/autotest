@@ -12,6 +12,7 @@ import gobject
 import json
 import logging
 import logging.handlers
+import os
 
 import common
 from autotest_lib.client.bin import utils
@@ -123,12 +124,14 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         super(BluetoothDeviceXmlRpcDelegate, self).__init__()
 
         # Init bluetooth service name based on newblue config file.
-        _newblue_config_file = open(self.NEWBLUE_CONFIG_FILE,"r")
-        _newblue_enable = _newblue_config_file.read()
-        if _newblue_enable:
-            self._bluetooth_service_name = self.BLUETOOTH_SERVICE_NAME
+        self._bluetooth_service_name = self.BLUEZ_SERVICE_NAME
+        if os.path.exists(self.NEWBLUE_CONFIG_FILE):
+            with open(self.NEWBLUE_CONFIG_FILE) as _newblue_config_file:
+                _newblue_enable = int(_newblue_config_file.read().strip())
+                if _newblue_enable:
+                    self._bluetooth_service_name = self.BLUETOOTH_SERVICE_NAME
         else:
-            self._bluetooth_service_name = self.BLUEZ_SERVICE_NAME
+            logging.debug('Newblue config file does not exist')
         logging.debug('Bluetooth Service Name: %s',
                       self._bluetooth_service_name)
 
