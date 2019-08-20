@@ -476,6 +476,27 @@ class ServoLabel(base_label.BaseLabel):
     _NAME = 'servo'
 
     def exists(self, host):
+        # Based on crbug.com/995900, Servo sometimes flips.
+        # Ensure that ServoLabel.exists returns True
+        # forever, after it returns True *once*.
+        if self._cached_exists(host):
+            # If the current state is True, return it, don't run the command on
+            # the DUT and potentially flip the state.
+            return True
+        # If the current state is not True, run the command on
+        # the DUT. The new state will be set to whatever the command
+        # produces.
+        return self._host_run_exists(host)
+
+    def _cached_exists(self, host):
+        """Get the state of Servo in the data store"""
+        info = host.host_info_store.get()
+        for label in info.labels:
+            if label.startswith(self._NAME):
+                return True
+        return False
+
+    def _host_run_exists(self, host):
         """
         Check if the servo label should apply to the host or not.
 
