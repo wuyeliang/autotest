@@ -81,6 +81,7 @@ DEVICE_POLICY_DICT = {
     'ReportUploadFrequency': 'device_status_frequency',
     'DeviceLocalAccounts': 'account',
     'DeviceLocalAccountAutoLoginId': 'auto_login_id',
+    'VirtualMachinesAllowed': 'virtual_machines_allowed',
 }
 
 # Default settings for managed user policies
