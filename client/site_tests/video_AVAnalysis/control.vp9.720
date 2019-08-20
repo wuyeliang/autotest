@@ -14,7 +14,6 @@ TEST_CATEGORY = "General"
 TEST_CLASS = "video"
 TEST_TYPE = "client"
 JOB_RETRIES = 0
-DEPENDENCIES = 'cros_av_analysis'
 
 DOC = """
 This test plays a bar-coded video file on DUT so it can be recorded.
