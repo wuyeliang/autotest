@@ -908,8 +908,8 @@ class BluetoothAdapterTests(test.test):
         try:
             for timeout in timeout_values:
                 result.append(_test_timeout_property(timeout))
-            logging.debug("Test returning %s", all(self.results))
-            return all(self.results)
+            logging.debug("Test returning %s", all(result))
+            return all(result)
         except:
             logging.error("exception in test_%s_timeout",property_name)
             raise
