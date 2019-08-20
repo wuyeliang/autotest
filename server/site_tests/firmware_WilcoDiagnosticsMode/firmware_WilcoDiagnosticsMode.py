@@ -117,8 +117,7 @@ class firmware_WilcoDiagnosticsMode(FirmwareTest):
         # diagnostics mode, and verify that the DUT goes down (indicating
         # success).
         logging.info('Updating firmware')
-        # TODO(b/132073076): Use --mode=autoupdate.
-        self.faft_client.Updater.RunFirmwareupdate('legacy')
+        self.faft_client.Updater.RunAutoupdate(None)
         logging.info('Rebooting to apply firmware update')
         self.switcher.mode_aware_reboot()
 
