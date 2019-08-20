@@ -44,11 +44,11 @@ class bluetooth_AdapterPairing(
         self.test_pairable()
 
         # Test if the adapter could discover the target device.
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_discover_device(device.address)
 
         # Test if the discovery could be stopped.
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_stop_discovery()
 
         # Test if the discovered device class of service is correct.
@@ -61,11 +61,11 @@ class bluetooth_AdapterPairing(
 
         # Verify that the adapter could pair with the device.
         # Also set the device trusted when pairing is done.
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_pairing(device.address, device.pin, trusted=True)
 
         # Verify that the adapter could connect to the device.
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_connection_by_adapter(device.address)
 
         # Test if the discovered device name is correct.
@@ -73,46 +73,46 @@ class bluetooth_AdapterPairing(
         # the device (more than 60 seconds) to resolve the device name.
         # Hence, it is safer to test the device name after pairing and
         # connection is done.
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_device_name(device.address, device.name)
 
         # Test if the device is still connected after suspend/resume.
         if suspend_resume:
             self.suspend_resume()
 
-            time.sleep(self.TEST_SLEEP_SECS)
+            time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_device_is_paired(device.address)
 
             # After a suspend/resume, we need to wake the peripheral
             # as it is not connected.
-            time.sleep(self.TEST_SLEEP_SECS)
+            time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_connection_by_device(device)
 
-            time.sleep(self.TEST_SLEEP_SECS)
+            time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_device_name(device.address, device.name)
 
         # Test if the device is still connected after reboot.
         # if reboot:
         #     self.host.reboot()
 
-        #     time.sleep(self.TEST_SLEEP_SECS)
+        #     time.sleep(self.PAIR_TEST_SLEEP_SECS)
         #     self.test_device_is_paired(device.address)
 
         #     # After a reboot, we need to wake the peripheral
         #     # as it is not connected.
-        #     time.sleep(self.TEST_SLEEP_SECS)
+        #     time.sleep(self.PAIR_TEST_SLEEP_SECS)
         #     self.test_connection_by_adapter(device.address)
 
-        #     time.sleep(self.TEST_SLEEP_SECS)
+        #     time.sleep(self.PAIR_TEST_SLEEP_SECS)
         #     self.test_device_is_connected(device.address)
 
-        #     time.sleep(self.TEST_SLEEP_SECS)
+        #     time.sleep(self.PAIR_TEST_SLEEP_SECS)
         #     self.test_device_name(device.address, device.name)
 
         # Verify that the adapter could disconnect the device.
         self.test_disconnection_by_adapter(device.address)
 
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         if device.can_init_connection:
             # Verify that the device could initiate the connection.
             self.test_connection_by_device(device)
@@ -134,16 +134,16 @@ class bluetooth_AdapterPairing(
         # Check if the device could be re-paired after being forgotten.
         if pairing_twice:
             # Test if the adapter could discover the target device again.
-            time.sleep(self.TEST_SLEEP_SECS)
+            time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_discover_device(device.address)
 
             # Verify that the adapter could pair with the device again.
             # Also set the device trusted when pairing is done.
-            time.sleep(self.TEST_SLEEP_SECS)
+            time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_pairing(device.address, device.pin, trusted=True)
 
             # Verify that the adapter could remove the paired device again.
-            time.sleep(self.TEST_SLEEP_SECS)
+            time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_remove_pairing(device.address)
 
 
@@ -155,9 +155,9 @@ class bluetooth_AdapterPairing(
         # crbug:905374
         # self.test_stop_discovery()
         self.bluetooth_facade.stop_discovery()
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_pairing(device.address, device.pin, trusted=True)
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         # Disconnect the device
         self.test_disconnection_by_adapter(device.address)
         total_duration_by_adapter = 0
@@ -197,9 +197,9 @@ class bluetooth_AdapterPairing(
         # crbug:905374
         # self.test_stop_discovery()
         self.bluetooth_facade.stop_discovery()
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_pairing(device.address, device.pin, trusted=True)
-        time.sleep(self.TEST_SLEEP_SECS)
+        time.sleep(self.PAIR_TEST_SLEEP_SECS)
         self.test_connection_by_adapter(device.address)
 
         total_reconnection_duration = 0
