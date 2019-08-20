@@ -28,6 +28,9 @@ class Values(object):
     ec_capability = list()
     spi_voltage = 'pp1800'
 
+    # The max input voltage for USB Type-C port
+    usbc_input_voltage_limit = 20
+
     # Has eventlog support including proper timestamps. (Only for old boards!
     # Never disable this "temporarily, until we get around to implementing it"!)
     has_eventlog = True
