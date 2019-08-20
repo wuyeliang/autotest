@@ -160,7 +160,7 @@ class FlashromHandler(object):
                     'rec': FvSection(None, 'RECOVERY_MRC_CACHE'),
                     'ec_a': FvSection(None, 'ECMAINA'),
                     'ec_b': FvSection(None, 'ECMAINB'),
-                    'rw_legacy': FvSection(None, None, 'RW_LEGACY'),
+                    'rw_legacy': FvSection(None, 'RW_LEGACY'),
             }
         elif self.target == 'ec':
             self.fum = saft_flashrom_util.flashrom_util(
