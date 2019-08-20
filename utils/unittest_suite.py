@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python2 -u
 
 import os, sys, unittest, optparse
 import common

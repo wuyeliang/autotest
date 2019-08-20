@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python2 -u
 """
 Wrapper to patch pylint library functions to suit autotest.
 
