@@ -97,6 +97,9 @@ _CONTROLFILE_TEMPLATE = Template(
             target_module={% if target_module %}'{{target_module}}'{% else %}None{%endif%},
             target_plan={% if target_plan %}'{{target_plan}}'{% else %}None{% endif %},
             bundle='{{abi}}',
+    {%- if extra_artifacts %}
+            extra_artifacts={{extra_artifacts}},
+    {%- endif %}
     {%- if uri %}
             uri='{{uri}}',
     {%- endif %}
@@ -398,6 +401,10 @@ _EXTRA_ATTRIBUTES = {
         'suite:arc-cts-deqp', 'suite:graphics_per-day'
     ],
     _COLLECT: ['suite:arc-cts-qual', 'suite:arc-cts'],
+}
+
+_EXTRA_ARTIFACTS = {
+    'CtsViewTestCases': ["/storage/emulated/0/SurfaceViewSyncTest/"],
 }
 
 
@@ -845,6 +852,14 @@ def get_modules_to_remove(is_public):
     return []
 
 
+def get_extra_artifacts(modules):
+    artifacts = []
+    for module in modules:
+        if module in _EXTRA_ARTIFACTS:
+            artifacts += _EXTRA_ARTIFACTS[module]
+    return artifacts
+
+
 def calculate_timeout(modules, suites, is_public):
     """Calculation for timeout of tradefed run.
 
@@ -931,6 +946,7 @@ def get_controlfile_content(combined,
             abi,
             is_public,
             is_camerabox_test=(camera_facing is not None)),
+        extra_artifacts=get_extra_artifacts(modules),
         job_retries=get_job_retries(modules, is_public),
         max_result_size_kb=get_max_result_size_kb(modules, is_public),
         revision=revision,

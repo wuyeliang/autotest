@@ -176,6 +176,7 @@ class cheets_CTS_N(tradefed_test.TradefedTest):
                  needs_push_media=False,
                  enable_default_apps=False,
                  bundle=None,
+                 extra_artifacts=[],
                  precondition_commands=[],
                  login_precondition_commands=[],
                  timeout=_CTS_TIMEOUT_SECONDS):
@@ -213,6 +214,7 @@ class cheets_CTS_N(tradefed_test.TradefedTest):
             needs_push_media=needs_push_media,
             enable_default_apps=enable_default_apps,
             bundle=bundle,
+            extra_artifacts=extra_artifacts,
             cts_uri=_CTS_URI,
             login_precondition_commands=login_precondition_commands,
             precondition_commands=precondition_commands)

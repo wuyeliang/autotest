@@ -29,6 +29,7 @@ def run_CTS(machine):
         target_module='all.CtsViewTestCases_-_CtsViewTestCases',
         target_plan=None,
         bundle='x86',
+        extra_artifacts=['/storage/emulated/0/SurfaceViewSyncTest/'],
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r9-linux_x86-x86.zip',
         precondition_commands=['sleep 60'],
         timeout=172800)

@@ -1034,6 +1034,20 @@ class TradefedTest(test.test):
             return False
         return True
 
+    def _copy_extra_artifacts(self, extra_artifacts, host, output_dir):
+        """ Upload the custom artifacts """
+        self._safe_makedirs(output_dir)
+
+        for artifact in extra_artifacts:
+            logging.info('Copying extra artifacts from "%s" to "%s".',
+                         artifact, output_dir)
+            try:
+                self._run_adb_cmd(host, verbose=True, timeout=120,
+                                  args=('pull', artifact, output_dir))
+            except:
+                # Maybe ADB connection failed, or the artifacts don't exist.
+                logging.exception('Copying extra artifacts failed.')
+
     def _run_tradefed_list_results(self):
         """Run the `tradefed list results` command.
 
@@ -1072,6 +1086,7 @@ class TradefedTest(test.test):
                                    target_plan=None,
                                    executable_test_count=None,
                                    bundle=None,
+                                   extra_artifacts=[],
                                    cts_uri=None,
                                    login_precondition_commands=[],
                                    precondition_commands=[],
@@ -1167,6 +1182,14 @@ class TradefedTest(test.test):
 
                 waived = len(waived_tests)
                 last_session_id, passed, failed, all_done = result
+
+                if failed > waived:
+                    for host in self._hosts:
+                        dir_name = "%s-step%02d" % (host.hostname, steps)
+                        output_dir = os.path.join(
+                            self.resultsdir, 'extra_artifacts', dir_name)
+                        self._copy_extra_artifacts(
+                            extra_artifacts, host, output_dir)
 
                 if passed + failed > 0:
                     # At least one test had run, which means the media push step
