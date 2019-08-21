@@ -87,7 +87,8 @@ class TestConfig(object):
     """
     def __init__(self, board, name, is_delta_update, source_release,
                  target_release, source_payload_uri, target_payload_uri,
-                 suite_name=_DEFAULT_AU_SUITE_NAME, source_archive_uri=None):
+                 suite_name=_DEFAULT_AU_SUITE_NAME, source_archive_uri=None,
+                 payload_type=None):
         """Initialize a test configuration.
 
         @param board: the board being tested (e.g. 'x86-alex')
@@ -99,6 +100,9 @@ class TestConfig(object):
         @param target_payload_uri: target payload URI ('gs://...')
         @param suite_name: the name of the test suite (default: 'au')
         @param source_archive_uri: location of source build artifacts
+        @param payload_type: The type of update we are doing with this payload.
+                             Possible types are in defined in PAYLOAD_TYPES at
+                             chromite/lib/paygen/paygen_build_lib
 
         """
         self.board = board
@@ -110,6 +114,7 @@ class TestConfig(object):
         self.target_payload_uri = target_payload_uri
         self.suite_name = suite_name
         self.source_archive_uri = source_archive_uri
+        self.payload_type = payload_type
 
 
     def get_update_type(self):
@@ -118,9 +123,14 @@ class TestConfig(object):
 
     def unique_name_suffix(self):
         """Unique name suffix for the test config given the target version."""
-        return '%s_%s_%s' % (self.name,
-                             'delta' if self.is_delta_update else 'full',
-                             self.source_release)
+
+        payload_type_ending = ''
+        if self.payload_type:
+            payload_type_ending = '_%s' % self.payload_type.lower()
+        return '%s_%s_%s%s' % (self.name,
+                               'delta' if self.is_delta_update else 'full',
+                               self.source_release,
+                               payload_type_ending)
 
 
     def get_autotest_name(self):
@@ -168,10 +178,13 @@ class TestConfig(object):
             ('target_payload_uri', self.target_payload_uri),
             ('SUITE', self.suite_name)
         ]
+
         if self.source_payload_uri:
             arg_values.append(('source_payload_uri', self.source_payload_uri))
         if self.source_archive_uri:
             arg_values.append(('source_archive_uri', self.source_archive_uri))
+        if self.payload_type:
+            arg_values.append(('payload_type', self.payload_type))
 
         return delim.join(
                 [template % (key, assign, val) for key, val in arg_values])

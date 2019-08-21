@@ -155,7 +155,7 @@ To run locally:
 TEST_CONF_KEYS = (
     'name', 'update_type', 'source_release', 'target_release',
     'source_payload_uri', 'source_archive_uri', 'target_payload_uri',
-    'target_archive_uri')
+    'target_archive_uri', 'payload_type')
 
 
 args_dict = utils.args_to_dict(args)
