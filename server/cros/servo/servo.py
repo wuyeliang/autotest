@@ -164,8 +164,17 @@ class _Uart(object):
                       uart)
         uart_cmd = '%s_uart_capture' % uart
         if self._servo.has_control(uart_cmd):
-            self._servo.set(uart_cmd, 'on' if start else 'off')
-            return True
+            # Do our own implementation of set() here as not_applicable
+            # should also count as a valid control.
+            level = 'on' if start else 'off'
+            logging.debug('Trying to set %s to %s.', uart_cmd, level)
+            self._servo.set_nocheck(uart_cmd, level)
+            result = self._servo.get(uart_cmd)
+            if result in [level, 'not_applicable']:
+              logging.debug('Managed to set %s to %s.', uart_cmd, result)
+              return True
+            logging.debug('Failed to set %s to %s. Got %s.', uart_cmd, level,
+                          result)
         return False
 
     def start_capture(self):
