@@ -317,9 +317,10 @@ class AtestCmd(object):
         """
         assert isinstance(reason, unicode)
         cmd = AtestCmd.atest_lock_cmd(reason=reason)
-        exit_code = call_with_tempfile(cmd, hostnames).exit_code
-        if exit_code != 0:
-            raise MigrationException('failed to lock file')
+        # NOTE: attempting to lock a host can fail because the host
+        # is already locked. Therefore, atest_lock always succeeds
+        # regardless of the exit status of the command.
+        call_with_tempfile(cmd, hostnames)
 
     @staticmethod
     def atest_lock_filter(stream):
