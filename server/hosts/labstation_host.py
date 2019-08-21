@@ -12,6 +12,8 @@ from autotest_lib.server.hosts import cros_label
 from autotest_lib.server.cros import autoupdater
 from autotest_lib.server.hosts import labstation_repair
 from autotest_lib.server.hosts import base_servohost
+from autotest_lib.client.cros import constants as client_constants
+from autotest_lib.client.common_lib import lsbrelease_utils
 
 
 class LabstationHost(base_servohost.BaseServoHost):
@@ -106,6 +108,30 @@ class LabstationHost(base_servohost.BaseServoHost):
 
     def get_os_type(self):
         return 'labstation'
+
+
+    def prepare_for_update(self):
+        """Prepares the DUT for an update.
+        Subclasses may override this to perform any special actions
+        required before updating.
+        """
+        pass
+
+
+    def _get_lsb_release_content(self):
+        """Return the content of lsb-release file of host."""
+        return self.run(
+            'cat "%s"' % client_constants.LSB_RELEASE).stdout.strip()
+
+
+    def get_release_version(self):
+        """Get the value of attribute CHROMEOS_RELEASE_VERSION from lsb-release.
+
+        @returns The version string in lsb-release, under attribute
+                 CHROMEOS_RELEASE_VERSION.
+        """
+        return lsbrelease_utils.get_chromeos_release_version(
+            lsb_release_content=self._get_lsb_release_content())
 
 
     def repair(self):
