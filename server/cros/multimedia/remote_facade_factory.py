@@ -37,6 +37,11 @@ CLIENT_LOG_STREAM = logging_manager.LoggingFile(
         prefix='[client] ')
 
 
+class WebSocketConnectionClosedException(Exception):
+    """WebSocket is closed during Telemetry inspecting the backend."""
+    pass
+
+
 class _Method:
     """Class to save the name of the RPC method instead of the real object.
 
@@ -125,13 +130,16 @@ class RemoteFacadeProxy(object):
 
             @return: A tuple of (keyword, reason); or None if not found.
             """
-            EXCEPTION_PATTERN = r'(\w+): (.+)'
             # Search the line containing the exception keyword, like:
             #   "TestFail: Not able to start session."
+            #   "WebSocketException... Error message: socket is already closed."
+            EXCEPTION_PATTERNS = (r'(\w+): (.+)',
+                                  r'(.*)\. Error message: (.*)')
             for line in reversed(message.split('\n')):
-                m = re.match(EXCEPTION_PATTERN, line)
-                if m:
-                    return (m.group(1), m.group(2))
+                for pattern in EXCEPTION_PATTERNS:
+                    m = re.match(pattern, line)
+                    if m:
+                        return (m.group(1), m.group(2))
             return None
 
         def call_rpc_with_log():
@@ -152,6 +160,8 @@ class RemoteFacadeProxy(object):
                         raise error.TestFail(reason)
                     elif keyword == 'TestError':
                         raise error.TestError(reason)
+                    elif 'WebSocketConnectionClosedException' in keyword:
+                        raise WebSocketConnectionClosedException(reason)
 
                     # Raise the exception with the original exception keyword.
                     raise Exception('%s: %s' % (keyword, reason))
@@ -173,7 +183,8 @@ class RemoteFacadeProxy(object):
                 return call_rpc_with_log()
             except (socket.error,
                     xmlrpclib.ProtocolError,
-                    httplib.BadStatusLine):
+                    httplib.BadStatusLine,
+                    WebSocketConnectionClosedException):
                 # Reconnect the RPC server in case connection lost, e.g. reboot.
                 self.connect()
                 if not self._no_chrome:
