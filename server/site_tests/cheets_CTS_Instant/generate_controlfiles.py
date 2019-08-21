@@ -723,14 +723,23 @@ def get_tradefed_data(path, is_public):
             modules.append(line)
         elif line.startswith('Saved log to'):
             break  # TODO(ihf): Fix using this as EOS.
-        elif line.isspace or line.startswith('Use "help"'):
+        elif not line:
+            if p.poll() is not None:
+                # The process has exited unexpectedly.
+                del modules[:]
+                break
+        elif line.isspace() or line.startswith('Use "help"'):
             pass
         else:
             logging.warning('Ignoring "%s"', line)
-    p.kill()
+    if p.poll() is None:
+      # Kill the process if alive.
+      p.kill()
     p.wait()
     for module in get_modules_to_remove(is_public):
         modules.remove(module)
+    if not modules:
+      raise Exception("no modules found.")
     return modules, build, revision
 
 
