@@ -7,6 +7,7 @@ import fcntl
 import glob
 import logging
 import os
+import random
 import re
 import shutil
 import time
@@ -88,6 +89,9 @@ class CrashTest(test.test):
     _EARLY_BOOT_CRASH_DIR = '/mnt/stateful_partition/unencrypted/preserve/crash'
     _USER_CRASH_DIRS = '/home/chronos/u-*/crash'
     _USER_CRASH_DIR_REGEX = re.compile('/home/chronos/u-([a-f0-9]+)/crash')
+
+    # Matches kDefaultMaxUploadBytes
+    _MAX_CRASH_SIZE = 1024 * 1024
 
     # Use the same file format as crash does normally:
     # <basename>.#.#.#.meta
@@ -309,7 +313,7 @@ class CrashTest(test.test):
 
 
     def write_crash_dir_entry(self, name, contents):
-        """Writes an empty file to the system crash directory.
+        """Writes a file to the system crash directory.
 
         This writes a file to _SYSTEM_CRASH_DIR with the given name. This is
         used to insert new crash dump files for testing purposes.
@@ -343,6 +347,16 @@ class CrashTest(test.test):
                             last_line))
         return self.write_crash_dir_entry(name, contents)
 
+    def _get_dmp_contents(self):
+        """Creates the contents of the dmp file for our made crashes.
+
+        The dmp file contents are deliberately large and hard-to-compress. This
+        ensures logging_CrashSender hits its bytes/day cap before its sends/day
+        cap.
+        """
+        return bytearray(
+                [random.randint(0, 255) for n in range(self._MAX_CRASH_SIZE)])
+
 
     def _prepare_sender_one_crash(self,
                                   send_success,
@@ -365,7 +379,7 @@ class CrashTest(test.test):
             # Use the same file format as crash does normally:
             # <basename>.#.#.#.meta
             payload = self.write_crash_dir_entry(
-                '%s.dmp' % self._FAKE_TEST_BASENAME, '')
+                '%s.dmp' % self._FAKE_TEST_BASENAME, self._get_dmp_contents())
             report = self.write_fake_meta(
                 '%s.meta' % self._FAKE_TEST_BASENAME, 'fake', payload)
         return report
