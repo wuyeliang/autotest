@@ -35,10 +35,9 @@ from autotest_lib.server.cros.dynamic_suite import tools
 from autotest_lib.server.cros.dynamic_suite.job_status import Status
 
 try:
-    from chromite.lib import boolparse_lib
-    from chromite.lib import cros_logging as logging
-except ImportError:
-    print 'Unable to import chromite.'
+    from autotest_lib.server.cros.dynamic_suite import boolparse_lib
+except ImportError as e:
+    print 'Unable to import boolparse_lib: %s' % (e,)
     print 'This script must be either:'
     print '  - Be run in the chroot.'
     print '  - (not yet supported) be run after running '
