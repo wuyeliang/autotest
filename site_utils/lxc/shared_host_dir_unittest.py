@@ -76,6 +76,7 @@ class SharedHostDirTests(lxc_utils.LXCTests):
             host_dir.cleanup()
 
 
+@unittest.skip('Flakey (http://crbug/960959)')
 class TimeoutTests(lxc_utils.LXCTests):
     """Test the timeouts on the shared host dir class."""
 
