@@ -249,8 +249,7 @@ class firmware_Cr50CCDServoCap(Cr50Test):
 
         @param state: string 'attach' or 'detach'
         """
-        self.servo.set_nocheck('servo_v4_dts_mode',
-            'on' if state == 'attach' else 'off')
+        self.servo.set_servo_v4_dts_mode('on' if state == 'attach' else 'off')
         time.sleep(self.SLEEP)
 
 

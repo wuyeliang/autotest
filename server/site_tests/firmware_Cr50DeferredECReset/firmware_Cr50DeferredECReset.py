@@ -112,7 +112,7 @@ class firmware_Cr50DeferredECReset(Cr50Test):
         # Check if the dut has any RDD recognition issue.
         # First, cut off power source and hold the power button.
         #        disable RDD connection.
-        self.servo.set('servo_v4_dts_mode', 'off')
+        self.servo.set_servo_v4_dts_mode('off')
         self.servo.set('pwr_button', 'press')
         self.cr50_power_on_reset()
         try:
@@ -124,7 +124,7 @@ class firmware_Cr50DeferredECReset(Cr50Test):
                 raise error.TestNAError('This board has a RDD recognition'
                                         ' issue')
         finally:
-            self.servo.set_nocheck('servo_v4_dts_mode', self.dts_restore)
+            self.servo.set_servo_v4_dts_mode(self.dts_restore)
             self.servo.set_nocheck('pwr_button', 'release')
             time.sleep(self.PD_SETTLE_TIME)
 
@@ -200,7 +200,7 @@ class firmware_Cr50DeferredECReset(Cr50Test):
 
         try:
             # enable RDD Connection (or disable) before power-on-reset
-            self.servo.set('servo_v4_dts_mode', 'on' if rdd_enable else 'off')
+            self.servo.set_servo_v4_dts_mode('on' if rdd_enable else 'off')
 
             # Set power button before the dut loses power,
             # because the power button value cannot be changed during power-off.
@@ -235,7 +235,7 @@ class firmware_Cr50DeferredECReset(Cr50Test):
             else:
                 self.servo.set_nocheck('servo_v4_role', 'src')
 
-            self.servo.set_nocheck('servo_v4_dts_mode', self.dts_restore)
+            self.servo.set_servo_v4_dts_mode(self.dts_restore)
             time.sleep(1)
 
             # Press power button to wake up AP, and releases it soon

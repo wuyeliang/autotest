@@ -682,7 +682,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     def ccd_disable(self, raise_error=True):
         """Change the values of the CC lines to disable CCD"""
         logging.info("disable ccd")
-        self._servo.set_nocheck('servo_v4_dts_mode', 'off')
+        self._servo.set_servo_v4_dts_mode('off')
         self.wait_for_ccd_disable(raise_error=raise_error)
 
 
@@ -690,7 +690,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     def ccd_enable(self, raise_error=False):
         """Reenable CCD and reset servo interfaces"""
         logging.info("reenable ccd")
-        self._servo.set_nocheck('servo_v4_dts_mode', 'on')
+        self._servo.set_servo_v4_dts_mode('on')
         # If the test is actually running with ccd, wait for USB communication
         # to come up after reset.
         if self._servo.running_through_ccd():
@@ -905,7 +905,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         except Exception, e:
             logging.info(e)
             rv = False
-        self._servo.set_nocheck('servo_v4_dts_mode', dts_start)
+        self._servo.set_servo_v4_dts_mode(dts_start)
         self.wait_for_stable_ccd_state(ccd_start, 60, True)
         logging.info('Test setup does%s support servo DTS mode',
                 '' if rv else 'n\'t')

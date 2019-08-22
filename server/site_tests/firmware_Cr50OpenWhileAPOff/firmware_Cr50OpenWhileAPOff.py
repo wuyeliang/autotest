@@ -162,7 +162,7 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
 
     def set_dts(self, state):
         """Set servo v4 dts mode"""
-        self.servo.set_nocheck('servo_v4_dts_mode', state)
+        self.servo.set_servo_v4_dts_mode(state)
         # Some boards can't detect DTS mode when the EC is off. After 0.X.18,
         # we can set CCD_MODE_L manually using gpioset. If detection is working,
         # this won't do anything. If it isn't working, it'll force cr50 to
