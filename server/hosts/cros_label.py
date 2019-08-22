@@ -24,6 +24,10 @@ from autotest_lib.site_utils import hwid_lib
 # pylint: disable=missing-docstring
 LsbOutput = collections.namedtuple('LsbOutput', ['unibuild', 'board'])
 
+# fallback values if we can't contact the HWID server
+HWID_LABELS_FALLBACK = ['sku', 'phase', 'touchscreen', 'touchpad', 'variant', 'stylus']
+
+
 def _parse_lsb_output(host):
     """Parses the LSB output and returns key data points for labeling.
 
@@ -634,11 +638,64 @@ class HWIDLabel(base_label.StringLabel):
                 'CROS', 'HWID_KEY', type=str)
 
 
+    @staticmethod
+    def _merge_hwid_label_lists(new, old):
+        """merge a list of old and new values for hwid_labels.
+        preferring new values if available
+
+        @returns: list of labels"""
+        # TODO(gregorynisbet): what is the appropriate way to merge
+        # old and new information?
+        retained = set(x for x in old)
+        for label in new:
+            key, sep, value = label.partition(':')
+            # If we have a key-value key such as variant:aaa,
+            # then we remove all the old labels with the same key.
+            if sep:
+                retained = set(x for x in retained if (not x.startswith(key + ':')))
+        return list(sorted(retained.union(new)))
+
+
+    def _hwid_label_names(self):
+        """get the labels that hwid_lib controls.
+
+        @returns: hwid_labels
+        """
+        all_hwid_labels, _ = self.get_all_labels()
+        # If and only if get_all_labels was unsuccessful,
+        # it will return a falsey value.
+        return all_hwid_labels or HWID_LABELS_FALLBACK
+
+
+    def _old_label_values(self, host):
+        """get the hwid_lib labels on previous run
+
+        @returns: hwid_labels"""
+        out = []
+        info = host.host_info_store.get()
+        for hwid_label in self._hwid_label_names():
+            for label in info.labels:
+                # NOTE: we want *all* the labels starting
+                # with this prefix.
+                if label.startswith(hwid_label):
+                    out.append(label)
+        return out
+
+
     def generate_labels(self, host):
-        hwid_labels = []
+        # use previous values as default
+        old_hwid_labels = self._old_label_values(host)
         hwid = host.run_output('crossystem hwid').strip()
-        hwid_info_list = hwid_lib.get_hwid_info(hwid, hwid_lib.HWID_INFO_LABEL,
-                                                self.key_file).get('labels', [])
+        hwid_info_list = []
+        try:
+            hwid_info_response = hwid_lib.get_hwid_info(
+                hwid=hwid,
+                info_type=hwid_lib.HWID_INFO_LABEL,
+                key_file=self.key_file,
+            )
+            hwid_info_list = hwid_info_response.get('labels', [])
+        except hwid_lib.HwIdException as e:
+            logging.info("HwIdException: %s", e)
 
         for hwid_info in hwid_info_list:
             # If it's a prefix, we'll have:
@@ -649,9 +706,13 @@ class HWIDLabel(base_label.StringLabel):
             name = hwid_info.get('name', '')
             # There should always be a name but just in case there is not.
             if name:
-                hwid_labels.append(name if not value else
-                                   '%s:%s' % (name, value))
-        return hwid_labels
+                new_label = name if not value else '%s:%s' % (name, value)
+                hwid_info_list.append(new_label)
+
+        return HWIDLabel._merge_hwid_label_lists(
+            old=old_hwid_labels,
+            new=hwid_info_list,
+        )
 
 
     def get_all_labels(self):

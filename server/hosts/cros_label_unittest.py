@@ -8,6 +8,7 @@ import unittest
 import common
 
 from autotest_lib.server import utils
+from autotest_lib.server.hosts import cros_label
 from autotest_lib.server.hosts.cros_label import BoardLabel
 from autotest_lib.server.hosts.cros_label import BluetoothLabel
 from autotest_lib.server.hosts.cros_label import BrandCodeLabel
@@ -261,6 +262,26 @@ class Cr50LabelTests(unittest.TestCase):
                         MockCmd('gsctool -a -f', 1, ''))
         self.assertEqual(Cr50Label().get(host), [])
 
+class HWIDLabelTests(unittest.TestCase):
+    def test_merge_hwid_label_lists_empty(self):
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists([], []), [])
+
+    def test_merge_hwid_label_lists_singleton(self):
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists([], ["4"]), ["4"])
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(["7"], []), ["7"])
+
+    def test_merge_hwid_label_lists_override(self):
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(old=["7:a"], new=["7:b"]), ["7:b"])
+
+    def test_merge_hwid_label_lists_no_override(self):
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(old=["7a"], new=["7b"]), ["7a", "7b"])
+
+    def test_hwid_label_names(self):
+        class HWIDLabelTester(cros_label.HWIDLabel):
+            def get_all_labels(self):
+                return [], []
+        item = HWIDLabelTester()
+        self.assertEqual(item._hwid_label_names(), cros_label.HWID_LABELS_FALLBACK)
 
 if __name__ == '__main__':
     unittest.main()
