@@ -38,8 +38,7 @@ class camera_V4L2(test.test):
             self.usb_info = self.get_camera_device_usb_info(device)
             if not self.usb_info:
                 continue
-            self.run_v4l2_unittests(device)
-            self.run_v4l2_capture_test(device)
+            self.run_v4l2_test(device)
 
     def should_test_halv3(self):
         has_v3 = os.path.exists('/usr/bin/cros_camera_service')
@@ -79,17 +78,7 @@ class camera_V4L2(test.test):
         if not self.v4l2_devices:
             raise error.TestFail("No V4L2 devices found!")
 
-    def run_v4l2_unittests(self, device):
-        cmd = [
-                "media_v4l2_unittest",
-                "--device_path=%s" % device,
-        ]
-        if self.test_list:
-            cmd.append("--test_list=%s" % self.test_list)
-        logging.info("Running %s", cmd)
-        stdout = utils.system_output(cmd, retain_output=True)
-
-    def run_v4l2_capture_test(self, device):
+    def run_v4l2_test(self, device):
         cmd = [
                 "media_v4l2_test",
                 "--device_path=%s" % device,
