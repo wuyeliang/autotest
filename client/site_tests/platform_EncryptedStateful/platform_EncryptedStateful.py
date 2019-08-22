@@ -259,8 +259,7 @@ class platform_EncryptedStateful(test.test):
         # Perform post-mount sanity checks (and handle unfinalized devices).
         encstate.check_sizes(finalized=os.path.exists(encstate.key))
 
-    def encstateful_reclamation_check(self):
-        # Create test root directory.
+    def no_tpm(self):
         encstate = EncryptedStateful()
 
         # Make sure we haven't run here before.
@@ -268,23 +267,6 @@ class platform_EncryptedStateful(test.test):
                   "%s does not exist" % (encstate.key))
         chk.check(not os.path.exists(encstate.block),
                   "%s does not exist" % (encstate.block))
-
-        # Mount a fresh encrypted stateful, following the default workflow to
-        # get the system key.
-        encstate.mount()
-
-        # Perform post-mount sanity checks.
-        encstate.check_sizes(finalized=os.path.exists(encstate.key))
-
-        # Check disk reclamation for kernels that support PUNCH_HOLE.
-        if self.is_punch_hole_supported():
-            encstate.check_reclamation()
-
-        # Check explicit umount.
-        encstate.umount()
-
-    def no_tpm(self):
-        encstate = EncryptedStateful()
 
         # Relocate the TPM device during mount.
         tpm = "/dev/tpm0"
@@ -301,12 +283,17 @@ class platform_EncryptedStateful(test.test):
         # Perform post-mount sanity checks.
         encstate.check_sizes(finalized=False)
 
+        # Check disk reclamation for kernels that support PUNCH_HOLE.
+        if self.is_punch_hole_supported():
+            encstate.check_reclamation()
+
+        # Check explicit umount.
+        encstate.umount()
+
     def run_once(self):
         # Do a no-write test of system's existing encrypted partition.
         self.existing_partition()
 
-        # Do a no-write, no-TPM test with sanity checks.
+        # Do a no-write, no-TPM test with sanity checks. Also do a reclamation
+        # check against the encrypted stateful partition.
         self.no_tpm()
-
-        # Do a reclamation check against the encrypted stateful partition.
-        self.encstateful_reclamation_check()
