@@ -78,12 +78,8 @@ class OSInterface(object):
         self.state_dir = state_dir
         self.log_file = log_file
 
-        if self.is_android:
-            self.shell = shell_wrapper.AdbShell(self)
-            self.host_shell = shell_wrapper.LocalShell(self)
-        else:
-            self.shell = shell_wrapper.LocalShell(self)
-            self.host_shell = None
+        self.shell = shell_wrapper.LocalShell(self)
+        self.host_shell = None
 
         self.create_dir(self.state_dir)
 
