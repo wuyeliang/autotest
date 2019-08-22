@@ -1159,6 +1159,35 @@ class Servo(object):
             logging.debug('Not a servo v4, unable to set role to %s.', role)
 
 
+    def set_servo_v4_dts_mode(self, state):
+        """Set servo v4 dts mode to off or on.
+
+        It does nothing if not a servo v4. Disable the ccd watchdog if we're
+        disabling dts mode. CCD will disconnect. The watchdog only allows CCD
+        to disconnect for 10 seconds until it kills servod. Disable the
+        watchdog, so CCD can stay disconnected indefinitely.
+
+        @param state: Set servo v4 dts mode 'off' or 'on'.
+        """
+        servo_version = self.get_servo_version()
+        if not servo_version.startswith('servo_v4'):
+            logging.debug('Not a servo v4, unable to set dts mode %s.', state)
+            return
+
+        # TODO(mruthven): remove watchdog check once the labstation has been
+        # updated to have support for modifying the watchdog.
+        set_watchdog = self.has_control('watchdog') and 'ccd' in servo_version
+        enable_watchdog = state == 'on'
+
+        if set_watchdog and not enable_watchdog:
+            self.set_nocheck('watchdog_remove', 'ccd')
+
+        self.set_nocheck('servo_v4_dts_mode', state)
+
+        if set_watchdog and enable_watchdog:
+            self.set_nocheck('watchdog_add', 'ccd')
+
+
     @property
     def uart_logs_dir(self):
         """Return the directory to save UART logs."""
