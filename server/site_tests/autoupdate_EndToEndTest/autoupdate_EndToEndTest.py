@@ -248,19 +248,24 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
             # Update the DUT to the target image.
             pid = cros_device.install_target_image(test_conf[
                 'target_payload_uri'])
+        except dev_server.DevServerException as e:
+            logging.fatal('ERROR: Failure occurred during the target update.')
+            raise error.TestFail(str(e))
 
-            # Verify the hostlog of events was returned from the update.
-            file_url = self._get_hostlog_file(self._DEVSERVER_HOSTLOG_ROOTFS,
-                                              pid)
+        # Verify the hostlog of events was returned from the update.
+        file_url = self._get_hostlog_file(self._DEVSERVER_HOSTLOG_ROOTFS,
+                                          pid)
 
+        try:
             # Call into base class to compare expected events against hostlog.
             self.verify_update_events(source_release, file_url)
-        except:
-            logging.fatal('ERROR: Failure occurred during the target update.')
+        except update_engine_test.UpdateEngineEventMissing:
+            self._dump_update_engine_log(cros_device)
             raise
 
         # Collect perf stats about this update run.
-        perf_file = cros_device.get_perf_stats_for_update(self.job.resultdir)
+        perf_file = cros_device.get_perf_stats_for_update(
+            self.job.resultdir)
         if perf_file is not None:
             self._report_perf_data(perf_file)
 
@@ -271,14 +276,21 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
             # post-reboot update check. So we just check the version from
             # lsb-release.
             logging.info('Skipping post reboot update check.')
-            self._verify_version(target_release, cros_device.get_cros_version())
+            self._verify_version(target_release,
+                                 cros_device.get_cros_version())
         else:
             # Verify we have a hostlog for the post-reboot update check.
-            file_url = self._get_hostlog_file(self._DEVSERVER_HOSTLOG_REBOOT,
-                                              pid)
+            file_url = self._get_hostlog_file(
+                self._DEVSERVER_HOSTLOG_REBOOT, pid)
 
-            # Call into base class to compare expected events against hostlog.
-            self.verify_update_events(source_release, file_url, target_release)
+            try:
+                # Compare expected events against hostlog.
+                self.verify_update_events(source_release, file_url,
+                                          target_release)
+            except update_engine_test.UpdateEngineEventMissing:
+                self._dump_update_engine_log(cros_device)
+                raise
+
 
         self._verify_active_slot_changed(source_active_slot,
                                          cros_device.get_active_slot(),
@@ -313,11 +325,7 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
             cros_device.check_login_after_source_update()
 
         # Start the update to the target image.
-        try:
-            self.run_update_test(cros_device, test_conf)
-        except update_engine_test.UpdateEngineEventMissing:
-            self._dump_update_engine_log(cros_device)
-            raise
+        self.run_update_test(cros_device, test_conf)
 
         # Check we can login after the update.
         cros_device.check_login_after_target_update()
