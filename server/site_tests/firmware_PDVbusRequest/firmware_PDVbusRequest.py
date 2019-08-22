@@ -33,10 +33,11 @@ class firmware_PDVbusRequest(FirmwareTest):
 
     VOLTAGE_SEQUENCE = [5, 12, 20, 12, 5, 20, 5, 5, 12, 12, 20]
 
-    def _compare_vbus(self, expected_vbus_voltage):
+    def _compare_vbus(self, expected_vbus_voltage, ok_to_fail):
         """Check VBUS using pdtester
 
         @param expected_vbus_voltage: nominal VBUS level (in volts)
+        @param ok_to_fail: True to not treat voltage-not-matched as failure.
 
         @returns: a tuple containing pass/fail indication and logging string
         """
@@ -51,7 +52,7 @@ class firmware_PDVbusRequest(FirmwareTest):
         # Verify that measured Vbus voltage is within expected range
         voltage_difference = math.fabs(expected_vbus_voltage - vbus_voltage)
         if voltage_difference > tolerance:
-            result = 'FAIL'
+            result = 'ALLOWED_FAIL' if ok_to_fail else 'FAIL'
         else:
             result = 'PASS'
         return result, result_str
@@ -107,6 +108,10 @@ class firmware_PDVbusRequest(FirmwareTest):
         logging.info('Start of DUT initiated tests')
         dut_failures = []
         dut_voltage_limit = self.faft_config.usbc_input_voltage_limit
+        is_override = self.faft_config.charger_profile_override
+        if is_override:
+            logging.info('*** Custom charger profile takes over, which may '
+                         'cause voltage-not-matched. It is OK to fail. *** ')
         for v in self.VOLTAGE_SEQUENCE:
             if v > dut_voltage_limit:
                 logging.info('Target = %02dV: skipped, over the limit %0dV',
@@ -116,7 +121,7 @@ class firmware_PDVbusRequest(FirmwareTest):
             cmd = 'pd %d dev %d' % (dut_state['port'], v)
             pd_dut_utils.send_pd_command(cmd)
             time.sleep(self.PD_SETTLE_DELAY)
-            result, result_str = self._compare_vbus(v)
+            result, result_str = self._compare_vbus(v, ok_to_fail=is_override)
             logging.info('%s, %s', result_str, result)
             if result == 'FAIL':
                 dut_failures.append(result_str)
@@ -139,11 +144,17 @@ class firmware_PDVbusRequest(FirmwareTest):
             time.sleep(self.PD_SETTLE_DELAY)
             # Get current PDTester PD state
             pdtester_state = pd_pdtester_utils.get_pd_state(self.pdtester_port)
-            expected_vbus_voltage = voltage
-            # If PDTester is sink, then Vbus_exp = 5v
+            # If PDTester is sink, then Vbus_exp = 5v, not skip failure even
+            # using charger profile override.
             if pdtester_state == pd_pdtester_utils.SNK_CONNECT:
                 expected_vbus_voltage = self.USBC_SINK_VOLTAGE
-            result, result_str = self._compare_vbus(expected_vbus_voltage)
+                ok_to_fail = False
+            else:
+                expected_vbus_voltage = voltage
+                ok_to_fail = is_override
+
+            result, result_str = self._compare_vbus(expected_vbus_voltage,
+                                                    ok_to_fail)
             logging.info('%s, %s', result_str, result)
             if result == 'FAIL':
                 pdtester_failures.append(result_str)

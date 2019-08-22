@@ -32,6 +32,10 @@ class Values(object):
     # The max input voltage for USB Type-C port
     usbc_input_voltage_limit = 20
 
+    # Has a custom charger profile, which takes over the control of voltage/
+    # current limit
+    charger_profile_override = False
+
     # Has eventlog support including proper timestamps. (Only for old boards!
     # Never disable this "temporarily, until we get around to implementing it"!)
     has_eventlog = True

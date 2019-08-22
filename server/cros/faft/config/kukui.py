@@ -13,3 +13,4 @@ class Values(object):
     fw_bypasser_type = 'tablet_detachable_bypasser'
     ec_reboot_to_g3_delay = 10
     usbc_input_voltage_limit = 12
+    charger_profile_override = True
