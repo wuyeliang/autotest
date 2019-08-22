@@ -37,7 +37,8 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
 
         # TODO(mruthven): replace with dependency on servo v4 with servo micro
         # and type c cable.
-        if 'servo_v4_with_servo_micro' != self.servo.get_servo_version():
+        if (self.servo.get_servo_version(active=True) !=
+            'servo_v4_with_servo_micro'):
             raise error.TestNAError('Run using servo v4 with servo micro')
 
         if not self.cr50.servo_v4_supports_dts_mode():

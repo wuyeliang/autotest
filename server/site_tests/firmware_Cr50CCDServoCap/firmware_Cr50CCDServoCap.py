@@ -105,7 +105,8 @@ class firmware_Cr50CCDServoCap(Cr50Test):
             raise error.TestNAError('Test can only be run on devices with '
                                     'access to the Cr50 console')
 
-        if self.servo.get_servo_version() != 'servo_v4_with_servo_micro':
+        if (self.servo.get_servo_version(active=True) !=
+            'servo_v4_with_servo_micro'):
             raise error.TestNAError('Must use servo v4 with servo micro')
 
         if not self.cr50.servo_v4_supports_dts_mode():

@@ -892,7 +892,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         # This is to test that Cr50 actually recognizes the change in ccd state
         # We cant do that with tests using ccd, because the cr50 communication
         # goes down once ccd is enabled.
-        if 'servo_v4_with_servo_micro' != self._servo.get_servo_version():
+        if (self._servo.get_servo_version(active=True) !=
+            'servo_v4_with_servo_micro'):
             return False
 
         ccd_start = 'on' if self.ccd_is_enabled() else 'off'
