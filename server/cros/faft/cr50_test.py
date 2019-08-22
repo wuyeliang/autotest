@@ -420,7 +420,7 @@ class Cr50Test(FirmwareTest):
 
         end_time = time.time() + self.RESPONSE_TIMEOUT
         while not self.host.ping_wait_up(
-                self.faft_config.delay_reboot_to_ping):
+                self.faft_config.delay_reboot_to_ping * 2):
             if time.time() > end_time:
                 logging.warn('DUT is unresponsive after trying to bring it up')
                 return
