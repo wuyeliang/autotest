@@ -86,6 +86,8 @@ _LOG_FORMAT = '%(asctime)s | %(levelname)-10s | %(message)s'
 
 _DEFAULT_POOL = constants.Labels.POOL_PREFIX + 'suites'
 
+_LABSTATION_DEFAULT_POOL = constants.Labels.POOL_PREFIX + 'labstation_main'
+
 _DIVIDER = '\n============\n'
 
 _LOG_BUCKET_NAME = 'chromeos-install-logs'
@@ -435,13 +437,15 @@ def _get_afe_host(afe, hostname, host_attrs, arguments):
         # This host was pre-existing; if the user didn't supply
         # attributes, don't update them, because the defaults may
         # not be correct.
-        if host_attrs:
+        if host_attrs and not arguments.labstation:
             _update_host_attributes(afe, hostname, host_attrs)
     else:
         afe_host = afe.create_host(hostname,
                                    locked=True,
                                    lock_reason=_LOCK_REASON_NEW_HOST)
-        _update_host_attributes(afe, hostname, host_attrs)
+
+        if not arguments.labstation:
+            _update_host_attributes(afe, hostname, host_attrs)
 
     # Correct board/model label is critical to installation. Always ensure user
     # supplied board/model matches the AFE information.
@@ -560,9 +564,12 @@ def _install_and_update_afe(afe, hostname, host_attrs, arguments):
     host = None
     try:
         host = _create_host(hostname, afe, afe_host)
-        with _create_host_for_installation(host, arguments) as host_to_install:
-            _install_test_image(host_to_install, arguments)
-            _update_servo_type_attribute(host_to_install, host)
+        if arguments.labstation:
+            _setup_labstation(host)
+        else:
+            with _create_host_for_installation(host, arguments) as target_host:
+                _install_test_image(target_host, arguments)
+                _update_servo_type_attribute(target_host, host)
 
         if arguments.install_test_image and not arguments.dry_run:
             host.labels.update_labels(host)
@@ -649,7 +656,7 @@ def _report_hosts(report_log, heading, host_results_list):
     report_log.write('\n')
 
 
-def _report_results(afe, report_log, hostnames, results):
+def _report_results(afe, report_log, hostnames, results, arguments):
     """Gather and report a summary of results from installation.
 
     Segregate results into successes and failures, reporting
@@ -662,6 +669,7 @@ def _report_results(afe, report_log, hostnames, results):
     @param results      List of error messages, in the same order
                         as the hostnames.  `None` means the
                         corresponding host succeeded.
+    @param arguments  Command line arguments with options.
     """
     successful_hosts = []
     success_reports = []
@@ -681,9 +689,13 @@ def _report_results(afe, report_log, hostnames, results):
                     success_reports.append(result)
                     break
             else:
-                h.add_labels([_DEFAULT_POOL])
+                if arguments.labstation:
+                    target_pool = _LABSTATION_DEFAULT_POOL
+                else:
+                    target_pool = _DEFAULT_POOL
+                h.add_labels([target_pool])
                 result = _ReportResult(h.hostname,
-                                       'Host added to %s' % _DEFAULT_POOL)
+                                       'Host added to %s' % target_pool)
                 success_reports.append(result)
     report_log.write(_DIVIDER)
     _report_hosts(report_log, 'Successes', success_reports)
@@ -887,7 +899,8 @@ def install_duts(arguments):
         install_function = functools.partial(_install_dut, arguments,
                                              host_attr_dict)
         results_list = install_pool.map(install_function, arguments.hostnames)
-        _report_results(afe, report_log, arguments.hostnames, results_list)
+        _report_results(afe, report_log, arguments.hostnames, results_list,
+                        arguments)
 
     if arguments.upload:
         try:
@@ -916,3 +929,38 @@ def _update_servo_type_attribute(host, host_to_update):
         logging.info("Collecting and adding servo_type attribute.")
         info.attributes['servo_type'] = host.servo.get_servo_version()
         host_to_update.host_info_store.commit(info)
+
+
+def _setup_labstation(host):
+    """Do initial setup for labstation host.
+
+    @param host    A LabstationHost object.
+
+    """
+    try:
+        if not host.is_labstation():
+            raise InstallFailedError('Current OS on host %s is not a labstation'
+                                     ' image.', host.hostname)
+    except AttributeError:
+        raise InstallFailedError('Unable to verify host has a labstation image,'
+                                 ' this can be caused by host is unsshable.')
+
+    try:
+        # TODO: we should setup hwid and serial number for DUT in deploy script
+        #  as well, which is currently obtained from repair job.
+        info = host.host_info_store.get()
+        hwid = host.run('crossystem hwid', ignore_status=True).stdout
+        if hwid:
+            info.attributes['HWID'] = hwid
+
+        serial_number = host.run('vpd -g serial_number',
+                                 ignore_status=True).stdout
+        if serial_number:
+            info.attributes['serial_number'] = serial_number
+        if info != host.host_info_store.get():
+            host.host_info_store.commit(info)
+    except Exception as e:
+        raise InstallFailedError('Failed to get HWID & Serial Number for host'
+                                 ' %s: %s' % (host.hostname, str(e)))
+
+    host.labels.update_labels(host)

@@ -163,6 +163,7 @@ def _add_servo_subcommand(subcommands):
         subcommands, 'servo', True,
         'Test servo and install the image on the USB stick')
     subparser.set_defaults(stageusb=True,
+                           labstation=False,
                            install_firmware=False,
                            install_test_image=False)
 
@@ -189,7 +190,8 @@ def _add_firmware_subcommand(subcommands):
     subparser.add_argument(
             '--using-servo', action='store_true',
             help='Flash DUT firmware directly using servo')
-    subparser.set_defaults(install_firmware=True,
+    subparser.set_defaults(labstation=False,
+                           install_firmware=True,
                            install_test_image=True)
 
 
@@ -203,7 +205,8 @@ def _add_test_image_subcommand(subcommands):
         subcommands, 'test-image', True,
         'Install initial test image on DUT from servo')
     _add_stageusb_option(subparser)
-    subparser.set_defaults(install_firmware=False,
+    subparser.set_defaults(labstation=False,
+                           install_firmware=False,
                            install_test_image=True)
 
 
@@ -217,8 +220,24 @@ def _add_repair_subcommand(subcommands):
         subcommands, 'repair', False,
         'Re-install test image on DUT from servo')
     _add_stageusb_option(subparser)
-    subparser.set_defaults(install_firmware=False,
+    subparser.set_defaults(labstation=False,
+                           install_firmware=False,
                            install_test_image=True)
+
+
+def _add_labstation_subcommand(subcommands):
+    """Add the `labstation` subcommand to `subcommands`.
+
+    @param subcommands  Subcommand object as returned by
+                        `ArgumentParser.add_subcommands`
+    """
+    subparser = _add_subcommand(
+        subcommands, 'labstation', False,
+        'Deploy a labstation to autotest, the labstation must be already'
+        ' imaged with a labstation test image.')
+    subparser.set_defaults(labstation=True,
+                           install_firmware=False,
+                           install_test_image=False)
 
 
 def parse_command(argv):
@@ -241,4 +260,5 @@ def parse_command(argv):
     _add_firmware_subcommand(subcommands)
     _add_test_image_subcommand(subcommands)
     _add_repair_subcommand(subcommands)
+    _add_labstation_subcommand(subcommands)
     return parser.parse_args(argv[1:])
