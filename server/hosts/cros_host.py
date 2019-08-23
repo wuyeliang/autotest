@@ -627,6 +627,9 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         if board is None or board == '':
             board = self.servo.get_board()
 
+        if model is None or model == '':
+            model = self.get_platform_from_fwid()
+
         # If build is not set, try to install firmware from stable CrOS.
         if not build:
             build = afe_utils.get_stable_faft_version(board)
@@ -1633,6 +1636,21 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             rpm_client.set_power(self, 'CYCLE')
 
 
+    def get_platform_from_fwid(self):
+        """Determine the platform from the crossystem fwid.
+
+        @returns a string representing this host's platform.
+        """
+        # Look at the firmware for non-unibuild cases or if mosys fails.
+        crossystem = utils.Crossystem(self)
+        crossystem.init()
+        # Extract fwid value and use the leading part as the platform id.
+        # fwid generally follow the format of {platform}.{firmware version}
+        # Example: Alex.X.YYY.Z or Google_Alex.X.YYY.Z
+        platform = crossystem.fwid().split('.')[0].lower()
+        # Newer platforms start with 'Google_' while the older ones do not.
+        return platform.replace('google_', '')
+
     def get_platform(self):
         """Determine the correct platform label for this host.
 
@@ -1647,18 +1665,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             result = self.run(command=cmd, ignore_status=True)
             if result.exit_status == 0:
                 platform = result.stdout.strip()
-
-        if not platform:
-            # Look at the firmware for non-unibuild cases or if mosys fails.
-            crossystem = utils.Crossystem(self)
-            crossystem.init()
-            # Extract fwid value and use the leading part as the platform id.
-            # fwid generally follow the format of {platform}.{firmware version}
-            # Example: Alex.X.YYY.Z or Google_Alex.X.YYY.Z
-            platform = crossystem.fwid().split('.')[0].lower()
-            # Newer platforms start with 'Google_' while the older ones do not.
-            platform = platform.replace('google_', '')
-        return platform
+        return platform if platform else self.get_platform_from_fwid()
 
 
     def get_architecture(self):
