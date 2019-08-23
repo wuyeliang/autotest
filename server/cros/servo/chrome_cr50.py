@@ -369,10 +369,20 @@ class ChromeCr50(chrome_ec.ChromeConsole):
                                                                regexp_list)
 
 
-    def send_safe_command_get_output(self, command, regexp_list):
-        """Restrict the console channels while sending console commands"""
+    def send_safe_command_get_output(self, command, regexp_list,
+            channel_mask=0x1):
+        """Restrict the console channels while sending console commands.
+
+        @param command: the command to send
+        @param regexp_list: The list of regular expressions to match in the
+                            command output
+        @param channel_mask: The mask to pass to 'chan' prior to running the
+                             command, indicating which channels should remain
+                             enabled (0x1 is command output)
+        @return: A list of matched output
+        """
         self.send_command('chan save')
-        self.send_command('chan 0')
+        self.send_command('chan 0x%x' % channel_mask)
         try:
             rv = self.send_command_get_output(command, regexp_list)
         finally:
@@ -817,7 +827,10 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         try:
             cmd = 'ccd %s%s' % (level, (' ' + password) if password else '')
-            rv = self.send_command_get_output(cmd, [cmd + '(.*)>'])[0][1]
+            enable_ccd_and_command_channels = 0x8 | 0x1
+            rv = self.send_safe_command_get_output(
+                    cmd, [cmd + '(.*)>'],
+                    channel_mask=enable_ccd_and_command_channels)[0][1]
         finally:
             self._servo.set('cr50_uart_timeout', original_timeout)
         logging.info(rv)
