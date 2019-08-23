@@ -614,7 +614,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             self._AFE.run('label_add_hosts', id=fw_label, hosts=[self.hostname])
 
 
-    def firmware_install(self, build=None, rw_only=False):
+    def firmware_install(self, build=None, rw_only=False, dest=None):
         """Install firmware to the DUT.
 
         Use stateful update if the DUT is already running the same build.
@@ -632,6 +632,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                       e.g. 'link-firmware/R22-2695.1.144'.
         @param rw_only: True to only install firmware to its RW portions. Keep
                         the RO portions unchanged.
+        @param dest: Directory to store the firmware in.
 
         TODO(dshi): After bug 381718 is fixed, update here with corresponding
                     exceptions that could be raised.
@@ -664,10 +665,13 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         ds = dev_server.ImageServer.resolve(build, self.hostname)
         ds.stage_artifacts(build, ['firmware'])
 
-        tmpd = autotemp.tempdir(unique_id='fwimage')
+        tmpd = None
+        if not dest:
+            tmpd = autotemp.tempdir(unique_id='fwimage')
+            dest = tmpd.name
         try:
             fwurl = self._FW_IMAGE_URL_PATTERN % (ds.url(), build)
-            local_tarball = os.path.join(tmpd.name, os.path.basename(fwurl))
+            local_tarball = os.path.join(dest, os.path.basename(fwurl))
             ds.download_file(fwurl, local_tarball)
 
             self._clear_fw_version_labels(rw_only)
@@ -675,7 +679,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             if utils.host_is_in_lab_zone(self.hostname):
                 self._add_fw_version_label(build, rw_only)
         finally:
-            tmpd.clean()
+            if tmpd:
+                tmpd.clean()
 
 
     def servo_install(self, image_url=None, usb_boot_timeout=USB_BOOT_TIMEOUT,
