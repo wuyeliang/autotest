@@ -81,10 +81,10 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
     def quick_test_init(self, host, use_chameleon=True):
         """Inits the test batch"""
         self.host = host
-        factory = remote_facade_factory.RemoteFacadeFactory(host)
+        factory = remote_facade_factory.RemoteFacadeFactory(host,
+                                                            disable_arc=True)
         self.bluetooth_facade = factory.create_bluetooth_hid_facade()
         self.use_chameleon = use_chameleon
-
         if self.use_chameleon:
             self.input_facade = factory.create_input_facade()
             self.check_chameleon()
@@ -106,7 +106,6 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.pkg_name = None
         self.pkg_iter = None
         self.pkg_is_running = False
-
 
     @staticmethod
     def quick_test_test_decorator(test_name, devices={}):
