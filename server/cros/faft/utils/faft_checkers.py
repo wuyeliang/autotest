@@ -257,10 +257,7 @@ class FAFTCheckers(object):
                               the expected copy of EC running firmware.
         @return: True if the current EC running copy matches; otherwise, False.
         """
-        if self.faft_client.System.HasHost():
-            cmd = 'fwtool ec version'
-        else:
-            cmd = 'ectool version'
+        cmd = 'ectool version'
         lines = self.faft_client.System.RunShellCommandGetOutput(cmd)
         pattern = re.compile("Firmware copy: (.*)")
         for line in lines:

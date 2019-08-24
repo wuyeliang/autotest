@@ -11,7 +11,6 @@ class RPCProxy(object):
     Bios: rpc_functions.BiosServicer
     Cgpt: rpc_functions.CgptServicer
     Ec: rpc_functions.EcServicer
-    Host: rpc_functions.HostServicer
     Kernel: rpc_functions.KernelServicer
     Rootfs: rpc_functions.RootfsServicer
     RpcSettings: rpc_functions.RpcSettingsServicer

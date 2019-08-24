@@ -178,9 +178,6 @@ service System {
   rpc IsAvailable
     (SystemIsAvailableRequest)
     returns (SystemIsAvailableResponse);
-  rpc HasHost
-    (SystemHasHostRequest)
-    returns (SystemHasHostResponse);
   rpc WaitForClient
     (SystemWaitForClientRequest)
     returns (SystemWaitForClientResponse);
@@ -678,11 +675,6 @@ message RpcSettingsEnableTestModeResponse {}
 
 message SystemIsAvailableRequest {}
 message SystemIsAvailableResponse {
-  bool response = 1;
-}
-
-message SystemHasHostRequest {}
-message SystemHasHostResponse {
   bool response = 1;
 }
 

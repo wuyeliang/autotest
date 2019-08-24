@@ -45,7 +45,6 @@ class RPCRouter(object):
         self.bios = BiosServicer(os_if)
         self.cgpt = CgptServicer(os_if)
         self.ec = EcServicer(os_if)
-        self.host = HostServicer(os_if)
         self.kernel = KernelServicer(os_if)
         self.rootfs = RootfsServicer(os_if)
         self.rpc_settings = RpcSettingsServicer(os_if)
@@ -57,7 +56,6 @@ class RPCRouter(object):
                 'Bios': self.bios,
                 'Cgpt': self.cgpt,
                 'Ec': self.ec,
-                'Host': self.host,
                 'Kernel': self.kernel,
                 'RpcSettings': self.rpc_settings,
                 'Rootfs': self.rootfs,
@@ -517,31 +515,6 @@ class EcServicer(object):
         return self._ec_handler.strip_modified_fwids()
 
 
-class HostServicer(object):
-    """Class to service all Host RPCs (used only for Android DUTs) """
-
-    def __init__(self, os_if):
-        """
-        @type os_if: os_interface.OSInterface
-        """
-        self._os_if = os_if
-
-    def RunShellCommand(self, command):
-        """Run shell command on the host.
-
-        @param command: A shell command to be run.
-        """
-        self._os_if.run_host_shell_command(command)
-
-    def RunShellCommandGetOutput(self, command):
-        """Run shell command and get its console output on the host.
-
-        @param command: A shell command to be run.
-        @return: A list of strings stripped of the newline characters.
-        """
-        return self._os_if.run_host_shell_command_get_output(command)
-
-
 class KernelServicer(object):
     """Class to service all Kernel RPCs"""
 
@@ -694,10 +667,6 @@ class SystemServicer(object):
         @return: Always True.
         """
         return True
-
-    def HasHost(self):
-        """Return True if a host is connected to DUT."""
-        return self._os_if.has_host()
 
     def WaitForClient(self, timeout):
         """Wait for the client to come back online.

@@ -89,10 +89,6 @@ class OSInterface(object):
 
         self.cs = Crossystem(self)
 
-    def has_host(self):
-        """Return True if a host is connected to DUT."""
-        return self.is_android
-
     def run_shell_command(self, cmd, modifies_device=False):
         """Run a shell command.
 
@@ -118,27 +114,6 @@ class OSInterface(object):
     def run_shell_command_get_output(self, cmd, include_stderr=False):
         """Run shell command and return its console output."""
         return self.shell.run_command_get_output(cmd, include_stderr)
-
-    def run_host_shell_command(self, cmd, block=True):
-        """Run a shell command on the host."""
-        if self.host_shell:
-            self.host_shell.run_command(cmd, block)
-        else:
-            raise OSInterfaceError('There is no host for DUT.')
-
-    def run_host_shell_command_get_status(self, cmd):
-        """Run shell command and return its return code on the host."""
-        if self.host_shell:
-            return self.host_shell.run_command_get_status(cmd)
-        else:
-            raise OSInterfaceError('There is no host for DUT.')
-
-    def run_host_shell_command_get_output(self, cmd):
-        """Run shell command and return its console output."""
-        if self.host_shell:
-            return self.host_shell.run_command_get_output(cmd)
-        else:
-            raise OSInterfaceError('There is no host for DUT.')
 
     def read_file(self, path):
         """Read the content of the file."""

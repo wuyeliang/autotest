@@ -38,10 +38,7 @@ class firmware_ECHash(FirmwareTest):
 
     def get_echash(self):
         """Get the current EC hash via ectool/fwtool."""
-        if self.faft_client.System.HasHost():
-            command = 'fwtool ec echash'
-        else:
-            command = 'ectool echash'
+        command = 'ectool echash'
         lines = self.faft_client.System.RunShellCommandGetOutput(command)
         pattern = re.compile('hash:    ([0-9a-f]{64})')
         for line in lines:
@@ -53,10 +50,7 @@ class firmware_ECHash(FirmwareTest):
 
     def invalidate_echash(self):
         """Invalidate the EC hash by requesting hashing some other part."""
-        if self.faft_client.System.HasHost():
-            command = 'fwtool ec echash recalc 0 4'
-        else:
-            command = 'ectool echash recalc 0 4'
+        command = 'ectool echash recalc 0 4'
         self.faft_client.System.RunShellCommand(command)
 
     def save_echash_and_invalidate(self):

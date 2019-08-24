@@ -76,7 +76,6 @@ RPC_CATEGORIES = [
             {
                 "method_names": [
                     "IsAvailable",
-                    "HasHost",
                     "GetPlatformName",
                     "DevTpmPresent",
                     "GetRootDev",
@@ -236,25 +235,6 @@ RPC_CATEGORIES = [
                     ([], [116]),
                 ],
                 "expected_return_type": int,
-            },
-        ]
-    },
-    {
-        "category_name": "Host",
-        "test_cases": [
-            {
-                "method_names": [
-                    "RunShellCommand",
-                    "RunShellCommandGetOutput",
-                ],
-                "passing_args": [
-                    ("ls", ),
-                ],
-                "failing_args": [
-                    NO_ARGS,
-                    ("ls", "-l"),
-                ],
-                "allow_error_msg": "There is no host for DUT",
             },
         ]
     },
