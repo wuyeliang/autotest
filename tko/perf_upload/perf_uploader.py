@@ -33,6 +33,7 @@ _DASHBOARD_UPLOAD_URL = 'https://chromeperf.appspot.com/add_point'
 # Format for Chrome and Chrome OS version strings.
 VERSION_REGEXP = r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$'
 
+
 class PerfUploadingError(Exception):
     """Exception raised in perf_uploader"""
     pass
@@ -104,7 +105,7 @@ def _gather_presentation_info(config_data, test_name):
     return {'master_name': master_name, 'test_name': test_name}
 
 
-def _format_for_upload(platform_name, cros_version, chrome_version,
+def _format_for_upload(board_name, cros_version, chrome_version,
                        hardware_id, hardware_hostname, perf_data,
                        presentation_info, jobname):
     """Formats perf data suitable to upload to the perf dashboard.
@@ -116,7 +117,7 @@ def _format_for_upload(platform_name, cros_version, chrome_version,
     measured perf value: master name, bot name, test name, perf value, error
     value, units, and build version numbers.
 
-    @param platform_name: The string name of the platform.
+    @param board_name: The string name of the image board name.
     @param cros_version: The string chromeOS version number.
     @param chrome_version: The string chrome version number.
     @param hardware_id: String that identifies the type of hardware the test was
@@ -145,7 +146,7 @@ def _format_for_upload(platform_name, cros_version, chrome_version,
 
     dash_entry = {
         'master': presentation_info['master_name'],
-        'bot': 'cros-' + platform_name,  # Prefix to clarify it's ChromeOS.
+        'bot': 'cros-' + board_name,  # Prefix to clarify it's ChromeOS.
         'point_id': _get_id_from_version(chrome_version, cros_version),
         'versions': {
             'cros_version': cros_version,
@@ -279,6 +280,29 @@ def _send_to_dashboard(data_obj):
                 'HTTPException for JSON %s\n' % data_obj['data'])
 
 
+def _get_image_board_name(platform, image):
+    """Returns the board name of the tested image.
+
+    Note that it can be different from the board name of DUTs the test was
+    scheduled to.
+
+    @param platform: The DUT platform in lab. eg. eve
+    @param image: The image installed in the DUT. eg. eve-arcnext-release.
+    @return: the image board name.
+    """
+    # This is a hacky way to resolve the mixture of reports in chromeperf
+    # dashboard. This solution is copied from our other reporting
+    # pipeline.
+    image_board_name = platform
+
+    suffixes = ['-arcnext', '-ndktranslation', '-arcvm', '-kernelnext']
+
+    for suffix in suffixes:
+        if not platform.endswith(suffix) and (suffix + '-') in image:
+            image_board_name += suffix
+    return image_board_name
+
+
 def upload_test(job, test, jobname):
     """Uploads any perf data associated with a test to the perf dashboard.
 
@@ -293,11 +317,12 @@ def upload_test(job, test, jobname):
 
     # Format the perf data for the upload, then upload it.
     test_name = test.testname
-    platform_name = job.machine_group
+    image_board_name = _get_image_board_name(
+        job.machine_group, job.keyval_dict.get('build', job.machine_group))
     # Append the platform name with '.arc' if the suffix of the control
     # filename is '.arc'.
     if job.label and re.match('.*\.arc$', job.label):
-        platform_name += '.arc'
+        image_board_name += '.arc'
     hardware_id = test.attributes.get('hwid', '')
     hardware_hostname = test.machine
     config_data = _parse_config_file(_PRESENTATION_CONFIG_FILE)
@@ -310,9 +335,10 @@ def upload_test(job, test, jobname):
     try:
         cros_version, chrome_version = _get_version_numbers(test.attributes)
         presentation_info = _gather_presentation_info(config_data, test_name)
-        formatted_data = _format_for_upload(
-                platform_name, cros_version, chrome_version, hardware_id,
-                hardware_hostname, test.perf_values, presentation_info, jobname)
+        formatted_data = _format_for_upload(image_board_name, cros_version,
+                                            chrome_version, hardware_id,
+                                            hardware_hostname, test.perf_values,
+                                            presentation_info, jobname)
         _send_to_dashboard(formatted_data)
     except PerfUploadingError as e:
         tko_utils.dprint('Error when uploading perf data to the perf '

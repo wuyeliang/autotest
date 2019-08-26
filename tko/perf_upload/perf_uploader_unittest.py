@@ -128,6 +128,35 @@ class test_json_config_file_sanity(unittest.TestCase):
                 self.fail('Missing master field for test %s.' %
                           entry['autotest_name'])
 
+class test_get_image_board_name(unittest.TestCase):
+    """Sanity tests for retrieving the image board name."""
+    def test_normal_platform(self):
+        """Verify image board name is equal to the platform in normal image."""
+        platform = 'veyron_jerry'
+        image = 'veyron_jerry-release/R78-12428.0.0'
+        self.assertEqual(perf_uploader._get_image_board_name(platform, image),
+                         'veyron_jerry')
+
+    def test_empty_platform(self):
+        """Sanity Verify image board name is equal to the platform."""
+        platform = ''
+        image = '-release/R78-12428.0.0'
+        self.assertEqual(perf_uploader._get_image_board_name(platform, image),
+                         '')
+
+    def test_specifc_image_suffix_found(self):
+        """Verify image board name is reflecting the running image."""
+        platform = 'veyron_jerry'
+        image = 'veyron_jerry-kernelnext-release/R78-12419.0.0'
+        self.assertEqual(perf_uploader._get_image_board_name(platform, image),
+                         'veyron_jerry-kernelnext')
+        image = 'veyron_jerry-arcnext-release/R78-12419.0.0'
+        self.assertEqual(perf_uploader._get_image_board_name(platform, image),
+                         'veyron_jerry-arcnext')
+        image = 'veyron_jerry-arcvm-release/R78-12419.0.0'
+        self.assertEqual(perf_uploader._get_image_board_name(platform, image),
+                         'veyron_jerry-arcvm')
+
 
 class test_gather_presentation_info(unittest.TestCase):
     """Tests for the gather_presentation_info function."""
@@ -427,6 +456,7 @@ class test_format_for_upload(unittest.TestCase):
         expected = json.loads(expected_result)
 
         def ordered(obj):
+            """Return the sorted obj."""
             if isinstance(obj, dict):
                return sorted((k, ordered(v)) for k, v in obj.items())
             if isinstance(obj, list):
