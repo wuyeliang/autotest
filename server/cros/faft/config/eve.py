@@ -14,3 +14,4 @@ class Values(object):
     dark_resume_capable = True
     firmware_screen = 15
     smm_store = False
+    cr50_capability = ['rdd_leakage']

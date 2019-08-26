@@ -23,6 +23,9 @@ class firmware_Cr50RddG3(Cr50Test):
         """Verify Rdd in G3."""
         if not hasattr(self, 'ec'):
             raise error.TestNAError('Board does not have an EC.')
+        if self.check_cr50_capability(['rdd_leakage']):
+            raise error.TestNAError('Leakage on the rdd signals breaks '
+                                    'detection in G3')
 
         self.servo.set_servo_v4_dts_mode('on')
         if not self.rdd_is_connected():
