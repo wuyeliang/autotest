@@ -897,12 +897,14 @@ class Cr50Test(FirmwareTest):
 
     def set_ccd_password(self, password, expect_error=False):
         """Set the ccd password"""
+        # Testlab mode can't be enabled if there is no power button, so we
+        # shouldn't allow setting the password.
+        if not self.faft_config.has_power_button:
+            raise error.TestError('No power button')
+
         # If for some reason the test sets a password and is interrupted before
         # we can clear it, we want testlab mode to be enabled, so it's possible
         # to clear the password without knowing it.
-        if self.faft_config.has_power_button:
-            raise error.TestError('No power button')
-
         if not self.cr50.testlab_is_on():
             raise error.TestError('Will not set password unless testlab mode '
                                   'is enabled.')
