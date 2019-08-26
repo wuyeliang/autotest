@@ -9,8 +9,8 @@ TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "desktopui"
 TEST_TYPE = "client"
-JOB_RETRIES = 2
-ATTRIBUTES = "suite:bvt-inline"
+JOB_RETRIES = 0
+ATTRIBUTES = "suite:bvt-perbuild"
 
 DOC = """
 This tests the Files app can launch and some basic functionality.
