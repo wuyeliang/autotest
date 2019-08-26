@@ -248,6 +248,9 @@ class servo_LabstationVerification(test.test):
                           stdout_err_regexp='No servod scratch entry found.')
         except error.AutoservRunError:
             raise error.TestFail('Servod did not come up on labstation.')
+        if config and 'dut_ip' in config:
+            # Retrieve DUT ip from args if caller specified it.
+            self.dut_ip = config['dut_ip']
 
     def run_once(self, local=False):
         """Run through the test sequence.
@@ -278,8 +281,10 @@ class servo_LabstationVerification(test.test):
                                                     **servo_args)
         self.labstation_host.connect_servo()
         servo_proxy = self.labstation_host.get_servo()
-        dut_ip = self.get_dut_on_servo_ip(self.labstation_host)
-        dut_host = factory.create_host(dut_ip)
+        if not self.dut_ip:
+            self.dut_ip = self.get_dut_on_servo_ip(self.labstation_host)
+        logging.info('Running the DUT side on DUT %r', self.dut_ip)
+        dut_host = factory.create_host(self.dut_ip)
         dut_host.set_servo_host(self.labstation_host)
         success &= self.runsubtest('platform_ServoPowerStateController',
                                    host=dut_host, usb_available=False,
