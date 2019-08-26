@@ -26,6 +26,7 @@ class Values(object):
     power_button_dev_switch = False
     rec_button_dev_switch = False
     ec_capability = list()
+    cr50_capability = list()
     spi_voltage = 'pp1800'
 
     # The max input voltage for USB Type-C port

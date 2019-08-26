@@ -565,6 +565,30 @@ class FirmwareTest(FAFTBase):
             logging.info('Current GBB flags look good for test: 0x%x.',
                          gbb_flags)
 
+
+    def _check_capability(self, target, required_cap, suppress_warning):
+        """Check if current platform has required capabilities for the target.
+
+        @param required_cap: A list containing required capabilities.
+        @param suppress_warning: True to suppress any warning messages.
+        @return: True if requirements are met. Otherwise, False.
+        """
+        if not required_cap:
+            return True
+
+        if target not in ['ec', 'cr50']:
+            raise error.TestError('Invalid capability target %r' % target)
+
+        for cap in required_cap:
+            if cap not in getattr(self.faft_config, target + '_capability'):
+                if not suppress_warning:
+                    logging.warn('Requires %s capability "%s" to run this '
+                                 'test.', target, cap)
+                return False
+
+        return True
+
+
     def check_ec_capability(self, required_cap=None, suppress_warning=False):
         """Check if current platform has required EC capabilities.
 
@@ -577,18 +601,23 @@ class FirmwareTest(FAFTBase):
             if not suppress_warning:
                 logging.warn('Requires Chrome EC to run this test.')
             return False
+        return self._check_capability('ec', required_cap, suppress_warning)
 
-        if not required_cap:
-            return True
 
-        for cap in required_cap:
-            if cap not in self.faft_config.ec_capability:
-                if not suppress_warning:
-                    logging.warn('Requires EC capability "%s" to run this '
-                                 'test.', cap)
-                return False
+    def check_cr50_capability(self, required_cap=None, suppress_warning=False):
+        """Check if current platform has required Cr50 capabilities.
 
-        return True
+        @param required_cap: A list containing required Cr50 capabilities. Pass
+                             in None to only check for presence of cr50 uart.
+        @param suppress_warning: True to suppress any warning messages.
+        @return: True if requirements are met. Otherwise, False.
+        """
+        if not hasattr(self, 'cr50'):
+            if not suppress_warning:
+                logging.warn('Requires Chrome Cr50 to run this test.')
+            return False
+        return self._check_capability('cr50', required_cap, suppress_warning)
+
 
     def check_root_part_on_non_recovery(self, part):
         """Check the partition number of root device and on normal/dev boot.
