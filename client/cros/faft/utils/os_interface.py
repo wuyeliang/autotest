@@ -52,8 +52,6 @@ class Crossystem(object):
 class OSInterface(object):
     """An object to encapsulate OS services functions."""
 
-    ANDROID_TESTER_FILE = '/mnt/stateful_partition/.android_faft_tester'
-
     def __init__(self, state_dir=None, log_file=None):
         """Object initialization (side effect: creates the state_dir)
 
@@ -63,7 +61,6 @@ class OSInterface(object):
         @param log_file: the name of the log file kept in the state directory.
         """
         # We keep the state of FAFT test in a permanent directory over reboots.
-        self.is_android = os.path.isfile(self.ANDROID_TESTER_FILE)
         self.test_mode = False
 
         if state_dir is None:
@@ -140,10 +137,7 @@ class OSInterface(object):
 
     def create_temp_file(self, prefix):
         """Create a temporary file with a prefix."""
-        if self.is_android:
-            tmp_path = '/data/local/tmp'
-        else:
-            tmp_path = '/tmp'
+        tmp_path = '/tmp'
         cmd = 'mktemp -p %s %sXXXXXX' % (tmp_path, prefix)
         return self.run_shell_command_get_output(cmd)[0]
 
@@ -174,8 +168,6 @@ class OSInterface(object):
 
     def target_hosted(self):
         """Return True if running on DUT."""
-        if self.is_android:
-            return True
         with open('/etc/lsb-release', 'r') as lsb_release:
             signature = lsb_release.readlines()[0]
         return bool(re.search(r'chrom(ium|e)os', signature, re.IGNORECASE))
@@ -183,14 +175,6 @@ class OSInterface(object):
     def state_dir_file(self, file_name):
         """Get a full path of a file in the state directory."""
         return os.path.join(self.state_dir, file_name)
-
-    def wait_for_device(self, timeout):
-        """Wait for an Android device to be connected."""
-        return self.shell.wait_for_device(timeout)
-
-    def wait_for_no_device(self, timeout):
-        """Wait for no Android device to be connected (offline)."""
-        return self.shell.wait_for_no_device(timeout)
 
     def log(self, text):
         """Write text to the log file and print it on the screen, if enabled.
@@ -218,9 +202,6 @@ class OSInterface(object):
 
         Returns True if the device is removable, False if not.
         """
-        if self.is_android:
-            return False
-
         if not self.target_hosted():
             return False
 
@@ -251,13 +232,7 @@ class OSInterface(object):
 
     def get_root_part(self):
         """Return a string, the name of root device with partition number"""
-        # FIXME(waihong): Android doesn't support dual kernel/root and misses
-        # the related tools. Just return something that not break the existing
-        # code.
-        if self.is_android:
-            return '/dev/mmcblk0p3'
-        else:
-            return self.run_shell_command_get_output('rootdev -s')[0]
+        return self.run_shell_command_get_output('rootdev -s')[0]
 
     def get_root_dev(self):
         """Return a string, the name of root device without partition number"""
