@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import dbus
 import errno
 import os
 
@@ -32,6 +31,8 @@ class network_ConfigureEthernetServiceForProfile(test.test):
         shill = shill_proxy.ShillProxy.get_proxy()
         if shill is None:
             raise error.TestFail('Could not connect to shill')
+
+        shill.manager.PopAllUserProfiles()
 
         name_servers = [ '8.8.8.8' ]
         config = {'NameServers' : name_servers}
