@@ -448,6 +448,62 @@ class Interface:
 
 
     @property
+    def signal_level_all_chains(self):
+        """Get the signal level for each chain of an interface.
+
+        This is only defined for WiFi interfaces.
+
+        localhost test # iw wlan0 station dump
+        Station 44:48:c1:af:d7:31 (on wlan0)
+            inactive time:  13180 ms
+            rx bytes:   46886
+            rx packets: 459
+            tx bytes:   103159
+            tx packets: 745
+            tx retries: 17
+            tx failed:  0
+            beacon loss:    0
+            beacon rx:  128
+            rx drop misc:   2
+            signal:     -52 [-52, -53] dBm
+            signal avg: 56 dBm
+            beacon signal avg:  -49 dBm
+            tx bitrate: 400.0 MBit/s VHT-MCS 9 40MHz short GI VHT-NSS 2
+            rx bitrate: 400.0 MBit/s VHT-MCS 9 40MHz short GI VHT-NSS 2
+            authorized: yes
+            authenticated:  yes
+            associated: yes
+            preamble:   long
+            WMM/WME:    yes
+            MFP:        no
+            TDLS peer:  no
+            DTIM period:    1
+            beacon interval:100
+            short slot time:yes
+            connected time: 6874 seconds
+
+        @return array of signal level information for each antenna in dBm
+            (an array of negative, integral numbers e.g. [-67, -60]) or None if
+            chain specific data is not provided by the device.
+
+        """
+        if not self.is_wifi_device():
+            return None
+
+        result_lines = self._run('iw %s station dump' %
+                                 self._name).stdout.splitlines()
+        signal_pattern = re.compile('signal:\s+([-0-9]+)\[')
+        for line in result_lines:
+            cleaned = line.strip().replace(' ', '').lower()
+            match = re.search(signal_pattern, cleaned)
+            if match is not None:
+                signal_levels = cleaned[cleaned.find('[') + 1 :
+                                    cleaned.find(']')].split(',')
+                return map(int, signal_levels)
+        return None
+
+
+    @property
     def mtu(self):
         """@return the interface configured maximum transmission unit (MTU)."""
         # "ip addr show %s 2> /dev/null" returns something that looks like:

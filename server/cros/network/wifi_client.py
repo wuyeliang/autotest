@@ -121,8 +121,6 @@ class WiFiClient(site_linux_system.LinuxSystem):
     CONNECTED_STATES = ['portal', 'no-connectivity', 'redirect-found',
                         'portal-suspected', 'online', 'ready']
 
-
-
     @property
     def machine_id(self):
         """@return string unique to a particular board/cpu configuration."""
@@ -274,6 +272,15 @@ class WiFiClient(site_linux_system.LinuxSystem):
         """
         return self._interface.signal_level
 
+    @property
+    def wifi_signal_level_all_chains(self):
+        """Returns the signal level of all chains of this DUT's WiFi interface.
+
+        @return int array signal level of each chain of connected WiFi interface
+                or None (e.g. [-67, -60]).
+
+        """
+        return self._interface.signal_level_all_chains
 
     @staticmethod
     def assert_bsses_include_ssids(found_bsses, expected_ssids):
