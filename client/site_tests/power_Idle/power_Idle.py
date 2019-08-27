@@ -38,7 +38,10 @@ class power_Idle(power_test.power_Test):
         """Collect power stats for idle tests."""
 
         def measure_it(warmup_secs, idle_secs, tagname):
-            time.sleep(warmup_secs)
+            if warmup_secs > 0:
+                tstart = time.time()
+                time.sleep(warmup_secs)
+                self.checkpoint_measurements("warmup", tstart)
             tstart = time.time()
             time.sleep(idle_secs)
             self.checkpoint_measurements(tagname, tstart)
