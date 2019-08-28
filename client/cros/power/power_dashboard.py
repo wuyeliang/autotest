@@ -414,7 +414,7 @@ class MeasurementLoggerDashboard(ClientTestDashboard):
             return None
 
         power_dict = collections.defaultdict(dict, {
-            'sample_count': len(self._logger.readings) - 1,
+            'sample_count': len(self._logger.readings),
             'sample_duration': 0,
             'average': dict(),
             'data': dict(),
@@ -422,7 +422,7 @@ class MeasurementLoggerDashboard(ClientTestDashboard):
         if power_dict['sample_count'] > 1:
             total_duration = self._logger.times[-1] - self._logger.times[0]
             power_dict['sample_duration'] = \
-                    1.0 * total_duration / power_dict['sample_count']
+                    1.0 * total_duration / (power_dict['sample_count'] - 1)
 
         self._create_padded_domains()
         for i, domain_readings in enumerate(zip(*self._logger.readings)):
@@ -430,8 +430,7 @@ class MeasurementLoggerDashboard(ClientTestDashboard):
                 domain = self._padded_domains[i]
             else:
                 domain = self._logger.domains[i]
-            # Remove first item because that is the log before the test begin.
-            power_dict['data'][domain] = domain_readings[1:]
+            power_dict['data'][domain] = domain_readings
             power_dict['average'][domain] = \
                     numpy.average(power_dict['data'][domain])
             if self._unit:
