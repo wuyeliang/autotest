@@ -107,6 +107,8 @@ def parse_args():
     run_parser.add_argument('-resultsdir')
     run_parser.add_argument('-waituntilready')
     run_parser.add_argument('-timeout')
+    run_parser.add_argument('-continueafterfailure', type=to_bool,
+                            default=False, nargs='?')
     run_parser.add_argument('-var', action='append', default=[])
 
     return parser.parse_args()

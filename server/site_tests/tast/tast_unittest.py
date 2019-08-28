@@ -138,6 +138,7 @@ class TastTest(unittest.TestCase):
         ]
         run_args = list_args + [
             'resultsdir=%s' % self._test.resultsdir,
+            'continueafterfailure=True',
             'var=%s' % run_vars,
         ]
 

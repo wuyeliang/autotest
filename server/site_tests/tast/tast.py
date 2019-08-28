@@ -350,6 +350,7 @@ class tast(test.test):
             '-resultsdir=' + self.resultsdir,
             '-waituntilready=true',
             '-timeout=' + str(timeout_sec),
+            '-continueafterfailure=true',
         ] + self._devserver_args + self._get_servo_args()
 
         if self._run_private_tests:
