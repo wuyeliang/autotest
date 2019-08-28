@@ -3,12 +3,10 @@
 # found in the LICENSE file.
 
 import ast
-import functools
 import logging
 import re
 import time
 
-from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros import ec
 from autotest_lib.server.cros.servo import servo
