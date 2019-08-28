@@ -122,3 +122,6 @@ class Values(object):
 
     # True if the chrome devices has power button.
     has_power_button = True
+
+    # True if altfw/diag is built into RW_LEGACY.
+    has_diagnostics_image = False

@@ -6,6 +6,7 @@ import logging
 import time
 import os
 
+from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
 
@@ -34,6 +35,9 @@ class firmware_WilcoDiagnosticsMode(FirmwareTest):
     def initialize(self, host, cmdline_args):
         super(firmware_WilcoDiagnosticsMode, self).initialize(
                 host, cmdline_args)
+
+        if not self.faft_config.has_diagnostics_image:
+            raise error.TestNAError('No diagnostics image for this board.')
 
         self.setup_firmwareupdate_shellball(shellball=None)
         # Make sure that the shellball is retained over subsequent power cycles.
