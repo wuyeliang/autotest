@@ -93,7 +93,7 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
             # setting up our own omaha instance on the DUT. We pass this to
             # the client test.
             payload = self._get_payload_url(full_payload=full_payload)
-            staged_url = self._stage_payload_by_uri(payload)
+            staged_url, _ = self._stage_payload_by_uri(payload)
             payload_info = self._get_staged_file_info(staged_url)
 
         # Call client test to start the forced OOBE update.

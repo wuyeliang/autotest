@@ -34,7 +34,7 @@ class autoupdate_Cellular(update_engine_test.UpdateEngineTest):
         # to use a devserver to stage the payloads and then call the fileinfo
         # API with the staged file URL. This will return the fields we need.
         payload = self._get_payload_url(full_payload=full_payload)
-        staged_url = self._stage_payload_by_uri(payload)
+        staged_url, _ = self._stage_payload_by_uri(payload)
         file_info = self._get_staged_file_info(staged_url)
 
         self._change_cellular_setting_in_update_engine(True)

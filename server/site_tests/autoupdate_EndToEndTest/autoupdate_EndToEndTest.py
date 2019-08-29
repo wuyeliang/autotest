@@ -87,11 +87,6 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
     _DEVSERVER_HOSTLOG_ROOTFS = 'devserver_hostlog_rootfs'
     _DEVSERVER_HOSTLOG_REBOOT = 'devserver_hostlog_reboot'
 
-    StagedURLs = collections.namedtuple('StagedURLs', ['source_url',
-                                                       'source_stateful_url',
-                                                       'target_url',
-                                                       'target_stateful_url'])
-
     def initialize(self):
         """Sets up variables that will be used by test."""
         super(autoupdate_EndToEndTest, self).initialize()
@@ -103,23 +98,16 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
 
         @param test_conf: a dictionary containing payload urls to stage.
 
-        @return a StagedURLs tuple containing the staged urls.
         """
         logging.info('Staging images onto autotest devserver (%s)',
                      self._autotest_devserver.url())
 
-        source_uri = test_conf['source_payload_uri']
-        staged_src_uri, staged_src_stateful = self._stage_payloads(
-            source_uri, test_conf['source_archive_uri'])
+        self._stage_payloads(test_conf['source_payload_uri'],
+                             test_conf['source_archive_uri'])
 
-        target_uri = test_conf['target_payload_uri']
-        staged_target_uri, staged_target_stateful = self._stage_payloads(
-            target_uri, test_conf['target_archive_uri'],
-            test_conf['update_type'])
-
-        return self.StagedURLs(staged_src_uri, staged_src_stateful,
-                               staged_target_uri, staged_target_stateful)
-
+        self._stage_payloads(test_conf['target_payload_uri'],
+                             test_conf['target_archive_uri'],
+                             test_conf['update_type'])
 
     def _get_hostlog_file(self, filename, pid):
         """Return the hostlog file location.

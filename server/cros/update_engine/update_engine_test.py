@@ -316,26 +316,31 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
                 'receive %s within %d seconds.' % (desc, timeout))
 
 
-    def _stage_payload_by_uri(self, payload_uri):
+    def _stage_payload_by_uri(self, payload_uri, properties_file=True):
         """Stage a payload based on its GS URI.
 
         This infers the build's label, filename and GS archive from the
         provided GS URI.
 
         @param payload_uri: The full GS URI of the payload.
+        @param properties_file: If true, it will stage the update payload
+                                properties file too.
 
-        @return URL of the staged payload on the server.
+        @return URL of the staged payload (and properties file) on the server.
 
         @raise error.TestError if there's a problem with staging.
 
         """
         archive_url, _, filename = payload_uri.rpartition('/')
         build_name = urlparse.urlsplit(archive_url).path.strip('/')
-        return self._stage_payload(build_name, filename,
+        filenames = [filename]
+        if properties_file:
+            filenames.append(filename + '.json')
+        return self._stage_payload(build_name, filenames,
                                    archive_url=archive_url)
 
 
-    def _stage_payload(self, build_name, filename, archive_url=None):
+    def _stage_payload(self, build_name, filenames, archive_url=None):
         """Stage the given payload onto the devserver.
 
         Works for either a stateful or full/delta test payload. Expects the
@@ -344,22 +349,22 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         @param build_name: The build name e.g. x86-mario-release/<version>.
                            If set, assumes default gs archive bucket and
                            requires filename to be specified.
-        @param filename: In conjunction with build_name, this is the file you
-                         are downloading.
+        @param filenames: In conjunction with build_name, these are the files
+                          you are downloading.
         @param archive_url: An optional GS archive location, if not using the
                             devserver's default.
 
-        @return URL of the staged payload on the server.
+        @return URL of the staged payload (and properties file) on the server.
 
         @raise error.TestError if there's a problem with staging.
 
         """
         try:
             self._autotest_devserver.stage_artifacts(image=build_name,
-                                                     files=[filename],
+                                                     files=filenames,
                                                      archive_url=archive_url)
-            return self._autotest_devserver.get_staged_file_url(filename,
-                                                                build_name)
+            return (self._autotest_devserver.get_staged_file_url(f, build_name)
+                    for f in filenames)
         except dev_server.DevServerException, e:
             raise error.TestError('Failed to stage payload: %s' % e)
 
@@ -488,17 +493,18 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
     def _stage_payloads(self, payload_uri, archive_uri, payload_type='full'):
         """Stages a payload and its associated stateful on devserver."""
         if payload_uri:
-            staged_uri = self._stage_payload_by_uri(payload_uri)
+            staged_uri, _ = self._stage_payload_by_uri(payload_uri)
+            logging.info('Staged %s payload from %s at %s.', payload_type,
+                         payload_uri, staged_uri)
 
             # Figure out where to get the matching stateful payload.
             if archive_uri:
                 stateful_uri = self._get_stateful_uri(archive_uri)
             else:
                 stateful_uri = self._payload_to_stateful_uri(payload_uri)
-            staged_stateful = self._stage_payload_by_uri(stateful_uri)
+            staged_stateful = self._stage_payload_by_uri(
+                stateful_uri, properties_file=False)
 
-            logging.info('Staged %s payload from %s at %s.', payload_type,
-                         payload_uri, staged_uri)
             logging.info('Staged stateful from %s at %s.', stateful_uri,
                          staged_stateful)
             return staged_uri, staged_stateful
