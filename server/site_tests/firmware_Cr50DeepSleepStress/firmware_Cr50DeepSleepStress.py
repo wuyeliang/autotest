@@ -6,6 +6,7 @@ import logging
 import time
 
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib.cros import cr50_utils
 from autotest_lib.server import autotest
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
@@ -175,6 +176,8 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                 device.
         @param reset_type: a str with the cycle type: 'mem' or 'reboot'
         """
+        if reset_type not in ['reboot', 'mem']:
+            raise error.TestNAError('Invalid reset_type. Use "mem" or "reboot"')
         if self.MIN_SUSPEND + self.MIN_RESUME < self.SLEEP_DELAY:
             logging.info('Minimum suspend-resume cycle is %ds. This is '
                          'shorter than the Cr50 idle timeout. Cr50 may not '
@@ -182,6 +185,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                          self.MIN_SUSPEND + self.MIN_RESUME)
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
+        logging.info('Initial FLOG output:\n%s', cr50_utils.DumpFlog(host))
 
         # x86 devices should suspend once per reset. ARM will only suspend
         # if the device enters s5.
@@ -190,16 +194,19 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         else:
             is_arm = self.check_ec_capability(['arm'], suppress_warning=True)
             self._enters_deep_sleep = not is_arm
-
-        if reset_type == 'reboot':
-            self.run_reboots(suspend_count)
-        elif reset_type == 'mem':
-            self.run_suspend_resume(host, suspend_count)
-        else:
-            raise error.TestNAError('Invalid reset_type. Use "mem" or "reboot"')
-
-        self.cr50.dump_nvmem()
-        self.check_cr50_deep_sleep(suspend_count)
-        self.check_cr50_version(self.original_cr50_version)
-        # Reenable CCD
-        self.wait_for_client_after_changing_ccd(host, True)
+        try:
+            if reset_type == 'reboot':
+                self.run_reboots(suspend_count)
+            elif reset_type == 'mem':
+                self.run_suspend_resume(host, suspend_count)
+        finally:
+            # Collect logs for debugging
+            # Autotest has some stages in between run_once and cleanup that may
+            # be run if the test succeeds. Do this here to make sure this is
+            # always run immediately after the suspend/resume cycles.
+            self.cr50.dump_nvmem()
+            logging.info('FLOG output:\n%s', cr50_utils.DumpFlog(host))
+            self.check_cr50_deep_sleep(suspend_count)
+            self.check_cr50_version(self.original_cr50_version)
+            # Reenable CCD
+            self.wait_for_client_after_changing_ccd(host, True)
