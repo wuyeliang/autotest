@@ -549,18 +549,18 @@ class ChameleonVideoInput(ChameleonPort):
           self.chameleond_proxy.ApplyEdid(self.port_id, edid_id)
           self.chameleond_proxy.DestroyEdid(edid_id)
 
-
-    def set_edid_from_file(self, filename):
+    def set_edid_from_file(self, filename, check_video_input=True):
         """Sets EDID from a file.
 
         The method is similar to set_edid but reads EDID from a file.
 
         @param filename: path to EDID file.
+        @param check_video_input: False to disable wait_video_input_stable.
         """
-        self.set_edid(edid_lib.Edid.from_file(filename))
+        self.set_edid(edid_lib.Edid.from_file(filename),
+                      check_video_input=check_video_input)
 
-
-    def set_edid(self, edid):
+    def set_edid(self, edid, check_video_input=True):
         """The complete flow of setting EDID.
 
         Unplugs the port if needed, sets EDID, plugs back if it was plugged.
@@ -568,6 +568,7 @@ class ChameleonVideoInput(ChameleonPort):
         call.
 
         @param edid: An Edid object.
+        @param check_video_input: False to disable wait_video_input_stable.
         """
         plugged = self.plugged
         if plugged:
@@ -581,8 +582,8 @@ class ChameleonVideoInput(ChameleonPort):
         if plugged:
             time.sleep(self._DURATION_UNPLUG_FOR_EDID)
             self.plug()
-            self.wait_video_input_stable(self._TIMEOUT_VIDEO_STABLE_PROBE)
-
+            if check_video_input:
+                self.wait_video_input_stable(self._TIMEOUT_VIDEO_STABLE_PROBE)
 
     def restore_edid(self):
         """Restores original EDID stored when set_edid was called."""
@@ -594,7 +595,7 @@ class ChameleonVideoInput(ChameleonPort):
 
 
     @contextmanager
-    def use_edid(self, edid):
+    def use_edid(self, edid, check_video_input=True):
         """Uses the given EDID in a with statement.
 
         It sets the EDID up in the beginning and restores to the original
@@ -605,9 +606,10 @@ class ChameleonVideoInput(ChameleonPort):
                 do_some_test_on(chameleon_port)
 
         @param edid: An EDID object.
+        @param check_video_input: False to disable wait_video_input_stable.
         """
         # Set the EDID up in the beginning.
-        self.set_edid(edid)
+        self.set_edid(edid, check_video_input=check_video_input)
 
         try:
             # Yeild to execute the with statement.
@@ -616,8 +618,7 @@ class ChameleonVideoInput(ChameleonPort):
             # Restore the original EDID in the end.
             self.restore_edid()
 
-
-    def use_edid_file(self, filename):
+    def use_edid_file(self, filename, check_video_input=True):
         """Uses the given EDID file in a with statement.
 
         It sets the EDID up in the beginning and restores to the original
@@ -628,9 +629,10 @@ class ChameleonVideoInput(ChameleonPort):
                 do_some_test_on(chameleon_port)
 
         @param filename: A path to the EDID file.
+        @param check_video_input: False to disable wait_video_input_stable.
         """
-        return self.use_edid(edid_lib.Edid.from_file(filename))
-
+        return self.use_edid(edid_lib.Edid.from_file(filename),
+                             check_video_input=check_video_input)
 
     def fire_hpd_pulse(self, deassert_interval_usec, assert_interval_usec=None,
                        repeat_count=1, end_level=1):
