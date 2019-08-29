@@ -151,7 +151,12 @@ class firmware_Cr50FactoryResetVC(Cr50Test):
         logging.debug(result)
         expect_enabled = enable and not enable_fail
 
-        time.sleep(self.SLEEP)
+        if expect_enabled:
+            # Cr50 will reboot after it enables factory mode.
+            self.cr50.wait_for_reboot(timeout=10)
+        else:
+            # Wait long enoug for cr50 to udpate the ccd state.
+            time.sleep(self.SLEEP)
         if self.factory_mode_enabled() != expect_enabled:
             raise error.TestFail('Unexpected factory mode %s result' % cmd)
 
