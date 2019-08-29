@@ -92,7 +92,7 @@ gsctool.add_argument('-s', '--systemdev', dest='systemdev', action='store_true')
 # something went wrong.
 gsctool.add_argument('-b', '--binvers', '-f', '--fwver', '-i', '--board_id',
                      '-r', '--rma_auth', '-F', '--factory', '-m', '--tpm_mode',
-                     dest='info_cmd', action='store_true')
+                     '-L', '--flog', dest='info_cmd', action='store_true')
 # upstart and post_reset will post resets instead of rebooting immediately
 gsctool.add_argument('-u', '--upstart', '-p', '--post_reset', dest='post_reset',
                      action='store_true')
@@ -654,3 +654,7 @@ def SetChipBoardId(client, board_id, flags=None):
     result = GSCTool(client, ['-a', '-i', board_id_arg]).stdout.strip()
 
     CheckChipBoardId(client, board_id, flags)
+
+def DumpFlog(client):
+    """Retrieve contents of the flash log"""
+    return GSCTool(client, ['-a', '-L']).stdout.strip()
