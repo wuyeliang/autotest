@@ -45,14 +45,13 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         self.original_cr50_version = self.cr50.get_active_version_info()
 
 
-    def check_cr50_version(self, expected_version):
+    def check_cr50_version(self, expected_ver):
         """Return an error message if the version changed running the test."""
         version = self.cr50.get_active_version_info()
         logging.info('running %s', version)
 
-        if version != expected_version:
-            raise error.TestFail('version mismatch: expected %s got %s' %
-                                 (expected_version, version))
+        if version != expected_ver:
+            return 'version changed from %s to %s' % (expected_ver, version)
 
 
     def run_reboots(self, suspend_count):
@@ -65,7 +64,10 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # Disable CCD so Cr50 can enter deep sleep
         self.cr50.ccd_disable()
         self.cr50.clear_deep_sleep_count()
-        self.check_cr50_deep_sleep(0)
+        rv = self.check_cr50_deep_sleep(0)
+        if rv:
+            raise error.TestError('Issue setting up test %s' % rv)
+        errors = []
 
         for i in range(suspend_count):
             # Power off the device
@@ -76,11 +78,17 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             self.servo.power_short_press()
             time.sleep(self.MIN_RESUME)
 
-            self.check_cr50_deep_sleep(i + 1)
+            rv = self.check_cr50_deep_sleep(i + 1)
+            if rv:
+                errors.append(rv)
 
             # Make sure it didn't boot into a different mode
-            self.check_state((self.checkers.crossystem_checker,
-                              {'mainfw_type': original_mainfw_type}))
+            if not self.checkers.crossystem_checker({'mainfw_type':
+                                                     original_mainfw_type}):
+                errors.append('Switched out of %s mode' % original_mainfw_type)
+            if errors:
+                msg = 'Reboots failed (%s)' % ' and '.join(errors)
+                raise error.TestFail(msg)
 
 
     def _dut_is_responsive(self, host):
@@ -89,7 +97,12 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
 
     def wait_for_client_after_changing_ccd(self, host, enable):
-        """Change CCD and wait for client"""
+        """Change CCD and wait for client.
+
+        @param host: the host object representing the DUT.
+        @param enable: True to enable ccd. False to disable it.
+        @returns an error message
+        """
         if enable:
             self.cr50.ccd_enable()
         else:
@@ -99,14 +112,15 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # dts ethernet issues and the dut going down during the suspend stress.
         if self._dut_is_responsive(host):
             return
-        logging.info('DUT is not pingable after disabling ccd')
+        msg = 'DUT is not pingable after %sabling ccd' % ('en' if enable else
+                                                          'dis')
+        logging.info(msg)
 
         # TODO(b/135147658): Raise an error once CCD disable is fixed.
         logging.info('Resetting DUT')
         self.servo.get_power_state_controller().reset()
         if not self._dut_is_responsive(host):
-            raise error.TestError('DUT is not pingable after %sabling ccd' %
-                                  ('en' if enable else 'dis'))
+            return msg
 
 
     def run_suspend_resume(self, host, suspend_count):
@@ -116,10 +130,14 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         @param suspend_count: the number of times to suspend the device.
         """
         # Disable CCD so Cr50 can enter deep sleep
-        self.wait_for_client_after_changing_ccd(host, False)
+        rv = self.wait_for_client_after_changing_ccd(host, False)
+        if rv:
+            raise error.TestFail('Network connection issue %s', rv)
         self.cr50.clear_deep_sleep_count()
-        self.check_cr50_deep_sleep(0)
-        client_at = autotest.Autotest(host)
+        rv = self.check_cr50_deep_sleep(0)
+        if rv:
+            raise error.TestError('Issue setting up test %s' % rv)
+        client_at = autotest.Autotest(self.host)
         # Duration is set to 0, because it is required but unused when
         # iterations is given.
         client_at.run_test('power_SuspendStress', tag='idle',
@@ -143,8 +161,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         values.
 
         @param suspend_count: The number of suspends.
-        @raises TestFail if there's an issue with the deep sleep count or if
-                         cr50 did a hard reboot.
+        @returns a message describing errors found in the state
         """
         exp_count = suspend_count if self._enters_deep_sleep else 0
         act_count = self.cr50.get_deep_sleep_count()
@@ -153,12 +170,14 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         self.cr50.get_ccdstate()
         reset_cause = self.cr50.get_reset_cause()
 
-        if exp_count and (not act_count or 'hibernate' not in reset_cause):
-            raise error.TestFail('Issue with cr50 suspend')
+        errors = []
+        if exp_count and 'hibernate' not in reset_cause:
+                errors.append('reset during suspend')
 
         if exp_count != act_count:
-            raise error.TestFail('After %d suspends cr50 entered deep sleep'
-                                 '%d times' % (exp_count, act_count))
+            errors.append('count mismatch DUT %d cr50 %d' % (exp_count,
+                                                             act_count))
+        return ', '.join(errors) if errors else None
 
 
     def run_once(self, host, suspend_count, reset_type):
@@ -194,19 +213,36 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         else:
             is_arm = self.check_ec_capability(['arm'], suppress_warning=True)
             self._enters_deep_sleep = not is_arm
+
+        main_error = None
         try:
             if reset_type == 'reboot':
                 self.run_reboots(suspend_count)
             elif reset_type == 'mem':
                 self.run_suspend_resume(host, suspend_count)
-        finally:
-            # Collect logs for debugging
-            # Autotest has some stages in between run_once and cleanup that may
-            # be run if the test succeeds. Do this here to make sure this is
-            # always run immediately after the suspend/resume cycles.
-            self.cr50.dump_nvmem()
-            logging.info('FLOG output:\n%s', cr50_utils.DumpFlog(host))
-            self.check_cr50_deep_sleep(suspend_count)
-            self.check_cr50_version(self.original_cr50_version)
-            # Reenable CCD
-            self.wait_for_client_after_changing_ccd(host, True)
+        except Exception, e:
+            main_error = e
+
+        errors = []
+        # Collect logs for debugging
+        # Autotest has some stages in between run_once and cleanup that may
+        # be run if the test succeeds. Do this here to make sure this is
+        # always run immediately after the suspend/resume cycles.
+        self.cr50.dump_nvmem()
+        logging.info('FLOG output:\n%s', cr50_utils.DumpFlog(host))
+        rv = self.check_cr50_deep_sleep(suspend_count)
+        if rv:
+            errors.append(rv)
+        rv = self.check_cr50_version(self.original_cr50_version)
+        if rv:
+            errors.append(rv)
+        # Reenable CCD
+        rv = self.wait_for_client_after_changing_ccd(host, True)
+        if rv:
+            errors.append(rv)
+        secondary_error = 'Suspend issues: %s' % ', '.join(errors)
+        if main_error:
+            logging.info(secondary_error)
+            raise main_error
+        if errors:
+            raise error.TestFail(secondary_error)
