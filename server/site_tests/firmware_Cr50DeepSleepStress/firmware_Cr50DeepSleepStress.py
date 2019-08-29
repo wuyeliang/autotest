@@ -147,18 +147,16 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
 
     def log_relevant_cr50_state(self):
-        """Log ccdstate dump_nvmem, and sleepmask.
+        """Log ccdstate and sleepmask.
 
-        Print ccdstate, dump_nvmem, and sleepmask output to get some basic
-        information about the cr50 state.
+        Print ccdstate and sleepmask output to get some basic information
+        about the cr50 state.
         - sleepmask will show what may be preventing cr50 from entering sleep.
-        - dump_nvmem will show the state of nvmem objects.
         - ccdstate will show what cr50 thinks the AP state is. If the AP is 'on'
           cr50 won't enter deep sleep.
         All of these functions log the state, so no need to log the return
         values.
         """
-        self.cr50.dump_nvmem()
         self.cr50.get_sleepmask()
         self.cr50.get_ccdstate()
 
@@ -195,6 +193,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         else:
             raise error.TestNAError('Invalid reset_type. Use "mem" or "reboot"')
 
+        self.cr50.dump_nvmem()
         self.log_relevant_cr50_state()
         # Cr50 should enter deep sleep once per suspend cycle if deep sleep is
         # supported
