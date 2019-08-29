@@ -1081,3 +1081,11 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         rv = self.send_safe_command_get_output('dump_nvmem',
                                                ['dump_nvmem(.*)>'])[0][1]
         logging.info('NVMEM OUTPUT:\n%s', rv)
+
+
+    def get_reset_cause(self):
+        """Returns a string with the sources for the last cr50 reset."""
+        rv = self.send_command_retry_get_output('sysinfo',
+                ['Reset flags:.*\((.*)\)'], compare_output=True)[0][1]
+        logging.info('reset cause: %s', rv)
+        return rv

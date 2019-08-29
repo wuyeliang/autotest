@@ -44,26 +44,14 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         self.original_cr50_version = self.cr50.get_active_version_info()
 
 
-    def check_cr50_state(self, expected_count, expected_version):
-        """Check the reboot count and version match the expected values"""
-        count = self.cr50.get_deep_sleep_count()
+    def check_cr50_version(self, expected_version):
+        """Return an error message if the version changed running the test."""
         version = self.cr50.get_active_version_info()
-
         logging.info('running %s', version)
-        logging.info('After %s reboots, Cr50 resumed from deep sleep %s times',
-                expected_count, count)
 
-        mismatch = []
-        if count != expected_count:
-            mismatch.append('count mismatch: expected %s got %s' %
-                    (expected_count, count))
         if version != expected_version:
-            mismatch.append('version mismatch: expected %s got %s' %
-                    (expected_version, version))
-
-        if mismatch:
-            raise error.TestFail('Deep Sleep Failure: "%s"' %
-                    '" and "'.join(mismatch))
+            raise error.TestFail('version mismatch: expected %s got %s' %
+                                 (expected_version, version))
 
 
     def run_reboots(self, suspend_count):
@@ -76,6 +64,8 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # Disable CCD so Cr50 can enter deep sleep
         self.cr50.ccd_disable()
         self.cr50.clear_deep_sleep_count()
+        self.check_cr50_deep_sleep(0)
+
         for i in range(suspend_count):
             # Power off the device
             self.servo.get_power_state_controller().power_off()
@@ -84,7 +74,8 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             # Power on the device
             self.servo.power_short_press()
             time.sleep(self.MIN_RESUME)
-            self.log_relevant_cr50_state()
+
+            self.check_cr50_deep_sleep(i + 1)
 
             # Make sure it didn't boot into a different mode
             self.check_state((self.checkers.crossystem_checker,
@@ -126,6 +117,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # Disable CCD so Cr50 can enter deep sleep
         self.wait_for_client_after_changing_ccd(host, False)
         self.cr50.clear_deep_sleep_count()
+        self.check_cr50_deep_sleep(0)
         client_at = autotest.Autotest(host)
         # Duration is set to 0, because it is required but unused when
         # iterations is given.
@@ -138,27 +130,34 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                            suspend_state=self.MEM)
 
 
-    def get_expected_ds_count(self, host, reset_type, suspend_count):
-        """Returns the expected deep sleep count"""
-        is_arm = self.check_ec_capability(['arm'], suppress_warning=True)
-        # x86 devices should suspend once per reset. ARM will only suspend
-        # if the device enters s5.
-        return 0 if (reset_type != 'reboot' and is_arm) else suspend_count
+    def check_cr50_deep_sleep(self, suspend_count):
+        """Verify cr50 has entered deep sleep the correct number of times.
 
-
-    def log_relevant_cr50_state(self):
-        """Log ccdstate and sleepmask.
-
-        Print ccdstate and sleepmask output to get some basic information
+        Also print ccdstate and sleepmask output to get some basic information
         about the cr50 state.
         - sleepmask will show what may be preventing cr50 from entering sleep.
         - ccdstate will show what cr50 thinks the AP state is. If the AP is 'on'
           cr50 won't enter deep sleep.
         All of these functions log the state, so no need to log the return
         values.
+
+        @param suspend_count: The number of suspends.
+        @raises TestFail if there's an issue with the deep sleep count or if
+                         cr50 did a hard reboot.
         """
+        exp_count = suspend_count if self._enters_deep_sleep else 0
+        act_count = self.cr50.get_deep_sleep_count()
+        logging.info('suspend %d: deep sleep count %d', act_count, exp_count)
         self.cr50.get_sleepmask()
         self.cr50.get_ccdstate()
+        reset_cause = self.cr50.get_reset_cause()
+
+        if exp_count and (not act_count or 'hibernate' not in reset_cause):
+            raise error.TestFail('Issue with cr50 suspend')
+
+        if exp_count != act_count:
+            raise error.TestFail('After %d suspends cr50 entered deep sleep'
+                                 '%d times' % (exp_count, act_count))
 
 
     def run_once(self, host, suspend_count, reset_type):
@@ -184,7 +183,13 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
 
-        self.log_relevant_cr50_state()
+        # x86 devices should suspend once per reset. ARM will only suspend
+        # if the device enters s5.
+        if reset_type == 'reboot':
+            self._enters_deep_sleep = True
+        else:
+            is_arm = self.check_ec_capability(['arm'], suppress_warning=True)
+            self._enters_deep_sleep = not is_arm
 
         if reset_type == 'reboot':
             self.run_reboots(suspend_count)
@@ -194,11 +199,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             raise error.TestNAError('Invalid reset_type. Use "mem" or "reboot"')
 
         self.cr50.dump_nvmem()
-        self.log_relevant_cr50_state()
-        # Cr50 should enter deep sleep once per suspend cycle if deep sleep is
-        # supported
-        expected_ds_count = self.get_expected_ds_count(host, reset_type,
-                suspend_count)
-        self.check_cr50_state(expected_ds_count, self.original_cr50_version)
+        self.check_cr50_deep_sleep(suspend_count)
+        self.check_cr50_version(self.original_cr50_version)
         # Reenable CCD
         self.wait_for_client_after_changing_ccd(host, True)
