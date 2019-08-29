@@ -98,9 +98,11 @@ veyron_fievel 3.14
 veyron_gus 3.14
 veyron_jaq 3.14
 veyron_jerry 3.14
+veyron_jerry-kernelnext 4.19
 veyron_mickey 3.14
 veyron_mighty 3.14
 veyron_minnie 3.14
+veyron_minnie-kernelnext 4.19
 veyron_nicky 3.14
 veyron_pinky 3.14
 veyron_rialto 3.14
