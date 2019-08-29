@@ -1061,3 +1061,10 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         cmd = 'bpforce %s%s' % (state, ' atboot' if atboot else '')
         logging.info('running %r', cmd)
         self.send_command(cmd)
+
+
+    def dump_nvmem(self):
+        """Print nvmem objects."""
+        rv = self.send_safe_command_get_output('dump_nvmem',
+                                               ['dump_nvmem(.*)>'])[0][1]
+        logging.info('NVMEM OUTPUT:\n%s', rv)

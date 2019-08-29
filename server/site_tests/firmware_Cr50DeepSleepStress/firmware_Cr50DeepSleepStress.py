@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import pprint
 import time
 
 from autotest_lib.client.common_lib import error
@@ -85,7 +84,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             # Power on the device
             self.servo.power_short_press()
             time.sleep(self.MIN_RESUME)
-            self.log_basic_cr50_sleep_information()
+            self.log_relevant_cr50_state()
 
             # Make sure it didn't boot into a different mode
             self.check_state((self.checkers.crossystem_checker,
@@ -147,18 +146,21 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         return 0 if (reset_type != 'reboot' and is_arm) else suspend_count
 
 
-    def log_basic_cr50_sleep_information(self):
-        """Log ccdstate and sleepmask.
+    def log_relevant_cr50_state(self):
+        """Log ccdstate dump_nvmem, and sleepmask.
 
-        Run ccdstate and sleepmask to get some basic information about what
-        cr50 thinks the device is doing.
-        sleepmask will show what may be preventing cr50 from entering sleep.
-        ccdstate will show what cr50 thinks the AP state is. If the AP is 'on'
-        cr50 won't enter deep sleep.
+        Print ccdstate, dump_nvmem, and sleepmask output to get some basic
+        information about the cr50 state.
+        - sleepmask will show what may be preventing cr50 from entering sleep.
+        - dump_nvmem will show the state of nvmem objects.
+        - ccdstate will show what cr50 thinks the AP state is. If the AP is 'on'
+          cr50 won't enter deep sleep.
+        All of these functions log the state, so no need to log the return
+        values.
         """
-        logging.info(self.cr50.send_safe_command_get_output('sleepmask',
-                ['sleepmask.*>'])[0])
-        logging.info(pprint.pformat(self.cr50.get_ccdstate()))
+        self.cr50.dump_nvmem()
+        self.cr50.get_sleepmask()
+        self.cr50.get_ccdstate()
 
 
     def run_once(self, host, suspend_count, reset_type):
@@ -184,7 +186,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
 
-        self.log_basic_cr50_sleep_information()
+        self.log_relevant_cr50_state()
 
         if reset_type == 'reboot':
             self.run_reboots(suspend_count)
@@ -193,7 +195,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         else:
             raise error.TestNAError('Invalid reset_type. Use "mem" or "reboot"')
 
-        self.log_basic_cr50_sleep_information()
+        self.log_relevant_cr50_state()
         # Cr50 should enter deep sleep once per suspend cycle if deep sleep is
         # supported
         expected_ds_count = self.get_expected_ds_count(host, reset_type,
