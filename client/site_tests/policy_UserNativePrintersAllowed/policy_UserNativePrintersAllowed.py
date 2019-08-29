@@ -21,13 +21,13 @@ class policy_UserNativePrintersAllowed(
 
     def _print_check(self, case):
         """
-        Navigates to the chrome://settings/cupsPrinters page, and will check
+        Navigates to the chrome://os-settings/cupsPrinters page, and will check
         to see if the "Add Printer" button is enabled/blocked.
 
         @param case: bool or None, the setting of the policy.
 
         """
-        self.navigate_to_url('chrome://settings/cupsPrinters')
+        self.navigate_to_url('chrome://os-settings/cupsPrinters')
         self.ui.wait_for_ui_obj(name='Add Printer', role='button')
 
         res = self.ui.is_obj_restricted(name='Add Printer', role='button')
