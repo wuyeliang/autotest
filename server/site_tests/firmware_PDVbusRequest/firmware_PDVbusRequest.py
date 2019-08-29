@@ -43,7 +43,6 @@ class firmware_PDVbusRequest(FirmwareTest):
         """
         # Get Vbus voltage and current
         vbus_voltage = self.pdtester.vbus_voltage
-        vbus_current = self.pdtester.vbus_current
         # Compute voltage tolerance range
         tolerance = self.VBUS_TOLERANCE * expected_vbus_voltage
         voltage_difference = math.fabs(expected_vbus_voltage - vbus_voltage)
@@ -150,7 +149,7 @@ class firmware_PDVbusRequest(FirmwareTest):
                 expected_vbus_voltage = self.USBC_SINK_VOLTAGE
                 ok_to_fail = False
             else:
-                expected_vbus_voltage = voltage
+                expected_vbus_voltage = min(voltage, dut_voltage_limit)
                 ok_to_fail = is_override
 
             result, result_str = self._compare_vbus(expected_vbus_voltage,
