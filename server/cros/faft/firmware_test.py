@@ -798,9 +798,12 @@ class FirmwareTest(FAFTBase):
 
         for servo_console in ['servo_micro', 'servo_v4']:
             capture_cmd = '%s_uart_capture' % servo_console
-            self.servo.set(capture_cmd, 'on')
-            outfile = '%s_uart.txt' % servo_console
-            self.servo_micro_uart_file = os.path.join(self.resultsdir, outfile)
+            uart_file_attr = '%s_uart_file' % servo_console
+            if self.servo.has_control(capture_cmd):
+                self.servo.set(capture_cmd, 'on')
+                outfile = '%s_uart.txt' % servo_console
+                setattr(self, uart_file_attr, os.path.join(self.resultsdir,
+                                                           outfile))
 
     def _record_uart_capture(self):
         """Record the CPU/EC/PD UART output stream to files."""
