@@ -445,7 +445,7 @@ class host_statjson(host_stat):
                     "hostname": hostname,
                     "id": ID_AUTOGEN_MESSAGE,
                     "labels": out_labels,
-                    "serialNumber": attributes["serial_number"],
+                    "serialNumber": attributes.get("serial_number", None),
                 }
             }
             print json.dumps(skylab_json, indent=4, sort_keys=True)
