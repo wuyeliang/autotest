@@ -11,7 +11,7 @@ import time
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error, utils
-from autotest_lib.client.common_lib.cros import cr50_utils, tpm_utils
+from autotest_lib.client.common_lib.cros import cr50_utils
 from autotest_lib.server.cros import filesystem_util, gsutil_wrapper
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
@@ -34,9 +34,6 @@ class Cr50Test(FirmwareTest):
     # images are needed to be able to restore the original image and board id.
     IMAGES = 1 << 1
     PP_SHORT_INTERVAL = 3
-    CLEARED_FWMP_EXIT_STATUS = 1
-    CLEARED_FWMP_ERROR_MSG = ('CRYPTOHOME_ERROR_FIRMWARE_MANAGEMENT_PARAMETERS'
-                              '_INVALID')
     # Cr50 may have flash operation errors during the test. Here's an example
     # of one error message.
     # do_flash_op:245 errors 20 fsh_pe_control 40720004
@@ -67,8 +64,6 @@ class Cr50Test(FirmwareTest):
                 info=self.cr50.CAP_SETTING)
 
         self.host = host
-        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
-        # Clear the FWMP, so it can't disable CCD.
         self.clear_fwmp()
 
         if self.can_set_ccd_level:
@@ -455,7 +450,6 @@ class Cr50Test(FirmwareTest):
         # reboot to normal mode if the device is in dev mode.
         self.enter_mode_after_checking_tpm_state('normal')
 
-        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
         self.clear_fwmp()
 
         # Restore the ccd privilege level
@@ -932,29 +926,6 @@ class Cr50Test(FirmwareTest):
 
         if (mode == 'dev') != self.cr50.in_dev_mode():
             raise error.TestError('Unable to enter %r mode' % mode)
-
-
-    def _fwmp_is_cleared(self):
-        """Return True if the FWMP has been created"""
-        res = self.host.run('cryptohome '
-                            '--action=get_firmware_management_parameters',
-                            ignore_status=True)
-        if res.exit_status and res.exit_status != self.CLEARED_FWMP_EXIT_STATUS:
-            raise error.TestError('Could not run cryptohome command %r' % res)
-        return self.CLEARED_FWMP_ERROR_MSG in res.stdout
-
-
-    def clear_fwmp(self):
-        """Clear the FWMP"""
-        if self._fwmp_is_cleared():
-            return
-        status = self.host.run('cryptohome --action=tpm_status').stdout
-        logging.debug(status)
-        if 'TPM Owned: true' not in status:
-            self.host.run('cryptohome --action=tpm_take_ownership')
-            self.host.run('cryptohome --action=tpm_wait_ownership')
-        self.host.run('cryptohome '
-                      '--action=remove_firmware_management_parameters')
 
     def tpm_is_responsive(self):
         """Check TPM responsiveness by running tpm_version."""

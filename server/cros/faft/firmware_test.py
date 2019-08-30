@@ -13,6 +13,7 @@ import uuid
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib.cros import tpm_utils
 from autotest_lib.server import test
 from autotest_lib.server.cros import vboot_constants as vboot
 from autotest_lib.server.cros.faft.config.config import Config as FAFTConfig
@@ -69,6 +70,11 @@ class FirmwareTest(FAFTBase):
 
     # Delay between closing and opening lid
     LID_DELAY = 1
+
+    # FWMP space constants
+    FWMP_CLEARED_EXIT_STATUS = 1
+    FWMP_CLEARED_ERROR_MSG = ('CRYPTOHOME_ERROR_FIRMWARE_MANAGEMENT_PARAMETERS'
+                              '_INVALID')
 
     # UARTs that may be captured
     UARTS = ('cpu', 'cr50', 'ec', 'servo_micro', 'servo_v4', 'usbpd')
@@ -1689,3 +1695,27 @@ class FirmwareTest(FAFTBase):
                 if actual_fwid != expected_fwid:
                     errors.append(msg)
         return errors
+
+
+    def fwmp_is_cleared(self):
+        """Return True if the FWMP has been created"""
+        res = self.host.run('cryptohome '
+                            '--action=get_firmware_management_parameters',
+                            ignore_status=True)
+        if res.exit_status and res.exit_status != self.FWMP_CLEARED_EXIT_STATUS:
+            raise error.TestError('Could not run cryptohome command %r' % res)
+        return self.FWMP_CLEARED_ERROR_MSG in res.stdout
+
+
+    def clear_fwmp(self):
+        """Clear the FWMP"""
+        if self.fwmp_is_cleared():
+            return
+        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
+        status = self.host.run('cryptohome --action=tpm_status').stdout
+        logging.debug(status)
+        if 'TPM Owned: true' not in status:
+            self.host.run('cryptohome --action=tpm_take_ownership')
+            self.host.run('cryptohome --action=tpm_wait_ownership')
+        self.host.run('cryptohome '
+                      '--action=remove_firmware_management_parameters')
