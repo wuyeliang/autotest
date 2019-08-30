@@ -27,6 +27,8 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
     MIN_RESUME = 15
     MIN_SUSPEND = 15
     MEM = 'mem'
+    # This is just a non-zero value. It doesn't matter what flag we choose.
+    FWMP_FLAGS = '1'
 
     def initialize(self, host, cmdline_args, suspend_count, reset_type):
         """Make sure the test is running with access to the cr50 console"""
@@ -45,6 +47,34 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
         # Save the original version, so we can make sure cr50 doesn't rollback.
         self.original_cr50_version = self.cr50.get_active_version_info()
+
+
+    def cleanup(self):
+        """Clear the fwmp."""
+        try:
+            self.clear_fwmp()
+        finally:
+            super(firmware_Cr50DeepSleepStress, self).cleanup()
+
+
+    def create_fwmp(self):
+        """Create the FWMP."""
+        self.clear_fwmp()
+
+        logging.info('Setting FWMP flags to %s', self.FWMP_FLAGS)
+        autotest.Autotest(self.host).run_test('firmware_SetFWMP',
+                flags=self.FWMP_FLAGS, fwmp_cleared=True,
+                check_client_result=True)
+
+        if self.fwmp_is_cleared():
+            raise error.TestError('Unable to create the FWMP')
+
+
+    def check_fwmp(self):
+        """Returns an error message if the fwmp doesn't exist."""
+        if self.fwmp_is_cleared():
+            return 'FWMP was lost during test'
+        logging.info('No issues detected with the FWMP')
 
 
     def check_cr50_version(self, expected_ver):
@@ -224,7 +254,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
         original_flog = cr50_utils.DumpFlog(self.host).strip()
-        logging.info('Initial FLOG output:\n%s', original_flog)
+        logging.debug('Initial FLOG output:\n%s', original_flog)
 
         # x86 devices should suspend once per reset. ARM will only suspend
         # if the device enters s5.
@@ -233,6 +263,8 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         else:
             is_arm = self.check_ec_capability(['arm'], suppress_warning=True)
             self._enters_deep_sleep = not is_arm
+
+        self.create_fwmp()
 
         main_error = None
         try:
@@ -250,6 +282,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # always run immediately after the suspend/resume cycles.
         self.cr50.dump_nvmem()
         rv = self.check_flog_output(original_flog)
+        if rv:
+            errors.append(rv)
+        rv = self.check_fwmp()
         if rv:
             errors.append(rv)
         rv = self.check_cr50_deep_sleep(suspend_count)
