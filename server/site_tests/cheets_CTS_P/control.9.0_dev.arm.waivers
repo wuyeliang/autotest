@@ -24,13 +24,14 @@ def run_CTS(machine):
         tag='9.0_dev.arm.waivers',
         test_name='cheets_CTS_P.9.0_dev.arm.waivers',
         run_template=['run', 'commandAndExit', 'cts',
-            '--include-filter', 'CtsSkQPTestCases'],
+            '--include-filter', 'CtsSkQPTestCases',
+            '--include-filter', 'CtsGraphicsTestCases android.graphics.cts.ImageDecoderTest#testConserveMemoryPlusHardware'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='cts-dev',
         target_plan=None,
         load_waivers=False,
         bundle='arm',
-        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-5781511-linux_x86-arm.zip',
+        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-5838791-linux_x86-arm.zip',
         timeout=7200)
 
 parallel_simple(run_CTS, machines)
