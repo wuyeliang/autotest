@@ -1,20 +1,16 @@
 from __future__ import unicode_literals
 
-# NOTE: send bvt to BVT
-#       send everything else to SUITES
-#
-# This decision has to be made on a pool by pool basis.
-
+# Source of truth is DUTPool enum at
+# https://cs.chromium.org/chromium/infra/go/src/infra/libs/skylab/inventory/device.proto
 MANAGED_POOLS = {
+    "cq": "DUT_POOL_CQ",
     "bvt": "DUT_POOL_BVT",
     "suites": "DUT_POOL_SUITES",
     "cts": "DUT_POOL_CTS",
-}
-
-UNMANAGED_POOLS = {
-    "labstation_main",
-    "lab_automation",
-    "wificell",
+    "cts-perbuild": "DUT_POOL_CTS_PERBUILD",
+    "continuous": "DUT_POOL_CONTINUOUS",
+    "arc-presubmit": "DUT_POOL_ARC_PRESUBMIT",
+    "quota": "DUT_POOL_QUOTA",
 }
 
 
@@ -27,14 +23,12 @@ def _normalize_pools(l):
         if pool in MANAGED_POOLS:
             # convert name to prototype enum for skylab-managed pools
             out["criticalPools"].append(MANAGED_POOLS[pool])
-        elif pool in UNMANAGED_POOLS:
+        else:
             # for unmanaged pools preserve the name
             out["self_serve_pools"].append(pool)
-        else:
-            raise ValueError("pool '%s' is not recognized" % pool)
     #TODO(gregorynisbet): reject empty pools too.
-    if len(out["criticalPools"]) + len(out["self_serve_pools"]) > 1:
-        raise ValueError("multiple pools %s" % pools)
+    if len(out["criticalPools"]) > 1:
+        raise ValueError("multiple critical pools %s" % pools)
     return out
 
 
