@@ -22,6 +22,12 @@ class power_VideoPlayback(power_test.power_Test):
 
     # list of video name and url.
     _VIDEOS = [
+        ('h264_720_30fps',
+         _BASE_URL + '720p30fpsH264_foodmarket_sync_30s.mp4'
+        ),
+        ('h264_720_60fps',
+         _BASE_URL + '720p60fpsH264_boat_sync_30s.mp4'
+        ),
         ('h264_1080_30fps',
          _BASE_URL + '1080p30fpsH264_foodmarket_sync_30s.mp4'
         ),
@@ -34,6 +40,12 @@ class power_VideoPlayback(power_test.power_Test):
         ('h264_4k_60fps',
          _BASE_URL + '4k60fpsH264_boat_sync_vod_30s.mp4'
         ),
+        ('vp8_720_30fps',
+         _BASE_URL + '720p30fpsVP8_foodmarket_sync_30s.webm'
+        ),
+        ('vp8_720_60fps',
+         _BASE_URL + '720p60fpsVP8_boat_sync_30s.webm'
+        ),
         ('vp8_1080_30fps',
          _BASE_URL + '1080p30fpsVP8_foodmarket_sync_30s.webm'
         ),
@@ -45,6 +57,12 @@ class power_VideoPlayback(power_test.power_Test):
         ),
         ('vp8_4k_60fps',
          _BASE_URL + '4k60fpsVP8_boat_sync_30s.webm'
+        ),
+        ('vp9_720_30fps',
+         _BASE_URL + '720p30fpsVP9_foodmarket_sync_30s.webm'
+        ),
+        ('vp9_720_60fps',
+         _BASE_URL + '720p60fpsVP9_boat_sync_30s.webm'
         ),
         ('vp9_1080_30fps',
          _BASE_URL + '1080p30fpsVP9_foodmarket_sync_30s.webm'
