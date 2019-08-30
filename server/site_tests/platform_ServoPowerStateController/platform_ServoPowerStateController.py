@@ -121,7 +121,7 @@ class platform_ServoPowerStateController(test.test):
             self.controller.power_on(self.controller.REC_OFF)
 
 
-    def assert_dut_booted(self, rec_on=False):
+    def assert_dut_on(self, rec_on=False):
         """Confirm DUT is powered on, claim test failure if DUT is off.
 
         @param rec_on: True if DUT should boot from external USB stick as in
@@ -129,13 +129,7 @@ class platform_ServoPowerStateController(test.test):
 
         @raise TestFail: If DUT is off or DUT boot from wrong source.
         """
-        # Wait for the firmware to come up to recovery and give the EC a chance
-        # to detect the change in state.
-        time.sleep(3)
-        if (self.host.servo.get('ec_system_powerstate') != 'S0' or
-            not self.host.wait_up(timeout=300)):
-            # After being in S0 the system still needs to verify that the
-            # DUT is fully booted and pingable.
+        if not self.host.wait_up(timeout=300):
             raise error.TestFail('power_state:%s did not turn DUT on.' %
                                  ('rec' if rec_on else 'on'))
 
@@ -148,45 +142,16 @@ class platform_ServoPowerStateController(test.test):
                                  ('rec' if rec_on else 'on', boot_source))
 
 
-    def assert_dut_at_rec_screen(self):
-        """Confirm DUT is at the recovery screen.
-
-        The heuristic to determine this is that the EC reports being in S0
-        while pings go unanswered.
+    def assert_dut_off(self, error_message):
+        """Confirm DUT is off and does not turn back on after 30 seconds.
 
         @param error_message: Error message to raise if DUT stays on.
         @raise TestFail: If DUT stays on.
         """
-        # Wait for the firmware to come up to recovery and give the EC a chance
-        # to detect the change in state.
-        time.sleep(3)
-        if not self.host.servo.get('ec_system_powerstate') == 'S0':
-            raise error.TestFail('Rebooting into recovery did not bring the '
-                                 'DUT to S0.')
-        error_message = "power_state:rec didn't stay at recovery screen."
         if not self.host.ping_wait_down(timeout=10):
             raise error.TestFail(error_message)
 
         if self.host.ping_wait_up(timeout=30):
-            raise error.TestFail('%s. %s' % (error_message, 'DUT turns back on'
-                                             ' after it is turned off.'))
-
-    def assert_dut_off(self, error_message):
-        """Confirm DUT is off and does not turn back on after 30 seconds.
-
-        This helper uses EC powerstate to determine on (S0) vs off (not S0).
-
-        @param error_message: Error message to raise if DUT stays on.
-        @raise TestFail: If DUT stays on.
-        """
-        # Sleep for 3s to give the EC a chance to detect the state change.
-        time.sleep(3)
-        if self.host.servo.get('ec_system_powerstate') == 'S0':
-            raise error.TestFail(error_message)
-
-        # Sleep for 30s to see whether the DUT turns on in the meantime
-        time.sleep(30)
-        if self.host.servo.get('ec_system_powerstate') == 'S0':
             raise error.TestFail('%s. %s' % (error_message, 'DUT turns back on'
                                              ' after it is turned off.'))
 
@@ -200,14 +165,11 @@ class platform_ServoPowerStateController(test.test):
         logging.info('Power DUT on in recovery mode, DUT shall boot from USB.')
         self.host.servo.switch_usbkey('off')
         self.controller.power_on(self.controller.REC_ON)
-        # Being on the recovery screen is also S0 power state. Therefore,
-        # the system needs to validate first that the system is in 'S0'
-        # and subsequently validate that it does not respond to pings.
-        self.assert_dut_at_rec_screen()
+        self.assert_dut_off('power_state:rec didn\'t stay at recovery screen.')
 
         self.host.servo.switch_usbkey('dut')
         time.sleep(30)
-        self.assert_dut_booted(rec_on=True)
+        self.assert_dut_on(rec_on=True)
 
         logging.info('Power off DUT which is up in recovery mode.')
         self.controller.power_off()
@@ -225,7 +187,7 @@ class platform_ServoPowerStateController(test.test):
         logging.info('Power on DUT in non-recovery mode.')
         self.host.servo.switch_usbkey('dut')
         self.controller.power_on(self.controller.REC_OFF)
-        self.assert_dut_booted()
+        self.assert_dut_on()
         self.host.servo.switch_usbkey('off')
 
 
@@ -246,13 +208,13 @@ class platform_ServoPowerStateController(test.test):
 
         logging.info('Power on in non-recovery mode.')
         self.controller.power_on(self.controller.REC_OFF)
-        self.assert_dut_booted(rec_on=False)
+        self.assert_dut_on(rec_on=False)
 
         logging.info('Power DUT off and on without delay. DUT should be '
                      'on after power_on is completed.')
         self.controller.power_off()
         self.controller.power_on(self.controller.REC_OFF)
-        self.assert_dut_booted(rec_on=False)
+        self.assert_dut_on(rec_on=False)
 
         logging.info('Power off DUT which is up in non-recovery mode.')
         self.controller.power_off()
@@ -262,13 +224,13 @@ class platform_ServoPowerStateController(test.test):
         logging.info('Power DUT off and reset. DUT should be on after '
                      'reset is completed.')
         self.controller.reset()
-        self.assert_dut_booted(rec_on=False)
+        self.assert_dut_on(rec_on=False)
 
         logging.info('Reset DUT when it\'s on. DUT should be on after '
                      'reset is completed.')
         boot_id = self.host.get_boot_id()
         self.controller.reset()
-        self.assert_dut_booted(rec_on=False)
+        self.assert_dut_on(rec_on=False)
         new_boot_id = self.host.get_boot_id()
         if not new_boot_id or boot_id == new_boot_id:
             raise error.TestFail('power_state:reset failed to reboot DUT.')
