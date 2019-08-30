@@ -698,6 +698,12 @@ class HWIDLabel(base_label.StringLabel):
             logging.info("HwIdException: %s", e)
 
         for hwid_info in hwid_info_list:
+            # TODO(gregorynisbet): if hwid_info is not a list, something has
+            # gone horribly wrong. Here we log the offending hwid_info object
+            # and just continue with the old values.
+            if not isinstance(hwid_info, dict):
+                logging.info("hwid_info: %s", hwid_info)
+                return old_hwid_labels
             # If it's a prefix, we'll have:
             # {'name': prefix_label, 'value': postfix_label} and create
             # 'prefix_label:postfix_label'; otherwise it'll just be
