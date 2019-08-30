@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import difflib
 import logging
 import time
 
@@ -179,6 +180,25 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         return ', '.join(errors) if errors else None
 
 
+    def check_flog_output(self, original_flog):
+        """Check for new flog messages.
+
+        @param original_flog: the original flog output.
+        @returns an error message with the flog difference, if there are new
+                 entries.
+        """
+        new_flog = cr50_utils.DumpFlog(self.host).strip()
+        logging.debug('New FLOG output:\n%s', new_flog)
+        diff = difflib.unified_diff(original_flog.splitlines(),
+                                    new_flog.splitlines())
+        line_diff = '\n'.join(diff)
+        if line_diff:
+            logging.info('FLOG output:\n%s', line_diff)
+            return 'New Flog messages (%s)' % ','.join(diff)
+        else:
+            logging.info('No new FLOG output')
+
+
     def run_once(self, host, suspend_count, reset_type):
         """Verify deep sleep after suspending for the given number of cycles
 
@@ -203,7 +223,8 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                          self.MIN_SUSPEND + self.MIN_RESUME)
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
-        logging.info('Initial FLOG output:\n%s', cr50_utils.DumpFlog(self.host))
+        original_flog = cr50_utils.DumpFlog(self.host).strip()
+        logging.info('Initial FLOG output:\n%s', original_flog)
 
         # x86 devices should suspend once per reset. ARM will only suspend
         # if the device enters s5.
@@ -228,7 +249,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # be run if the test succeeds. Do this here to make sure this is
         # always run immediately after the suspend/resume cycles.
         self.cr50.dump_nvmem()
-        logging.info('FLOG output:\n%s', cr50_utils.DumpFlog(self.host))
+        rv = self.check_flog_output(original_flog)
+        if rv:
+            errors.append(rv)
         rv = self.check_cr50_deep_sleep(suspend_count)
         if rv:
             errors.append(rv)
