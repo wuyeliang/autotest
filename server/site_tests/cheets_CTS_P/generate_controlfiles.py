@@ -93,7 +93,6 @@ _CONTROLFILE_TEMPLATE = Template(
     {% endif %}
 """))
 
-_ALL = 'all'
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440
 # Do not change the name/tag without adjusting the dashboard.
@@ -106,42 +105,25 @@ _CTS_MAX_RETRIES = {
     'CtsSensorTestCases':       30,  # TODO(b/124528412)
 }
 
-# TODO(ihf): Update timeouts once P is more stable.
 # Timeout in hours.
 _CTS_TIMEOUT = {
-    'CtsAccessibilityServiceTestCases':  3.0,  # TODO(ihf): Remove once Nocturne stable.
-    'CtsActivityManagerDeviceTestCases': 3.0,
-    'CtsAppSecurityHostTestCases':       1.5,
-    'CtsDeqpTestCases':                 30.0,
+    'CtsAutoFillServiceTestCases':       2.5,  # TODO(b/134662826)
+    'CtsDeqpTestCases':                 20.0,
     'CtsDeqpTestCases.dEQP-EGL'  :       2.0,
     'CtsDeqpTestCases.dEQP-GLES2':       2.0,
     'CtsDeqpTestCases.dEQP-GLES3':       6.0,
     'CtsDeqpTestCases.dEQP-GLES31':      6.0,
     'CtsDeqpTestCases.dEQP-VK':         15.0,
-    'CtsDevicePolicyManagerTestCases':   2.0,
-    'CtsFileSystemTestCases':            2.5,
-    'CtsHardwareTestCases':              3.0,
+    'CtsFileSystemTestCases':            3.0,
     'CtsIcuTestCases':                   2.0,
-    'CtsLibcoreOjTestCases':             1.5,
-    'CtsLibcoreTestCases':               1.5,
-    # Media might be reduced to 12h?
-    'CtsMediaBitstreamsTestCases':      16.0,
-    'CtsMediaStressTestCases':          16.0,
-    'CtsMediaTestCases':                16.0,
-    'CtsPrintTestCases':                 3.0,
-    'CtsSecurityHostTestCases':          1.5,
+    'CtsLibcoreOjTestCases':             2.0,
+    'CtsMediaStressTestCases':           5.0,
+    'CtsMediaTestCases':                10.0,
+    'CtsPrintTestCases':                 1.5,
     'CtsSecurityTestCases':              2.0,
-    'CtsSensorTestCases':                3.0,  # TODO(ihf): Remove once Nocturne stable.
-    'CtsShortcutHostTestCases':          1.5,
-    'CtsThemeHostTestCases':             6.0,
     'CtsVideoTestCases':                 1.5,
-    'CtsWidgetTestCases':                2.0,
-    'vm-tests-tf':                       2.0,
-    # Without media kevin runs 40h. :-(
-    # Never seen this finish on grunt.
-    _ALL:                               60.0,
-    _COLLECT:                            2.0,
-    _PUBLIC_COLLECT:                     2.0,
+    _COLLECT:                            2.5,
+    _PUBLIC_COLLECT:                     2.5,
 }
 
 # Any test that runs as part as blocking BVT needs to be stable and fast. For
@@ -229,7 +211,7 @@ _MEDIA_MODULES = [
     'CtsMediaStressTestCases',
     'CtsMediaBitstreamsTestCases',
 ]
-_NEEDS_PUSH_MEDIA = _MEDIA_MODULES + [_ALL]
+_NEEDS_PUSH_MEDIA = _MEDIA_MODULES
 
 # Modules that are known to need the default apps of Chrome (eg. Files.app).
 _ENABLE_DEFAULT_APPS = [
@@ -319,7 +301,6 @@ _OVERRIDE_TEST_LENGTH = {
     'CtsMediaStressTestCases': 4,
     'CtsSecurityTestCases': 4,
     'CtsCameraTestCases': 4,
-    _ALL: 4,
     # Even though collect tests doesn't run very long, it must be the very first
     # job executed inside of the suite. Hence it is the only 'LENGTHY' test.
     _COLLECT: 5,  # LENGTHY
@@ -1014,10 +995,7 @@ def get_run_template(modules, is_public, retry=False):
     """Command to run the modules specified by a control file."""
     cmd = None
     if modules.intersection(get_collect_modules(is_public)):
-        if _COLLECT in modules or _PUBLIC_COLLECT in modules:
-            cmd = _format_collect_cmd(retry=retry)
-        elif _ALL in modules:
-            cmd = _format_modules_cmd(is_public, modules, retry=retry)
+        cmd = _format_collect_cmd(retry=retry)
     else:
         cmd = _format_modules_cmd(is_public, modules, retry=retry)
     return cmd
