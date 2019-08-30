@@ -123,13 +123,13 @@ class ServoHost(base_servohost.BaseServoHost):
         set to the neutral (off) position.
         """
         servo_obj = servo.Servo(servo_host=self, servo_serial=self.servo_serial)
+        self._servo = servo_obj
         timeout, _ = retry.timeout(
                 servo_obj.initialize_dut,
                 timeout_sec=self.INITIALIZE_SERVO_TIMEOUT_SECS)
         if timeout:
             raise hosts.AutoservVerifyError(
                     'Servo initialize timed out.')
-        self._servo = servo_obj
 
 
     def disconnect_servo(self):
