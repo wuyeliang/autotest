@@ -29,6 +29,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
     def initialize(self, host, cmdline_args, suspend_count, reset_type):
         """Make sure the test is running with access to the cr50 console"""
+        self.host = host
         super(firmware_Cr50DeepSleepStress, self).initialize(host, cmdline_args)
         if not hasattr(self, 'cr50'):
             raise error.TestNAError('Test can only be run on devices with '
@@ -91,15 +92,14 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                 raise error.TestFail(msg)
 
 
-    def _dut_is_responsive(self, host):
+    def _dut_is_responsive(self):
         """Returns True if the DUT eventually responds"""
-        return host.ping_wait_up(180)
+        return self.host.ping_wait_up(180)
 
 
-    def wait_for_client_after_changing_ccd(self, host, enable):
+    def wait_for_client_after_changing_ccd(self, enable):
         """Change CCD and wait for client.
 
-        @param host: the host object representing the DUT.
         @param enable: True to enable ccd. False to disable it.
         @returns an error message
         """
@@ -110,7 +110,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # power suspend stress needs to ssh into the DUT. If ethernet goes
         # down, raise a test error, so we can tell the difference between
         # dts ethernet issues and the dut going down during the suspend stress.
-        if self._dut_is_responsive(host):
+        if self._dut_is_responsive():
             return
         msg = 'DUT is not pingable after %sabling ccd' % ('en' if enable else
                                                           'dis')
@@ -119,18 +119,17 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # TODO(b/135147658): Raise an error once CCD disable is fixed.
         logging.info('Resetting DUT')
         self.servo.get_power_state_controller().reset()
-        if not self._dut_is_responsive(host):
+        if not self._dut_is_responsive():
             return msg
 
 
-    def run_suspend_resume(self, host, suspend_count):
+    def run_suspend_resume(self, suspend_count):
         """Suspend the device the requested number of times
 
-        @param host: the host object representing the DUT.
         @param suspend_count: the number of times to suspend the device.
         """
         # Disable CCD so Cr50 can enter deep sleep
-        rv = self.wait_for_client_after_changing_ccd(host, False)
+        rv = self.wait_for_client_after_changing_ccd(False)
         if rv:
             raise error.TestFail('Network connection issue %s', rv)
         self.cr50.clear_deep_sleep_count()
@@ -204,7 +203,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                          self.MIN_SUSPEND + self.MIN_RESUME)
         if not suspend_count:
             raise error.TestFail('Need to provide non-zero suspend_count')
-        logging.info('Initial FLOG output:\n%s', cr50_utils.DumpFlog(host))
+        logging.info('Initial FLOG output:\n%s', cr50_utils.DumpFlog(self.host))
 
         # x86 devices should suspend once per reset. ARM will only suspend
         # if the device enters s5.
@@ -219,7 +218,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             if reset_type == 'reboot':
                 self.run_reboots(suspend_count)
             elif reset_type == 'mem':
-                self.run_suspend_resume(host, suspend_count)
+                self.run_suspend_resume(suspend_count)
         except Exception, e:
             main_error = e
 
@@ -229,7 +228,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # be run if the test succeeds. Do this here to make sure this is
         # always run immediately after the suspend/resume cycles.
         self.cr50.dump_nvmem()
-        logging.info('FLOG output:\n%s', cr50_utils.DumpFlog(host))
+        logging.info('FLOG output:\n%s', cr50_utils.DumpFlog(self.host))
         rv = self.check_cr50_deep_sleep(suspend_count)
         if rv:
             errors.append(rv)
@@ -237,7 +236,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         if rv:
             errors.append(rv)
         # Reenable CCD
-        rv = self.wait_for_client_after_changing_ccd(host, True)
+        rv = self.wait_for_client_after_changing_ccd(True)
         if rv:
             errors.append(rv)
         secondary_error = 'Suspend issues: %s' % ', '.join(errors)
