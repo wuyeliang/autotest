@@ -11,6 +11,7 @@ class Values(object):
                      'keyboard', 'lid', 'x86' ]
     spi_voltage = 'pp3300'
     servo_prog_state_delay = 10
+    delay_reboot_to_ping = 60
     dark_resume_capable = True
     firmware_screen = 15
     smm_store = False
