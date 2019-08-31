@@ -944,7 +944,9 @@ class AbstractSSHHost(remote.RemoteHost):
         # Using a shell leaves a dangling ssh process, because we deliver
         # signals to the shell wrapping ssh, not the ssh process itself.
         args = shlex.split(tunnel_cmd)
-        tunnel_proc = subprocess.Popen(args, close_fds=True)
+        with open('/dev/null', 'w') as devnull:
+            tunnel_proc = subprocess.Popen(args, stdout=devnull, stderr=devnull,
+                                           close_fds=True)
         logging.debug('Started ssh tunnel, local = %d'
                       ' remote = %d, pid = %d',
                       local_port, port, tunnel_proc.pid)
