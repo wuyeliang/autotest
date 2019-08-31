@@ -205,11 +205,19 @@ class _Uart(object):
                 logging.warn('Failed to get UART log for %s: %s', stream, err)
                 continue
 
+            if content == 'not_applicable':
+                logging.warn('%s is not applicable', stream)
+                continue
+
             # The UART stream may contain non-printable characters, and servo
             # returns it in string representation. We use `ast.leteral_eval`
             # to revert it back.
             with open(logfile_fullname, 'a') as fd:
-                fd.write(ast.literal_eval(content))
+                try:
+                    fd.write(ast.literal_eval(content))
+                except ValueError:
+                    logging.exception('Invalid value for %s: %r', stream,
+                                      content)
 
     def stop_capture(self):
         """Stop capturing UART streams."""
