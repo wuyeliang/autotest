@@ -20,7 +20,8 @@ class network_WlanRegulatory(test.test):
     test can't apply reliably.
     """
     version = 1
-    # TODO: parse /lib/firmware/regulatory.db, once CRDA goes away.
+    # TODO(https://crbug.com/1000346): parse /lib/firmware/regulatory.db, once
+    # CRDA goes away.
     REGULATORY_DATABASE = '/usr/lib/crda/regulatory.bin'
 
     def get_regulatory_domains(self):
