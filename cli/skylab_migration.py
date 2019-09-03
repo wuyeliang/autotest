@@ -202,11 +202,12 @@ class AtestCmd(object):
         return [_ATEST_EXE, 'host', 'list', '--parse', '-M', _TEMPPATH]
 
     @staticmethod
-    def brief_info(hostnames=[]):
+    def brief_info(hostnames=None):
         """Run brief info command.
 
         @return : iterator of dictionaries describing each hostname
         """
+        hostnames = hostnames or set()
         items = call_with_tempfile(AtestCmd.brief_info_cmd(), hostnames).output
         for item in AtestCmd.brief_info_filter(items):
             yield item
@@ -252,11 +253,12 @@ class AtestCmd(object):
         ]
 
     @staticmethod
-    def rename(hostnames=[], for_migration=True):
+    def rename(hostnames=None, for_migration=True):
         """Rename a list of hosts.
 
         @return : iterator of successfully renamed hosts
         """
+        hostnames = hostnames or set()
         stderr_log('begin rename', time.time(), _humantime())
         items = call_with_tempfile(
             AtestCmd.rename_cmd(for_migration=for_migration),
@@ -310,11 +312,12 @@ class AtestCmd(object):
         ]
 
     @staticmethod
-    def atest_lock(reason=None, hostnames=[]):
+    def atest_lock(reason=None, hostnames=None):
         """Try to lock hostnames via 'atest host mod --lock'.
 
         @return : Nothing
         """
+        hostnames = hostnames or set()
         assert isinstance(reason, unicode)
         cmd = AtestCmd.atest_lock_cmd(reason=reason)
         # NOTE: attempting to lock a host can fail because the host
@@ -352,11 +355,12 @@ class AtestCmd(object):
         return [_ATEST_EXE, 'host', 'mod', '--unlock', '-M', _TEMPPATH]
 
     @staticmethod
-    def atest_unlock(reason=None, hostnames=[]):
+    def atest_unlock(reason=None, hostnames=None):
         """Unlock hostnames via 'atest host mod --unlock'.
 
         @return : iterator of successfully unlocked hosts
         """
+        hostnames = hostnames or set()
         cmd = AtestCmd.atest_unlock_cmd()
         items = call_with_tempfile(cmd, hostnames).output
         for item in AtestCmd.atest_unlock_filter(items):
@@ -495,26 +499,29 @@ class SkylabCmd(object):
 class Migration(object):
 
     @staticmethod
-    def migration_plan(ratio, hostnames=[]):
+    def migration_plan(ratio, hostnames=None):
+        hostnames = hostnames or set()
         plan = AtestCmd.atest_get_migration_plan(
             ratio=ratio, hostnames=hostnames)
         return MigrationPlan(transfer=plan['transfer'], retain=plan['retain'])
 
     @staticmethod
-    def lock(hostnames=[], reason=None, retries=3):
+    def lock(hostnames=None, reason=None, retries=3):
         """Lock a list of hostnames with retries.
         """
+        hostnames = hostnames or set()
         assert isinstance(reason, unicode)
         to_lock = set(hostnames)
         for _ in range(retries):
             AtestCmd.atest_lock(hostnames=to_lock.copy(), reason=reason)
 
     @staticmethod
-    def ensure_lock(hostnames=[]):
+    def ensure_lock(hostnames=None):
         """Without changing the state of a DUT, determine which are locked.
 
         @return : LockCommandStatus
         """
+        hostnames = hostnames or set()
         dut_infos = AtestCmd.brief_info(hostnames=hostnames)
         all_hosts = set(hostnames)
         confirmed_locked = set()
@@ -530,12 +537,13 @@ class Migration(object):
         )
 
     @staticmethod
-    def rename(hostnames=[], for_migration=True, retries=1):
+    def rename(hostnames=None, for_migration=True, retries=1):
         """Rename a list of hosts with retry.
 
         @return : {"renamed": renamed hosts, "not-renamed": not renamed
         hosts}
         """
+        hostnames = hostnames or set()
         all_hosts = set(hostnames)
         needs_rename = all_hosts.copy()
         for _ in range(retries):
@@ -549,8 +557,9 @@ class Migration(object):
         return out
 
     @staticmethod
-    def add_to_skylab_inventory_and_drone(hostnames=[], rename_retries=3):
+    def add_to_skylab_inventory_and_drone(hostnames=None, rename_retries=3):
         """@returns : AddToSkylabInventoryAndDroneStatus"""
+        hostnames = hostnames or set()
         assert not isinstance(hostnames, (unicode, bytes))
         stderr_log('begin add hostnames to inventory', time.time(),
                    _humantime())
@@ -577,7 +586,7 @@ class Migration(object):
         return out
 
     @staticmethod
-    def migrate_known_good_duts_until_max_duration_sync(hostnames=[],
+    def migrate_known_good_duts_until_max_duration_sync(hostnames=None,
                                                         max_duration=60 * 60,
                                                         min_ready_intervals=10,
                                                         interval_len=0):
@@ -594,6 +603,7 @@ class Migration(object):
         @returns : {"success": successfuly migrated DUTS, "failure":
         non-migrated DUTS}
         """
+        hostnames = hostnames or set()
         assert interval_len is not None
         stderr_log('begin migrating only ready DUTs', time.time(), _humantime())
         start = time.time()
@@ -674,7 +684,7 @@ class Migration(object):
         return out
 
     @staticmethod
-    def migrate(hostnames=[],
+    def migrate(hostnames=None,
                 ratio=1,
                 reason=None,
                 max_duration=None,
@@ -694,6 +704,7 @@ class Migration(object):
 
         @return : nothing
         """
+        hostnames = hostnames or set()
         assert isinstance(reason, (unicode, bytes))
         assert interval_len is not None
         assert max_duration is not None
