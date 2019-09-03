@@ -16,15 +16,18 @@ class platform_CompromisedStatefulPartition(test.test):
     _WAIT_DELAY = 2
     FILES_LIST = [
         '/mnt/stateful_partition/dev_image',
-        '/mnt/stateful_partition/encrypted.key',
         '/mnt/stateful_partition/encrypted.block',
         '/mnt/stateful_partition/unencrypted',
+    ]
+    ENCRYPTION_KEY_FILES = [
+        '/mnt/stateful_partition/encrypted.key',
+        '/mnt/stateful_partition/encrypted.needs-finalization',
     ]
 
 
     def run_once(self, host, client_autotest):
         """This test verify that user should get OOBE after booting
-        the device with corrupted statefull partition.
+        the device with corrupted stateful partition.
         Test fails if not able to recover the device with corrupted
         stateful partition.
         """
@@ -53,5 +56,12 @@ class platform_CompromisedStatefulPartition(test.test):
             if not host.path_exists(new_file):
                 raise error.TestFail('%s is missing after rebooting '
                                      'the device with corrupted '
-                                     'statefull partition' % new_file)
-
+                                     'stateful partition' % new_file)
+        encryption_key_exists = False
+        for encryption_key_file in self.ENCRYPTION_KEY_FILES:
+            if host.path_exists(encryption_key_file):
+                encryption_key_exists = True
+        if encryption_key_exists is False:
+            raise error.TestFail('An encryption key is missing after '
+                                 'rebooting the device with corrupted stateful '
+                                 'partition')
