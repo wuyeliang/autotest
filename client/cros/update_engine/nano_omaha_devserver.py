@@ -23,19 +23,20 @@ def _split_url(url):
 class NanoOmahaDevserver(object):
     """A simple Omaha instance that can be setup on a DUT in client tests."""
 
-    def __init__(self, eol=False, failures_per_url=1, backoff=False,
+    def __init__(self, eol_date=None, failures_per_url=1, backoff=False,
                  num_urls=2):
         """
         Create a nano omaha devserver.
 
-        @param eol: True if we should return a response with _eol flag.
+        @param eol_date: An integer representing days from Unix Epoch
+                         of the device's EOL date.
         @param failures_per_url: how many times each url can fail.
         @param backoff: Whether we should wait a while before trying to
                         update again after a failure.
         @param num_urls: The number of URLs in the omaha response.
 
         """
-        self._eol = eol
+        self._eol_date = eol_date
         self._failures_per_url = failures_per_url
         self._backoff = backoff
         self._num_urls = num_urls
@@ -55,7 +56,7 @@ class NanoOmahaDevserver(object):
             <daystart elapsed_seconds="44801"/>
             <app appid="$appid" status="ok">
               <ping status="ok"/>
-              <updatecheck _eol="eol" status="noupdate"/>
+              <updatecheck _eol_date="$eol_date" status="noupdate"/>
             </app>
           </response>
         """)
@@ -108,9 +109,9 @@ class NanoOmahaDevserver(object):
                 _rollback="$is_rollback"
                 """)
 
-        # IF EOL, return a simplified response with _eol tag.
-        if self._eol:
-            return EOL_TEMPLATE.substitute(appid=appid)
+        # IF EOL date, return a simplified response with _eol_date tag.
+        if self._eol_date is not None:
+          return EOL_TEMPLATE.substitute(appid=appid, eol_date=self._eol_date)
 
         template_keys = {}
         template_keys['is_delta'] = str(self._is_delta).lower()
