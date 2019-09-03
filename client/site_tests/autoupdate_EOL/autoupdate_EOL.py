@@ -14,6 +14,7 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
     """Tests end of life (EOL) behaviour."""
     version = 1
 
+    _EXPECTED_EOL_STATUS = 'EOL_STATUS=eol'
     _EOL_NOTIFICATION_TITLE = 'Final software update'
 
     def cleanup(self):
@@ -24,18 +25,15 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
     def _check_eol_status(self):
         """Checks update_engines eol status."""
         result = utils.run('update_engine_client --eol_status').stdout.strip()
-        if self._EXPECTED_EOL_STATUS not in result:
+        if result != self._EXPECTED_EOL_STATUS:
             raise error.TestFail('Expected status %s. Actual: %s' %
                                  (self._EXPECTED_EOL_STATUS, result))
-        if self._EXPECTED_MILESTONES_TO_EOL not in result:
-            raise error.TestFail('Expected milestones to EOL %s. Actual: %s' %
-                                 (self._EXPECTED_MILESTONES_TO_EOL, result))
+
 
     def _check_eol_notification(self):
         """Checks that we are showing an EOL notification to the user."""
         with chrome.Chrome(autotest_ext=True, logged_in=True) as cr:
             def find_notification():
-                """Checks the notification value."""
                 notifications = cr.get_visible_notifications()
                 if notifications is None:
                     return False
@@ -51,27 +49,9 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
                                      sleep_interval=1)
 
 
-    def run_once(self, eol="eol", milestones_to_eol=0):
-        """
-        The main test.
-
-        @param eol: the value passed along to NanoOmahaDevserver placed within
-                    the _eol tag in the Omaha response.
-        @param milestones_to_eol: the value passed long to NanoOmahaDevsever
-                                  placed within the _milestones_to_eol tag in
-                                  the Omaha response.
-        """
-
-        # Expected results based off given input
-        self._EXPECTED_EOL_STATUS = 'EOL_STATUS={}'.format(eol)
-        self._EXPECTED_MILESTONES_TO_EOL = \
-            'MILESTONES_TO_EOL={}'.format(milestones_to_eol)
-
+    def run_once(self):
         # Start a devserver to return a response with eol entry.
-        self._omaha = \
-            nano_omaha_devserver.NanoOmahaDevserver(
-                eol=eol,
-                milestones_to_eol=milestones_to_eol)
+        self._omaha = nano_omaha_devserver.NanoOmahaDevserver(eol=True)
         self._omaha.start()
 
         # Try to update using the omaha server. It will fail with noupdate.
@@ -79,8 +59,4 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
                                wait_for_completion=True)
 
         self._check_eol_status()
-
-        # TODO(crbug.com/995889): should have notification check when milestones
-        # to EOL exists and not in EOL.
-        if eol is "eol":
-          self._check_eol_notification()
+        self._check_eol_notification()
