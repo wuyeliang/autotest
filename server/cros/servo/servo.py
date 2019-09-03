@@ -157,25 +157,33 @@ class _Uart(object):
         @param uart:  The UART name to start/stop capturing.
         @param start:  True to start capturing, otherwise stop.
 
-        @returns True if the operation completes successfully. False if the UART
-                 capturing is not supported or failed due to an error.
+        @returns True if the operation completes successfully.
+                 False if the UART capturing is not supported or failed due to
+                 an error.
         """
         logging.debug('%s capturing %s UART.', 'Start' if start else 'Stop',
                       uart)
         uart_cmd = '%s_uart_capture' % uart
+        target_level = 'on' if start else 'off'
+        level = None
         if self._servo.has_control(uart_cmd):
             # Do our own implementation of set() here as not_applicable
             # should also count as a valid control.
-            level = 'on' if start else 'off'
-            logging.debug('Trying to set %s to %s.', uart_cmd, level)
-            self._servo.set_nocheck(uart_cmd, level)
-            result = self._servo.get(uart_cmd)
-            if result in [level, 'not_applicable']:
-              logging.debug('Managed to set %s to %s.', uart_cmd, result)
-              return True
-            logging.debug('Failed to set %s to %s. Got %s.', uart_cmd, level,
-                          result)
-        return False
+            logging.debug('Trying to set %s to %s.', uart_cmd, target_level)
+            try:
+                self._servo.set_nocheck(uart_cmd, target_level)
+                level = self._servo.get(uart_cmd)
+            except error.TestFail as e:
+                # Any sort of test failure here should not stop the test. This
+                # is just to capture more output. Log and move on.
+                logging.warning('Failed to set %s to %s. %s. Ignoring.',
+                                uart_cmd, target_level, str(e))
+            if level == target_level:
+              logging.debug('Managed to set %s to %s.', uart_cmd, level)
+            else:
+              logging.debug('Failed to set %s to %s. Got %s.', uart_cmd,
+                            target_level, level)
+        return level == target_level
 
     def start_capture(self):
         """Start capturing UART streams."""
