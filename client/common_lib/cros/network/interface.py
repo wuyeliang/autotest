@@ -77,7 +77,8 @@ DEVICE_NAME_LOOKUP = {
     DeviceInfo('0x8086', '0x2723'): NAME_INTEL_22260,
     # For integrated wifi chips, use device_id and subsystem_id together
     # as an identifier.
-    # 0x02f0 is for Quasar on CML, 0x0074 is for HrP2
+    # 0x02f0 is for Quasar on CML, 0x4070 and 0x0074 is for HrP2
+    DeviceInfo('0x8086', '0x02f0', subsystem='0x4070'): NAME_INTEL_22560,
     DeviceInfo('0x8086', '0x02f0', subsystem='0x0074'): NAME_INTEL_22560,
     # With the same Quasar, subsystem_id 0x0034 is JfP2
     DeviceInfo('0x8086', '0x02f0', subsystem='0x0034'): NAME_INTEL_9000,
