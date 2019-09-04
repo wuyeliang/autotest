@@ -12,7 +12,6 @@ import gobject
 import json
 import logging
 import logging.handlers
-import os
 
 import common
 from autotest_lib.client.bin import utils
@@ -89,16 +88,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     UPSTART_ERROR_ALREADYSTARTED = \
             'com.ubuntu.Upstart0_6.Error.AlreadyStarted'
 
-    # The file stores newblue enable/disable setting. The file can be updated in
-    # the run time by calling newblue enable/disable in crosh shell.
-    NEWBLUE_CONFIG_FILE = "/var/lib/bluetooth/newblue"
-
     BLUETOOTHD_JOB = 'bluetoothd'
 
     DBUS_ERROR_SERVICEUNKNOWN = 'org.freedesktop.DBus.Error.ServiceUnknown'
 
     BLUETOOTH_SERVICE_NAME = 'org.chromium.Bluetooth'
-    BLUEZ_SERVICE_NAME = 'org.bluez'
     BLUEZ_MANAGER_PATH = '/'
     BLUEZ_MANAGER_IFACE = 'org.freedesktop.DBus.ObjectManager'
     BLUEZ_ADAPTER_IFACE = 'org.bluez.Adapter1'
@@ -123,17 +117,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     def __init__(self):
         super(BluetoothDeviceXmlRpcDelegate, self).__init__()
 
-        # Init bluetooth service name based on newblue config file.
-        self._bluetooth_service_name = self.BLUEZ_SERVICE_NAME
-        if os.path.exists(self.NEWBLUE_CONFIG_FILE):
-            with open(self.NEWBLUE_CONFIG_FILE) as _newblue_config_file:
-                _newblue_enable = int(_newblue_config_file.read().strip())
-                if _newblue_enable:
-                    self._bluetooth_service_name = self.BLUETOOTH_SERVICE_NAME
-        else:
-            logging.debug('Newblue config file does not exist')
-        logging.debug('Bluetooth Service Name: %s',
-                      self._bluetooth_service_name)
+        # Always connect to btdispatch regardless of NewBlue enable status.
+        self._bluetooth_service_name = self.BLUETOOTH_SERVICE_NAME
 
         # Open the Bluetooth Raw socket to the kernel which provides us direct,
         # raw, access to the HCI controller.
