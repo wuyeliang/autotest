@@ -11,7 +11,7 @@ import time
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error, utils
-from autotest_lib.client.common_lib.cros import cr50_utils
+from autotest_lib.client.common_lib.cros import cr50_utils, tpm_utils
 from autotest_lib.server.cros import filesystem_util, gsutil_wrapper
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
@@ -64,6 +64,8 @@ class Cr50Test(FirmwareTest):
                 info=self.cr50.CAP_SETTING)
 
         self.host = host
+        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
+        # Clear the FWMP, so it can't disable CCD.
         self.clear_fwmp()
 
         if self.can_set_ccd_level:
@@ -450,6 +452,7 @@ class Cr50Test(FirmwareTest):
         # reboot to normal mode if the device is in dev mode.
         self.enter_mode_after_checking_tpm_state('normal')
 
+        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
         self.clear_fwmp()
 
         # Restore the ccd privilege level
