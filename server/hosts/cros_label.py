@@ -664,7 +664,14 @@ class HWIDLabel(base_label.StringLabel):
         all_hwid_labels, _ = self.get_all_labels()
         # If and only if get_all_labels was unsuccessful,
         # it will return a falsey value.
-        return all_hwid_labels or HWID_LABELS_FALLBACK
+        out = all_hwid_labels or HWID_LABELS_FALLBACK
+
+        # TODO(gregorynisbet): remove this
+        # TODO(crbug.com/999785)
+        if "sku" not in out:
+            logging.info("sku-less label names %s", out)
+
+        return out
 
 
     def _old_label_values(self, host):
@@ -714,6 +721,11 @@ class HWIDLabel(base_label.StringLabel):
             if name:
                 new_label = name if not value else '%s:%s' % (name, value)
                 hwid_info_list.append(new_label)
+
+        # TODO(gregorynisbet): remove this
+        # TODO(crbug.com/999785)
+        logging.info("old_hwid_labels %s", old_hwid_labels)
+        logging.info("hwid_info_list %s", hwid_info_list)
 
         return HWIDLabel._merge_hwid_label_lists(
             old=old_hwid_labels,
