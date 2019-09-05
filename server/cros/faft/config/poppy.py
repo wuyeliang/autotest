@@ -9,7 +9,6 @@ class Values(object):
     """FAFT config values for Poppy."""
 
     mode_switcher_type = 'tablet_detachable_switcher'
-    fw_bypasser_type = 'tablet_detachable_bypasser'
 
     confirm_screen = 1
 

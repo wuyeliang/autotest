@@ -9,7 +9,6 @@ class Values(object):
     """FAFT config values for JetStream."""
 
     mode_switcher_type = 'jetstream_switcher'
-    fw_bypasser_type = 'jetstream_bypasser'
 
     firmware_screen = 16
     has_lid = False

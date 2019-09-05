@@ -8,7 +8,6 @@
 class Values(object):
     """FAFT config values for Cheza."""
     mode_switcher_type = 'tablet_detachable_switcher'
-    fw_bypasser_type = 'tablet_detachable_bypasser'
 
     has_lid = True
     has_keyboard = False

@@ -4,12 +4,8 @@
 
 import logging
 import time
-import sys
 
-from multiprocessing import Process
-from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.cros.faft.utils import shell_wrapper
 
 class ConnectionError(Exception):
     """Raised on an error of connecting DUT."""
@@ -367,34 +363,13 @@ class _TabletDetachableBypasser(_BaseFwBypasser):
         self.servo.set_nocheck('volume_down_hold', 100)
         time.sleep(self.faft_config.confirm_screen)
 
-def _create_fw_bypasser(faft_framework):
-    """Creates a proper firmware bypasser.
-
-    @param faft_framework: The main FAFT framework object.
-    """
-    bypasser_type = faft_framework.faft_config.fw_bypasser_type
-    if bypasser_type == 'ctrl_d_bypasser':
-        logging.info('Create a CtrlDBypasser')
-        return _CtrlDBypasser(faft_framework)
-    elif bypasser_type == 'jetstream_bypasser':
-        logging.info('Create a JetstreamBypasser')
-        return _JetstreamBypasser(faft_framework)
-    elif bypasser_type == 'ryu_bypasser':
-        # FIXME Create an RyuBypasser
-        logging.info('Create a CtrlDBypasser')
-        return _CtrlDBypasser(faft_framework)
-    elif bypasser_type == 'tablet_detachable_bypasser':
-        logging.info('Create a TabletDetachableBypasser')
-        return _TabletDetachableBypasser(faft_framework)
-    else:
-        raise NotImplementedError('Not supported fw_bypasser_type: %s',
-                                  bypasser_type)
-
 
 class _BaseModeSwitcher(object):
     """Base class that controls firmware mode switching."""
 
     HOLD_VOL_DOWN_BUTTON_BYPASS = _BaseFwBypasser.HOLD_VOL_DOWN_BUTTON_BYPASS
+
+    FW_BYPASSER_CLASS = _BaseFwBypasser
 
     def __init__(self, faft_framework):
         self.faft_framework = faft_framework
@@ -403,9 +378,12 @@ class _BaseModeSwitcher(object):
         self.servo = faft_framework.servo
         self.faft_config = faft_framework.faft_config
         self.checkers = faft_framework.checkers
-        self.bypasser = _create_fw_bypasser(faft_framework)
+        self.bypasser = self._create_fw_bypasser()
         self._backup_mode = None
 
+    def _create_fw_bypasser(self):
+        """Creates a proper firmware bypasser."""
+        return self.FW_BYPASSER_CLASS(self.faft_framework)
 
     def setup_mode(self, mode):
         """Setup for the requested mode.
@@ -709,6 +687,8 @@ class _BaseModeSwitcher(object):
 class _KeyboardDevSwitcher(_BaseModeSwitcher):
     """Class that switches firmware mode via keyboard combo."""
 
+    FW_BYPASSER_CLASS = _CtrlDBypasser
+
     def _enable_dev_mode_and_reboot(self):
         """Switch to developer mode and reboot."""
         logging.info("Enabling keyboard controlled developer mode")
@@ -730,6 +710,8 @@ class _KeyboardDevSwitcher(_BaseModeSwitcher):
 class _JetstreamSwitcher(_BaseModeSwitcher):
     """Class that switches firmware mode in Jetstream devices."""
 
+    FW_BYPASSER_CLASS = _JetstreamBypasser
+
     def _enable_dev_mode_and_reboot(self):
         """Switch to developer mode and reboot."""
         logging.info("Enabling Jetstream developer mode")
@@ -749,6 +731,8 @@ class _JetstreamSwitcher(_BaseModeSwitcher):
 
 class _TabletDetachableSwitcher(_BaseModeSwitcher):
     """Class that switches fw mode in tablets/detachables with fw menu UI."""
+
+    FW_BYPASSER_CLASS = _TabletDetachableBypasser
 
     def _enable_dev_mode_and_reboot(self):
         """Switch to developer mode and reboot.
@@ -789,21 +773,21 @@ class _TabletDetachableSwitcher(_BaseModeSwitcher):
         self.bypasser.trigger_dev_to_normal()
 
 
+_SWITCHER_CLASSES = {
+    'keyboard_dev_switcher': _KeyboardDevSwitcher,
+    'jetstream_switcher': _JetstreamSwitcher,
+    'tablet_detachable_switcher': _TabletDetachableSwitcher}
+
+
 def create_mode_switcher(faft_framework):
     """Creates a proper mode switcher.
 
     @param faft_framework: The main FAFT framework object.
     """
     switcher_type = faft_framework.faft_config.mode_switcher_type
-    if switcher_type == 'keyboard_dev_switcher':
-        logging.info('Create a KeyboardDevSwitcher')
-        return _KeyboardDevSwitcher(faft_framework)
-    elif switcher_type == 'jetstream_switcher':
-        logging.info('Create a JetstreamSwitcher')
-        return _JetstreamSwitcher(faft_framework)
-    elif switcher_type == 'tablet_detachable_switcher':
-        logging.info('Create a TabletDetachableSwitcher')
-        return _TabletDetachableSwitcher(faft_framework)
-    else:
+    switcher_class = _SWITCHER_CLASSES.get(switcher_type, None)
+    if switcher_class is None:
         raise NotImplementedError('Not supported mode_switcher_type: %s',
                                   switcher_type)
+    else:
+        return switcher_class(faft_framework)

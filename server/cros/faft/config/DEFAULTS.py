@@ -15,7 +15,6 @@ class Values(object):
     """
 
     mode_switcher_type = 'keyboard_dev_switcher'
-    fw_bypasser_type = 'ctrl_d_bypasser'
 
     chrome_ec = False
     chrome_usbpd = False

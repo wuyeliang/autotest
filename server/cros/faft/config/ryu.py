@@ -9,7 +9,6 @@ class Values(object):
     """FAFT config values for Ryu."""
 
     mode_switcher_type = 'ryu_switcher'
-    fw_bypasser_type = 'ryu_bypasser'
 
     has_lid = False
     has_keyboard = False
