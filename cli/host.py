@@ -1616,7 +1616,7 @@ class host_skylab_migrate(action_common.atest_list, host):
         if self.hosts:
             hostnames = self.hosts
         else:
-            hostnames = self.__get_hostnames(
+            hostnames = self._host_skylab_migrate_get_hostnames(
                 model=self.model,
                 board=self.board,
                 pool=self.pool,
