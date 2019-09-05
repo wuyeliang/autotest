@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib import utils
 from autotest_lib.client.common_lib.cros import retry
 
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
@@ -22,25 +21,9 @@ class policy_VirtualMachinesAllowed(
     version = 1
     _POLICY = 'VirtualMachinesAllowed'
 
-    def _can_install_linux(self):
-        """Determine whether Linux installation popup will appear."""
-        try:
-            utils.poll_for_condition(
-                lambda: self.ui.item_present(
-                    name='/Set up Linux/', isRegex=True),
-                exception=error.TestFail(
-                    'Installing Linux popup did not appear'),
-                timeout=10,
-                sleep_interval=1,
-                desc='Polling for installing Linux popup.')
-            return True
-        except:
-            return False
-
     @retry.retry(TimeoutException, timeout_min=5, delay_sec=10)
     def _run_setup_case(self, case):
         self.setup_case(device_policies={self._POLICY: case}, enroll=True)
-
 
     def run_once(self, case):
         """
@@ -56,13 +39,9 @@ class policy_VirtualMachinesAllowed(
             chrome.autotestPrivate.runCrostiniInstaller(function() {})
         ''')
 
-        linux_availability = self._can_install_linux()
-
         if case:
-            if not linux_availability:
-                raise error.TestFail(
-                    'Linux cannot be installed and it should be able to.')
+            self.ui.wait_for_ui_obj(name='/Linux/', isRegex=True)
         else:
-            if linux_availability:
+            if not self.ui.did_obj_not_load(name='/Linux/', isRegex=True):
                 raise error.TestFail(
                     'Linux is installing and it should not be.')
