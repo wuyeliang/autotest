@@ -37,6 +37,6 @@ def run(machine):
     bluetooth_test.newblue_enable_disable(host=host,
                                           newblue_enable=newblue_enable)
     job.run_test('bluetooth_AdapterQuickSanity', host=host,
-                 num_iterations=50)
+                 num_iterations=15)
 
 parallel_simple(run, machines)
