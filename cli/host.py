@@ -435,6 +435,12 @@ class host_statjson(host_stat):
                 MIGRATED_HOST_SUFFIX
             )
 
+            # TODO(gregorynisbet): clean up servo information
+            if "servo_host" not in attributes:
+                attributes["servo_host"] = "dummy_host"
+            if "servo_port" not in attributes:
+                attributes["servo_port"] = "dummy_port"
+
             labels = self._cleanup_labels(labels)
             attrs = [{"key": k, "value": v} for k, v in attributes.iteritems()]
             out_labels = process_labels(labels, platform=stats_map["platform"])
