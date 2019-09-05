@@ -32,6 +32,12 @@ def _normalize_pools(l):
     return out
 
 
+def _get_chameleon(l):
+    out = l.get_enum("chameleon", prefix="CHAMELEON_TYPE_")
+    if out == "CHAMELEON_TYPE_":
+        return None
+    return out
+
 
 EC_TYPE_ATEST_TO_SK = {
     "cros": "EC_TYPE_CHROME_OS",
@@ -239,7 +245,7 @@ def process_labels(labels, platform):
             "audioBox": l.get_bool("audio_box"),
             "audioLoopbackDongle": l.get_bool("audio_loopback_dongle"),
             "chameleon": l.get_bool("chameleon"),
-            "chameleonType": l.get_enum("chameleon", prefix="CHAMELEON_TYPE_"),
+            "chameleonType": _get_chameleon(l),
             "conductive": l.get_bool("conductive"),
             "huddly": l.get_bool("huddly"),
             "mimo": l.get_bool("mimo"),
