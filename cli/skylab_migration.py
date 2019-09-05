@@ -400,6 +400,17 @@ class AtestCmd(object):
 
     @staticmethod
     def atest_get_migration_plan(ratio, hostnames=[]):
+        # optimizations in case the ratio is 1 or 0
+        if ratio == 0:
+            return {
+                'transfer': [],
+                'retain': hostnames,
+            }
+        if ratio == 1:
+            return {
+                'transfer': hostnames,
+                'retain': [],
+            }
         cmd = AtestCmd.atest_get_migration_plan_cmd(ratio)
         output = call_with_tempfile(cmd, hostnames).output
         out = json.loads(''.join(output))
