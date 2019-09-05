@@ -401,6 +401,7 @@ class AtestCmd(object):
     @staticmethod
     def atest_get_migration_plan(ratio, hostnames=[]):
         # optimizations in case the ratio is 1 or 0
+        hostnames = hostnames or set()
         if ratio == 0:
             return {
                 'transfer': [],
@@ -452,6 +453,9 @@ class SkylabCmd(object):
 
     @staticmethod
     def add_many_duts(dut_contents):
+        stderr_log('begin add_many_duts', time.time(), _humantime())
+        for dut_content in dut_contents:
+            stderr_log("add many DUTs: ", dut_content)
         """Add multiple DUTs to skylab at once.
 
         @param dut_contents: a sequence of JSON-like objects describing DUTs as
@@ -468,15 +472,17 @@ class SkylabCmd(object):
         td = tempfile.mkdtemp()
         try:
             paths = []
-            for i, dut_content in enumerate(dut_contents):
+            for i in range(len(dut_contents)):
                 path_ = os.path.join(td, str(i))
                 with open(path_, 'w') as fh:
-                    json.dump(dut_contents, fh)
+                    json.dump(dut_contents[i], fh)
                 paths.append(path_)
             cmd = list(SkylabCmd.ADD_MANY_DUTS_CMD) + paths
-            subprocess.call(cmd)
+            stderr_log(cmd)
+            subprocess.check_call(cmd)
+            # shutil.rmtree(td, ignore_errors=True)
         finally:
-            shutil.rmtree(td, ignore_errors=True)
+            stderr_log('end add_many_duts', time.time(), _humantime())
 
     @staticmethod
     def assign_one_dut(hostname=None):
@@ -568,7 +574,7 @@ class Migration(object):
         return out
 
     @staticmethod
-    def add_to_skylab_inventory_and_drone(hostnames=None, rename_retries=3):
+    def add_to_skylab_inventory_and_drone(use_quick_add, hostnames=None, rename_retries=3):
         """@returns : AddToSkylabInventoryAndDroneStatus"""
         hostnames = hostnames or set()
         assert not isinstance(hostnames, (unicode, bytes))
@@ -576,28 +582,43 @@ class Migration(object):
                    _humantime())
         all_hosts = set(hostnames)
         moved = set()
-        renamed = set()
+        with_drone = set()
+
+        if use_quick_add:
+            dut_contents = []
+            for hostname in hostnames:
+                dut_contents.append(AtestCmd.statjson(hostname=hostname))
+            # TODO(gregorynisbet): Currently we assume that
+            # SkylabCmd.add_many_duts worked for all DUTs.
+            # In the future, check the
+            # inventory or query Skylab in some way to check that the
+            # transfer was successful
+            SkylabCmd.add_many_duts(dut_contents=dut_contents)
+            moved.update(hostnames)
+
         for hostname in hostnames:
-            skylab_dut_descr = AtestCmd.statjson(hostname=hostname)
-            status = SkylabCmd.add_one_dut(add_dut_content=skylab_dut_descr)
-            if status.exit_code != 0:
-                continue
-            moved.add(hostname)
+            if hostname not in moved:
+                skylab_dut_descr = AtestCmd.statjson(hostname=hostname)
+                status = SkylabCmd.add_one_dut(add_dut_content=skylab_dut_descr)
+                if status.exit_code != 0:
+                    continue
+                moved.add(hostname)
             for _ in range(rename_retries):
                 status = SkylabCmd.assign_one_dut(hostname=hostname)
                 if status.exit_code == 0:
-                    renamed.add(hostname)
+                    with_drone.add(hostname)
                     break
         out = AddToSkylabInventoryAndDroneStatus(
-            complete=renamed,
-            without_drone=(moved - renamed),
-            not_started=((all_hosts - moved) - renamed),
+            complete=with_drone,
+            without_drone=(moved - with_drone),
+            not_started=((all_hosts - moved) - with_drone),
         )
         stderr_log('end add hostnames to inventory', time.time(), _humantime())
         return out
 
     @staticmethod
-    def migrate_known_good_duts_until_max_duration_sync(hostnames=None,
+    def migrate_known_good_duts_until_max_duration_sync(use_quick_add,
+                                                        hostnames=None,
                                                         max_duration=60 * 60,
                                                         min_ready_intervals=10,
                                                         interval_len=0):
@@ -605,11 +626,10 @@ class Migration(object):
 
         @param hostnames : list of hostnames
         @param max_duration : when to stop trying to safely migrate duts
-        @param atest : path to atest executable
         @param min_ready_intervals : the minimum number of intervals that a DUT
         must have a good status
         @param interval_len : the length in seconds of interval
-        @param skylab : path to skylab executable
+        @param use_quick_add : whether to use skylab quick-add-duts.
 
         @returns : {"success": successfuly migrated DUTS, "failure":
         non-migrated DUTS}
@@ -643,7 +663,7 @@ class Migration(object):
             # any dut that is declared ready to move at this point will definitely
             # reach a terminal state
             skylab_summary = Migration.add_to_skylab_inventory_and_drone(
-                hostnames=ready_to_move)
+                hostnames=ready_to_move, use_quick_add=use_quick_add)
             needs_add_to_skylab.update(skylab_summary.not_started)
             needs_drone.update(skylab_summary.without_drone)
             # rename the autotest entry all at once
@@ -664,11 +684,12 @@ class Migration(object):
         return out
 
     @staticmethod
-    def migrate_duts_unconditionally(hostnames):
+    def migrate_duts_unconditionally(hostnames, use_quick_add):
         """regardless of the DUTs' status, forcibly migrate all the DUTs to skylab.
 
         @returns: MigrateDutCommandStatus
         """
+        hostnames = hostnames or set()
         assert not isinstance(hostnames, (unicode, bytes))
         stderr_log('begin unconditional migration', time.time(), _humantime())
         successfully_moved = set()
@@ -676,7 +697,7 @@ class Migration(object):
         needs_drone = set()
         needs_rename = set()
         skylab_summary = Migration.add_to_skylab_inventory_and_drone(
-            hostnames=hostnames)
+            hostnames=hostnames, use_quick_add=use_quick_add)
         needs_add_to_skylab.update(skylab_summary.not_started)
         needs_drone.update(skylab_summary.without_drone)
         rename_summary = Migration.rename(
@@ -701,7 +722,8 @@ class Migration(object):
                 max_duration=None,
                 interval_len=None,
                 min_ready_intervals=10,
-                immediately=None):
+                immediately=None,
+                use_quick_add=False):
         """Migrate duts from autotest to skylab.
 
         @param ratio : ratio of DUTs in hostnames to migrate.
@@ -731,6 +753,10 @@ class Migration(object):
         stderr_log('skylab', _SKYLAB_EXE, time.time(), _humantime())
         stderr_log('minimum number of intervals', min_ready_intervals, time.time(), _humantime())
         stderr_log('immediately', immediately, time.time(), _humantime())
+        stderr_log('use_quick_add', use_quick_add, time.time(), _humantime())
+
+        # import pdb; pdb.set_trace()
+
         all_hosts = tuple(hostnames)
         plan = Migration.migration_plan(ratio=ratio, hostnames=all_hosts)
         Migration.lock(hostnames=plan.transfer, reason=reason)
@@ -741,14 +767,18 @@ class Migration(object):
         to_migrate = plan.transfer
         migrate_status = None
         if not immediately:
-            migrate_status = Migration.migrate_known_good_duts_until_max_duration_sync(
-                hostnames=to_migrate,
-                max_duration=max_duration,
-                min_ready_intervals=min_ready_intervals,
-                interval_len=interval_len)
+            migrate_status = \
+                Migration.migrate_known_good_duts_until_max_duration_sync(
+                    hostnames=to_migrate,
+                    max_duration=max_duration,
+                    min_ready_intervals=min_ready_intervals,
+                    interval_len=interval_len,
+                    use_quick_add=use_quick_add)
             to_migrate = migrate_status.failure
         unconditionally_migrate_status = Migration.migrate_duts_unconditionally(
-            hostnames=to_migrate)
+            use_quick_add=use_quick_add,
+            hostnames=to_migrate,
+        )
         failed_step = None
         out = _migration_json_summary(
             failed_step=failed_step,

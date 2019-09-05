@@ -1196,7 +1196,7 @@ class host_rename(host):
                             host, MIGRATED_HOST_SUFFIX)
                 else:
                     #for_rollback
-                    new_hostname = _remove_hostname_suffix(
+                    new_hostname = _remove_hostname_suffix_if_present(
                             host, MIGRATED_HOST_SUFFIX)
 
                 if not self.dryrun:
@@ -1539,7 +1539,12 @@ class host_skylab_migrate(action_common.atest_list, host):
                                help='Pool of the hosts to migrate',
                                dest='pool',
                                default=None)
-
+        # TODO(gregorynisbet): remove this flag and make quick-add-duts default.
+        self.parser.add_option('-q',
+                               '--use-quick-add',
+                               help='whether to use "skylab quick-add-duts"',
+                               dest='use_quick_add',
+                               action='store_true')
     def parse(self):
         (options, leftover) = super(host_skylab_migrate, self).parse()
         self.dry_run = options.dry_run
@@ -1549,6 +1554,7 @@ class host_skylab_migrate(action_common.atest_list, host):
         self.pool = options.pool
         self.board = options.board
         self._reason = "migration to skylab: %s" % self.bug_number
+        self.use_quick_add = options.use_quick_add
         return (options, leftover)
 
 
@@ -1633,6 +1639,7 @@ class host_skylab_migrate(action_common.atest_list, host):
             interval_len=2,
             min_ready_intervals=10,
             immediately=True,
+            use_quick_add=self.use_quick_add,
         )
         return res
 

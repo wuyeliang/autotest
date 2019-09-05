@@ -215,8 +215,9 @@ class MigrationUnittest(unittest.TestCase):
 
         with mock.patch.object(tempfile, 'mkdtemp', new=mkdtemp_impl):
             with mock.patch.object(subprocess, 'call', new=call_impl):
-                skylab_migration.SkylabCmd.add_many_duts(
-                    [None, None, None, None])
+                with mock.patch.object(subprocess, 'check_call', new=call_impl):
+                    skylab_migration.SkylabCmd.add_many_duts(
+                        [None, None, None, None])
 
     def test_assign_one_dut_cmd(self):
         expected = [skylab_migration._SKYLAB_EXE, 'assign-dut', '--', 'HHH']
@@ -328,7 +329,8 @@ class MigrationUnittest(unittest.TestCase):
 
     def test_add_to_skylab_inventory_and_drone_smoke_test(self):
         summary = skylab_migration.Migration.add_to_skylab_inventory_and_drone(
-            hostnames=[])
+            hostnames=[],
+            use_quick_add=False)
         self.assertEqual(summary.complete, set())
         self.assertEqual(summary.without_drone, set())
         self.assertEqual(summary.not_started, set())
@@ -362,6 +364,7 @@ class MigrationUnittest(unittest.TestCase):
                         'assign_one_dut',
                         new=assign_one_dut):
                     summary = skylab_migration.Migration.add_to_skylab_inventory_and_drone(
+                        use_quick_add=False,
                         hostnames=['GOOD', 'MEDIUM', 'BAD'])
                     self.assertEqual(summary.complete, {'GOOD'})
                     self.assertEqual(summary.without_drone, {'MEDIUM'})
@@ -381,6 +384,7 @@ class MigrationUnittest(unittest.TestCase):
             atest_cmd.brief_info = brief_info
             atest_cmd.rename = rename
             summary = skylab_migration.Migration.migrate_known_good_duts_until_max_duration_sync(
+                use_quick_add=False,
                 hostnames=[])
             self.assertEqual(summary.success, set())
             self.assertEqual(summary.failure, set())
@@ -417,6 +421,7 @@ class MigrationUnittest(unittest.TestCase):
                                       ) as add_to_skylab_obj:
                     add_to_skylab_obj.return_value = inventory_return
                     summary = skylab_migration.Migration.migrate_known_good_duts_until_max_duration_sync(
+                        use_quick_add=False,
                         hostnames=['GOOD', 'BAD'])
                     self.assertEqual(summary.success, set(['GOOD']))
                     self.assertEqual(summary.failure, set(['BAD']))
@@ -439,6 +444,7 @@ class MigrationUnittest(unittest.TestCase):
             atest_cmd.brief_info = brief_info
             atest_cmd.rename = rename
             summary = skylab_migration.Migration.migrate_duts_unconditionally(
+                use_quick_add=False,
                 hostnames=[])
             self.assertEqual(summary.success, set())
             self.assertEqual(summary.failure, set())
@@ -475,6 +481,7 @@ class MigrationUnittest(unittest.TestCase):
                                       ) as add_to_skylab_obj:
                     add_to_skylab_obj.return_value = inventory_retval
                     summary = skylab_migration.Migration.migrate_duts_unconditionally(
+                        use_quick_add=False,
                         hostnames=['GOOD', 'BAD'])
                     self.assertEqual(summary.success, set(['GOOD']))
                     self.assertEqual(summary.failure, set(['BAD']))
