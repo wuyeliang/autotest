@@ -504,7 +504,7 @@ class SkylabCmd(object):
         if already_present:
             return CommandOutput(exit_code=0, output=output)
         else:
-            return CommandOutput(exit_code=e.returncode, output=output)
+            return CommandOutput(exit_code=exit_code, output=output)
 
 
 class Migration(object):
