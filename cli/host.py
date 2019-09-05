@@ -1561,7 +1561,7 @@ class host_skylab_migrate(action_common.atest_list, host):
         # this just gets all the hostnames, it doesn't filter by
         # presence or absence of migrated-do-not-use.
         labels = []
-        for key, value in {'model': model, 'board': board, 'pool': pool}:
+        for key, value in ({'model': model, 'board': board, 'pool': pool}).items():
             if value:
                 labels.append(key + ":" + value)
         filters = {}
