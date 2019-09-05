@@ -37,6 +37,9 @@ _LITERAL_MAP = {
 }
 
 
+TEXT = (unicode, str)
+
+
 def find_atest_path():
     """Get the path to the 'atest' executable.
 
@@ -487,7 +490,7 @@ class SkylabCmd(object):
     @staticmethod
     def assign_one_dut(hostname=None):
         """Assign a DUT to a randomly chosen drone."""
-        assert isinstance(hostname, unicode)
+        assert isinstance(hostname, TEXT)
         cmd = SkylabCmd.assign_one_dut_cmd(hostname=hostname)
         # run command capturing stdout and stderr regardless of exit status
         def run(cmd):
