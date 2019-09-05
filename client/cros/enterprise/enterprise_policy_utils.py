@@ -15,10 +15,10 @@ import json
 from autotest_lib.client.common_lib import error
 # Default settings for managed user policies
 
-def get_all_policies(autotest_ext, local=False):
+def get_all_policies(autotest_ext):
     """Returns a dict of all the policies on the device."""
 
-    policy_data = _get_pol_from_api(autotest_ext, local)
+    policy_data = _get_pol_from_api(autotest_ext)
     if not policy_data:
         raise error.TestError('API did not return policy data!')
     _reformat_policies(policy_data)
@@ -26,17 +26,18 @@ def get_all_policies(autotest_ext, local=False):
     return policy_data
 
 
-def _get_pol_from_api(autotest_ext, promise=False):
+def _get_pol_from_api(autotest_ext):
     """Call the getAllPolicies API, return raw result, clear stored data."""
-    autotest_ext.ExecuteJavaScript('''
-        chrome.autotestPrivate.getAllEnterprisePolicies(function(save_pol) {
-          result = save_pol;
-        });
-    ''')
-    policy_data = autotest_ext.EvaluateJavaScript('result')
-
-    # Ensure that a test does not attempt to get stale results.
-    autotest_ext.ExecuteJavaScript('delete(result)')
+    new_promise = '''new Promise(function(resolve, reject) {
+        chrome.autotestPrivate.getAllEnterprisePolicies(function(policies) {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(policies);
+          }
+        })
+    })'''
+    policy_data = autotest_ext.EvaluateJavaScript(new_promise, promise=True)
     return policy_data
 
 
