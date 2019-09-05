@@ -38,7 +38,10 @@ ON_DUT_BLACKLIST = [
 
 # A list of telemetry tests that output histograms.
 HISTOGRAMS_WHITELIST = [
+    'loading.desktop',
     'rendering.desktop',
+    'octane',
+    'kraken',
     'speedometer2',
 ]
 
