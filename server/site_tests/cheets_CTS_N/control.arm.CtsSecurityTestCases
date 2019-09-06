@@ -21,6 +21,7 @@ def run_CTS(machine):
         'cheets_CTS_N',
         hosts=host_list,
         iterations=1,
+        max_retry=30,
         needs_push_media=False,
         tag='arm.CtsSecurityTestCases',
         test_name='cheets_CTS_N.arm.CtsSecurityTestCases',
