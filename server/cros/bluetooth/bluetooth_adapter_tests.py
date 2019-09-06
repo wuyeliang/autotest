@@ -379,12 +379,11 @@ def retry(test_method, instance, *args, **kwargs):
         return _is_successful(_run_method(test_method, test_method.__name__,
                                           instance, *args, **kwargs))
     for device_type in SUPPORTED_DEVICE_TYPES:
-        for device_list in getattr(instance, 'devices')[device_type]:
-            for device in device_list:
-                #fix_serial_device in 'recreate' mode doesn't require chameleon
-                #so just pass None for convinent.
-                if not fix_serial_device(None, device, "recreate"):
-                    return False
+        for device in getattr(instance, 'devices')[device_type]:
+            #fix_serial_device in 'recreate' mode doesn't require chameleon
+            #so just pass None for convinent.
+            if not fix_serial_device(None, device, "recreate"):
+                return False
 
     logging.info('%s: retry the 2nd time.', test_method.__name__)
     return _is_successful(_run_method(test_method, test_method.__name__,
