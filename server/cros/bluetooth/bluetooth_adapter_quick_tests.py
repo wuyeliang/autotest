@@ -84,12 +84,15 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
     def quick_test_init(self, host, use_chameleon=True, flag='Quick Sanity'):
         """Inits the test batch"""
         self.host = host
-        factory = remote_facade_factory.RemoteFacadeFactory(host,
-                                                            disable_arc=True)
-        self.bluetooth_facade = factory.create_bluetooth_hid_facade()
+        #factory can not be declared as local variable, otherwise
+        #factory._proxy.__del__ will be invoked, which shutdown the xmlrpc server,
+        #which log out the user.
+        self.factory = remote_facade_factory.RemoteFacadeFactory(host,
+                                                                 disable_arc=True)
+        self.bluetooth_facade = self.factory.create_bluetooth_hid_facade()
         self.use_chameleon = use_chameleon
         if self.use_chameleon:
-            self.input_facade = factory.create_input_facade()
+            self.input_facade = self.factory.create_input_facade()
             self.check_chameleon()
 
             # Query connected devices on our chameleon at init time
