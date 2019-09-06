@@ -569,7 +569,8 @@ class ShillProxy(object):
 
         """
         return dbus.Interface(
-                self._bus.get_object(self.DBUS_INTERFACE, path),
+                self._bus.get_object(self.DBUS_INTERFACE, path,
+                                     introspect=False),
                 type_str)
 
 
