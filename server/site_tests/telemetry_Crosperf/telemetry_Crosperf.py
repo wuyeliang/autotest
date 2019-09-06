@@ -54,6 +54,8 @@ HISTOGRAM_REGEX = re.compile(r'(?P<IMPORTANT>\*)?HISTOGRAM '
                              r'(?P<VALUE_JSON>{.*})(?P<UNITS>.+)?')
 
 
+CHARTJSON_ALLOWLIST = ('loading.desktop')
+
 def _find_chrome_root_dir():
     # Look for chrome source root, either externally mounted, or inside
     # the chroot.  Prefer chrome-src-internal source tree to chrome-src.
@@ -286,27 +288,29 @@ class telemetry_Crosperf(test.test):
         test_args = args.get('test_args', '')
         profiler_args = args.get('profiler_args', '')
 
+        output_format = '--output-format=histograms'
+        if test_name in CHARTJSON_ALLOWLIST:
+            output_format += ' --output-format=chartjson'
         # Decide whether the test will run locally or by a remote server.
         if args.get('run_local', 'false').lower() == 'true':
             # The telemetry scripts will run on DUT.
             _ensure_deps(dut, test_name)
             format_string = ('python %s --browser=system '
-                             '--output-format=chartjson '
-                             '--output-format=histograms '
-                             '%s %s')
-            command = format_string % (os.path.join(
-                CLIENT_CHROME_ROOT, RUN_BENCHMARK), test_args, test_name)
+                             '%s %s %s')
+            command = format_string % (
+                os.path.join(
+                    CLIENT_CHROME_ROOT, RUN_BENCHMARK),
+                output_format, test_args, test_name)
             runner = dut
         else:
             # The telemetry scripts will run on server.
             format_string = ('python %s --browser=cros-chrome --remote=%s '
                              '--output-dir="%s" '
-                             '--output-format=chartjson '
-                             '--output-format=histograms '
-                             '%s %s')
+                             '%s %s %s')
             command = format_string % (os.path.join(_find_chrome_root_dir(),
                                                     RUN_BENCHMARK), client_ip,
-                                       self.resultsdir, test_args, test_name)
+                                       self.resultsdir,
+                                       output_format, test_args, test_name)
             runner = utils
 
         # Run the test. And collect profile if needed.
@@ -369,19 +373,21 @@ class telemetry_Crosperf(test.test):
         # Copy the results-chart.json and histograms.json file into
         # the test_that results directory, if necessary.
         if args.get('run_local', 'false').lower() == 'true':
-            result = self.scp_telemetry_results(
-                client_ip, dut,
-                os.path.join(DUT_CHROME_RESULTS_DIR, 'results-chart.json'),
-                self.resultsdir)
+            if test_name in CHARTJSON_ALLOWLIST:
+                result = self.scp_telemetry_results(
+                    client_ip, dut,
+                    os.path.join(DUT_CHROME_RESULTS_DIR, 'results-chart.json'),
+                    self.resultsdir)
             result = self.scp_telemetry_results(
                 client_ip, dut,
                 os.path.join(DUT_CHROME_RESULTS_DIR, 'histograms.json'),
                 self.resultsdir)
         else:
-            filepath = os.path.join(self.resultsdir, 'results-chart.json')
-            if not os.path.exists(filepath):
-                exit_code = -1
-                raise RuntimeError('Missing results file: %s' % filepath)
+            if test_name in CHARTJSON_ALLOWLIST:
+                filepath = os.path.join(self.resultsdir, 'results-chart.json')
+                if not os.path.exists(filepath):
+                    exit_code = -1
+                    raise RuntimeError('Missing results file: %s' % filepath)
             filepath = os.path.join(self.resultsdir, 'histograms.json')
             if not os.path.exists(filepath):
                 exit_code = -1
