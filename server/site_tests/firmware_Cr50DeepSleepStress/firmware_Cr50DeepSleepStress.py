@@ -27,8 +27,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
     MIN_RESUME = 15
     MIN_SUSPEND = 15
     MEM = 'mem'
-    # This is just a non-zero value. It doesn't matter what flag we choose.
-    FWMP_FLAGS = '1'
+    # Initialize the FWMP with a non-zero value. Use 100, because it's an
+    # unused flag and it wont do anything like lock out dev mode or ccd.
+    FWMP_FLAGS = '0x100'
 
     def initialize(self, host, cmdline_args, suspend_count, reset_type):
         """Make sure the test is running with access to the cr50 console"""
