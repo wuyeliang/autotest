@@ -21,6 +21,7 @@ from autotest_lib.client.cros import cryptohome
 from autotest_lib.client.cros import httpd
 from autotest_lib.client.cros.input_playback import keyboard
 from autotest_lib.client.cros.enterprise import enterprise_fake_dmserver
+from autotest_lib.client.cros.enterprise.device_policy_lookup import DEVICE_POLICY_DICT
 from autotest_lib.client.common_lib import ui_utils
 from py_utils import TimeoutException
 
@@ -65,24 +66,6 @@ USERNAME = 'fake-user@managedchrome.com'
 PASSWORD = 'fakepassword'
 GAIA_ID = 'fake-gaia-id'
 
-# Convert from chrome://policy name to what fake dms expects.
-DEVICE_POLICY_DICT = {
-    'DeviceAllowBluetooth': 'allow_bluetooth',
-    'DeviceAutoUpdateDisabled': 'update_disabled',
-    'DeviceEphemeralUsersEnabled': 'ephemeral_users_enabled',
-    'DeviceNativePrinters': 'external_policy',
-    'DeviceNativePrintersAccessMode': 'access_mode',
-    'DeviceNativePrintersBlacklist': 'blacklist',
-    'DeviceNativePrintersWhitelist': 'whitelist',
-    'DeviceOpenNetworkConfiguration': 'open_network_configuration',
-    'DeviceRollbackToTargetVersion': 'rollback_to_target_version',
-    'DeviceTargetVersionPrefix': 'target_version_prefix',
-    'SystemTimezone': 'timezone',
-    'ReportUploadFrequency': 'device_status_frequency',
-    'DeviceLocalAccounts': 'account',
-    'DeviceLocalAccountAutoLoginId': 'auto_login_id',
-    'VirtualMachinesAllowed': 'virtual_machines_allowed',
-}
 
 # Default settings for managed user policies
 DEFAULT_POLICY = {
