@@ -375,7 +375,7 @@ def retry(test_method, instance, *args, **kwargs):
     time.sleep(1)
 
 
-    if getattr(instance, 'use_chameleon') is False:
+    if not hasattr(instance, 'use_chameleon'):
         return _is_successful(_run_method(test_method, test_method.__name__,
                                           instance, *args, **kwargs))
     for device_type in SUPPORTED_DEVICE_TYPES:
