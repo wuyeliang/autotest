@@ -166,6 +166,17 @@ class skylab_json_utils_unittest(unittest.TestCase):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
         self.assertFalse("criticalPools" in out)
+    
+    def test_hwid_sku_present(self):
+        l = sky.Labels()
+        l._add_label("sku:TEST")
+        out = sky.process_labels(l, platform=None)
+        self.assertEqual(out["hwid-sku"], "TEST")
+    
+    def test_hwid_sku_absent(self):
+        l = sky.Labels()
+        out = sky.process_labels(l, platform=None)
+        self.assertEqual(out["hwid-sku"], None)
 
     def test_cts_abi_present(self):
         l = sky.Labels()

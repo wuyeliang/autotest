@@ -204,6 +204,7 @@ def process_labels(labels, platform):
         "board": l.get_string("board", default=None),
         "brand": l.get_string("brand-code", default=None),
         "cr50Phase": _cr50_phase(l),
+        "hwid-sku": l.get_string("sku", default=None),
         "model": l.get_string("model", default=None),
         "platform": platform,
         "referenceDesign": l.get_string("reference_design"),
