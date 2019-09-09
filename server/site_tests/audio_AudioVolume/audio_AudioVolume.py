@@ -127,7 +127,7 @@ class audio_AudioVolume(audio_test.AudioTest):
                 source.start_playback()
 
                 time.sleep(self.RECORD_SECONDS)
-
+                audio_facade.check_audio_stream_at_selected_device()
                 recorder.stop_recording()
                 logging.info('Stopped recording from Chameleon.')
 
