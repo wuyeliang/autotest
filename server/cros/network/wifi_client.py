@@ -757,43 +757,6 @@ class WiFiClient(site_linux_system.LinuxSystem):
         self.host.run('ip neigh add %s lladdr %s dev %s nud perm' %
                       (ip_address, mac_address, self.wifi_if))
 
-
-    def discover_tdls_link(self, mac_address):
-        """Send a TDLS Discover to |peer_mac_address|.
-
-        @param mac_address: string MAC address associated with the TDLS peer.
-
-        @return bool True if operation initiated successfully, False otherwise.
-
-        """
-        logging.info('TDLS discovery with peer %s', mac_address)
-        return self._shill_proxy.discover_tdls_link(self.wifi_if, mac_address)
-
-
-    def establish_tdls_link(self, mac_address):
-        """Establish a TDLS link with |mac_address|.
-
-        @param mac_address: string MAC address associated with the TDLS peer.
-
-        @return bool True if operation initiated successfully, False otherwise.
-
-        """
-        logging.info('Establishing TDLS link with peer %s', mac_address)
-        return self._shill_proxy.establish_tdls_link(self.wifi_if, mac_address)
-
-
-    def query_tdls_link(self, mac_address):
-        """Query a TDLS link with |mac_address|.
-
-        @param mac_address: string MAC address associated with the TDLS peer.
-
-        @return string indicating current TDLS connectivity.
-
-        """
-        logging.info('Querying TDLS link with peer %s', mac_address)
-        return self._shill_proxy.query_tdls_link(self.wifi_if, mac_address)
-
-
     def add_wake_packet_source(self, source_ip):
         """Add |source_ip| as a source that can wake us up with packets.
 
