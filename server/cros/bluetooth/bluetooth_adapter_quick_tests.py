@@ -288,6 +288,15 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.pkg_is_running = True
 
 
+    def quick_test_print_summary(self):
+        """Print results summary of a test package"""
+        logging.info('%s Test Package Summary: total pass %d, total fail %d',
+                     self.pkg_name, self.pkg_pass_count, self.pkg_fail_count)
+        for result in self.pkg_tests_results:
+            logging.info(result)
+        self._print_delimiter();
+
+
     def quick_test_package_update_iteration(self, iteration):
         """Update state and print log per package iteration.
            Must be called to have a proper package test result tracking.
@@ -301,12 +310,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
 
     def quick_test_package_end(self):
-        """Print results summary of a test package"""
-        logging.info('%s Test Package Summary: total pass %d, total fail %d',
-                     self.pkg_name, self.pkg_pass_count, self.pkg_fail_count)
-        for result in self.pkg_tests_results:
-            logging.info(result)
-        self._print_delimiter();
+        """Print final result of a test package"""
         if self.pkg_fail_count > 0:
             logging.error('===> Test Package Failed! More than one failure')
             self._print_delimiter();

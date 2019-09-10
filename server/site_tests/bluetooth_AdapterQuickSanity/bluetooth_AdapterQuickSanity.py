@@ -34,10 +34,11 @@ class bluetooth_AdapterQuickSanity(
         self.quick_test_package_start('BT Quick Sanity')
 
         # Run sanity package
-        for iter in xrange(num_iterations):
+        for iter in xrange(1, num_iterations+1):
             self.quick_test_package_update_iteration(iter)
             self.sa_sanity_batch_run()
             self.le_sanity_batch_run()
+            self.quick_test_print_summary()
 
         # End and cleanup test package
         self.quick_test_package_end()
