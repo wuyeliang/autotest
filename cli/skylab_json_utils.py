@@ -136,6 +136,14 @@ def _cts_abi(l):
     return out
 
 
+def _cts_cpu(l):
+    out = []
+    for abi in ["cts_cpu_x86", "cts_cpu_arm"]:
+        if l.get_bool(abi):
+            out.append(abi.upper())
+    return out
+
+
 def _os_type(l):
     """Get the operating system type"""
     return l.get_enum("os", prefix="OS_TYPE_")
@@ -152,10 +160,11 @@ def _video_acceleration(l):
     to the video_acc_ keys in the atest format
     """
     out = []
-    for key in l.bool_keys_starting_with("video_acc"):
-        _, delim, suffix = key.rpartition("video_acc_")
-        assert delim == "video_acc_"
-        out.append("VIDEO_ACCELERATION" + _ + suffix.upper())
+    for prefix in ["video_acc", "hw_video_acc"]:
+        for key in l.bool_keys_starting_with(prefix=prefix):
+            _, delim, suffix = key.rpartition("video_acc_")
+            assert delim == "video_acc_"
+            out.append("VIDEO_ACCELERATION" + "_" + suffix.upper())
     return out
 
 
@@ -218,6 +227,7 @@ def process_labels(labels, platform):
         # list of enum keys
         "criticalPools": pools["criticalPools"],
         "ctsAbi": _cts_abi(l),
+        "ctsCpu": _cts_cpu(l),
         # list of string keys
         "self_serve_pools": pools["self_serve_pools"],
         # capabilities substructure
@@ -233,12 +243,16 @@ def process_labels(labels, platform):
             "touchpad": l.get_bool("touchpad"),
             "webcam": l.get_bool("webcam"),
             # string keys in capabilities
+            "graphics": l.get_string("graphics", default=None),
+            "gpuFamily": l.get_string("gpu_family", default=None),
             "modem": l.get_string("modem", default=""),
             "power": l.get_string("power", default=None),
             "storage": l.get_string("storage", default=None),
             "telephony": l.get_string("telephony", default=""),
             # enum keys in capabilities
             "carrier": l.get_enum("carrier", prefix="CARRIER_"),
+            # video acceleration is its own thing.
+            "videoAcceleration": _video_acceleration(l),
         },
         # peripherals substructure
         "peripherals": {
