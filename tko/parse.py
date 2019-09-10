@@ -375,6 +375,9 @@ def parse_one(db, pid_file_manager, jobname, path, parse_options):
             job.board = label_info.get('board', None)
             job.suite = label_info.get('suite', None)
 
+    if 'suite' in job.keyval_dict:
+      job.suite = job.keyval_dict['suite']
+
     result_utils_lib.LOG =  tko_utils.dprint
     _throttle_result_size(path)
 
