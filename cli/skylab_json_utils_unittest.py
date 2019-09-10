@@ -195,7 +195,7 @@ class skylab_json_utils_unittest(unittest.TestCase):
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["ctsCpu"], ["CTS_CPU_ARM"])
 
-def test_cts_cpu_absent(self):
+    def test_cts_cpu_absent(self):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["ctsCpu"], [])
