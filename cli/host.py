@@ -30,6 +30,7 @@ from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, sky
 from autotest_lib.cli import fair_partition
 from autotest_lib.client.bin import utils as bin_utils
 from autotest_lib.cli.skylab_json_utils import process_labels
+from autotest_lib.cli import skylab_rollback
 from autotest_lib.client.common_lib import error, host_protections
 from autotest_lib.server import frontend, hosts
 from autotest_lib.server.hosts import host_info
@@ -1656,3 +1657,39 @@ class host_skylab_migrate(action_common.atest_list, host):
     def output(self, result):
         if result is not None:
             print json.dumps(result, indent=4, sort_keys=True)
+
+
+class skylab_rollback():
+    usage_action = "skylab_rollback"
+
+    def __init__(self):
+        super(skylab_rollback, self).__init__()
+        self.parser.add_option('--bug-number',
+                               help='bug number for tracking purposes.',
+                               dest='bug_number',
+                               default=None)
+
+    def parse(self):
+        (options, leftover) = super(host_skylab_migrate, self).parse()
+        self.bug_number = options.bug_number
+        return (options, leftover)
+
+    def execute(self):
+        if self.hosts:
+            hostnames = self.hosts
+        else:
+            hostnames = _host_skylab_migrate_get_hostnames(
+                obj=self,
+                class_=host_skylab_migrate,
+                model=self.model,
+                board=self.board,
+                pool=self.pool,
+            )
+        if not hostnames:
+            return {'error': 'no hosts to migrate'}
+        res = skylab_rollback.rollback(
+            hosts=hostnames,
+            bug=self.bug_number,
+            dry_run=False,
+        )
+        return res
