@@ -1515,6 +1515,40 @@ class host_migrate(action_common.atest_list, host):
             print('No hosts were migrated.')
 
 
+
+def _host_skylab_migrate_get_hostnames(obj, class_, model=None, pool=None, board=None):
+    """
+    @params : in 'model', 'pool', 'board'
+
+    """
+    # TODO(gregorynisbet)
+    # this just gets all the hostnames, it doesn't filter by
+    # presence or absence of migrated-do-not-use.
+    labels = []
+    for key, value in ({'model': model, 'board': board, 'pool': pool}).items():
+        if value:
+            labels.append(key + ":" + value)
+    filters = {}
+    check_results = {}
+    # Copy the filter and check_results initialization logic from
+    # the 'execute' method of the class 'host_migrate'.
+    if not labels:
+        return []
+    elif len(labels) == 1:
+        filters['labels__name__in'] = labels
+        check_results['labels__name__in'] = None
+    elif len(labels) > 1:
+        filters['multiple_labels'] = labels
+        check_results['multiple_labels'] = None
+    else:
+        assert False
+
+    results = super(class_, obj).execute(
+        op='get_hosts', filters=filters, check_results=check_results)
+    return [result['hostname'] for result in results]
+
+
+
 class host_skylab_migrate(action_common.atest_list, host):
     usage_action = 'skylab_migrate'
 
@@ -1563,39 +1597,6 @@ class host_skylab_migrate(action_common.atest_list, host):
         self.use_quick_add = options.use_quick_add
         return (options, leftover)
 
-
-    def _host_skylab_migrate_get_hostnames(self, model=None, pool=None, board=None):
-        """
-        @params : in 'model', 'pool', 'board'
-
-        """
-        # TODO(gregorynisbet)
-        # this just gets all the hostnames, it doesn't filter by
-        # presence or absence of migrated-do-not-use.
-        labels = []
-        for key, value in ({'model': model, 'board': board, 'pool': pool}).items():
-            if value:
-                labels.append(key + ":" + value)
-        filters = {}
-        check_results = {}
-        # Copy the filter and check_results initialization logic from
-        # the 'execute' method of the class 'host_migrate'.
-        if not labels:
-            return []
-        elif len(labels) == 1:
-            filters['labels__name__in'] = labels
-            check_results['labels__name__in'] = None
-        elif len(labels) > 1:
-            filters['multiple_labels'] = labels
-            check_results['multiple_labels'] = None
-        else:
-            assert False
-
-        results = super(host_skylab_migrate, self).execute(
-            op='get_hosts', filters=filters, check_results=check_results)
-        return [result['hostname'] for result in results]
-
-
     def _validate_one_hostname_source(self):
         """Validate that hostname source is explicit hostnames or valid query.
 
@@ -1628,7 +1629,9 @@ class host_skylab_migrate(action_common.atest_list, host):
         if self.hosts:
             hostnames = self.hosts
         else:
-            hostnames = self._host_skylab_migrate_get_hostnames(
+            hostnames = _host_skylab_migrate_get_hostnames(
+                obj=self,
+                class_=host_skylab_migrate,
                 model=self.model,
                 board=self.board,
                 pool=self.pool,
