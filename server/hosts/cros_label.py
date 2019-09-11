@@ -247,7 +247,17 @@ class ChameleonLabel(base_label.BaseLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        return len(host._chameleon_host_list) > 0
+        has_chameleon = len(host._chameleon_host_list) > 0
+        # TODO(crbug.com/995900) -- debug why chameleon label is flipping
+        try:
+            logging.info("has_chameleon %s", has_chameleon)
+            logging.info("chameleon_host_list %s", getattr(host, "_chameleon_host_list", "NO_ATTRIBUTE"))
+            logging.info("host: %s chameleon_list %s", getattr(host, "chameleon_list", "NO_ATTRIBUTE"))
+            logging.info("host: %s multi_chameleon", getattr(host, "multi_chameleon", "NO_ATTRIBUTE"))
+        except:
+            pass
+        return has_chameleon
+
 
 
 class ChameleonConnectionLabel(base_label.StringPrefixLabel):
