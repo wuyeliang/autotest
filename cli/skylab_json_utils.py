@@ -186,7 +186,7 @@ def validate_required_fields_for_skylab(skylab_fields):
         raise ValueError(
             'skylab_fields["common"]["labels"] = { ... } is not present')
     for label in REQUIRED_LABELS:
-        if label not in labels:
+        if label not in labels or labels[label] is None:
             raise SkylabMissingLabelException(label)
     return
 

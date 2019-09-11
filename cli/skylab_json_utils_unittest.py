@@ -655,7 +655,7 @@ class skylab_json_utils_unittest(unittest.TestCase):
             skylab_json_utils.validate_required_fields_for_skylab(
                 {"common": {
                     "labels": {
-                        "board": None
+                        "board": True
                     }
                 }})
         e = ctx.exception
@@ -667,8 +667,8 @@ class skylab_json_utils_unittest(unittest.TestCase):
             skylab_json_utils.validate_required_fields_for_skylab(
                 {"common": {
                     "labels": {
-                        "board": None,
-                        "model": None
+                        "board": True,
+                        "model": True
                     }
                 }})
         e = ctx.exception
@@ -680,9 +680,9 @@ class skylab_json_utils_unittest(unittest.TestCase):
             skylab_json_utils.validate_required_fields_for_skylab({
                 "common": {
                     "labels": {
-                        "board": None,
-                        "model": None,
-                        "sku": None
+                        "board": True,
+                        "model": True,
+                        "sku": True
                     }
                 }
             })
@@ -693,10 +693,10 @@ class skylab_json_utils_unittest(unittest.TestCase):
         item = {
             "common": {
                 "labels": {
-                    "board": None,
-                    "model": None,
-                    "sku": None,
-                    "brand": None
+                    "board": True,
+                    "model": True,
+                    "sku": True,
+                    "brand": True
                 }
             }
         }
