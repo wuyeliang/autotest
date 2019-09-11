@@ -818,7 +818,7 @@ class BluetoothAdapterTests(test.test):
             # minium time after timeout before checking property
             MIN_DELTA_SECS = 3
             # Time between checking  property
-            WAIT_TIME_SECS = 5
+            WAIT_TIME_SECS = 2
 
             # Set and read back the timeout value
             if not set_timeout(timeout):
@@ -898,11 +898,6 @@ class BluetoothAdapterTests(test.test):
                         return True
 
         default_timeout = get_timeout()
-        #
-        # Test with default value along any values passed.
-        #
-        if default_timeout not in timeout_values:
-            timeout_values.append(default_timeout)
 
         result = []
         try:
@@ -926,7 +921,7 @@ class BluetoothAdapterTests(test.test):
             set_timeout = self.bluetooth_facade.set_discoverable_timeout,
             get_timeout = self.bluetooth_facade.get_discoverable_timeout,
             property_name = 'discoverable',
-            timeout_values = [0, 60, 180])
+            timeout_values = timeout_values)
 
     @_test_retry_and_log
     def test_pairable_timeout(self, timeout_values = [0, 60, 180]):
@@ -937,7 +932,7 @@ class BluetoothAdapterTests(test.test):
             set_timeout = self.bluetooth_facade.set_pairable_timeout,
             get_timeout = self.bluetooth_facade.get_pairable_timeout,
             property_name = 'pairable',
-            timeout_values = [0, 60, 180])
+            timeout_values = timeout_values)
 
 
     @_test_retry_and_log
