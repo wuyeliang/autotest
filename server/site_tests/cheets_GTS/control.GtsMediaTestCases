@@ -21,7 +21,7 @@ def run_GTS(machine):
         'cheets_GTS',
         hosts=host_list,
         iterations=1,
-        max_retry=2,
+        max_retry=5,
         tag='GtsMediaTestCases',
         test_name='cheets_GTS.GtsMediaTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsMediaTestCases', '--ignore-business-logic-failure'],

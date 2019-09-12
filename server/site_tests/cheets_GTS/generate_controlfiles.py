@@ -168,7 +168,9 @@ _PUBLIC_DEPENDENCIES = {}
 
 # This information is changed based on regular analysis of the failure rate on
 # partner moblabs.
-_PUBLIC_MODULE_RETRY_COUNT = {}
+_PUBLIC_MODULE_RETRY_COUNT = {
+  'GtsMediaTestCases': 5   # TODO(b/140841434)
+}
 
 # This information is changed based on regular analysis of the job run time on
 # partner moblabs.
