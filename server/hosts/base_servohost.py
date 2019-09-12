@@ -44,7 +44,7 @@ class BaseServoHost(ssh_host.SSHHost):
     REBOOT_FILE_POSTFIX = '_reboot'
 
     # Time to wait a rebooting servohost. In seconds
-    REBOOT_TIMEOUT = 120
+    REBOOT_TIMEOUT = 240
 
 
     def _initialize(self, hostname, is_in_lab=None, *args, **dargs):
