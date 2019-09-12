@@ -11,6 +11,7 @@ from autotest_lib.server.hosts import base_label
 from autotest_lib.server.hosts import cros_label
 from autotest_lib.server.cros import autoupdater
 from autotest_lib.server.hosts import labstation_repair
+from autotest_lib.server.cros import provision
 from autotest_lib.server.hosts import base_servohost
 from autotest_lib.client.cros import constants as client_constants
 from autotest_lib.client.common_lib import lsbrelease_utils
@@ -132,6 +133,19 @@ class LabstationHost(base_servohost.BaseServoHost):
         """
         return lsbrelease_utils.get_chromeos_release_version(
             lsb_release_content=self._get_lsb_release_content())
+
+
+    def host_version_prefix(self, image):
+        """Return version label prefix.
+
+        In case the CrOS provisioning version is something other than the
+        standard CrOS version e.g. CrOS TH version, this function will
+        find the prefix from provision.py.
+
+        @param image: The image name to find its version prefix.
+        @returns: A prefix string for the image type.
+        """
+        return provision.get_version_label_prefix(image)
 
 
     def repair(self):
