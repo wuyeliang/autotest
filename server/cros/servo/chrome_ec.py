@@ -95,6 +95,24 @@ class ChromeConsole(object):
         else:
             self._servo.set_nocheck(self.uart_cmd, commands)
 
+    def has_command(self, command):
+        """Check whether EC console supports |command|.
+
+        Args:
+          command: Command to look for.
+
+        Returns:
+          True: If the |command| exist on the EC image of the device.
+          False: If the |command| does not exist on the EC image of the device.
+        """
+        result = None
+        try:
+            # Throws error.TestFail (on timeout) if it cannot find a line with
+            # 'command' in the output. Thus return False in that case.
+            result = self.send_command_get_output('help', [command])
+        except error.TestFail:
+            return False
+        return result is not None
 
     def send_command_get_output(self, command, regexp_list):
         """Send command through UART and wait for response.

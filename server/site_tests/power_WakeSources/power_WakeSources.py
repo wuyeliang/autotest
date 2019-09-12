@@ -16,9 +16,14 @@ from autotest_lib.server.cros.servo import chrome_ec
 # Possible states base can be forced into.
 BASE_STATE = enum.Enum('ATTACH', 'DETACH', 'RESET')
 
+# Possible states for tablet mode as defined in common/tablet_mode.c via
+# crrev.com/c/1797370.
+TABLET_MODE = enum.Enum('ON', 'OFF', 'RESET')
+
 # List of wake sources expected to cause a full resume.
 FULL_WAKE_SOURCES = [
-    'PWR_BTN', 'LID_OPEN', 'BASE_ATTACH', 'BASE_DETACH', 'INTERNAL_KB', 'USB_KB'
+    'PWR_BTN', 'LID_OPEN', 'BASE_ATTACH', 'BASE_DETACH', 'INTERNAL_KB',
+    'USB_KB', 'TABLET_MODE_ON', 'TABLET_MODE_OFF'
 ]
 
 # Max time taken by the system to resume.
@@ -59,6 +64,8 @@ class power_WakeSources(test.test):
         """
         if wake_source in ['BASE_ATTACH', 'BASE_DETACH']:
             self._force_base_state(BASE_STATE.RESET)
+        if wake_source in ['TABLET_MODE_ON', 'TABLET_MODE_OFF']:
+            self._force_tablet_mode(TABLET_MODE.RESET)
 
     def _before_suspend(self, wake_source):
         """Prep before suspend.
@@ -69,10 +76,12 @@ class power_WakeSources(test.test):
         """
         if wake_source == 'BASE_ATTACH':
             # Force detach before suspend so that attach won't be ignored.
-            return self._force_base_state(BASE_STATE.DETACH)
+            self._force_base_state(BASE_STATE.DETACH)
+            return True
         if wake_source == 'BASE_DETACH':
             # Force attach before suspend so that detach won't be ignored.
-            return self._force_base_state(BASE_STATE.ATTACH)
+            self._force_base_state(BASE_STATE.ATTACH)
+            return True
         if wake_source == 'LID_OPEN':
             # Set the power policy for lid closed action to suspend.
             return self._host.run(
@@ -82,17 +91,33 @@ class power_WakeSources(test.test):
             # Initialize USB keyboard.
             self._host.servo.set_nocheck('init_usb_keyboard', 'on')
             return True
-
+        if wake_source == 'TABLET_MODE_ON':
+            self._force_tablet_mode(TABLET_MODE.OFF)
+            return True
+        if wake_source == 'TABLET_MODE_OFF':
+            self._force_tablet_mode(TABLET_MODE.ON)
+            return True
         return True
+
+    def _force_tablet_mode(self, mode):
+        """Send EC command to force the tablet mode.
+
+        @param mode: mode to force. One of the |TABLET_MODE| enum.
+        """
+        ec_cmd = 'tabletmode '
+        ec_arg = {
+            TABLET_MODE.ON: 'on',
+            TABLET_MODE.OFF: 'off',
+            TABLET_MODE.RESET: 'r'
+        }
+
+        ec_cmd += ec_arg[mode]
+        self._ec.send_command(ec_cmd)
 
     def _force_base_state(self, base_state):
         """Send EC command to force the |base_state|.
 
         @param base_state: State to force base to. One of |BASE_STATE| enum.
-
-        @return: False if the command does not exist in the current EC build.
-
-        @raise error.TestFail : If base state change fails.
         """
         ec_cmd = 'basestate '
         ec_arg = {
@@ -103,7 +128,6 @@ class power_WakeSources(test.test):
 
         ec_cmd += ec_arg[base_state]
         self._ec.send_command(ec_cmd)
-        return True
 
     def _is_valid_wake_source(self, wake_source):
         """Check if |wake_source| is valid for DUT.
@@ -112,12 +136,9 @@ class power_WakeSources(test.test):
         @return: False if |wake_source| is not valid for DUT, True otherwise
         """
         if wake_source.startswith('BASE'):
-            if self._host.run('which hammerd', ignore_status=True).\
-                    exit_status == 0:
-                # Smoke test to see if EC has support to reset base.
-                return self._force_base_state(BASE_STATE.RESET)
-            else:
-                return False
+            return self._ec.has_command('basestate')
+        if wake_source.startswith('TABLET_MODE'):
+            return self._ec.has_command('tabletmode')
         if wake_source == 'LID_OPEN':
             return self._dr_utils.host_has_lid()
         if wake_source == 'INTERNAL_KB':
@@ -228,6 +249,10 @@ class power_WakeSources(test.test):
             self._force_base_state(BASE_STATE.ATTACH)
         elif wake_source == 'BASE_DETACH':
             self._force_base_state(BASE_STATE.DETACH)
+        elif wake_source == 'TABLET_MODE_ON':
+            self._force_tablet_mode(TABLET_MODE.ON)
+        elif wake_source == 'TABLET_MODE_OFF':
+            self._force_tablet_mode(TABLET_MODE.OFF)
         elif wake_source == 'INTERNAL_KB':
             self._host.servo.ctrl_key()
         elif wake_source == 'USB_KB':
