@@ -694,99 +694,11 @@
     "master_name": "ChromeOSPerf"
   },
   {
-    "autotest_name": "video_HangoutHardwarePerf",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_JDAPerf.cpu",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_JDAPerf.power",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_JEAPerf",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_MediaRecorderPerf",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_PlaybackPerf",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VDAPerf",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VDAPerf.cfm",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VDAPerf.h264",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VDAPerf.vp8",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VDAPerf.vp9",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VEAPerf.cfm",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VEAPerf.h264",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VEAPerf.vp8",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VideoDecodeMemoryUsage.h264",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VideoDecodeMemoryUsage.vp8",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_VideoDecodeMemoryUsage.vp9",
-    "master_name": "ChromeOSVideo"
-  },
-  {
-    "autotest_name": "video_YouTubeHTML5",
-    "master_name": "ChromeOS_Graphics"
-  },
-  {
     "autotest_name": "video_WebRtcMainFeedSwitching.perf",
     "master_name": "ChromeOSWebRtcVideo"
   },
   {
-    "autotest_name": "video_WebRtcPeerConnectionWithCamera.h264",
-    "master_name": "ChromeOSWebRtcVideo"
-  },
-  {
-    "autotest_name": "video_WebRtcPeerConnectionWithCamera.vp8",
-    "master_name": "ChromeOSWebRtcVideo"
-  },
-  {
-    "autotest_name": "video_WebRtcPerf",
-    "master_name": "ChromeOSWebRtcVideo"
-  },
-  {
     "autotest_name": "video_WebRtcResolutionSwitching.perf",
-    "master_name": "ChromeOSWebRtcVideo"
-  },
-  {
-    "autotest_name": "video_WebRtcCamera",
     "master_name": "ChromeOSWebRtcVideo"
   },
   {
