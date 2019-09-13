@@ -7,7 +7,7 @@ import logging
 import time
 
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib.cros import cr50_utils
+from autotest_lib.client.common_lib.cros import cr50_utils, tpm_utils
 from autotest_lib.server import autotest
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
@@ -61,6 +61,9 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
     def create_fwmp(self):
         """Create the FWMP."""
         self.clear_fwmp()
+
+        # Clear the TPM owner, so we can set the fwmp.
+        tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
 
         logging.info('Setting FWMP flags to %s', self.FWMP_FLAGS)
         autotest.Autotest(self.host).run_test('firmware_SetFWMP',
