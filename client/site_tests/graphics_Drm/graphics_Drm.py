@@ -66,9 +66,10 @@ class DrmTest(object):
                                 'have version %s. Skipping test.'
                                 % (min_kernel_version, kernel_version))
                 return False
-        if self.name == 'atomictest' and gpu_type == 'baytrail':
-            logging.warning('Baytrail is on kernel v4.4, but there is no '
-                            'intention to enable atomic.')
+        if self.name == 'atomictest' and (gpu_type == 'baytrail' or
+                                          gpu_type == 'broadwell'):
+            logging.warning('Baytrail and Broadwell intentionally do not '
+                            'support atomic.')
             return False
         if self.name == 'vk_glow' and cpu == 'amd':
             logging.warning('VK_EXT_image_drm_format_modifier needs to be '
