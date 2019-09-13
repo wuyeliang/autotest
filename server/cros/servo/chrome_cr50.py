@@ -827,10 +827,14 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
         try:
             cmd = 'ccd %s%s' % (level, (' ' + password) if password else '')
-            enable_ccd_and_command_channels = 0x8 | 0x1
+            # ccd command outputs on the rbox, ccd, and console channels,
+            # respectively. Cr50 uses these channels to print relevant ccd
+            # information.
+            # Restrict all other channels.
+            ccd_output_channels = 0x20000 | 0x8 | 0x1
             rv = self.send_safe_command_get_output(
                     cmd, [cmd + '(.*)>'],
-                    channel_mask=enable_ccd_and_command_channels)[0][1]
+                    channel_mask=ccd_output_channels)[0][1]
         finally:
             self._servo.set('cr50_uart_timeout', original_timeout)
         logging.info(rv)
