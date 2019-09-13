@@ -33,10 +33,10 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import dev_server
 from autotest_lib.server import test
 from autotest_lib.server import utils
-from autotest_lib.server.cros import cts_expected_failure_parser
-from autotest_lib.server.cros import tradefed_chromelogin as login
-from autotest_lib.server.cros import tradefed_constants as constants
-from autotest_lib.server.cros import tradefed_utils
+from autotest_lib.server.cros.tradefed import cts_expected_failure_parser
+from autotest_lib.server.cros.tradefed import tradefed_chromelogin as login
+from autotest_lib.server.cros.tradefed import tradefed_constants as constants
+from autotest_lib.server.cros.tradefed import tradefed_utils
 
 # For convenience, add to our scope.
 parse_tradefed_result = tradefed_utils.parse_tradefed_result

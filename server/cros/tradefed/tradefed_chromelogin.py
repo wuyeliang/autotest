@@ -6,7 +6,7 @@ import contextlib
 import logging
 
 from autotest_lib.server import autotest
-from autotest_lib.server.cros import tradefed_constants as constants
+from autotest_lib.server.cros.tradefed import tradefed_constants as constants
 
 
 class ChromeLogin(object):
