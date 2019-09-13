@@ -702,6 +702,7 @@ class HWIDLabel(base_label.StringLabel):
     def generate_labels(self, host):
         # use previous values as default
         old_hwid_labels = self._old_label_values(host)
+        logging.info("old_hwid_labels: %r", old_hwid_labels)
         hwid = host.run_output('crossystem hwid').strip()
         hwid_info_list = []
         try:
@@ -710,6 +711,7 @@ class HWIDLabel(base_label.StringLabel):
                 info_type=hwid_lib.HWID_INFO_LABEL,
                 key_file=self.key_file,
             )
+            logging.info("hwid_info_response: %r", hwid_info_response)
             hwid_info_list = hwid_info_response.get('labels', [])
         except hwid_lib.HwIdException as e:
             logging.info("HwIdException: %s", e)
