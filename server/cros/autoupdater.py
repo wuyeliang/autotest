@@ -1042,7 +1042,6 @@ class ChromiumOSUpdater(object):
             raise
         except Exception as e:
             logging.exception('Failure during download and install.')
-            server_name = dev_server.get_resolved_hostname(self.update_url)
             raise ImageInstallError(self.host.hostname, server_name, str(e))
 
         try:
