@@ -1597,12 +1597,17 @@ class host_skylab_migrate(action_common.atest_list, host):
                                help='Pool of the hosts to migrate',
                                dest='pool',
                                default=None)
-        # TODO(gregorynisbet): remove this flag and make quick-add-duts default.
         self.parser.add_option('-q',
-                               '--use-quick-add',
-                               help='whether to use "skylab quick-add-duts"',
+                               '--quick',
+                               help='use quick-add-duts',
                                dest='use_quick_add',
                                action='store_true')
+        self.parser.add_option('-s',
+                               '--slow',
+                               help='don\' use quick-add-duts',
+                               dest='no_use_quick_add',
+                               action='store_true')
+
     def parse(self):
         (options, leftover) = super(host_skylab_migrate, self).parse()
         self.dry_run = options.dry_run
@@ -1612,7 +1617,19 @@ class host_skylab_migrate(action_common.atest_list, host):
         self.pool = options.pool
         self.board = options.board
         self._reason = "migration to skylab: %s" % self.bug_number
-        self.use_quick_add = options.use_quick_add
+        use_quick_add = options.use_quick_add
+        no_use_quick_add = options.no_use_quick_add
+        if use_quick_add:
+            if no_use_quick_add:
+                self.invalid_syntax('cannot supply both --quick and --slow.')
+            else:
+                self.use_quick_add = True
+        else:
+            if no_use_quick_add:
+                self.use_quick_add = False
+            else:
+                self.invalid_syntax('must include either --quick or --slow.')
+
         return (options, leftover)
 
     def _validate_one_hostname_source(self):
