@@ -1676,7 +1676,7 @@ class host_skylab_migrate(action_common.atest_list, host):
             print json.dumps(result, indent=4, sort_keys=True)
 
 
-class skylab_rollback():
+class skylab_rollback(action_common.atest_list, host):
     usage_action = "skylab_rollback"
 
     def __init__(self):
