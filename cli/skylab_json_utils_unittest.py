@@ -171,12 +171,12 @@ class skylab_json_utils_unittest(unittest.TestCase):
         l = sky.Labels()
         l._add_label("sku:TEST")
         out = sky.process_labels(l, platform=None)
-        self.assertEqual(out["hwid-sku"], "TEST")
+        self.assertEqual(out["hwidSku"], "TEST")
     
     def test_hwid_sku_absent(self):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
-        self.assertEqual(out["hwid-sku"], None)
+        self.assertEqual(out["hwidSku"], None)
 
     def test_cts_abi_present(self):
         l = sky.Labels()
