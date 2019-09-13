@@ -1676,18 +1676,18 @@ class host_skylab_migrate(action_common.atest_list, host):
             print json.dumps(result, indent=4, sort_keys=True)
 
 
-class skylab_rollback(action_common.atest_list, host):
+class host_skylab_rollback(action_common.atest_list, host):
     usage_action = "skylab_rollback"
 
     def __init__(self):
-        super(skylab_rollback, self).__init__()
+        super(host_skylab_rollback, self).__init__()
         self.parser.add_option('--bug-number',
                                help='bug number for tracking purposes.',
                                dest='bug_number',
                                default=None)
 
     def parse(self):
-        (options, leftover) = super(host_skylab_migrate, self).parse()
+        (options, leftover) = super(host_skylab_rollback, self).parse()
         self.bug_number = options.bug_number
         return (options, leftover)
 
