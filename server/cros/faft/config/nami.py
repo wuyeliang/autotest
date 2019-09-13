@@ -15,3 +15,4 @@ class Values(object):
     dark_resume_capable = True
     smm_store = False
     gsc_can_wake_ec_with_reset = False
+    cr50_capability = ['rdd_leakage']
