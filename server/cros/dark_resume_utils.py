@@ -15,6 +15,7 @@ POWER_DEFAULTS = '/usr/share/power_manager/board_specific'
 RESUME_CTRL_RETRIES = 3
 RESUME_GRACE_PERIOD = 10
 XMLRPC_BRINGUP_TIMEOUT_SECONDS = 60
+DARK_SUSPEND_MAX_DELAY_TIMEOUT_MILLISECONDS = 60000
 
 
 class DarkResumeSuspend(object):
@@ -83,6 +84,10 @@ class DarkResumeUtils(object):
 
         logging.debug('Enabling dark resume')
         host.run('echo 0 > %s/disable_dark_resume' % TMP_POWER_DIR)
+        logging.debug('setting max dark suspend delay timeout to %d msecs',
+                  DARK_SUSPEND_MAX_DELAY_TIMEOUT_MILLISECONDS)
+        host.run('echo %d > %s/max_dark_suspend_delay_timeout_ms',
+                 DARK_SUSPEND_MAX_DELAY_TIMEOUT_MILLISECONDS, TMP_POWER_DIR)
 
         # bind the tmp directory to the power preference directory
         host.run('mount --bind %s %s' % (TMP_POWER_DIR, POWER_DIR))
