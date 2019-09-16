@@ -28,31 +28,49 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
 
     @test_wrapper('Pairing Test', devices={"MOUSE":1})
     def cl_adapter_pairing_test(self):
+        """Performs pairing test with mouse peripheral"""
         device = self.devices['MOUSE'][0]
+        self.pairing_test(device)
+
+    @test_wrapper('keyboard Pairing Test', devices={"KEYBOARD":1})
+    def cl_adapter_keyboard_pairing_test(self):
+        """Performs pairing test with keyboard peripheral"""
+        device = self.devices['KEYBOARD'][0]
         self.pairing_test(device)
 
     @test_wrapper('Pairing Suspend Resume Test', devices={"MOUSE":1})
     def cl_adapter_pairing_suspend_resume_test(self):
+        """Performs pairing test over resume with mouse peripheral"""
         device = self.devices['MOUSE'][0]
         self.pairing_test(device, suspend_resume=True)
 
     @test_wrapper('HID Reports Test', devices={"MOUSE":1})
     def cl_HID_reports_test(self):
+        """Performs HID report test with mouse peripheral"""
         device = self.devices['MOUSE'][0]
+        self.run_hid_reports_test(device)
+
+    @test_wrapper('HID keyboard Reports Test', devices={'KEYBOARD':1})
+    def cl_HID_keyboard_reports_test(self):
+        """Performs HID report test with keyboard peripheral"""
+        device = self.devices['KEYBOARD'][0]
         self.run_hid_reports_test(device)
 
     @test_wrapper('HID Reports Suspend Resume Test', devices={"MOUSE":1})
     def cl_HID_reports_suspend_resume_test(self):
+        """Performs HID report test over resume with mouse peripheral"""
         device = self.devices['MOUSE'][0]
         self.run_hid_reports_test(device, suspend_resume=True)
 
     @test_wrapper('HID Reports Reboot Test', devices={"MOUSE":1})
     def cl_HID_reports_reboot_test(self):
+        """Performs HID report test over reboot with mouse peripheral"""
         device = self.devices['MOUSE'][0]
         self.run_hid_reports_test(device, reboot=True)
 
     @test_wrapper('Connect Disconnect Loop Test', devices={"MOUSE":1})
     def cl_connect_disconnect_loop_test(self):
+        """Performs connect/disconnect test with mouse peripheral"""
         device = self.devices['MOUSE'][0]
         self.connect_disconnect_loop(device=device, loops=3)
 
@@ -70,8 +88,10 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
                              whole batch
         """
         self.cl_adapter_pairing_test()
+        self.cl_adapter_keyboard_pairing_test()
         self.cl_adapter_pairing_suspend_resume_test()
         self.cl_HID_reports_test()
+        self.cl_HID_keyboard_reports_test()
         self.cl_HID_reports_suspend_resume_test()
         #self.cl_HID_reports_reboot_test()
         self.cl_connect_disconnect_loop_test()

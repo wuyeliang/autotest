@@ -4,11 +4,13 @@
 
 """Server side bluetooth adapter subtests."""
 
+import errno
 import functools
 import inspect
 import logging
 import os
 import re
+from socket import error as SocketError
 import time
 
 import bluetooth_test_utils
@@ -581,6 +583,19 @@ class BluetoothAdapterTests(test.test):
 
             for chameleon in self.chameleon_group[device_type][:number]:
                 device = get_bluetooth_emulated_device(chameleon, device_type)
+
+                try:
+                    # Tell generic chameleon to bind to this device type
+                    device.SpecifyDeviceType(device_type)
+
+                # Catch generic Fault exception by rpc server, ignore method not
+                # available as it indicates platform didn't support method and
+                # that's ok
+                except Exception, e:
+                    if not (e.__class__.__name__ == 'Fault' and
+                        'is not supported' in str(e)):
+                        raise
+
                 self.devices[device_type].append(device)
 
         return True
@@ -596,6 +611,19 @@ class BluetoothAdapterTests(test.test):
         """
         self.devices[device_type].append(get_bluetooth_emulated_device(\
                                     self.host.chameleon, device_type))
+
+        try:
+            # Tell generic chameleon to bind to this device type
+            self.devices[device_type][-1].SpecifyDeviceType(device_type)
+
+        # Catch generic Fault exception by rpc server, ignore method not
+        # available as it indicates platform didn't support method and that's
+        # ok
+        except Exception, e:
+            if not (e.__class__.__name__ == 'Fault' and
+                'is not supported' in str(e)):
+                raise
+
         return self.devices[device_type][-1]
 
 
@@ -2611,6 +2639,23 @@ class BluetoothAdapterTests(test.test):
             for device in device_list:
                 if device is not None:
                     device.Close()
+
+                    # If module has a reset feature, use it
+                    try:
+                        device.ResetStack()
+
+                    except SocketError as e:
+                        # Ignore connection reset, expected during stack reset
+                        if e.errno != errno.ECONNRESET:
+                            raise
+
+                    # Catch generic Fault exception by rpc server, ignore method
+                    # not available as it indicates platform didn't support
+                    # method and that's ok
+                    except Exception, e:
+                        if not (e.__class__.__name__ == 'Fault' and
+                            'is not supported' in str(e)):
+                            raise
 
         self.devices = dict()
         for device_type in SUPPORTED_DEVICE_TYPES:
