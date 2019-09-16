@@ -504,10 +504,6 @@ class TelemetryRunner(object):
             if 'type' in obj and obj['type'] == 'GenericSet':
                 value_map[obj['guid']] = obj['values']
 
-        # Mapping histogram set units to chart json units.
-        units_map = {'ms_smallerIsBetter': 'ms',
-                     'unitless_biggerIsBetter': 'score'}
-
         charts = {}
         benchmark_name = ''
         benchmark_desc = ''
@@ -520,17 +516,30 @@ class TelemetryRunner(object):
             diagnostics = obj['diagnostics']
             story_name = value_map[diagnostics['stories']][0]
             local_benchmark_name = value_map[diagnostics['benchmarks']][0]
-            if benchmark_name is '':
+            if benchmark_name == '':
                 benchmark_name = local_benchmark_name
                 benchmark_desc = value_map[
                     diagnostics['benchmarkDescriptions']][0]
-            assert(benchmark_name == local_benchmark_name,
-                   'There are more than 1 benchmark names in the result, '
-                   'could not parse.')
-            unit = units_map.get(obj['unit'], '')
+            assert benchmark_name == local_benchmark_name, ('There are more '
+                   'than 1 benchmark names in the result, could not parse.')
+
+            unit = obj['unit']
+            smaller_postfixes = ('_smallerIsBetter', '-')
+            bigger_postfixes = ('_biggerIsBetter', '+')
+            all_postfixes = smaller_postfixes + bigger_postfixes
+
             improvement = 'up'
-            if obj['unit'].endswith('smallerIsBetter'):
+            for postfix in smaller_postfixes:
+              if unit.endswith(postfix):
                 improvement = 'down'
+            for postfix in all_postfixes:
+              if unit.endswith(postfix):
+                unit = unit[:-len(postfix)]
+                break
+
+            if unit == 'unitless':
+              unit = 'score'
+
             values = [x for x in obj['sampleValues']
                       if isinstance(x, numbers.Number)]
             if metric_name not in charts:
