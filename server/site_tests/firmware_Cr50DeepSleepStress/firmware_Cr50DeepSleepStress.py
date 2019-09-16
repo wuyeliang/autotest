@@ -222,7 +222,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
                  entries.
         """
         new_flog = cr50_utils.DumpFlog(self.host).strip()
-        logging.debug('New FLOG output:\n%s', new_flog)
+        logging.info('New FLOG output:\n%s', new_flog)
         diff = difflib.unified_diff(original_flog.splitlines(),
                                     new_flog.splitlines())
         line_diff = '\n'.join(diff)
