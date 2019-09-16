@@ -49,7 +49,7 @@ class OmahaDevserver(object):
 
 
     def __init__(self, omaha_host, payload_location, max_updates=1,
-                 critical_update=True):
+                 critical_update=True, moblab=False):
         """Starts a private devserver instance, operating at Omaha capacity.
 
         @param omaha_host: host address where the devserver is spawned.
@@ -57,6 +57,7 @@ class OmahaDevserver(object):
         @param max_updates: int number of updates this devserver will handle.
                             This is passed to src/platform/dev/devserver.py.
         @param critical_update: Whether to set a deadline in responses.
+        @param moblab: True if we are running on moblab.
 
         """
         self._critical_update = critical_update
@@ -73,7 +74,7 @@ class OmahaDevserver(object):
         self._devserver_pidfile = None
         self._devserver_static_dir = None
 
-        if client_utils.is_moblab():
+        if moblab:
             self._devserver_dir = global_config.global_config.get_config_value(
                 'CROS', 'devserver_dir')
             ssh_user = 'moblab'

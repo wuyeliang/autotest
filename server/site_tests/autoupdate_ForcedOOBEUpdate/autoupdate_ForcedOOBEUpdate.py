@@ -58,7 +58,8 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
 
 
     def run_once(self, full_payload=True, cellular=False,
-                 interrupt=None, max_updates=1, job_repo_url=None):
+                 interrupt=None, max_updates=1, job_repo_url=None,
+                 moblab=False):
         """
         Runs a forced autoupdate during ChromeOS OOBE.
 
@@ -72,6 +73,7 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
                              out the current build and the devserver to use.
                              The test will read this from a host argument
                              when run in the lab.
+        @param moblab: True if we are running on moblab.
 
         """
         # veyron_rialto is a medical device with a different OOBE that auto
@@ -84,7 +86,8 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
                                                   full_payload=full_payload,
                                                   critical_update=True,
                                                   public=cellular,
-                                                  max_updates=max_updates)
+                                                  max_updates=max_updates,
+                                                  moblab=moblab)
         before = self._get_chromeos_version()
         payload_info = None
         if cellular:
