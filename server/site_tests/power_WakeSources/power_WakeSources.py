@@ -287,6 +287,16 @@ class power_WakeSources(test.test):
             passed_ws.add('RTC')
         else:
             failed_ws.add('RTC')
+        test_keyval = {}
+
+        for ws in passed_ws:
+            test_keyval.update({ws : 'PASS'})
+        for ws in failed_ws:
+            test_keyval.update({ws : 'FAIL'})
+        for ws in skipped_ws:
+            test_keyval.update({ws: 'SKIPPED'})
+        self.write_test_keyval(test_keyval)
+
         if len(passed_ws):
             logging.info('[%s] woke the device as expected.',
                          ''.join(str(elem) + ', ' for elem in passed_ws))
