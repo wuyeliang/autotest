@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import collections
 import json
 import logging
 import os
@@ -309,7 +308,10 @@ class autoupdate_EndToEndTest(update_engine_test.UpdateEngineTest):
         # Install source image
         source_payload_uri = test_conf['source_payload_uri']
         if source_payload_uri is not None:
-            cros_device.install_source_image(source_payload_uri)
+            try:
+                cros_device.install_source_image(source_payload_uri)
+            except dev_server.DevServerException as e:
+                raise error.TestFail(str(e))
             cros_device.check_login_after_source_update()
 
         # Start the update to the target image.
