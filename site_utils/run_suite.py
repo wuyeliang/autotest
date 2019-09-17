@@ -1679,18 +1679,6 @@ class ResultCollector(object):
         self._compute_return_code()
 
 
-    def gather_timing_stats(self):
-        """Collect timing related statistics."""
-        # Record suite runtime in metadata db.
-        # Some failure modes can leave times unassigned, report sentinel value
-        # in that case.
-        runtime_in_secs = -1
-        if (self.timings.tests_end_time is not None and
-            self.timings.suite_start_time is not None):
-            runtime_in_secs = (self.timings.tests_end_time -
-                    self.timings.suite_start_time).total_seconds()
-
-
 def _make_child_dependencies(options):
     """Creates a list of extra dependencies for child jobs.
 
@@ -1918,19 +1906,10 @@ def _handle_job_wait(afe, job_id, options, job_timer, is_real_time):
     # Dump test outputs into json.
     output_dict = collector.get_results_dict()
     output_dict['autotest_instance'] = instance_server
-    if not options.json_dump:
+    if not (options.json_dump or options.json_dump_postfix):
         collector.output_results()
     result = collector.return_result
     if is_real_time:
-        # Do not record stats if the suite was aborted (either by a user
-        # or through the golo rpc).
-        # Also do not record stats if is_aborted is None, indicating
-        # aborting status is unknown yet.
-        if collector.is_aborted == False:
-            logging.info('%s Gathering timing stats for the suite job.',
-                         diagnosis_utils.JobTimer.format_time(datetime.now()))
-            collector.gather_timing_stats()
-
         if collector.is_aborted == True and is_suite_timeout:
             # There are two possible cases when a suite times out.
             # 1. the suite job was aborted due to timing out
@@ -1939,16 +1918,6 @@ def _handle_job_wait(afe, job_id, options, job_timer, is_real_time):
             # The case 2 was handled by ResultCollector,
             # here we handle case 1.
             result |= _RETURN_RESULTS['suite_timeout']
-        logging.info('\n %s Attempting to display pool info: %s',
-                     diagnosis_utils.JobTimer.format_time(datetime.now()),
-                     options.pool)
-        try:
-            # Add some jitter to make up for any latency in
-            # aborting the suite or checking for results.
-            cutoff = job_timer.timeout_hours + timedelta(hours=0.3)
-            rpc_helper.diagnose_pool(options.dependencies, cutoff)
-        except proxy.JSONRPCException:
-            logging.warning('Unable to display pool info.')
 
     # And output return message.
     if result.message:
@@ -2306,8 +2275,10 @@ def main():
     if options.suite_args_json:
         options.suite_args = options.suite_args_json
 
-    sys.exceptionhandler = _ExceptionHandler(dump_json=options.json_dump)
+    sys.exceptionhandler = _ExceptionHandler(
+            dump_json=(options.json_dump or options.json_dump_postfix))
     if options.json_dump:
+        # Not disabled in json_dump_postfix mode, intentionally.
         logging.disable(logging.CRITICAL)
 
     options_okay = verify_and_clean_options(options)
