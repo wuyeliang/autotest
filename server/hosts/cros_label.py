@@ -247,7 +247,11 @@ class ChameleonLabel(base_label.BaseLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        has_chameleon = len(host._chameleon_host_list) > 0
+        # See crbug.com/1004500#2 for details.
+        # https://chromium.googlesource.com/chromiumos/third_party/autotest/+
+        # /refs/heads/master/server/hosts/cros_host.py#335 shows that
+        # _chameleon_host_list is not reliable.
+        has_chameleon = len(host.chameleon_list) > 0
         # TODO(crbug.com/995900) -- debug why chameleon label is flipping
         try:
             logging.info("has_chameleon %s", has_chameleon)
