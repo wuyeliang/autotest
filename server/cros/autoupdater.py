@@ -834,21 +834,6 @@ class ChromiumOSUpdater(object):
                      self.update_version)
 
 
-    def _verify_devserver(self):
-        """Check that our chosen devserver is still working.
-
-        @raise DevServerError if the devserver fails any sanity check.
-        """
-        server = 'http://%s' % urlparse.urlparse(self.update_url)[1]
-        try:
-            if not dev_server.ImageServer.devserver_healthy(server):
-                raise DevServerError(
-                        server, 'Devserver is not healthy')
-        except Exception as e:
-            raise DevServerError(
-                    server, 'Devserver is not up and available')
-
-
     def _install_via_update_engine(self):
         """Install an updating using the production AU flow.
 
@@ -1042,8 +1027,6 @@ class ChromiumOSUpdater(object):
         server_name = dev_server.get_resolved_hostname(self.update_url)
         metrics.Counter(_metric_name('install')).increment(
                 fields={'devserver': server_name})
-
-        self._verify_devserver()
 
         try:
             self._prepare_host()
