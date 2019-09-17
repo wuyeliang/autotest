@@ -15,6 +15,8 @@ from autotest_lib.server.hosts import servo_host
 # the pdtester_host and pdtester_port for a PD tester connected to the DUT.
 PDTESTER_HOST_ATTR = 'pdtester_host'
 PDTESTER_PORT_ATTR = 'pdtester_port'
+SERVO_HOST_ATTR = servo_host.SERVO_HOST_ATTR
+SERVO_PORT_ATTR = servo_host.SERVO_PORT_ATTR
 
 
 def make_pdtester_hostname(dut_hostname):
@@ -34,8 +36,8 @@ class PDTesterHost(servo_host.ServoHost):
     """Host class for a host that controls a PDTester object."""
 
 
-    def _initialize(self, pdtester_host='localhost', pdtester_port=9998,
-                    required_by_test=True, is_in_lab=None, *args, **dargs):
+    def _initialize(self, pdtester_host='localhost', pdtester_port=9999,
+                    *args, **dargs):
         """Initialize a PDTesterHost instance.
 
         A PDTesterHost instance represents a host that controls a PD tester.
@@ -46,11 +48,11 @@ class PDTesterHost(servo_host.ServoHost):
 
         """
         super(PDTesterHost, self)._initialize(pdtester_host, pdtester_port,
-                                              False, None, *args, **dargs)
+                                              *args, **dargs)
         self.connect_servo()
 
 
-def create_pdtester_host(pdtester_args):
+def create_pdtester_host(pdtester_args, servo_args):
     """Create a PDTesterHost object used to access pdtester servo
 
     The `pdtester_args` parameter is a dictionary specifying optional
@@ -61,14 +63,27 @@ def create_pdtester_host(pdtester_args):
 
     @param pdtester_args: A dictionary that contains args for creating
                           a PDTesterHost object,
-                          e.g. {'planton_host': '172.11.11.111',
+                          e.g. {'pdtester_host': '172.11.11.111',
                                 'pdtester_port': 9999}.
-                          See comments above.
-
-    @returns: A PDTesterHost object or None. See comments above.
+    @param servo_args: A dictionary that contains args for creating
+                       a ServoHost object,
+                       e.g. {'servo_host': '172.11.11.111',
+                             'servo_port': 9999}.
+    @returns: A PDTesterHost object or None.
 
     """
-    # TODO Make this work in the lab chromium:564836
+    # None means PDTester is not required to run a test.
     if pdtester_args is None:
         return None
-    return PDTesterHost(Required_by_test=True, is_in_lab=False, **pdtester_args)
+
+    # If an user doesn't pass the PDTester info, fall back to use the servo
+    # info. Usually we use Servo v4 as PDTester, so make it default.
+    if (PDTESTER_HOST_ATTR not in pdtester_args and
+        SERVO_HOST_ATTR in servo_args):
+        pdtester_args[PDTESTER_HOST_ATTR] = servo_args[SERVO_HOST_ATTR]
+
+    if (PDTESTER_PORT_ATTR not in pdtester_args and
+        SERVO_PORT_ATTR in servo_args):
+        pdtester_args[PDTESTER_PORT_ATTR] = servo_args[SERVO_PORT_ATTR]
+
+    return PDTesterHost(**pdtester_args)
