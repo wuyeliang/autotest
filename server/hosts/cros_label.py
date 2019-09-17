@@ -845,6 +845,5 @@ LABSTATION_LABELS = [
     BoardLabel(),
     ModelLabel(),
     common_label.OSLabel(),
-    ECLabel(),
     PowerSupplyLabel(),
 ]
