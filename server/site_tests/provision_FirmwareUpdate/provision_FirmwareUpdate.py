@@ -74,7 +74,7 @@ class provision_FirmwareUpdate(test.test):
                 self.stage_image_to_usb(host)
 
             host.firmware_install(build=value, rw_only=rw_only,
-                                  resultsdir=self.resultsdir)
+                                  dest=self.resultsdir)
         except Exception as e:
             logging.error(e)
             raise error.TestFail, str(e), sys.exc_info()[2]
