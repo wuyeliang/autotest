@@ -51,11 +51,18 @@ def _normalize_pools(l):
 
 def _get_chameleon(l):
     out = l.get_enum("chameleon", prefix="CHAMELEON_TYPE_")
-    if out == "CHAMELEON_TYPE_":
-        return None
     # send CHAMELEON_TYPE_['HDMI'] -> CHAMELEON_TYPE_HDMI
     out = "".join(ch for ch in out if ch not in "[']")
-    return out
+    if out == "CHAMELEON_TYPE_":
+        return None
+    good_val = False
+    for ch in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMOPQRSTUVWXYZ0123456789":
+        if out.startswith("CHAMELEON_TYPE_" + ch):
+            good_val = True
+    if good_val:
+        return out
+    else:
+        return None
 
 
 EC_TYPE_ATEST_TO_SK = {
