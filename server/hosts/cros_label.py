@@ -189,27 +189,67 @@ class ECLabel(base_label.BaseLabel):
 
 
 class Cr50Label(base_label.StringPrefixLabel):
-    """Label indicating the cr50 version."""
+    """Label indicating the cr50 image type."""
 
     _NAME = 'cr50'
 
     def __init__(self):
         self.ver = None
 
-
     def exists(self, host):
         # Make sure the gsctool version command runs ok
         self.ver = host.run('gsctool -a -f', ignore_status=True)
         return self.ver.exit_status == 0
 
+    def _get_version(self, region):
+        """Get the version number of the given region"""
+        return re.search(region + ' (\d+\.\d+\.\d+)', self.ver.stdout).group(1)
 
     def generate_labels(self, host):
         # Check the major version to determine prePVT vs PVT
-        version_info = re.search('RW (\d+\.(\d+)\.\d+)$', self.ver.stdout)
-        full_version = version_info.group(1)
-        major_version = int(version_info.group(2))
+        version = self._get_version('RW')
+        major_version = int(version.split('.')[1])
         # PVT images have a odd major version prePVT have even
-        return [full_version, 'pvt' if (major_version % 2) else 'prepvt']
+        return ['pvt' if (major_version % 2) else 'prepvt']
+
+
+class Cr50RWKeyidLabel(Cr50Label):
+    """Label indicating the cr50 RW version."""
+    _REGION = 'RW'
+    _NAME = 'cr50-rw-keyid'
+
+    def _get_keyid_info(self, region):
+        """Get the keyid of the given region."""
+        match = re.search('keyids:.*%s (\S+)' % region, self.ver.stdout)
+        keyid = match.group(1).rstrip(',')
+        is_prod = int(keyid, 16) & (1 << 2)
+        return [keyid, 'prod' if is_prod else 'dev']
+
+    def generate_labels(self, host):
+        """Get the key type."""
+        return self._get_keyid_info(self._REGION)
+
+
+class Cr50ROKeyidLabel(Cr50RWKeyidLabel):
+    """Label indicating the RO key type."""
+    _REGION = 'RO'
+    _NAME = 'cr50-ro-keyid'
+
+
+class Cr50RWVersionLabel(Cr50Label):
+    """Label indicating the cr50 RW version."""
+    _REGION = 'RW'
+    _NAME = 'cr50-rw-version'
+
+    def generate_labels(self, host):
+        """Get the version and key type"""
+        return [self._get_version(self._REGION)]
+
+
+class Cr50ROVersionLabel(Cr50RWVersionLabel):
+    """Label indicating the RO version."""
+    _REGION = 'RO'
+    _NAME = 'cr50-ro-version'
 
 
 class AccelsLabel(base_label.BaseLabel):
@@ -825,6 +865,10 @@ CROS_LABELS = [
     ChameleonPeripheralsLabel(),
     common_label.OSLabel(),
     Cr50Label(),
+    Cr50ROKeyidLabel(),
+    Cr50RWKeyidLabel(),
+    Cr50ROVersionLabel(),
+    Cr50RWVersionLabel(),
     CtsArchLabel(),
     DetachableBaseLabel(),
     DeviceSkuLabel(),

@@ -13,6 +13,10 @@ from autotest_lib.server.hosts.cros_label import BoardLabel
 from autotest_lib.server.hosts.cros_label import BluetoothLabel
 from autotest_lib.server.hosts.cros_label import BrandCodeLabel
 from autotest_lib.server.hosts.cros_label import Cr50Label
+from autotest_lib.server.hosts.cros_label import Cr50ROKeyidLabel
+from autotest_lib.server.hosts.cros_label import Cr50RWKeyidLabel
+from autotest_lib.server.hosts.cros_label import Cr50ROVersionLabel
+from autotest_lib.server.hosts.cros_label import Cr50RWVersionLabel
 from autotest_lib.server.hosts.cros_label import DeviceSkuLabel
 from autotest_lib.server.hosts.cros_label import ModelLabel
 from autotest_lib.server.hosts import host_info
@@ -79,6 +83,26 @@ GSCTOOL_OUTPUT_PREPVT = """
 start
 target running protocol version 6
 keyids: RO 0xaa66150f, RW 0xde88588d
+offsets: backup RO at 0x40000, backup RW at 0x44000
+Current versions:
+RO 0.0.10
+RW 0.4.15
+"""
+
+GSCTOOL_OUTPUT_DEV_RO = """
+start
+target running protocol version 6
+keyids: RO 0x3716ee6b, RW 0xde88588d
+offsets: backup RO at 0x40000, backup RW at 0x44000
+Current versions:
+RO 0.0.10
+RW 0.4.15
+"""
+
+GSCTOOL_OUTPUT_DEV_RW = """
+start
+target running protocol version 6
+keyids: RO 0xaa66150f, RW 0xb93d6539
 offsets: backup RO at 0x40000, backup RW at 0x44000
 Current versions:
 RO 0.0.10
@@ -244,23 +268,102 @@ class BluetoothLabelTests(unittest.TestCase):
         self.assertEqual(BoardLabel().exists(host), True)
 
 
-class Cr50LabelTests(unittest.TestCase):
+class Cr50Tests(unittest.TestCase):
     """Unit tests for Cr50Label"""
-
-    def test_cr50_prepvt(self):
-        host = MockHost([],
-                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
-        self.assertEqual(Cr50Label().get(host), ['cr50:0.4.15', 'cr50:prepvt'])
 
     def test_cr50_pvt(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
-        self.assertEqual(Cr50Label().get(host), ['cr50:0.3.14', 'cr50:pvt'])
+        self.assertEqual(Cr50Label().get(host), ['cr50:pvt'])
+
+    def test_cr50_prepvt(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
+        self.assertEqual(Cr50Label().get(host), ['cr50:prepvt'])
 
     def test_gsctool_fails(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 1, ''))
         self.assertEqual(Cr50Label().get(host), [])
+
+
+class Cr50RWKeyidTests(unittest.TestCase):
+    """Unit tests for Cr50RWKeyidLabel"""
+
+    def test_cr50_prod_rw(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
+        self.assertEqual(Cr50RWKeyidLabel().get(host),
+                ['cr50-rw-keyid:0xde88588d','cr50-rw-keyid:prod'])
+
+    def test_cr50_dev_rw(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_DEV_RW))
+        self.assertEqual(Cr50RWKeyidLabel().get(host),
+                ['cr50-rw-keyid:0xb93d6539', 'cr50-rw-keyid:dev'])
+
+    def test_gsctool_fails(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 1, ''))
+        self.assertEqual(Cr50RWKeyidLabel().get(host), [])
+
+
+class Cr50ROKeyidTests(unittest.TestCase):
+    """Unit tests for Cr50ROKeyidLabel"""
+
+    def test_cr50_prod_ro(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
+        self.assertEqual(Cr50ROKeyidLabel().get(host),
+                ['cr50-ro-keyid:0xaa66150f', 'cr50-ro-keyid:prod'])
+
+    def test_cr50_dev_ro(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_DEV_RO))
+        self.assertEqual(Cr50ROKeyidLabel().get(host),
+                ['cr50-ro-keyid:0x3716ee6b', 'cr50-ro-keyid:dev'])
+
+    def test_gsctool_fails(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 1, ''))
+        self.assertEqual(Cr50ROKeyidLabel().get(host), [])
+
+
+class Cr50RWVersionTests(unittest.TestCase):
+    """Unit tests for Cr50RWVersionLabel"""
+
+    def test_cr50_prod_rw(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
+        self.assertEqual(Cr50RWVersionLabel().get(host),
+                ['cr50-rw-version:0.3.14'])
+
+    def test_cr50_dev_rw(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
+        self.assertEqual(Cr50RWVersionLabel().get(host),
+                ['cr50-rw-version:0.4.15'])
+
+    def test_gsctool_fails(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 1, ''))
+        self.assertEqual(Cr50RWVersionLabel().get(host), [])
+
+
+class Cr50ROVersionTests(unittest.TestCase):
+    """Unit tests for Cr50ROVersionLabel"""
+
+    def test_cr50_prod_ro(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
+        self.assertEqual(Cr50ROVersionLabel().get(host),
+                         ['cr50-ro-version:0.0.10'])
+
+    def test_gsctool_fails(self):
+        host = MockHost([],
+                        MockCmd('gsctool -a -f', 1, ''))
+        self.assertEqual(Cr50ROVersionLabel().get(host), [])
+
 
 class HWIDLabelTests(unittest.TestCase):
     def test_merge_hwid_label_lists_empty(self):
