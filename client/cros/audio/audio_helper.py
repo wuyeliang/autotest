@@ -854,6 +854,35 @@ def compare_data_correlation(golden_data_binary, golden_data_format,
         raise error.TestFail(error_msg)
 
 
+def recorded_filesize_check(filesize,
+                            duration,
+                            channels=1,
+                            rate=48000,
+                            bits=16,
+                            tolerant_ratio=0.1):
+    """Checks the recorded file size is correct. The check will pass if the
+    file size is larger than expected and smaller than our tolerant size. We
+    can tolerate size larger than expected as the way cras_test_client stop
+    recording base on duration is not always accurate but should record longer
+    than expected audio.
+
+    @param filesize: Actually file size.
+    @param duration: Expected seconds to record.
+    @param channels: Number of channels to record.
+    @param rate: Recording sample rate.
+    @param bits: The sample bit width.
+    @param tolerant_ratio: The larger than expected file size ratio that we
+    regard as pass.
+
+    @raises: TestFail if the size is less or larger than expect.
+    """
+    expected = duration * channels * (bits / 8) * rate
+    ratio = abs(float(filesize) / expected)
+    if ratio < 1 or ratio > 1 + tolerant_ratio:
+        raise error.TestFail(
+                'File size not correct: %d expect: %d' % (filesize, expected))
+
+
 class _base_rms_test(test.test):
     """Base class for all rms_test """
 

@@ -8,30 +8,22 @@ import tempfile
 
 from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.cros.audio import audio_helper
 from autotest_lib.client.cros.audio import audio_spec
 from autotest_lib.client.cros.audio import alsa_utils
 from autotest_lib.client.cros.audio import cras_utils
 
 DURATION = 3
-TOLERANT_RATIO = 0.1
 
 class audio_Microphone(test.test):
     version = 1
-
-
-    def check_recorded_filesize(
-            self, filesize, duration, channels, rate, bits=16):
-        expected = duration * channels * (bits / 8) * rate
-        if abs(float(filesize) / expected - 1) > TOLERANT_RATIO:
-            raise error.TestFail('File size not correct: %d' % filesize)
-
 
     def verify_alsa_capture(self, channels, rate, device, bits=16):
         recorded_file = tempfile.NamedTemporaryFile()
         alsa_utils.record(
                 recorded_file.name, duration=DURATION, channels=channels,
                 bits=bits, rate=rate, device=device)
-        self.check_recorded_filesize(
+        audio_helper.recorded_filesize_check(
                 os.path.getsize(recorded_file.name),
                 DURATION, channels, rate, bits)
 
@@ -41,7 +33,7 @@ class audio_Microphone(test.test):
         cras_utils.capture(
                 recorded_file.name, duration=DURATION, channels=channels,
                 rate=rate)
-        self.check_recorded_filesize(
+        audio_helper.recorded_filesize_check(
                 os.path.getsize(recorded_file.name),
                 DURATION, channels, rate)
 
