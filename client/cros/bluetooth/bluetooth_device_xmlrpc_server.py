@@ -97,7 +97,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     BLUEZ_MANAGER_IFACE = 'org.freedesktop.DBus.ObjectManager'
     BLUEZ_ADAPTER_IFACE = 'org.bluez.Adapter1'
     BLUEZ_DEVICE_IFACE = 'org.bluez.Device1'
-    BLUEZ_GATT_IFACE = 'org.bluez.GattCharacteristic1'
+    BLUEZ_GATT_SERV_IFACE = 'org.bluez.GattService1'
+    BLUEZ_GATT_CHAR_IFACE = 'org.bluez.GattCharacteristic1'
+    BLUEZ_GATT_DESC_IFACE = 'org.bluez.GattDescriptor1'
     BLUEZ_LE_ADVERTISING_MANAGER_IFACE = 'org.bluez.LEAdvertisingManager1'
     BLUEZ_AGENT_MANAGER_PATH = '/org/bluez'
     BLUEZ_AGENT_MANAGER_IFACE = 'org.bluez.AgentManager1'
@@ -1460,6 +1462,229 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                     'reset_advertising: failed: %s', str(error)))
 
 
+    @xmlrpc_server.dbus_safe(None)
+    def get_gatt_attributes_map(self, address):
+        """Return a JSON formated string of the GATT attributes of a device,
+        keyed by UUID
+        @param address: a string of the MAC address of the device
+
+        @return: JSON formated string, stored the nested structure of the
+        attributes. Each attribute has 'path' and
+        ['characteristics' | 'descriptors'], which store their object path and
+        children respectively.
+
+        """
+        attribute_map = dict()
+
+        device_object_path = self._get_device_path(address)
+        service_map = self._get_service_map(device_object_path)
+
+        servs = dict()
+        attribute_map['services'] = servs
+
+        for uuid, path in service_map.items():
+
+            servs[uuid] = dict()
+            serv = servs[uuid]
+
+            serv['path'] = path
+            serv['characteristics'] = dict()
+            chrcs = serv['characteristics']
+
+            chrcs_map = self._get_characteristic_map(path)
+            for uuid, path in chrcs_map.items():
+                chrcs[uuid] = dict()
+                chrc = chrcs[uuid]
+
+                chrc['path'] = path
+                chrc['descriptors'] = dict()
+                descs = chrc['descriptors']
+
+                descs_map = self._get_descriptor_map(path)
+
+                for uuid, path in descs_map.items():
+                    descs[uuid] = dict()
+                    desc = descs[uuid]
+
+                    desc['path'] = path
+
+        return json.dumps(attribute_map)
+
+
+    def _get_gatt_interface(self, uuid, object_path, interface):
+        """Get dbus interface by uuid
+        @param uuid: a string of uuid
+        @param object_path: a string of the object path of the service
+
+        @return: a dbus interface
+        """
+
+        return dbus.Interface(
+            self._system_bus.get_object(
+            self._bluetooth_service_name, object_path), interface)
+
+
+    def get_gatt_service_property(self, object_path, property_name):
+        """Get property from a service attribute
+        @param object_path: a string of the object path of the service
+        @param property_name: a string of a property, ex: 'Value', 'UUID'
+
+        @return: the property if success,
+                 none otherwise
+
+        """
+        return self.get_gatt_attribute_property(
+                        object_path, self.BLUEZ_GATT_SERV_IFACE, property_name)
+
+
+    def get_gatt_characteristic_property(self, object_path, property_name):
+        """Get property from a characteristic attribute
+        @param object_path: a string of the object path of the characteristic
+        @param property_name: a string of a property, ex: 'Value', 'UUID'
+
+        @return: the property if success,
+                 none otherwise
+
+        """
+        return self.get_gatt_attribute_property(
+                        object_path, self.BLUEZ_GATT_CHAR_IFACE, property_name)
+
+
+    def get_gatt_descriptor_property(self, object_path, property_name):
+        """Get property from descriptor attribute
+        @param object_path: a string of the object path of the descriptor
+        @param property_name: a string of a property, ex: 'Value', 'UUID'
+
+        @return: the property if success,
+                 none otherwise
+
+        """
+        return self.get_gatt_attribute_property(
+                        object_path, self.BLUEZ_GATT_DESC_IFACE, property_name)
+
+
+    @xmlrpc_server.dbus_safe(None)
+    def get_gatt_attribute_property(self, object_path, interface,
+                                    property_name):
+        """Get property from attribute
+        @param object_path: a string of the bject path
+        @param property_name: a string of a property, ex: 'Value', 'UUID'
+
+        @return: the property if success,
+                 none otherwise
+
+        """
+        gatt_object = self._system_bus.get_object(
+                            self._bluetooth_service_name, object_path)
+        prop = self._get_dbus_object_property(gatt_object, interface,
+                                              property_name)
+        logging.info(prop)
+        if isinstance(prop, dbus.ByteArray):
+            return _dbus_byte_array_to_b64_string(prop)
+        if isinstance(prop, dbus.Boolean):
+            return bool(prop)
+        if isinstance(prop, dbus.String):
+            return str(prop)
+        if isinstance(prop, dbus.ObjectPath):
+            return str(prop)
+        if isinstance(prop, dbus.Array):
+            return list(map(str, prop))
+        return prop
+
+
+    @xmlrpc_server.dbus_safe(None)
+    def gatt_characteristic_read_value(self, uuid, object_path):
+        """Perform method ReadValue on a characteristic attribute
+        @param uuid: a string of uuid
+        @param object_path: a string of the object path of the characteristic
+
+        @return: base64 string of dbus bytearray
+        """
+
+        dbus_interface = self._get_gatt_interface(uuid, object_path,
+                                                  self.BLUEZ_GATT_CHAR_IFACE)
+        value = dbus_interface.ReadValue(dbus.Dictionary({}, signature='sv'))
+        return _dbus_byte_array_to_b64_string(value)
+
+
+    @xmlrpc_server.dbus_safe(None)
+    def gatt_descriptor_read_value(self, uuid, object_path):
+        """Perform method ReadValue on a descriptor attribute
+        @param uuid: a string of uuid
+        @param object_path: a string of the object path of the descriptor
+
+        @return: base64 string of dbus bytearray
+        """
+
+        dbus_interface = self._get_gatt_interface(uuid, object_path,
+                                                  self.BLUEZ_GATT_DESC_IFACE)
+        value = dbus_interface.ReadValue(dbus.Dictionary({}, signature='sv'))
+        return _dbus_byte_array_to_b64_string(value)
+
+
+    @xmlrpc_server.dbus_safe(False)
+    def _get_attribute_map(self, object_path, dbus_interface):
+        """Gets a map of object paths under an object path.
+
+        Walks the object tree, and returns a map of UUIDs to object paths for
+        all resolved gatt object.
+
+        @param object_path: The object path of the attribute to retrieve
+            gatt  UUIDs and paths from.
+
+        @returns: A dictionary of object paths, keyed by UUID.
+
+        """
+        attr_map = {}
+
+        if object_path:
+            objects = self._bluez.GetManagedObjects(
+              dbus_interface=self.BLUEZ_MANAGER_IFACE, byte_arrays=False)
+
+            for path, ifaces in objects.iteritems():
+                if (dbus_interface in ifaces and
+                  path.startswith(object_path)):
+                    uuid = ifaces[dbus_interface]['UUID'].lower()
+                    attr_map[uuid] = path
+
+        else:
+            logging.warning('object_path %s is not valid', object_path)
+
+        return attr_map
+
+
+    def _get_service_map(self, device_path):
+        """Gets a map of service paths for a device."""
+        return self._get_attribute_map(device_path, self.BLUEZ_GATT_SERV_IFACE)
+
+
+    def _get_characteristic_map(self, serv_path):
+        """Gets a map of characteristic paths for a service."""
+        return self._get_attribute_map(serv_path, self.BLUEZ_GATT_CHAR_IFACE)
+
+
+    def _get_descriptor_map(self, chrc_path):
+        """Gets a map of descriptor paths for a characteristic."""
+        return self._get_attribute_map(chrc_path, self.BLUEZ_GATT_DESC_IFACE)
+
+
+    @xmlrpc_server.dbus_safe(None)
+    def _get_dbus_object_property(self, dbus_object, dbus_interface,
+                                    dbus_property):
+        """Get the property in an object.
+
+        @param dbus_object: a dbus object
+        @param dbus_property: a dbus property of the dbus object, as a string
+
+        @return: dbus type object if it success, e.g. dbus.Boolean, dbus.String,
+                 none otherwise
+
+        """
+        return dbus_object.Get(dbus_interface,
+                          dbus_property,
+                          dbus_interface=dbus.PROPERTIES_IFACE)
+
+
     @xmlrpc_server.dbus_safe(False)
     def get_characteristic_map(self, address):
         """Gets a map of characteristic paths for a device.
@@ -1491,13 +1716,13 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return char_map
 
 
-    @xmlrpc_server.dbus_safe(False)
+    @xmlrpc_server.dbus_safe(None)
     def _get_char_object(self, uuid, address):
         """Gets a characteristic object.
 
-        Gets a characteristic object for a given uuid and address.
+        Gets a characteristic object for a given UUID and address.
 
-        @param uuid: The uuid of the characteristic, as a string.
+        @param uuid: The UUID of the characteristic, as a string.
         @param address: The MAC address of the remote device.
 
         @returns: A dbus interface for the characteristic if the uuid/address
@@ -1510,7 +1735,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             return None
         return dbus.Interface(
             self._system_bus.get_object(self._bluetooth_service_name, path),
-            self.BLUEZ_GATT_IFACE)
+            self.BLUEZ_GATT_CHAR_IFACE)
 
 
     @xmlrpc_server.dbus_safe(None)
@@ -1532,7 +1757,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         char_obj = self._get_char_object(uuid, address)
         if char_obj is None:
             return None
-        value = char_obj.ReadValue(dbus.Dictionary())
+        value = char_obj.ReadValue(dbus.Dictionary({}, signature='sv'))
         return _dbus_byte_array_to_b64_string(value)
 
 
@@ -1556,7 +1781,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         if char_obj is None:
             return None
         dbus_value = _b64_string_to_dbus_byte_array(value)
-        char_obj.WriteValue(dbus_value, dbus.Dictionary())
+        char_obj.WriteValue(dbus_value, dbus.Dictionary({}, signature='sv'))
         return True
 
 
