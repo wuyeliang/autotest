@@ -22,6 +22,8 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.server import test
 from autotest_lib.client.bin.input.linux_input import (
         BTN_LEFT, BTN_RIGHT, EV_KEY, EV_REL, REL_X, REL_Y, REL_WHEEL)
+from autotest_lib.server.cros.bluetooth.bluetooth_gatt_client_utils import (
+        GATT_ClientFacade, GATT_Application, GATT_HIDApplication)
 
 
 Event = recorder.Event
@@ -2251,6 +2253,58 @@ class BluetoothAdapterTests(test.test):
     def get_dev_info(self):
         """Read raw HCI device information."""
         return self.bluetooth_facade.get_dev_info()
+
+
+    @_test_retry_and_log(False)
+    def test_service_resolved(self, address):
+        """Test that the services under device address can be resolved
+
+        @param address: MAC address of a device
+
+        @returns: True if the ServicesResolved property is changed before
+                 timeout, False otherwise.
+
+        """
+        is_resolved_func = self.bluetooth_facade.device_services_resolved
+        return self._wait_for_condition(lambda : is_resolved_func(address),\
+                                        method_name())
+
+
+    @_test_retry_and_log(False)
+    def test_gatt_browse(self, address):
+        """Test that the GATT client can get the attributes correctly
+
+        @param address: MAC address of a device
+
+        @returns: True if the attribute map received by GATT client is the same
+                  as expected. False otherwise.
+
+        """
+
+        gatt_client_facade = GATT_ClientFacade(self.bluetooth_facade)
+        actual_app = gatt_client_facade.browse(address)
+        expected_app = GATT_HIDApplication()
+        diff = GATT_Application.diff(actual_app, expected_app)
+
+        self.result = {
+            'actural_result': actual_app,
+            'expected_result': expected_app
+        }
+
+        gatt_attribute_hierarchy = ['Device', 'Service', 'Characteristic',
+                                    'Descriptor']
+        # Remove any difference in object path
+        for parent, child in zip(gatt_attribute_hierarchy,
+                                 gatt_attribute_hierarchy[1:]):
+            pattern = re.compile('^%s .* is different in %s' % (child, parent))
+            for diff_str in diff[::]:
+                if pattern.search(diff_str):
+                    diff.remove(diff_str)
+
+        if len(diff) != 0:
+            logging.error('Application Diff: %s', diff)
+            return False
+        return True
 
 
     # -------------------------------------------------------------------
