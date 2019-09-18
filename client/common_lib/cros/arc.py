@@ -159,6 +159,9 @@ def wait_for_adb_ready(timeout=_WAIT_FOR_ADB_READY):
     # Although adbd is started at login screen, we still need /data to be
     # mounted to set up key-based authentication. /data should be mounted
     # once the user has logged in.
+
+    initial_timeout = timeout
+
     start_time = time.time()
     _wait_for_data_mounted(timeout)
     timeout -= (time.time() - start_time)
@@ -177,6 +180,24 @@ def wait_for_adb_ready(timeout=_WAIT_FOR_ADB_READY):
     _android_shell('chown shell ' + pipes.quote(_ANDROID_ADB_KEYS_PATH))
     _android_shell('restorecon ' + pipes.quote(_ANDROID_ADB_KEYS_PATH))
 
+    attempt_count = 3
+    timeout = timeout / attempt_count
+
+    for i in range(attempt_count):
+        if _restart_adb_and_wait_for_ready(timeout):
+          return
+    raise error.TestFail(
+            'Failed to connect to adb in %d seconds.' % initial_timeout)
+
+
+def _restart_adb_and_wait_for_ready(timeout):
+    """Restart adb/adbd and wait adb connection is ready.
+
+    @param timeout: Timeout in seconds.
+    @return True in case adb connection was established or throw an error in
+            case persistent error occured.
+    """
+
     # Restart adbd and adb.
     start_time = time.time()
     restart_adbd(timeout)
@@ -185,13 +206,11 @@ def wait_for_adb_ready(timeout=_WAIT_FOR_ADB_READY):
     restart_adb()
     timeout -= (time.time() - start_time)
 
-    exception = error.TestFail('Failed to connect to adb in %d seconds.' % timeout)
-
     try:
-        utils.poll_for_condition(adb_connect,
-                                 exception,
-                                 timeout)
-    except (utils.TimeoutError, error.TestFail):
+        utils.poll_for_condition(condition=adb_connect,
+                                 timeout=timeout)
+        return True
+    except (utils.TimeoutError):
         # The operation has failed, but let's try to clarify the failure to
         # avoid shifting blame to adb.
 
@@ -215,16 +234,9 @@ def wait_for_adb_ready(timeout=_WAIT_FOR_ADB_READY):
         # actual failure clearer.
         if not arc_alive:
             raise error.TestFail('ARC is not alive.')
-        if not adbd_pid:
-            raise error.TestFail('adbd is not running.')
         if arc_booted != '1':
             raise error.TestFail('ARC did not finish booting.')
-        if not adbd_port_reachable:
-            raise error.TestFail('adbd TCP port is not reachable.')
-
-        # We exhausted all possibilities. Fall back to printing the generic
-        # error.
-        raise
+        return False
 
 
 def grant_permissions(package, permissions):
