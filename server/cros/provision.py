@@ -18,6 +18,7 @@ CROS_VERSION_PREFIX = Key.CROS_VERSION
 CROS_ANDROID_VERSION_PREFIX = Key.CROS_ANDROID_VERSION
 FW_RW_VERSION_PREFIX = Key.FIRMWARE_RW_VERSION
 FW_RO_VERSION_PREFIX = Key.FIRMWARE_RO_VERSION
+FW_CR50_RW_VERSION_PREFIX = Key.FIRMWARE_CR50_RW_VERSION
 
 # So far the word cheets is only way to distinguish between ARC and Android
 # build.
@@ -284,7 +285,8 @@ class Provision(_SpecialTaskAction):
     _priorities = [CROS_VERSION_PREFIX,
                    CROS_ANDROID_VERSION_PREFIX,
                    FW_RO_VERSION_PREFIX,
-                   FW_RW_VERSION_PREFIX]
+                   FW_RW_VERSION_PREFIX,
+                   FW_CR50_RW_VERSION_PREFIX]
 
     # TODO(milleral): http://crbug.com/249555
     # Create some way to discover and register provisioning tests so that we
@@ -305,6 +307,8 @@ class Provision(_SpecialTaskAction):
                 'provision_FirmwareUpdate',
                 extra_kwargs={'rw_only': True,
                               'tag': 'rw_only'}),
+        FW_CR50_RW_VERSION_PREFIX: actionables.TestActionable(
+                'provision_Cr50TOT')
     }
 
     name = 'provision'
