@@ -421,6 +421,34 @@ class AtestCmd(object):
         return out
 
 
+def trywith(exn_type, f, *args, **kwargs):
+    out = None
+    exn = None
+    try:
+        out = f(*args, **kwargs)
+    except exn_type as e:
+        exn = e
+    return (out, exn)
+
+
+
+def backtick(*args, **kwargs):
+    output = None
+    exit_status = None
+    out, exn = trywith(subprocess.CalledProcessError, subprocess.check_output, *args, **kwargs)
+    if exn is None:
+        output = out
+        exit_status = 0
+    else:
+        output = e.output
+        exit_status = e.returncode
+    return (output, exit_status)
+
+
+def backtick_out_err(*args, **kwargs):
+    return backtick(*args, stderr=subprocess.STDOUT, **kwargs)
+
+
 class SkylabCmd(object):
     """Helper functions for executing Skylab commands"""
 
@@ -482,7 +510,13 @@ class SkylabCmd(object):
                 paths.append(path_)
             cmd = list(SkylabCmd.ADD_MANY_DUTS_CMD) + paths
             stderr_log(cmd)
-            subprocess.check_call(cmd)
+            # ignore cases where the hostname doesn't exist
+            (output, err) = backtick_out_err(cmd)
+            if err:
+                if "Failed to stat:" in err:
+                    assert "Unknown host" in err
+                    # then do nothing
+
             # shutil.rmtree(td, ignore_errors=True)
         finally:
             stderr_log('end add_many_duts', time.time(), _humantime())
