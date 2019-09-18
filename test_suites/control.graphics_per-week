@@ -1,4 +1,4 @@
-# Copyright 2014 The Chromium OS Authors. All rights reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -27,7 +27,7 @@ import common
 from autotest_lib.server.cros.dynamic_suite import dynamic_suite
 
 args_dict['max_runtime_mins'] = 1440
-args_dict['timeout_mins'] = 2880
+args_dict['timeout_mins'] = 4320
 args_dict['file_bugs'] = False
 args_dict['name'] = 'graphics_per-day'
 args_dict['job'] = job

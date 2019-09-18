@@ -139,7 +139,9 @@ suite:fingerprint
 suite:gpu_hang
 suite:graphics
 suite:graphics_browser
+suite:graphics_per-build
 suite:graphics_per-day
+suite:graphics_per-week
 suite:graphics_system
 suite:gts
 suite:hotrod
