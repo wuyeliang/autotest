@@ -457,6 +457,7 @@ def _is_valid_result(build, result_pattern, suite):
             suite.startswith('arc-cts') or
             suite.startswith('arc-gts') or
             suite.startswith('bvt-arc') or
+            suite.startswith('cros_test_platform') or
             suite.startswith('test_that_wrapper')):
         return False
 
