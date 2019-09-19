@@ -4,6 +4,8 @@
 
 # This file has been automatically generated. Do not edit!
 
+from autotest_lib.server import utils
+
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_P.9.0_r9.arm.CtsBluetoothTestCases'
 ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-unibuild, suite:arc-cts-unibuild-hw, suite:bvt-perbuild'
@@ -14,8 +16,19 @@ TIME = 'MEDIUM'
 MAX_RESULT_SIZE_KB = 512000
 DOC = 'Run module CtsBluetoothTestCases of the Android Compatibility Test Suite (CTS) using arm ABI in the ARC++ container.'
 
+# For local debugging, if your test setup doesn't have servo, REMOVE these
+# two lines.
+args_dict = utils.args_to_dict(args)
+servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
+
 def run_CTS(machine):
-    host_list = [hosts.create_host(machine)]
+    # REMOVE 'servo_args=servo_args' arg for local debugging if your test
+    # setup doesn't have servo.
+    try:
+        host_list = [hosts.create_host(machine, servo_args=servo_args)]
+    except:
+        # Just ignore any servo setup flakiness.
+        host_list = [hosts.create_host(machine)]
     job.run_test(
         'cheets_CTS_P',
         hosts=host_list,
@@ -30,6 +43,7 @@ def run_CTS(machine):
         target_plan=None,
         bundle='arm',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r9-linux_x86-arm.zip',
+        hard_reboot_on_failure=True,
         timeout=3600)
 
 parallel_simple(run_CTS, machines)

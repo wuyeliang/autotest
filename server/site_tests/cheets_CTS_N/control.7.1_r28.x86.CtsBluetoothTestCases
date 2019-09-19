@@ -24,7 +24,11 @@ servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 def run_CTS(machine):
     # REMOVE 'servo_args=servo_args' arg for local debugging if your test
     # setup doesn't have servo.
-    host_list = [hosts.create_host(machine, servo_args=servo_args)]
+    try:
+        host_list = [hosts.create_host(machine, servo_args=servo_args)]
+    except:
+        # Just ignore any servo setup flakiness.
+        host_list = [hosts.create_host(machine)]
     job.run_test(
         'cheets_CTS_N',
         hosts=host_list,

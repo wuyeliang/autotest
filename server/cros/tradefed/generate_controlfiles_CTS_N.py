@@ -66,7 +66,11 @@ _CONTROLFILE_TEMPLATE = Template(
         {%- if servo_support_needed %}
         # REMOVE 'servo_args=servo_args' arg for local debugging if your test
         # setup doesn't have servo.
-        host_list = [hosts.create_host(machine, servo_args=servo_args)]
+        try:
+            host_list = [hosts.create_host(machine, servo_args=servo_args)]
+        except:
+            # Just ignore any servo setup flakiness.
+            host_list = [hosts.create_host(machine)]
         {%- else %}
         host_list = [hosts.create_host(machine)]
         {%- endif %}

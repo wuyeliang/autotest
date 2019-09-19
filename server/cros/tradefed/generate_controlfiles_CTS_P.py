@@ -28,6 +28,11 @@ _CONTROLFILE_TEMPLATE = Template(
     # found in the LICENSE file.
 
     # This file has been automatically generated. Do not edit!
+    {%- if servo_support_needed %}
+
+    from autotest_lib.server import utils
+
+    {%- endif %}
 
     AUTHOR = 'ARC++ Team'
     NAME = '{{name}}'
@@ -44,13 +49,31 @@ _CONTROLFILE_TEMPLATE = Template(
     PRIORITY = {{priority}}
     {%- endif %}
     DOC = '{{DOC}}'
+    {%- if servo_support_needed %}
+
+    # For local debugging, if your test setup doesn't have servo, REMOVE these
+    # two lines.
+    args_dict = utils.args_to_dict(args)
+    servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
+
+    {%- endif %}
     {% if sync_count and sync_count > 1 %}
     from autotest_lib.server import utils as server_utils
     def run_CTS(ntuples):
         host_list = [hosts.create_host(machine) for machine in ntuples]
     {% else %}
     def run_CTS(machine):
+        {%- if servo_support_needed %}
+        # REMOVE 'servo_args=servo_args' arg for local debugging if your test
+        # setup doesn't have servo.
+        try:
+            host_list = [hosts.create_host(machine, servo_args=servo_args)]
+        except:
+            # Just ignore any servo setup flakiness.
+            host_list = [hosts.create_host(machine)]
+        {%- else %}
         host_list = [hosts.create_host(machine)]
+        {%- endif %}
     {%- endif %}
         job.run_test(
             'cheets_CTS_P',
@@ -80,6 +103,9 @@ _CONTROLFILE_TEMPLATE = Template(
     {%- for arg in extra_args %}
             {{arg}},
     {%- endfor %}
+    {%- if servo_support_needed %}
+            hard_reboot_on_failure=True,
+    {%- endif %}
             timeout={{timeout}})
 
     {% if sync_count and sync_count > 1 -%}
@@ -185,6 +211,10 @@ _BVT_PERBUILD = [
     'CtsUiAutomationTestCases',
     'CtsUsbTests',
     'CtsVoiceSettingsTestCases',
+]
+
+_NEEDS_POWER_CYCLE = [
+    'CtsBluetoothTestCases',
 ]
 
 _HARDWARE_DEPENDENT_MODULES = [
@@ -685,6 +715,12 @@ def get_doc(modules, abi, is_public):
     return doc
 
 
+def servo_support_needed(modules, is_public=True):
+    """Determines if servo support is needed for a module."""
+    return not is_public and all(module in _NEEDS_POWER_CYCLE
+                                 for module in modules)
+
+
 def get_controlfile_name(module,
                          abi,
                          revision,
@@ -1132,6 +1168,7 @@ def get_controlfile_content(combined,
         tag=tag,
         uri=uri,
         DOC=get_doc(modules, abi, is_public),
+        servo_support_needed = servo_support_needed(modules, is_public),
         max_retries=get_max_retries(modules, abi, suites, is_public),
         timeout=calculate_timeout(modules, suites, is_public),
         run_template=get_run_template(modules, is_public),
