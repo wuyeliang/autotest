@@ -71,7 +71,7 @@ class UI_Handler(object):
 
         @param name: Parameter to provide to the 'name' attribute.
         @param isRegex: bool, if the 'name' is a regex.
-        @param remove: bool, if wait for the item to be removed.
+        @param remove: bool, if you are waiting for the item to be removed.
         @param role: Parameter to provide to the 'role' attribute.
 
         @raises error.TestError if the element is not loaded (or removed).
@@ -203,3 +203,41 @@ class UI_Handler(object):
                 {name: %s,
                  role: %s}}
              );""" % (name, role))
+
+    def click_and_wait_for_item_with_retries(self,
+                                             item_to_click,
+                                             item_to_wait_for,
+                                             isRegex_click=False,
+                                             isRegex_wait=False,
+                                             click_role=None,
+                                             wait_role=None):
+        """
+        Click on an item, and wait for a subsequent item to load. If the new
+        item does not load, we attempt to click the button again.
+
+        This being done to remove the corner case of button being visually
+        loaded, but not fully ready to be clicked yet. In simple terms:
+            Click button --> Check for next button to appear
+            IF button does not appear, its likely the original button click did
+            not work, thus reclick that button --> recheck for the next button.
+
+            If button did appear, stop clicking.
+
+        """
+
+        self.doDefault_on_obj(item_to_click,
+                                 role=click_role,
+                                 isRegex=isRegex_click)
+        for retry in xrange(2):
+            try:
+                self.wait_for_ui_obj(item_to_wait_for,
+                                        role=wait_role,
+                                        isRegex=isRegex_wait)
+                break
+            except TypeError:
+                self.doDefault_on_obj(item_to_click,
+                                         role=click_role,
+                                         isRegex=isRegex_click)
+        else:
+            raise error.TestError('Item {} did not load after 2 tries'.format(
+                                  item_to_wait_for))

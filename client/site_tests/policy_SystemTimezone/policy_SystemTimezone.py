@@ -20,6 +20,21 @@ class policy_SystemTimezone(
     version = 1
     POLICY_NAME = 'SystemTimezone'
 
+    def _navigate_chromeos_settings_to_timezone(self):
+        """
+        Will navigate the ChromeOS Settings (New as of R79) to the 'Time zone'
+        page.
+
+        """
+        self.ui.click_and_wait_for_item_with_retries('/tray/', 'Settings', True)
+        self.ui.click_and_wait_for_item_with_retries('Settings', 'Advanced')
+        self.ui.click_and_wait_for_item_with_retries('Advanced',
+                                                     'Date and time')
+        self.ui.click_and_wait_for_item_with_retries('Date and time',
+                                                     'Time zone')
+        self.ui.click_and_wait_for_item_with_retries('Time zone',
+                                                     'Choose from list')
+
     def _is_timezone_selectable(self):
         """
         Check if the timezone is selectable via the UI. If the timezone
@@ -28,16 +43,11 @@ class policy_SystemTimezone(
         @returns: True if dropdown is usable, False if not.
 
         """
-        SETTINGS_URL = "chrome://settings/dateTime/timeZone"
-        tab = self.navigate_to_url(SETTINGS_URL)
-        tab.WaitForDocumentReadyStateToBeComplete()
-
-        self.ui.wait_for_ui_obj('Choose from list')
+        self._navigate_chromeos_settings_to_timezone()
         self.ui.doDefault_on_obj('Choose from list')
 
-        # Give the dropdown a second to load.
+        # Give the dropdown a second to load (there is no object to wait on).
         time.sleep(1)
-
         return not self.ui.is_obj_restricted('Time zone', role='popUpButton')
 
     def _set_timezone(self):
@@ -61,7 +71,7 @@ class policy_SystemTimezone(
             lambda: check_timezone(expected),
             exception=error.TestFail('Time zone was not set! Expected {}'
                                      .format(expected)),
-            timeout=5,
+            timeout=30,
             sleep_interval=1,
             desc='Polling for timezone change')
 
@@ -82,7 +92,6 @@ class policy_SystemTimezone(
             expected = setting['expected']
             policies = {self.POLICY_NAME: policy_value}
             self.setup_case(device_policies=policies, enroll=True)
-
             self.ui.start_ui_root(self.cr)
             # Logout so the policy can take effect
             if self._is_timezone_selectable():
