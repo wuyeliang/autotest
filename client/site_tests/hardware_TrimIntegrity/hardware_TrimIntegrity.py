@@ -251,7 +251,7 @@ class hardware_TrimIntegrity(test.test):
                                                       self.nvme_dlfeat)
                 if dlfeat == "None":
                     msg += ' Expected values for trimmed data not reported.'
-                    error.TestNAError(msg)
+                    raise error.TestNAError(msg)
                 elif int(dlfeat, 16) & 7 == 1:
                     msg += ' Disk indicates values should be zero after trim.'
                     raise error.TestFail(msg)
@@ -259,8 +259,8 @@ class hardware_TrimIntegrity(test.test):
                 # to FF from a deallocated logical block
                 elif int(dlfeat, 16) & 7 == 2:
                     msg += ' Unexpected values, test does not check for ones.'
-                    error.TestFail(msg)
+                    raise error.TestFail(msg)
                 else:
                     msg += ' Expected values for trimmed data not specified.'
-                    error.TestNAError(msg)
+                    raise error.TestNAError(msg)
             raise error.TestNAError(msg)
