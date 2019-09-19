@@ -61,7 +61,7 @@ class hardware_StorageStress(test.test):
 
         # init test
         if not client_ip:
-            error.TestError("Must provide client's IP address to test")
+            raise error.TestError("Must provide client's IP address to test")
 
         self._client = hosts.create_host(client_ip)
         self._client_at = autotest.Autotest(self._client)
