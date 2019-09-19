@@ -26,14 +26,19 @@ FULL_WAKE_SOURCES = [
     'USB_KB', 'TABLET_MODE_ON', 'TABLET_MODE_OFF'
 ]
 
-# Max time taken by the system to resume.
-RESUME_DURATION_SECS = 5
+# Max time taken by the device to resume. This gives enough time for the device
+# to establish network connection with the autotest server
+SECS_FOR_RESUMING = 15
 
-# Time in future after which RTC goes off.
-RTC_WAKE_SECS = 30
+# Time in future after which RTC goes off when testing other wake sources.
+BACKUP_RTC_SECS = 60
 
-# Max time taken by the system to suspend.
-SUSPEND_DURATION_SECS = 5
+# Time in future after which RTC goes off when testing wake due to RTC alarm.
+RTC_WAKE_SECS = 10
+
+# Max time taken by the device to suspend. This includes the time powerd takes
+# trigger the suspend after receiving the suspend request from autotest script.
+SECS_FOR_SUSPENDING = 20
 
 # Time to allow lid transition to take effect.
 WAIT_TIME_LID_TRANSITION_SECS = 5
@@ -184,25 +189,33 @@ class power_WakeSources(test.test):
             is_success = False
         else:
             count_before = self._dr_utils.count_dark_resumes()
-            with self._dr_utils.suspend() as _:
-                logging.info('DUT suspended! Waiting to resume...')
-                # Wait at least |SUSPEND_DURATION_SECS| secs for the kernel to
-                # fully suspend.
-                time.sleep(SUSPEND_DURATION_SECS)
-                self._trigger_wake(wake_source)
-                # Wait at least |RESUME_DURATION_SECS| secs for the device to
-                # resume.
-                time.sleep(RESUME_DURATION_SECS)
+            self._dr_utils.suspend(BACKUP_RTC_SECS)
+            logging.info('DUT suspended! Waiting to resume...')
+            # Wait at least |SECS_FOR_SUSPENDING| secs for the kernel to
+            # fully suspend.
+            time.sleep(SECS_FOR_SUSPENDING)
+            self._trigger_wake(wake_source)
+            # Wait at least |SECS_FOR_RESUMING| secs for the device to
+            # resume.
+            time.sleep(SECS_FOR_RESUMING)
 
-                if not self._host.is_up():
-                    logging.error('Device did not resume from suspend for %s',
-                                  wake_source)
-                    is_success = False
+            if not self._host.is_up_fast():
+                logging.error('Device did not resume from suspend for %s.'
+                              ' Waiting for backup RTC to wake the system.',
+                              wake_source)
+                time.sleep(BACKUP_RTC_SECS -
+                           SECS_FOR_SUSPENDING - SECS_FOR_RESUMING)
+                is_success = False
+            if not self._host.is_up():
+                raise error.TestFail(
+                    'Device failed to wakeup from backup RTC.')
 
             count_after = self._dr_utils.count_dark_resumes()
-            if count_before != count_after:
+            if is_success and count_before != count_after:
                 logging.error('%s caused a dark resume.', wake_source)
                 is_success = False
+            elif is_success:
+                logging.info('%s caused a full resume.', wake_source)
         self._after_resume(wake_source)
         return is_success
 
@@ -215,14 +228,14 @@ class power_WakeSources(test.test):
         logging.info('Testing RTC triggers dark resume when enabled.')
 
         count_before = self._dr_utils.count_dark_resumes()
-        with self._dr_utils.suspend(RTC_WAKE_SECS) as _:
-            logging.info('DUT suspended! Waiting to resume...')
-            time.sleep(SUSPEND_DURATION_SECS + RTC_WAKE_SECS +
-                       RESUME_DURATION_SECS)
+        self._dr_utils.suspend(SECS_FOR_SUSPENDING + RTC_WAKE_SECS)
+        logging.info('DUT suspended! Waiting to resume...')
+        time.sleep(SECS_FOR_SUSPENDING + RTC_WAKE_SECS +
+                   SECS_FOR_RESUMING)
 
-            if not self._host.is_up():
-                logging.error('Device did not resume from suspend for RTC')
-                return False
+        if not self._host.is_up():
+            logging.error('Device did not resume from suspend for RTC')
+            return False
 
         count_after = self._dr_utils.count_dark_resumes()
         if count_before != count_after - 1:
@@ -290,9 +303,9 @@ class power_WakeSources(test.test):
         test_keyval = {}
 
         for ws in passed_ws:
-            test_keyval.update({ws : 'PASS'})
+            test_keyval.update({ws: 'PASS'})
         for ws in failed_ws:
-            test_keyval.update({ws : 'FAIL'})
+            test_keyval.update({ws: 'FAIL'})
         for ws in skipped_ws:
             test_keyval.update({ws: 'SKIPPED'})
         self.write_test_keyval(test_keyval)

@@ -48,44 +48,45 @@ class KernelError(SuspendFailure):
     comparing regexp.
     """
     WHITELIST = [
-            # crosbug.com/37594: debug tracing clock desync we don't care about
-            (r'kernel/trace/ring_buffer.c:\d+ rb_reserve_next_event',
-             r'Delta way too big!'),
-            # TODO(crosbug.com/p/52008): Remove from whitelist once watermark
-            # implementation has landed.
-            (r'v3.18/\S+/intel_pm.c:\d+ skl_update_other_pipe_wm',
-            r'WARN_ON\(\!wm_changed\)')
-        ]
+        # crosbug.com/37594: debug tracing clock desync we don't care about
+        (r'kernel/trace/ring_buffer.c:\d+ rb_reserve_next_event',
+         r'Delta way too big!'),
+        # TODO(crosbug.com/p/52008): Remove from whitelist once watermark
+        # implementation has landed.
+        (r'v3.18/\S+/intel_pm.c:\d+ skl_update_other_pipe_wm',
+         r'WARN_ON\(\!wm_changed\)')
+    ]
 
 
 class FirmwareError(SuspendFailure):
     """String 'ERROR' found in firmware log after resume."""
     WHITELIST = [
-            # crosbug.com/36762: no one knows, but it has always been there
-            ('^stumpy', r'PNP: 002e\.4 70 irq size: 0x0000000001 not assigned'),
-            # crbug.com/221538: no one knows what ME errors mean anyway
-            ('^parrot', r'ME failed to respond'),
-            # b/64684441: eve SKU without eMMC
-            ('^eve', r'Card did not respond to voltage select!'),
-        ]
+        # crosbug.com/36762: no one knows, but it has always been there
+        ('^stumpy', r'PNP: 002e\.4 70 irq size: 0x0000000001 not assigned'),
+        # crbug.com/221538: no one knows what ME errors mean anyway
+        ('^parrot', r'ME failed to respond'),
+        # b/64684441: eve SKU without eMMC
+        ('^eve', r'Card did not respond to voltage select!'),
+    ]
 
 
 class SpuriousWakeupError(SuspendFailure):
     """Received spurious wakeup while suspending or woke before schedule."""
     S3_WHITELIST = [  # (<board>, <eventlog wake source>, <syslog wake source>)
-            # crbug.com/220014: spurious trackpad IRQs
-            ('^link', 'Wake Source | GPIO | 12', ''),
-            # crbug.com/345327: unknown, probably same as crbug.com/290923
-            ('^x86-alex', '', ''),   # alex can report neither, blanket ignore
-            # crbug.com/355106: unknown, possibly related to crbug.com/290923
-            ('^lumpy|^parrot', '', 'PM1_STS: WAK PWRBTN'),
-        ]
+        # crbug.com/220014: spurious trackpad IRQs
+        ('^link', 'Wake Source | GPIO | 12', ''),
+        # crbug.com/345327: unknown, probably same as crbug.com/290923
+        ('^x86-alex', '', ''),   # alex can report neither, blanket ignore
+        # crbug.com/355106: unknown, possibly related to crbug.com/290923
+        ('^lumpy|^parrot', '', 'PM1_STS: WAK PWRBTN'),
+    ]
     S0_WHITELIST = [  # (<board>, <kernel wake source>)
-            # crbug.com/290923: spurious keyboard IRQ, believed to be from Servo
-            ('^x86-alex|^lumpy|^parrot|^butterfly', 'serio0'),
-            # crosbug.com/p/46140: battery event caused by MKBP
-            ('^elm|^oak', 'spi32766.0'),
-        ]
+        # crbug.com/290923: spurious keyboard IRQ, believed to be from Servo
+        ('^x86-alex|^lumpy|^parrot|^butterfly', 'serio0'),
+        # crosbug.com/p/46140: battery event caused by MKBP
+        ('^elm|^oak', 'spi32766.0'),
+    ]
+
 
 class MemoryError(SuspendFailure):
     """memory_suspend_test found memory corruption."""
@@ -101,6 +102,7 @@ class S0ixResidencyNotChanged(SuspendFailure):
     """power_SuspendStress test found CPU/SoC is unable to idle properly
     when suspended to S0ix. """
     pass
+
 
 def prepare_wakeup(seconds):
     """Prepare the device to wake up from an upcoming suspend.
@@ -172,21 +174,25 @@ def do_suspend(suspend_seconds, delay_seconds=0):
     return estimated_alarm
 
 
-def suspend_bg_for_dark_resume(delay_seconds=0):
-    """Do a non-blocking indefinite suspend using power manager. ONLY USE THIS
-    IF YOU ARE ABSOLUTELY CERTAIN YOU NEED TO.
+def suspend_bg_for_dark_resume(suspend_seconds, delay_seconds=0):
+    """Do a non-blocking suspend using power manager.
 
-    Wait for |delay_seconds|, then suspend to RAM (S3). This does not set an RTC
-    alarm and does not pass an external wakeup count. It is meant to be used for
-    dark resume testing, where the server-side API exposes it in such a fashion
-    that the DUT will be woken by the server no matter how the test is exited.
+    Wait for |delay_seconds|, then suspend with an rtc alarm for
+    waking up again after having been suspended for |suspend_seconds|, using
+    the powerd_dbus_suspend program all in the background.
 
+    @param suspend_seconds: Number of seconds to suspend the DUT.
     @param delay_seconds: Number of seconds wait before suspending the DUT.
 
     """
     upstart.ensure_running('powerd')
-    command = ('/usr/bin/powerd_dbus_suspend --delay=%d '
-               '--timeout=30') % delay_seconds
+    # Disarm any existing wake alarms so as to prevent early wakeups.
+    os.system('echo 0 > /sys/class/rtc/rtc0/wakealarm')
+    wakeup_count = read_wakeup_count()
+    command = ('/usr/bin/powerd_dbus_suspend --delay=%d --timeout=30 '
+               '--wakeup_count=%d --wakeup_timeout=%d '
+               '--disable_dark_resume=false' %
+               (delay_seconds, wakeup_count, suspend_seconds))
     logging.info("Running '%s'", command)
     process = multiprocessing.Process(target=os.system, args=(command,))
     process.start()
