@@ -367,7 +367,8 @@ def retry(test_method, instance, *args, **kwargs):
         return True
 
     # Try to fix the serial device if applicable.
-    logging.error('%s failed at the 1st time.', test_method.__name__)
+    logging.error('%s failed at the 1st time: (%s)', test_method.__name__,
+                  str(instance.results))
 
     # If this test does not use any attached serial device, just re-run
     # the test.
