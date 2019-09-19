@@ -369,10 +369,10 @@ class power_LoadTest(arc.ArcTest):
                               plt._detachable_handler.wake_base(1000)))
             # reset backlight level since powerd might've modified it
             # based on ambient light
-            self._set_backlight_level()
+            self._set_backlight_level(i)
             self._set_lightbar_level()
             if self._keyboard_backlight:
-                self._set_keyboard_backlight_level()
+                self._set_keyboard_backlight_level(loop=i)
             audio_helper.set_volume_levels(self._volume_level,
                                            self._mic_gain)
 
@@ -620,10 +620,10 @@ class power_LoadTest(arc.ArcTest):
 
         return low_battery
 
-    def _set_backlight_level(self):
+    def _set_backlight_level(self, loop=None):
         self._backlight.set_default()
         # record brightness level
-        self._tmp_keyvals['level_backlight_current'] = \
+        self._tmp_keyvals[_loop_keyname(loop, 'level_backlight')] = \
             self._backlight.get_level()
 
 
@@ -677,8 +677,8 @@ class power_LoadTest(arc.ArcTest):
         energy_wh = 0
         loop = 0
         while True:
-            duration_key = 'loop%d_system_duration' % loop
-            avg_power_key = 'loop%d_system_pwr_avg' % loop
+            duration_key = _loop_keyname(loop, 'system_duration')
+            avg_power_key = _loop_keyname(loop, 'system_pwr_avg')
             if duration_key not in keyval or avg_power_key not in keyval:
                 break
             energy_wh += keyval[duration_key] * keyval[avg_power_key] / 3600
@@ -704,7 +704,7 @@ class power_LoadTest(arc.ArcTest):
         return True
 
 
-    def _set_keyboard_backlight_level(self):
+    def _set_keyboard_backlight_level(self, loop=None):
         """
         Sets keyboard backlight based on light sensor and hover.
         These values are based on UMA as mentioned in
@@ -740,11 +740,11 @@ class power_LoadTest(arc.ArcTest):
 
         logging.info('Setting keyboard backlight to %d', level_to_set)
         self._keyboard_backlight.set_level(level_to_set)
-        self._tmp_keyvals['percent_kbd_backlight'] = \
-            self._keyboard_backlight.get_percent()
+        keyname = _loop_keyname(loop, 'percent_kbd_backlight')
+        self._tmp_keyvals[keyname] = self._keyboard_backlight.get_percent()
 
     def _log_loop_checkpoint(self, loop, start, end):
-        loop_str = 'loop%d' % loop
+        loop_str = _loop_prefix(loop)
         self._checkpoint_logger.checkpoint(loop_str, start, end)
 
         # Don't log section if we run custom tasks.
@@ -759,7 +759,7 @@ class power_LoadTest(arc.ArcTest):
         ]
 
         # Use start time from extension if found by look for google.com start.
-        goog_str = loop_str+ '_web_page_www.google.com'
+        goog_str = loop_str + '_web_page_www.google.com'
         for item, start_extension, _ in self._task_tracker:
             if item == goog_str:
                 if start_extension >= start:
@@ -811,7 +811,7 @@ def _extension_log_handler(handler, form, loop_number):
 
     if form:
         for field in sorted(form.keys(), key=alphanum_key):
-            logging.debug("[extension] @ loop_%d %s", loop_number,
+            logging.debug("[extension] @ %s %s", _loop_prefix(loop_number),
             form[field].value)
             # we don't want to add url information to our keyvals.
             # httpd adds them automatically so we remove them again
@@ -835,23 +835,20 @@ def _extension_page_time_info_handler(handler, form, loop_number,
         page = json.loads(form[field].value)
         url = page['url']
 
-        logging.debug("[extension] @ loop_%d url: %s start_time: %d",
-            loop_number, url, page['start_time'])
+        pstr = "[extension] @ %s url: %s" % (_loop_prefix(loop_number), url)
+        logging.debug("%s start_time: %d", pstr, page['start_time'])
 
         if page['end_load_time']:
-            logging.debug("[extension] @ loop_%d url: %s end_load_time: %d",
-                loop_number, url, page['end_load_time'])
+            logging.debug("%s end_load_time: %d", pstr, page['end_load_time'])
 
             load_time = page['end_load_time'] - page['start_time']
 
             loadtime_measurements.append(load_time)
             sorted_pagelt.append((url, load_time))
 
-            logging.debug("[extension] @ loop_%d url: %s load time: %d ms",
-                loop_number, url, load_time)
+            logging.debug("%s load time: %d ms", pstr, load_time)
 
-        logging.debug("[extension] @ loop_%d url: %s end_browse_time: %d",
-            loop_number, url, page['end_browse_time'])
+        logging.debug("%s end_browse_time: %d", pstr, page['end_browse_time'])
 
         page_timestamps.append(page)
 
@@ -859,7 +856,7 @@ def _extension_page_time_info_handler(handler, form, loop_number,
         # httpd adds them automatically so we remove them again
         del handler.server._form_entries[field]
 
-    page_base = 'loop%d_web_page_' % loop_number
+    page_base = _loop_keyname(loop_number, 'web_page_')
     for page in page_timestamps:
         page_failed = "_failed"
         # timestamps from javascript are in milliseconds, change to seconds
@@ -911,11 +908,19 @@ def _extension_key_values_handler(handler, form, loop_number,
 
         # Print each key:value pair and associate it with the data
         for key, value in keyval_data.iteritems():
-            logging.debug("[extension] @ loop_%d key: %s val: %s",
-                loop_number, key, value)
+            logging.debug("[extension] @ %s key: %s val: %s",
+                _loop_prefix(loop_number), key, value)
             # Add the key:values to the _tmp_keyvals set
-            test_instance._tmp_keyvals["loop%d_%s" % (loop_number, key)] = value
+            test_instance._tmp_keyvals[_loop_keyname(loop_number, key)] = value
 
         # we don't want to add url information to our keyvals.
         # httpd adds them automatically so we remove them again
         del handler.server._form_entries[field]
+
+def _loop_prefix(loop):
+    return "loop%02d" % loop
+
+def _loop_keyname(loop, keyname):
+    if loop != None:
+        return "%s_%s" % (_loop_prefix(loop), keyname)
+    return keyname
