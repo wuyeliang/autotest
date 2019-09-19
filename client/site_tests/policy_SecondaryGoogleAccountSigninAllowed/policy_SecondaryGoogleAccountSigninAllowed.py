@@ -45,19 +45,22 @@ class policy_SecondaryGoogleAccountSigninAllowed(
 
         # This sleep is needed for the all available buttons to load.
         time.sleep(1)
-        add_account_button = self.ui.item_present(role='link',
-                                                  name='/Add account/',
-                                                  isRegex=True)
+        add_account_button = self.ui.doDefault_on_obj(role='link',
+                                                      name='/Manage accounts/',
+                                                      isRegex=True)
 
         if case is False:
-            if add_account_button:
+            if not self.ui.did_obj_not_load(
+            name='/Manage accounts on this device/',
+            isRegex=True):
                 raise error.TestFail(
                     'Add account button is present and it should not be.')
 
         else:
-            if not add_account_button:
-                raise error.TestFail(
-                    'Add account button is not present and it should be.')
+            self.ui.wait_for_ui_obj(
+                name='/Manage accounts on this device/',
+                isRegex=True,
+                role='button')
 
     def run_once(self, case):
         """
