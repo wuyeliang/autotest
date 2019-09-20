@@ -301,8 +301,16 @@ class AtestCmd(object):
         @return : 'atest host statjson' output as parsed json.
         """
         cmd = AtestCmd.statjson_cmd(hostname=hostname)
-        out = subprocess.check_output(cmd)
-        return json.loads(out.decode('utf-8'))
+        (out, exit_status) = backtick_out_err(cmd)
+        if exit_status == 0:
+            return json.loads(out.decode('utf-8'))
+        else:
+            if exit_status:
+                if "Failed to stat:" in out:
+                    assert "Unknown host" in out
+                return None
+            else:
+                assert "unexpected failure"
 
     @staticmethod
     def atest_lock_cmd(reason=None):
@@ -440,8 +448,8 @@ def backtick(*args, **kwargs):
         output = out
         exit_status = 0
     else:
-        output = e.output
-        exit_status = e.returncode
+        output = exn.output
+        exit_status = exn.returncode
     return (output, exit_status)
 
 
@@ -486,7 +494,7 @@ class SkylabCmd(object):
     def add_many_duts(dut_contents):
         stderr_log('begin add_many_duts', time.time(), _humantime())
         for dut_content in dut_contents:
-            stderr_log("add many DUTs: ", dut_content)
+            stderr_log("add many DUTs: ", str(dut_content)[:80] + "...")
         """Add multiple DUTs to skylab at once.
 
         @param dut_contents: a sequence of JSON-like objects describing DUTs as
@@ -509,12 +517,14 @@ class SkylabCmd(object):
                     json.dump(dut_contents[i], fh)
                 paths.append(path_)
             cmd = list(SkylabCmd.ADD_MANY_DUTS_CMD) + paths
+            print("log command")
             stderr_log(cmd)
+            print("backtick_out_err")
             # ignore cases where the hostname doesn't exist
             (output, err) = backtick_out_err(cmd)
             if err:
-                if "Failed to stat:" in err:
-                    assert "Unknown host" in err
+                if "Failed to stat:" in output:
+                    assert "Unknown host" in output
                     # then do nothing
 
             # shutil.rmtree(td, ignore_errors=True)
@@ -623,15 +633,20 @@ class Migration(object):
 
         if use_quick_add:
             dut_contents = []
+            good_hostnames = []
             for hostname in hostnames:
-                dut_contents.append(AtestCmd.statjson(hostname=hostname))
+                out_json = dut_contents.append(AtestCmd.statjson(hostname=hostname))
+                if out_json is None:
+                    pass
+                else:
+                    good_hostnames.append(out_json)
             # TODO(gregorynisbet): Currently we assume that
             # SkylabCmd.add_many_duts worked for all DUTs.
             # In the future, check the
             # inventory or query Skylab in some way to check that the
             # transfer was successful
             SkylabCmd.add_many_duts(dut_contents=dut_contents)
-            moved.update(hostnames)
+            moved.update(good_hostnames)
 
         for hostname in hostnames:
             if hostname not in moved:

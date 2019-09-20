@@ -1727,3 +1727,7 @@ class host_skylab_rollback(action_common.atest_list, host):
             dry_run=False,
         )
         return res
+
+
+    def output(self, result):
+        print result

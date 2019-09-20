@@ -12,7 +12,7 @@ BATCH_SIZE = 200
 ROLLBACK_CMD = r"""
 bug="${ROLLBACK_BUG:-b/7}"
 
-skylab remove-duts -delete -bug "${ROLLBACK_BUG}" "$@"
+skylab remove-duts -delete -bug b/7 "$@"
 
 declare -a mangled
 
@@ -20,7 +20,9 @@ for item in "$@"; do
     mangled+=("$item"-migrated-do-not-use)
 done
 
-yes y | atest host rename --for-rollback "${mangled[@]}"
+echo y > /tmp/yfile
+
+</tmp/yfile atest host rename --for-rollback "${mangled[@]}"
 
 atest host mod --unlock "${mangled[@]}"
 """
