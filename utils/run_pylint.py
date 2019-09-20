@@ -33,6 +33,7 @@ pylint_version_parsed = tuple(map(int, pylint_version.split('.')))
 # some files make pylint blow up, so make sure we ignore them
 BLACKLIST = ['/site-packages/*', '/contrib/*', '/frontend/afe/management.py']
 
+import astroid
 import pylint.lint
 from pylint.checkers import base, imports, variables
 
@@ -133,6 +134,24 @@ class CustomVariablesChecker(variables.VariablesChecker):
         """Patches modnames so pylints understands autotest_lib."""
         node.modname = patch_modname(node.modname)
         return super(CustomVariablesChecker, self).visit_importfrom(node)
+
+    def visit_expr(self, node):
+        """
+        Flag exceptions instantiated but not used.
+
+        https://crbug.com/1005893
+        """
+        if not isinstance(node.value, astroid.Call):
+            return
+        func = node.value.func
+        try:
+            cls = next(func.infer())
+        except astroid.InferenceError:
+            return
+        if not isinstance(cls, astroid.ClassDef):
+            return
+        if any(x for x in cls.ancestors() if x.name == 'BaseException'):
+            self.add_message('W0104', node=node, line=node.fromlineno)
 
 
 class CustomDocStringChecker(base.DocStringChecker):
@@ -407,7 +426,8 @@ def main():
         pylint_base_opts = ['--rcfile=%s' % pylint_rc,
                             '--reports=no',
                             '--disable=W,R,E,C,F',
-                            '--enable=W0611,W1201,C0111,C0112,E0602,W0601',
+                            '--enable=W0104,W0611,W1201,C0111,C0112,E0602,'
+                            'W0601,E0633',
                             '--no-docstring-rgx=%s' % no_docstring_rgx,]
     else:
         all_failures = 'error,warning,refactor,convention'
