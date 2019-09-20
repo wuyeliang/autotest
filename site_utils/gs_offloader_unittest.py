@@ -441,7 +441,7 @@ class _TempResultsDirTestCase(unittest.TestCase):
                       `self._resultsroot`.
 
         """
-        os.mkdir(jobdir)
+        os.makedirs(jobdir)
         return _MockJobDirectory(jobdir)
 
 
@@ -554,6 +554,7 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
         alarm.start()
         self.addCleanup(alarm.stop)
         self.mox.StubOutWithMock(models.test, 'parse_job_keyval')
+        self.should_remove_sarming_req_dir = False
 
 
     def tearDown(self):
@@ -609,6 +610,11 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
         self.mox.VerifyAll()
         self.assertEqual(not should_succeed,
                          os.path.isdir(self._job.queue_args[0]))
+        swarming_req_dir = gs_offloader._get_swarming_req_dir(
+                self._job.queue_args[0])
+        if swarming_req_dir:
+            self.assertEqual(not self.should_remove_sarming_req_dir,
+                             os.path.exists(swarming_req_dir))
 
 
     def test_offload_success(self):
@@ -625,6 +631,33 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
         self._mock_offload_dir_calls(['test', '!', '-d'],
                                      self._job.queue_args)
         self._run_offload_dir(False, 0)
+
+
+    def test_offload_swarming_req_dir_remove(self):
+        """Test that `offload_dir()` can prune the empty swarming task dir."""
+        should_remove = os.path.join('results', 'swarming-123abc0')
+        self._job = self.make_job(os.path.join(should_remove, '1'))
+        self._mock_offload_dir_calls(['test', '-d'],
+                                     self._job.queue_args)
+
+        os.path.isfile(mox.IgnoreArg()).AndReturn(True)
+        self.should_remove_sarming_req_dir = True
+        self._mock_create_marker_file()
+        self._run_offload_dir(True, 0)
+
+
+    def test_offload_swarming_req_dir_exist(self):
+        """Test that `offload_dir()` keeps the non-empty swarming task dir."""
+        should_not_remove = os.path.join('results', 'swarming-456edf0')
+        self._job = self.make_job(os.path.join(should_not_remove, '1'))
+        self.make_job(os.path.join(should_not_remove, '2'))
+        self._mock_offload_dir_calls(['test', '-d'],
+                                     self._job.queue_args)
+
+        os.path.isfile(mox.IgnoreArg()).AndReturn(True)
+        self.should_remove_sarming_req_dir = False
+        self._mock_create_marker_file()
+        self._run_offload_dir(True, 0)
 
 
     def test_sanitize_dir(self):

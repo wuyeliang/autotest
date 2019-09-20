@@ -473,6 +473,23 @@ def _is_test_collector(package):
     """
     return TEST_LIST_COLLECTOR in package
 
+
+def _get_swarming_req_dir(path):
+    """
+    Returns the parent directory of |path|, if |path| is a swarming task result.
+
+    @param path: Full path to the result of a task.
+                      e.g. /tmp/results/swarming-44466815c4bc951/1
+
+    @return string of the parent dir or None if not a swarming task.
+    """
+    m_parent = re.match(
+            '(?P<parent_dir>.*/swarming-[0-9a-fA-F]*0)/[1-9a-fA-F]$', path)
+    if m_parent:
+        return m_parent.group('parent_dir')
+    return None
+
+
 def _parse_cts_job_results_file_path(path):
     """Parse CTS file paths an extract required information from them."""
 
@@ -735,6 +752,10 @@ class GSOffloader(BaseGSOffloader):
                     correct_results_folder_permission(dir_entry)
             else:
                 self._prune(dir_entry, job_complete_time)
+                swarming_req_dir = _get_swarming_req_dir(dir_entry)
+                if swarming_req_dir:
+                    self._prune_swarming_req_dir(swarming_req_dir)
+
 
     def _try_offload(self, dir_entry, dest_path,
                  stdout_file, stderr_file):
@@ -824,6 +845,20 @@ class GSOffloader(BaseGSOffloader):
             _handle_dir_os_error(dir_entry, e.errno==errno.EACCES)
             # Try again after the permission issue is fixed.
             shutil.rmtree(dir_entry)
+
+    def _prune_swarming_req_dir(self, swarming_req_dir):
+        """Prune swarming request directory, if it is empty.
+
+        @param swarming_req_dir: Directory entry of a swarming request.
+        """
+        try:
+            logging.debug('Pruning swarming request directory %s',
+                          swarming_req_dir)
+            os.rmdir(swarming_req_dir)
+        except OSError as e:
+            # Do nothing and leave this directory to next attempt to remove.
+            logging.debug('Failed to prune swarming request directory %s',
+                          swarming_req_dir)
 
 
 class _OffloadError(Exception):
