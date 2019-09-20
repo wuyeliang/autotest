@@ -608,7 +608,7 @@ class AbstractStats(object):
 
     def __init__(self, name=None, incremental=True):
         if not name:
-            error.TestFail("Need to name AbstractStats instance please.")
+            raise error.TestFail("Need to name AbstractStats instance please.")
         self.name = name
         self.incremental = incremental
         self._stats = self._read_stats()
