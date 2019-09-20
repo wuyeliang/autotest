@@ -67,6 +67,7 @@ class TpmHandler(object):
     @ivar nvrams: A dictionary where the keys are nvram names, and the values
           are instances of TpmNvRam objects, providing access to the
           appropriate TPM NvRam sections.
+    @ivar tpm_version: Either "1.2" or "2.0".
     @type os_if: autotest_lib.client.cros.faft.utils.os_interface.OSInterface
     """
 
@@ -87,6 +88,7 @@ class TpmHandler(object):
                         size=10,
                         version_offset=2)
         }
+        self.tpm_version = None
         self.trunksd_started = False
         self.tcsd_started = False
         self.initialized = False
@@ -114,6 +116,12 @@ class TpmHandler(object):
 
     def get_kernel_key_version(self):
         return self.nvrams['kernel'].get_key_version()
+
+    def get_tpm_version(self):
+        if self.tpm_version is None:
+            self.tpm_version = self.os_if.run_shell_command_get_output(
+                    'tpmc tpmver')[0]
+        return self.tpm_version
 
     def stop_daemon(self):
         """Stop TPM related daemon."""

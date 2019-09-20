@@ -916,6 +916,11 @@ class TpmServicer(object):
         """Retrieve tpm kernel data key version."""
         return self._tpm_handler.get_kernel_key_version()
 
+    def GetTpmVersion(self):
+        """Returns '1.2' or '2.0' as a string."""
+        # tpmc can return this without stopping daemons, so access real handler.
+        return self._real_tpm_handler.get_tpm_version()
+
     def StopDaemon(self):
         """Stop tpm related daemon."""
         return self._tpm_handler.stop_daemon()

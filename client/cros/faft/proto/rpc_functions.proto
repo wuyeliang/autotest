@@ -274,6 +274,9 @@ service Tpm {
   rpc GetKernelDatakeyVersion
     (TpmGetKernelDatakeyVersionRequest)
     returns (TpmGetKernelDatakeyVersionResponse);
+  rpc GetTpmVersion
+    (TpmGetTpmVersionRequest)
+    returns (TpmGetTpmVersionResponse);
   rpc StopDaemon
     (TpmStopDaemonRequest)
     returns (TpmStopDaemonResponse);
@@ -873,6 +876,11 @@ message TpmGetKernelVersionResponse {
 message TpmGetKernelDatakeyVersionRequest {}
 message TpmGetKernelDatakeyVersionResponse {
   int32 version = 1;
+}
+
+message TpmGetTpmVersionRequest {}
+message TpmGetTpmVersionResponse {
+  string version = 1;
 }
 
 message TpmStopDaemonRequest {}

@@ -515,6 +515,7 @@ RPC_CATEGORIES = [
                     "GetFirmwareDatakeyVersion",
                     "GetKernelVersion",
                     "GetKernelDatakeyVersion",
+                    "GetTpmVersion",
                     "StopDaemon",
                     "RestartDaemon",
                 ],
