@@ -27,7 +27,7 @@ See http://go/tast-failures for information about investigating failures.
 def run(machine):
     job.run_test('tast',
                  host=hosts.create_host(machine),
-                 test_exprs=['(!disabled && "group:graphics_video_nightly")'],
+                 test_exprs=['(!disabled && "group:graphics" && graphics_nightly && graphics_video)'],
                  ignore_test_failures=True, max_run_sec=10800,
                  command_args=args)
 
