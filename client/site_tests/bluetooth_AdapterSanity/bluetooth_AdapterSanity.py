@@ -21,7 +21,8 @@ class bluetooth_AdapterSanity(
 
         """
         fail_terms = ['[^a-z]err[^a-z]']
-        ignore_terms = ['RFKILL control', '"Service Changed" characteristic']
+        ignore_terms = ['RFKILL control', '"Service Changed" characteristic',
+                'Unknown Evt ID: 19']
 
         log_cmd = 'grep -i bluetooth /var/log/messages'
         for term in ignore_terms:
