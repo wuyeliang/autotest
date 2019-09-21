@@ -552,8 +552,15 @@ def take_screenshot_crop(fullpath, box=None, crtc_id=None):
     return fullpath
 
 
+# id      encoder status          name            size (mm)       modes   encoders
+# 39      0       connected       eDP-1           256x144         1       38
 _MODETEST_CONNECTOR_PATTERN = re.compile(
-    r'^(\d+)\s+\d+\s+(connected|disconnected)\s+(\S+)\s+\d+x\d+\s+\d+\s+\d+')
+    r'^(\d+)\s+(\d+)\s+(connected|disconnected)\s+(\S+)\s+\d+x\d+\s+\d+\s+\d+')
+
+# id      crtc    type    possible crtcs  possible clones
+# 38      0       TMDS    0x00000002      0x00000000
+_MODETEST_ENCODER_PATTERN = re.compile(
+    r'^(\d+)\s+(\d+)\s+\S+\s+0x[0-9a-fA-F]+\s+0x[0-9a-fA-F]+')
 
 # Group names match the drmModeModeInfo struct
 _MODETEST_MODE_PATTERN = re.compile(
@@ -585,12 +592,19 @@ _MODETEST_PLANE_PATTERN = re.compile(
 Connector = collections.namedtuple(
     'Connector', [
         'cid',  # connector id (integer)
+        'eid',  # encoder id (integer)
         'ctype',  # connector type, e.g. 'eDP', 'HDMI-A', 'DP'
         'connected',  # boolean
-        'size',  # current screen size, e.g. (1024, 768)
+        'size',  # current screen size in mm, e.g. (256, 144)
         'encoder',  # encoder id (integer)
         # list of resolution tuples, e.g. [(1920,1080), (1600,900), ...]
         'modes',
+    ])
+
+Encoder = collections.namedtuple(
+    'Encoder', [
+        'eid',  # encoder id (integer)
+        'crtc_id',  # CRTC id (integer)
     ])
 
 CRTC = collections.namedtuple(
@@ -599,6 +613,7 @@ CRTC = collections.namedtuple(
         'fb',  # fb id
         'pos',  # position, e.g. (0,0)
         'size',  # size, e.g. (1366,768)
+        'is_internal',  # True if for the internal display
     ])
 
 Plane = collections.namedtuple(
@@ -656,15 +671,16 @@ def get_modetest_connectors():
         connector_match = re.match(_MODETEST_CONNECTOR_PATTERN, line)
         if connector_match is not None:
             cid = int(connector_match.group(1))
+            eid = int(connector_match.group(2))
             connected = False
-            if connector_match.group(2) == 'connected':
+            if connector_match.group(3) == 'connected':
                 connected = True
-            ctype = connector_match.group(3)
+            ctype = connector_match.group(4)
             size = (-1, -1)
             encoder = -1
             modes = None
             connectors.append(
-                Connector(cid, ctype, connected, size, encoder, modes))
+                Connector(cid, eid, ctype, connected, size, encoder, modes))
         else:
             # See if we find corresponding line with modes, sizes etc.
             mode_match = re.match(_MODETEST_MODE_PATTERN, line)
@@ -675,9 +691,58 @@ def get_modetest_connectors():
                 c = connectors.pop()
                 connectors.append(
                     Connector(
-                        c.cid, c.ctype, c.connected, size, c.encoder,
+                        c.cid, c.eid, c.ctype, c.connected, size, c.encoder,
                         c.modes))
     return connectors
+
+
+def get_modetest_encoders():
+    """
+    Retrieves a list of Encoders using modetest.
+
+    Return value: List of Encoders.
+    """
+    encoders = []
+    modetest_output = utils.system_output('modetest -e')
+    for line in modetest_output.splitlines():
+        encoder_match = re.match(_MODETEST_ENCODER_PATTERN, line)
+        if encoder_match is None:
+            continue
+
+        eid = int(encoder_match.group(1))
+        crtc_id = int(encoder_match.group(2))
+        encoders.append(Encoder(eid, crtc_id))
+    return encoders
+
+
+def find_eid_from_crtc_id(crtc_id):
+    """
+    Finds the integer Encoder ID matching a CRTC ID.
+
+    @param crtc_id: The integer CRTC ID.
+
+    @return: The integer Encoder ID or None.
+    """
+    encoders = get_modetest_encoders()
+    for encoder in encoders:
+        if encoder.crtc_id == crtc_id:
+            return encoder.eid
+    return None
+
+
+def find_connector_from_eid(eid):
+    """
+    Finds the Connector object matching an Encoder ID.
+
+    @param eid: The integer Encoder ID.
+
+    @return: The Connector object or None.
+    """
+    connectors = get_modetest_connectors()
+    for connector in connectors:
+        if connector.eid == eid:
+            return connector
+    return None
 
 
 def get_modetest_crtcs():
@@ -704,7 +769,15 @@ def get_modetest_crtcs():
                 # CRTCs with fb=0 are disabled, but lets skip anything with
                 # trivial width/height just in case.
                 if not (fb == 0 or width == 0 or height == 0):
-                    crtcs.append(CRTC(crtc_id, fb, (x, y), (width, height)))
+                    eid = find_eid_from_crtc_id(crtc_id)
+                    connector = find_connector_from_eid(eid)
+                    if connector is None:
+                        is_internal = False
+                    else:
+                        is_internal = (connector.ctype ==
+                                       get_internal_connector_name())
+                    crtcs.append(CRTC(crtc_id, fb, (x, y), (width, height),
+                                      is_internal))
             elif line and not line[0].isspace():
                 return crtcs
         if re.match(_MODETEST_CRTCS_START_PATTERN, line) is not None:
@@ -767,11 +840,26 @@ def get_output_rect(output):
     return (0, 0, 0, 0)
 
 
+def get_internal_crtc():
+    for crtc in get_modetest_crtcs():
+        if crtc.is_internal:
+            return crtc
+    return None
+
+
+def get_external_crtc(index=0):
+    for crtc in get_modetest_crtcs():
+        if not crtc.is_internal:
+            if index == 0:
+                return crtc
+            index -= 1
+    return None
+
+
 def get_internal_resolution():
-    if has_internal_display():
-        crtcs = get_modetest_crtcs()
-        if len(crtcs) > 0:
-            return crtcs[0].size
+    crtc = get_internal_crtc()
+    if crtc:
+        return crtc.size
     return (-1, -1)
 
 
@@ -789,10 +877,9 @@ def get_external_resolution():
     @return A tuple of (width, height) or None if no external display is
             connected.
     """
-    offset = 1 if has_internal_display() else 0
-    crtcs = get_modetest_crtcs()
-    if len(crtcs) > offset and crtcs[offset].size != (0, 0):
-        return crtcs[offset].size
+    crtc = get_external_crtc()
+    if crtc:
+        return crtc.size
     return None
 
 
@@ -819,19 +906,17 @@ def set_display_output(output_name, enable):
 
 
 # TODO(ihf): Fix this for multiple external connectors.
-def get_external_crtc(index=0):
-    offset = 1 if has_internal_display() else 0
-    crtcs = get_modetest_crtcs()
-    if len(crtcs) > offset + index:
-        return crtcs[offset + index].id
+def get_external_crtc_id(index=0):
+    crtc = get_external_crtc(index)
+    if crtc is not None:
+        return crtc.id
     return -1
 
 
-def get_internal_crtc():
-    if has_internal_display():
-        crtcs = get_modetest_crtcs()
-        if len(crtcs) > 0:
-            return crtcs[0].id
+def get_internal_crtc_id():
+    crtc = get_internal_crtc()
+    if crtc is not None:
+        return crtc.id
     return -1
 
 

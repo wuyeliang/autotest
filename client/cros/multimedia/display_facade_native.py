@@ -400,18 +400,18 @@ class DisplayFacadeNative(object):
         return graphics_utils.get_content_protection(connector)
 
 
-    def get_external_crtc(self):
+    def get_external_crtc_id(self):
         """Gets the external crtc.
 
         @return The id of the external crtc."""
-        return graphics_utils.get_external_crtc()
+        return graphics_utils.get_external_crtc_id()
 
 
-    def get_internal_crtc(self):
+    def get_internal_crtc_id(self):
         """Gets the internal crtc.
 
         @retrun The id of the internal crtc."""
-        return graphics_utils.get_internal_crtc()
+        return graphics_utils.get_internal_crtc_id()
 
 
     def take_internal_screenshot(self, path):
@@ -419,7 +419,7 @@ class DisplayFacadeNative(object):
 
         @param path: path to image file.
         """
-        self.take_screenshot_crtc(path, self.get_internal_crtc())
+        self.take_screenshot_crtc(path, self.get_internal_crtc_id())
 
 
     def take_external_screenshot(self, path):
@@ -427,7 +427,7 @@ class DisplayFacadeNative(object):
 
         @param path: path to image file.
         """
-        self.take_screenshot_crtc(path, self.get_external_crtc())
+        self.take_screenshot_crtc(path, self.get_external_crtc_id())
 
 
     def take_screenshot_crtc(self, path, id):
