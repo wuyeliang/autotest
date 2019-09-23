@@ -61,7 +61,6 @@ CROS_REPAIR_ACTIONS = (
 MOBLAB_VERIFY_DAG = (
     (repair_utils.SshVerifier, 'ssh', ()),
     (cros_repair.ACPowerVerifier, 'power', ('ssh',)),
-    (cros_firmware.FirmwareVersionVerifier, 'rwfw', ('ssh',)),
     (cros_repair.PythonVerifier, 'python', ('ssh',)),
     (repair_utils.LegacyHostVerifier, 'cros', ('ssh',)),
 )
@@ -69,7 +68,7 @@ MOBLAB_VERIFY_DAG = (
 MOBLAB_REPAIR_ACTIONS = (
     (repair_utils.RPMCycleRepair, 'rpm', (), ('ssh', 'power',)),
     (cros_repair.AutoUpdateRepair,
-     'au', ('ssh',), ('power', 'rwfw', 'python', 'cros',)),
+     'au', ('ssh',), ('power', 'python', 'cros',)),
 )
 
 JETSTREAM_VERIFY_DAG = (

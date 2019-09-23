@@ -745,11 +745,9 @@ def create_cros_repair_strategy():
 
 def _moblab_verify_dag():
     """Return the verification DAG for a `MoblabHost`."""
-    FirmwareVersionVerifier = cros_firmware.FirmwareVersionVerifier
     verify_dag = (
         (repair_utils.SshVerifier,        'ssh',     ()),
         (ACPowerVerifier,                 'power',   ('ssh',)),
-        (FirmwareVersionVerifier,         'rwfw',    ('ssh',)),
         (PythonVerifier,                  'python',  ('ssh',)),
         (repair_utils.LegacyHostVerifier, 'cros',    ('ssh',)),
     )
@@ -760,7 +758,7 @@ def _moblab_repair_actions():
     """Return the repair actions for a `MoblabHost`."""
     repair_actions = (
         (repair_utils.RPMCycleRepair, 'rpm', (), ('ssh', 'power',)),
-        (AutoUpdateRepair, 'au', ('ssh',), _CROS_AU_TRIGGERS),
+        (AutoUpdateRepair, 'au', ('ssh',), ('power', 'python', 'cros')),
     )
     return repair_actions
 
