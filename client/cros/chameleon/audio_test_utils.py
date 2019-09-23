@@ -21,7 +21,6 @@ from autotest_lib.client.cros.audio import audio_spec
 from autotest_lib.client.cros.audio import audio_data
 from autotest_lib.client.cros.audio import audio_helper
 from autotest_lib.client.cros.audio import audio_quality_measurement
-from autotest_lib.client.cros.audio import cras_configs
 from autotest_lib.client.cros.chameleon import chameleon_audio_ids
 
 CHAMELEON_AUDIO_IDS_TO_CRAS_NODE_TYPES = {
@@ -807,9 +806,8 @@ def get_internal_mic_node(host):
     board = host.get_board().split(':')[1]
     model = host.get_platform()
     sku = host.host_info_store.get().device_sku
-    num_mics = audio_spec.get_num_internal_microphone(board, model, sku)
 
-    return cras_configs.get_internal_mic_node(board, model, num_mics)
+    return audio_spec.get_internal_mic_node(board, model, sku)
 
 
 def get_plugged_internal_mics(host):
@@ -822,6 +820,5 @@ def get_plugged_internal_mics(host):
     board = host.get_board().split(':')[1]
     model = host.get_platform()
     sku = host.host_info_store.get().device_sku
-    num_mics = audio_spec.get_num_internal_microphone(board, model, sku)
 
-    return cras_configs.get_plugged_internal_mics(board, model, num_mics)
+    return audio_spec.get_plugged_internal_mics(board, model, sku)

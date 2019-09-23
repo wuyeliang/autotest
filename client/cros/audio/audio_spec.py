@@ -94,3 +94,55 @@ def get_num_internal_microphone(board, model, sku):
                 return 2
 
     return 1
+
+INTERNAL_MIC_NODE = {
+        ('nami', 'vayne'): 'FRONT_MIC',
+}
+
+def get_internal_mic_node(board, model, sku):
+    """Return the expected internal microphone node for given board name and
+       model name.
+
+    @param board: board name of the DUT.
+    @param model: model name of the DUT.
+    @param sku: sku number string of the DUT.
+
+    @returns: The name of the expected internal microphone nodes.
+    """
+    if get_num_internal_microphone(board, model, sku) == 2:
+        return 'FRONT_MIC'
+
+    return INTERNAL_MIC_NODE.get((board, model), 'INTERNAL_MIC')
+
+
+INTERNAL_MIC_NODES = {
+        ('nami', 'vayne'): ['FRONT_MIC'],
+}
+
+def get_plugged_internal_mics(board, model, sku):
+    """Return a list of all the plugged internal microphone nodes for given
+       board name and model name.
+
+    @param board: board name of the DUT.
+    @param model: model name of the DUT.
+    @param sku: sku number string of the DUT.
+
+    @returns: A list of all the plugged internal microphone nodes.
+    """
+    if get_num_internal_microphone(board, model, sku) == 2:
+        return ['FRONT_MIC', 'REAR_MIC']
+
+    return INTERNAL_MIC_NODES.get((board, model), ['INTERNAL_MIC'])
+
+HEADPHONE_NODE = {
+    ('sarien'): 'LINEOUT',
+}
+
+def get_headphone_node(board):
+    """Return the expected headphone node for given board name.
+
+    @param board: board name of the DUT.
+
+    @returns: The name of the expected headphone node.
+    """
+    return HEADPHONE_NODE.get((board), 'HEADPHONE')

@@ -9,7 +9,6 @@ from autotest_lib.client.bin import test, utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.audio import alsa_utils
 from autotest_lib.client.cros.audio import audio_spec
-from autotest_lib.client.cros.audio import cras_configs
 from autotest_lib.client.cros.audio import cras_utils
 
 APLAY_FILE = '/dev/zero' # raw data
@@ -114,7 +113,7 @@ class audio_Aplay(test.test):
                 return
 
         if test_headphone:
-            output_node = cras_configs.get_headphone_node(utils.get_board())
+            output_node = audio_spec.get_headphone_node(utils.get_board())
         else:
             output_node = "INTERNAL_SPEAKER"
         logging.debug("Test output device %s", output_node)
