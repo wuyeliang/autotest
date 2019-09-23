@@ -89,20 +89,6 @@ RPC_CATEGORIES = [
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
             },
             {
-                "method_name": "WaitForClient",
-                "passing_args": [ONE_INT_ARG],
-                "failing_args": [NO_ARGS, ONE_STR_ARG],
-                "allow_error_msg":
-                    "'LocalShell' object has no attribute 'wait_for_device'",
-            },
-            {
-                "method_name": "WaitForClientOffline",
-                "passing_args": [ONE_INT_ARG],
-                "failing_args": [NO_ARGS, ONE_STR_ARG],
-                "allow_error_msg":
-                    "'LocalShell' object has no attribute 'wait_for_no_device'",
-            },
-            {
                 "method_name": "DumpLog",
                 "passing_args": [
                     NO_ARGS,

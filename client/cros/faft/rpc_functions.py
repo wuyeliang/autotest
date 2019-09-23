@@ -694,23 +694,6 @@ class SystemServicer(object):
         """
         return True
 
-    def WaitForClient(self, timeout):
-        """Wait for the client to come back online.
-
-        @param timeout: Time in seconds to wait for the client SSH daemon to
-                        come up.
-        @return: True if succeed; otherwise False.
-        """
-        return self._os_if.wait_for_device(timeout)
-
-    def WaitForClientOffline(self, timeout):
-        """Wait for the client to come offline.
-
-        @param timeout: Time in seconds to wait the client to come offline.
-        @return: True if succeed; otherwise False.
-        """
-        return self._os_if.wait_for_no_device(timeout)
-
     def DumpLog(self, remove_log=False):
         """Dump the log file.
 

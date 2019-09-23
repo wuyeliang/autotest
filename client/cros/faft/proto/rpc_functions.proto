@@ -187,12 +187,6 @@ service System {
   rpc IsAvailable
     (SystemIsAvailableRequest)
     returns (SystemIsAvailableResponse);
-  rpc WaitForClient
-    (SystemWaitForClientRequest)
-    returns (SystemWaitForClientResponse);
-  rpc WaitForClientOffline
-    (SystemWaitForClientOfflineRequest)
-    returns (SystemWaitForClientOfflineResponse);
   rpc DumpLog
     (SystemDumpLogRequest)
     returns (SystemDumpLogResponse);
@@ -711,20 +705,6 @@ message RpcSettingsEnableTestModeResponse {}
 message SystemIsAvailableRequest {}
 message SystemIsAvailableResponse {
   bool response = 1;
-}
-
-message SystemWaitForClientRequest {
-  int32 timeout = 1; // seconds
-}
-message SystemWaitForClientResponse {
-  bool success = 1;
-}
-
-message SystemWaitForClientOfflineRequest {
-  int32 timeout = 1; // seconds
-}
-message SystemWaitForClientOfflineResponse {
-  bool success = 1;
 }
 
 message SystemDumpLogRequest {
