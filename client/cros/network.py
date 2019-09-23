@@ -53,6 +53,7 @@ def CheckInterfaceForDestination(host, expected_interface):
             raise error.TestFail('Target server %s uses interface %s'
                                  '(%s expected).' %
                                  (address, interface, expected_interface))
+        return True
 
     # addrinfo records: (family, type, proto, canonname, (addr, port))
     server_addresses = [record[4][0]
