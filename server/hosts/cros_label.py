@@ -317,7 +317,7 @@ class ChameleonConnectionLabel(base_label.StringPrefixLabel):
 
 
     def generate_labels(self, host):
-        return [[chameleon.get_label()] for chameleon in host.chameleon_list]
+        return [chameleon.get_label() for chameleon in host.chameleon_list]
 
 
 class ChameleonPeripheralsLabel(base_label.StringPrefixLabel):
