@@ -31,6 +31,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.server import autotest
 from autotest_lib.server import test
 from autotest_lib.server import utils
+from autotest_lib.server.cros import filesystem_util
 from autotest_lib.server.cros import telemetry_runner
 from autotest_lib.site_utils import test_runner_utils
 from contextlib import contextmanager
@@ -203,6 +204,11 @@ class telemetry_AFDOGenerate(test.test):
                     'This test cannot be run on board %s' % host_board)
 
         self._parse_args(args)
+
+        # Remove write protection on host, as now telemetry code will
+        # try to remove write protection that causes the machine to
+        # reboot and remount during run_benchmark. We want to avoid it.
+        filesystem_util.make_rootfs_writable(self._host)
 
         with self.perf_on_dut():
             if self._minimal_telemetry:
