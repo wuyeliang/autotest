@@ -73,6 +73,7 @@ BORADS_WITH_TWO_INTERNAL_MICS = [
         BoardInfo('coral', 'nasher360', ''),
         BoardInfo('octopus', 'bobba360', '9'),
         BoardInfo('octopus', 'bobba360', '10'),
+        BoardInfo('snappy', 'snappy', '8'),
 ]
 
 def get_num_internal_microphone(board, model, sku):

@@ -2,12 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import logging
 import os
 import time
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.audio import audio_helper
+from autotest_lib.client.cros.audio import audio_spec
 from autotest_lib.client.cros.audio import audio_test_data
 from autotest_lib.client.cros.audio import cmd_utils
 from autotest_lib.client.cros.audio import cras_utils
@@ -42,6 +44,11 @@ class audio_CrasPinnedStream(audio_helper.cras_rms_test):
     def run_once(self):
         """Entry point of this test."""
 
+        # The test requires internal mic as second capture device.
+        if not audio_spec.has_internal_microphone(utils.get_board_type()):
+            logging.info("No internal mic. Skipping the test.")
+            return
+
         # Generate sine raw file that lasts 5 seconds.
         raw_path = os.path.join(self.bindir, '5SEC.raw')
         data_format = dict(
@@ -57,8 +64,11 @@ class audio_CrasPinnedStream(audio_helper.cras_rms_test):
                                               'loopback_recorded.raw')
         internal_mic_recorded_file = os.path.join(self.resultsdir,
                                                   'internal_mic_recorded.raw')
+        node_type = audio_spec.get_internal_mic_node(utils.get_board(),
+                                                     utils.get_platform(),
+                                                     utils.get_sku())
         device_id = int(
-                cras_utils.get_device_id_from_node_type('INTERNAL_MIC', True))
+                cras_utils.get_device_id_from_node_type(node_type, True))
 
         self.wait_for_active_stream_count(0)
         p = cmd_utils.popen(cras_utils.playback_cmd(raw_file.path))

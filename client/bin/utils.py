@@ -2085,6 +2085,19 @@ def get_platform():
     return platform
 
 
+def get_sku():
+    """
+    Get the SKU number.
+
+    @returns SKU number
+    """
+    command = 'mosys platform sku'
+    result = utils.run(command, ignore_status=True)
+    if result.exit_status != 0:
+        return ''
+    return result.stdout.strip()
+
+
 def get_ec_version():
     """Get the ec version as strings.
 
