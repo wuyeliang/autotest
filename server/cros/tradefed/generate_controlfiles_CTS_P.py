@@ -195,7 +195,6 @@ _BVT_ARC = [
 
 _BVT_PERBUILD = [
     'CtsAccountManagerTestCases',
-    'CtsBluetoothTestCases',
     'CtsGraphicsTestCases',
     'CtsJankDeviceTestCases',
     'CtsOpenGLTestCases',
