@@ -18,11 +18,12 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         super(autoupdate_Interruptions, self).cleanup()
 
 
-    def run_once(self, full_payload=True, job_repo_url=None):
+    def run_once(self, full_payload=True, interrupt=None, job_repo_url=None):
         """
         Runs an update with interruptions from the user.
 
         @param full_payload: True for a full payload. False for delta.
+        @param interrupt: The interrupt to perform: [reboot, network, suspend].
         @param job_repo_url: Used for debugging locally. This is used to figure
                              out the current build and the devserver to use.
                              The test will read this from a host argument
@@ -37,7 +38,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         chromeos_version = self._get_chromeos_version()
 
         # Choose a random downloaded progress to interrupt the update.
-        progress = random.uniform(0.1, 0.7)
+        progress = random.uniform(0.1, 0.6)
         logging.info('Progress when we will begin interruptions: %f', progress)
 
         parsed_url = urlparse.urlparse(update_url)
@@ -46,40 +47,23 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         self._run_client_test_and_check_result(
             'autoupdate_LoginStartUpdateLogout', server=server,
             port=parsed_url.port, progress_to_complete=progress)
-        completed = self._get_update_progress()
 
-        # Reboot the DUT during the update.
-        self._host.reboot()
-        self._check_for_update(server=server, port=parsed_url.port)
-        if self._is_update_finished_downloading():
-            raise error.TestError('Reboot interrupt: Update finished '
-                                  'downloading before any more interruptions. '
-                                  'Started interrupting at: %f' % progress)
-        if not self._update_continued_where_it_left_off(completed):
-            raise error.TestFail('The update did not continue where it '
-                                 'left off before rebooting.')
-        completed = self._get_update_progress()
-
-        # Disconnect the network
-        self._disconnect_then_reconnect_network(update_url)
-        if self._is_update_finished_downloading():
-            raise error.TestError('Network interrupt: Update finished '
-                                  'downloading before any more interruptions. '
-                                  'Started interrupting at: %f' % progress)
-        if not self._update_continued_where_it_left_off(completed):
-            raise error.TestFail('The update did not continue where it '
-                                 'left off before disconnecting network.')
-        completed = self._get_update_progress()
-
-        # Suspend / Resume
-        self._suspend_then_resume()
-        if self._is_update_finished_downloading():
-            raise error.TestError('Suspend interrupt: Update finished '
-                                  'downloading before any more interruptions. '
-                                  'Started interrupting at: %f' % progress)
-        if not self._update_continued_where_it_left_off(completed):
-            raise error.TestFail('The update did not continue where it '
-                                 'left off after suspend/resume.')
+        if interrupt is not None:
+            completed = self._get_update_progress()
+            if interrupt is 'reboot':
+                self._host.reboot()
+                self._check_for_update(server=server, port=parsed_url.port)
+            elif interrupt is 'network':
+                self._disconnect_then_reconnect_network(update_url)
+            elif interrupt is 'suspend':
+                self._suspend_then_resume()
+            else:
+                raise error.TestFail('Unknown interrupt type: %s' % interrupt)
+            if self._is_update_engine_idle():
+                raise error.TestFail('The update was IDLE after interrupt.')
+            if not self._update_continued_where_it_left_off(completed):
+                raise error.TestFail('The update did not continue where it '
+                                     'left off after interruption.')
 
         # Add a new user and crash browser.
         self._run_client_test_and_check_result(

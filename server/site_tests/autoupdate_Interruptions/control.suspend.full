@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = "dhaddock, Chromium OS"
-NAME = "autoupdate_Interruptions.full"
+NAME = "autoupdate_Interruptions.suspend.full"
 PURPOSE = "Tests using the chromebook during an update."
 TIME = "MEDIUM"
 TEST_CATEGORY = "Functional"
@@ -11,7 +11,7 @@ TEST_CLASS = "platform"
 TEST_TYPE = "server"
 ATTRIBUTES = "suite:au-perbuild"
 DOC = """
-Tests using the chromebook during an update.
+Tests suspending/resuming the chromebook during an update.
 
 test_that <hostname>.cros autoupdate_Interruptions.full --args="job_repo_url='http://<IP>:<port>/static/<board>-release/RXX-XXXX.X.X/autotest/packages'"
 """
@@ -23,6 +23,6 @@ args_dict = utils.args_to_dict(args)
 def run(machine):
     host = hosts.create_host(machine)
     job.run_test('autoupdate_Interruptions', host=host, full_payload=True,
-                 **args_dict)
+                 interrupt='suspend', **args_dict)
 
 job.parallel_simple(run, machines)
