@@ -28,6 +28,7 @@ suite:arc-cts-instant
 suite:arc-cts-instant-perbuild
 suite:arc-cts-instant-qual
 suite:arc-cts-perbuild
+suite:arc-cts-q
 suite:arc-cts-qual
 suite:arc-cts-stable
 suite:arc-cts-terra
