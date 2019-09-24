@@ -301,13 +301,18 @@ class AtestCmd(object):
         @return : 'atest host statjson' output as parsed json.
         """
         cmd = AtestCmd.statjson_cmd(hostname=hostname)
-        (out, exit_status) = backtick_out_err(cmd)
+        (out, err, exit_status) = capture_all(cmd)
         if exit_status == 0:
-            return json.loads(out.decode('utf-8'))
+            try:
+                return json.loads(out.decode('utf-8'))
+            except ValueError:
+                sys.stderr.write(out)
+                sys.stderr.write("\n\n")
+                return None
         else:
             if exit_status:
-                if "Failed to stat:" in out:
-                    assert "Unknown host" in out
+                if "Failed to stat:" in err:
+                    assert "Unknown host" in err
                 return None
             else:
                 assert "unexpected failure"
@@ -453,8 +458,15 @@ def backtick(*args, **kwargs):
     return (output, exit_status)
 
 
-def backtick_out_err(*args, **kwargs):
-    return backtick(*args, stderr=subprocess.STDOUT, **kwargs)
+def capture_all(*args, **kwargs):
+    proc = subprocess.Popen(
+        *args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        **kwargs
+    )
+    out, err = proc.communicate()
+    return (out, err, proc.returncode)
 
 
 class SkylabCmd(object):
@@ -519,12 +531,12 @@ class SkylabCmd(object):
             cmd = list(SkylabCmd.ADD_MANY_DUTS_CMD) + paths
             print("log command")
             stderr_log(cmd)
-            print("backtick_out_err")
+            print("capture_all")
             # ignore cases where the hostname doesn't exist
-            (output, err) = backtick_out_err(cmd)
-            if err:
-                if "Failed to stat:" in output:
-                    assert "Unknown host" in output
+            (out, err, exit_status) = capture_all(cmd)
+            if exit_status != 0:
+                if "Failed to stat:" in err:
+                    assert "Unknown host" in err
                     # then do nothing
 
             # shutil.rmtree(td, ignore_errors=True)
