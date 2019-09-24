@@ -645,11 +645,12 @@ class Migration(object):
                         continue
                     moved.add(hostname)
                     with_drone.add(hostname)
-            out = AddToSkylabInventoryAndDroneStatus(
-                complete=with_drone,
-                without_drone=(moved - with_drone),
-                not_started=((all_hosts - moved) - with_drone),
-            )
+
+        out = AddToSkylabInventoryAndDroneStatus(
+            complete=with_drone,
+            without_drone=(moved - with_drone),
+            not_started=((all_hosts - moved) - with_drone),
+        )
         stderr_log('end add hostnames to inventory', time.time(), _humantime())
         return out
 
