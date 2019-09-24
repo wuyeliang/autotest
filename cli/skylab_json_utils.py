@@ -45,7 +45,8 @@ def _normalize_pools(l):
             out["self_serve_pools"].append(pool)
     #TODO(gregorynisbet): reject empty pools too.
     if len(out["criticalPools"]) > 1:
-        raise ValueError("multiple critical pools %s" % pools)
+        print("multiple critical pools %s" % pools)
+        out["criticalPools"] = ["DUT_POOL_SUITES"]
     return out
 
 
