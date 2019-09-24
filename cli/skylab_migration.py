@@ -651,6 +651,7 @@ class Migration(object):
         for hostname in hostnames:
             if hostname not in moved:
                 skylab_dut_descr = AtestCmd.statjson(hostname=hostname)
+                stderr_log("processing hostname", hostname)
                 status = SkylabCmd.add_one_dut(add_dut_content=skylab_dut_descr)
                 if status.exit_code != 0:
                     continue
