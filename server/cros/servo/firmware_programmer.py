@@ -20,7 +20,7 @@ import time
 import xml.etree.ElementTree
 
 from autotest_lib.client.common_lib import error
-from autotest_lib.server.cros.faft.config.config import Config as FAFTConfig
+from autotest_lib.server.cros.faft.utils.config import Config as FAFTConfig
 
 
 # Number of seconds for program EC/BIOS to time out.

@@ -9,7 +9,7 @@ from autotest_lib.client.common_lib import enum, error
 from autotest_lib.server import test
 from autotest_lib.server.cros import servo_keyboard_utils
 from autotest_lib.server.cros.dark_resume_utils import DarkResumeUtils
-from autotest_lib.server.cros.faft.config.config import Config as FAFTConfig
+from autotest_lib.server.cros.faft.utils.config import Config as FAFTConfig
 from autotest_lib.server.cros.servo import chrome_ec
 
 

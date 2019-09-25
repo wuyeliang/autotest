@@ -1,0 +1,12 @@
+{
+    "platform": "snow",
+    "chrome_ec": true,
+    "ec_capability": [
+        "battery",
+        "keyboard",
+        "arm"
+    ],
+    "ec_boot_to_console": 0.4,
+    "ec_has_powerbtn_cmd": false,
+    "has_eventlog": false
+}

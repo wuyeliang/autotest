@@ -1,0 +1,15 @@
+{
+    "platform": "kukui",
+    "has_keyboard": false,
+    "chrome_ec": true,
+    "ec_capability": [
+        "arm",
+        "battery",
+        "charging",
+        "lid"
+    ],
+    "mode_switcher_type": "tablet_detachable_switcher",
+    "ec_reboot_to_g3_delay": 10,
+    "usbc_input_voltage_limit": 12,
+    "charger_profile_override": true
+}

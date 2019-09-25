@@ -1,0 +1,13 @@
+{
+    "platform": "ryu",
+    "mode_switcher_type": "ryu_switcher",
+    "has_lid": false,
+    "has_keyboard": false,
+    "chrome_ec": true,
+    "ec_capability": [
+        "arm",
+        "battery",
+        "charging"
+    ],
+    "smm_store": false
+}

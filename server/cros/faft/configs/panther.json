@@ -1,0 +1,8 @@
+{
+    "platform": "panther",
+    "has_lid": false,
+    "has_keyboard": false,
+    "rec_button_dev_switch": true,
+    "spi_voltage": "pp3300",
+    "smm_store": false
+}

@@ -1,0 +1,13 @@
+{
+    "platform": "spring",
+    "software_sync_update": 6,
+    "chrome_ec": true,
+    "ec_capability": [
+        "battery",
+        "keyboard",
+        "arm",
+        "lid"
+    ],
+    "ec_has_powerbtn_cmd": false,
+    "has_eventlog": false
+}
