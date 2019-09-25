@@ -80,10 +80,11 @@ class BaseServoHost(ssh_host.SSHHost):
     def get_board(self):
         """Determine the board for this servo host. E.g. fizz-labstation
 
-        @returns a string representing this labstation's board.
+        @returns a string representing this labstation's board or None if
+         target host is not using a ChromeOS image(e.g. test in chroot).
         """
-        return lsbrelease_utils.get_current_board(
-            lsb_release_content=self.run('cat /etc/lsb-release').stdout)
+        output = self.run('cat /etc/lsb-release', ignore_status=True).stdout
+        return lsbrelease_utils.get_current_board(lsb_release_content=output)
 
 
     def is_labstation(self):
