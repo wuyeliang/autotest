@@ -631,8 +631,11 @@ class Migration(object):
             # inventory or query Skylab in some way to check that the
             # transfer was successful
             SkylabCmd.add_many_duts(dut_contents=dut_contents)
-            moved.update(good_hostnames)
-            with_drone.update(good_hostnames)
+            return AddToSkylabInventoryAndDroneStatus(
+                complete=hostnames,
+                without_drone=set(),
+                not_started=set(),
+            )
 
         else:
             stderr_log("slow add path", time.time(), _humantime()) 
