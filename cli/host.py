@@ -24,6 +24,7 @@ import json
 import random
 import re
 import socket
+import sys
 import time
 
 from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, skylab_migration
@@ -1731,3 +1732,36 @@ class host_skylab_rollback(action_common.atest_list, host):
 
     def output(self, result):
         print result
+
+
+class host_skylab_verify(action_common.atest_list, host):
+    usage_action = "skylab_verify"
+
+    def __init__(self):
+        super(host_skylab_verify, self).__init__()
+
+    def parse(self):
+        (options, leftover) = super(host_skylab_verify, self).parse()
+        return (options, leftover)
+
+    def execute(self):
+        if self.hosts:
+            hostnames = self.hosts
+        else:
+            hostnames = _host_skylab_migrate_get_hostnames(
+                obj=self,
+                class_=host_skylab_migrate,
+                model=self.model,
+                board=self.board,
+                pool=self.pool,
+            )
+        if not hostnames:
+            return {'error': 'no hosts to migrate'}
+        res = skylab_migration.hostname_migrated_status(
+            hostnames=hostnames,
+        )
+        return res
+
+
+    def output(self, result):
+        json.dump(result, sys.stdout, indent=4)

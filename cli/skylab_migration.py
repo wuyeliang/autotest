@@ -89,6 +89,59 @@ def call_with_tempfile(cmd, lines):
                 output=[x.decode('utf-8') for x in e.output.splitlines()])
 
 
+
+# accepts: string
+# returns: string but with exactly one trailing newline
+def _one_trailing_newline(s):
+    s = s.rstrip("\n")
+    return s + "\n"
+
+# accepts: shell command, rest of args
+# returns: exit_status, stdout, stderr
+def shell_capture_all(cmd, *rest):
+    shellcmd = ("bash", "-c", cmd, "bash",) + rest
+    pr = subprocess.Popen(
+        shellcmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = pr.communicate()
+    return pr.returncode, stdout, stderr
+
+
+# accepts: shell command, rest of args
+# returns: exit_status, stdout, stderr
+def shell_capture_all_no_stdin(cmd, *rest):
+    with open(os.devnull) as null:
+        shellcmd = ("bash", "-c", cmd, "bash",) + rest
+        pr = subprocess.Popen(
+            shellcmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=null,
+        )
+        stdout, stderr = pr.communicate()
+        return pr.returncode, stdout, stderr
+
+
+# accepts: shell command, lines of temporary file
+# returns: exit_status, stdout, stderr
+def shell_capture_all_with_tempfile(cmd, lines):
+    exit_status = stdout = stderr = None
+    if lines in (bytes, unicode):
+        raise TypeError("lines must not be text-like (%s)" % type(lines))
+    filename = None
+    with tempfile.NamedTemporaryFile(delete=False) as fh:
+        filename = fh.name
+        for line in lines:
+            fh.write(_one_trailing_newline(line))
+    try:
+        exit_status, stdout, stderr = shell_capture_all_no_stdin(cmd, filename)
+    finally:
+        os.unlink(filename)
+    return exit_status, stdout, stderr
+
+
 CommandOutput = collections.namedtuple('CommandOutput', ['output', 'exit_code'])
 
 
@@ -467,6 +520,117 @@ def capture_all(*args, **kwargs):
     )
     out, err = proc.communicate()
     return (out, err, proc.returncode)
+
+
+
+# accepts: iterable of hostnames
+# returns: {
+#     good: hostnames in autotest
+#     bad:  hostnames not in autotest
+# }
+def autotest_status(hostnames):
+    os.environ["ATEST"] = _ATEST_EXE
+    status, out, err = shell_capture_all_with_tempfile('"${ATEST}" host list --hostnames-only --mlist "$1"', hostnames)
+    good = []
+    bad = []
+    # process the bad lines
+    for errline in err:
+        # skip preamble
+        if errline.startswith("Unknown host"):
+            continue
+        bad.append(errline.strip())
+    # process the good lines
+    for goodline in good:
+        good.append(good.strip())
+    return {
+        "good": good,
+        "bad": bad
+    }
+
+# accepts: iterable of hostnames
+# returns: {
+#     good: hostnames in skylab
+#     bad:  hostnames not in skylab
+# }
+def skylab_status(hostnames):
+    os.environ["SKYLAB"] = _SKYLAB_EXE
+    good = []
+    bad = []
+    for hostname in hostnames:
+        os.environ["HOSTNAME"] = hostname
+        status, out, err = shell_capture_all_no_stdin('"${SKYLAB}" dut-info "${HOSTNAME}"')
+        # TODO(gregorynisbet): make error checking more robust here to see why exactly
+        # we couldn't get info on the DUT.
+        if status == 0:
+            good.append(hostname)
+        else:
+            bad.append(hostname)
+    return {
+        "good": good,
+        "bad": bad,
+    }
+        
+        
+
+# accepts: iterable of hostnames
+# returns: {
+#        good:                       hostnames with no issues
+#        not_renamed:                hostnames in skylab but not renamed in autotest
+#        not_in_skylab:              hostnames that are not in skylab
+#        not_renamed_not_in_skylab:  hostnames that aren't renamed or in skylab
+# }
+def hostname_migrated_status(hostnames):
+    migrated_map = {}
+    for hostname in hostnames:
+        migrated_map[hostname + "-migrated-do-not-use"] = hostname
+
+    atest_out = autotest_status(hostnames)
+    atest_out_good = set(atest_out["good"])
+    atest_out_bad = set(atest_out["bad"])
+
+    skylab_out = skylab_status(hostnames)
+    skylab_out_good = set(skylab_out["good"])
+    skylab_out_bad = set(skylab_out["bad"])
+
+    atest_renamed_out = autotest_status(list(migrated_map))
+    atest_renamed_out_good = set(atest_renamed_out["good"])
+    atest_renamed_out_bad = set(atest_renamed_out["bad"])
+
+    good = []
+    not_renamed = []
+    not_in_skylab = []
+    not_renamed_not_in_skylab = []
+
+    for hostname in hostnames:
+        # hostname flags is a string listing the undesirable properties
+        # associated with that particular hostname
+        # A -- host has bad autotest status, either not renamed or old hostname present
+        # S -- not migrated to skylab
+        hostname_flags = set()
+        if hostname in atest_out_good:
+            hostname.add("A")
+        if hostname in atest_renamed_out_bad:
+            hostname.add("A")
+        if hostname in skylab_out_bad:
+            hostname.add("S")
+
+        if hostname_flags == set():
+            good.append(hostname)
+        elif hostname_flags == {"A"}:
+            not_renamed.append(hostname)
+        elif hostname_flags == {"S"}:
+            not_in_skylab.append(hostname)
+        elif hostname_flags == {"A", "S"}:
+            not_renamed_not_in_skylab.append(hostname)
+        else:
+            assert False, ("impossible, unexpected set %s" % hostname_flags)
+
+    return {
+        "good": good,
+        "not_renamed": not_renamed,
+        "not_in_skylab": not_in_skylab,
+        "not_renamed_not_in_skylab": not_renamed_not_in_skylab,
+    }
 
 
 class SkylabCmd(object):
