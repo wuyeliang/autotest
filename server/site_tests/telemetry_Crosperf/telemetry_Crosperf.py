@@ -7,18 +7,18 @@ from __future__ import print_function
 import logging
 import os
 import re
+import shlex
 import shutil
-import StringIO
 
 from contextlib import contextmanager
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server import test
 from autotest_lib.server import utils
+from autotest_lib.server.cros import telemetry_runner
 from autotest_lib.site_utils import test_runner_utils
 
 
-TELEMETRY_TIMEOUT_MINS = 60
 WAIT_FOR_CMD_TIMEOUT_SECS = 60
 DUT_COMMON_SSH_OPTIONS = ['-o StrictHostKeyChecking=no',
                           '-o UserKnownHostsFile=/dev/null',
@@ -30,12 +30,8 @@ DUT_COMMON_SSH_OPTIONS = ['-o StrictHostKeyChecking=no',
                           '-o Protocol=2']
 DUT_SCP_OPTIONS = ' '.join(DUT_COMMON_SSH_OPTIONS)
 
-CHROME_SRC_ROOT = '/var/cache/chromeos-cache/distfiles/target/'
-CLIENT_CHROME_ROOT = '/usr/local/telemetry/src'
-RUN_BENCHMARK = 'tools/perf/run_benchmark'
-
 RSA_KEY = '-i %s' % test_runner_utils.TEST_KEY_PATH
-DUT_CHROME_RESULTS_DIR = '/usr/local/telemetry/src/tools/perf'
+DUT_CHROME_RESULTS_DIR = '/usr/local/telemetry/src'
 
 TURBOSTAT_LOG = 'turbostat.log'
 CPUSTATS_LOG = 'cpustats.log'
@@ -57,66 +53,6 @@ RESULTS_REGEX = re.compile(r'(?P<IMPORTANT>\*)?RESULT '
 HISTOGRAM_REGEX = re.compile(r'(?P<IMPORTANT>\*)?HISTOGRAM '
                              r'(?P<GRAPH>[^:]*): (?P<TRACE>[^=]*)= '
                              r'(?P<VALUE_JSON>{.*})(?P<UNITS>.+)?')
-
-
-CHARTJSON_ALLOWLIST = ('loading.desktop')
-
-def _find_chrome_root_dir():
-  # Look for chrome source root, either externally mounted, or inside
-  # the chroot.  Prefer chrome-src-internal source tree to chrome-src.
-  sources_list = ('chrome-src-internal', 'chrome-src')
-
-  dir_list = [os.path.join(CHROME_SRC_ROOT, x) for x in sources_list]
-  if 'CHROME_ROOT' in os.environ:
-    dir_list.insert(0, os.environ['CHROME_ROOT'])
-
-  for dir in dir_list:
-    if os.path.exists(dir):
-      chrome_root_dir = dir
-      break
-  else:
-    raise error.TestError('Chrome source directory not found.')
-
-  logging.info('Using Chrome source tree at %s', chrome_root_dir)
-  return os.path.join(chrome_root_dir, 'src')
-
-
-def _ensure_deps(dut, test_name):
-  """Ensure the dependencies are locally available on DUT.
-
-  @param dut: The autotest host object representing DUT.
-  @param test_name: Name of the telemetry test.
-  """
-  # Get DEPs using host's telemetry.
-  chrome_root_dir = _find_chrome_root_dir()
-  format_string = ('python %s/tools/perf/fetch_benchmark_deps.py %s')
-  command = format_string % (chrome_root_dir, test_name)
-  logging.info('Getting DEPs: %s', command)
-  stdout = StringIO.StringIO()
-  stderr = StringIO.StringIO()
-  try:
-    utils.run(command, stdout_tee=stdout, stderr_tee=stderr)
-
-  except error.CmdError:
-    logging.debug('Error occurred getting DEPs: %s\n %s\n',
-                  stdout.getvalue(), stderr.getvalue())
-    raise error.TestFail('Error occurred while getting DEPs.')
-
-  # Download DEPs to DUT.
-  # send_file() relies on rsync over ssh. Couldn't be better.
-  stdout_str = stdout.getvalue()
-  stdout.close()
-  stderr.close()
-  for dep in stdout_str.split():
-    src = os.path.join(chrome_root_dir, dep)
-    dst = os.path.join(CLIENT_CHROME_ROOT, dep)
-    if not os.path.isfile(src):
-      raise error.TestFail('Error occurred while saving DEPs.')
-    logging.info('Copying: %s -> %s', src, dst)
-    try:
-      dut.send_file(src, dst)
-    except:
-      raise error.TestFail('Error occurred while sending DEPs to dut.\n')
 
 
 class telemetry_Crosperf(test.test):
@@ -313,43 +249,25 @@ class telemetry_Crosperf(test.test):
     test_args = args.get('test_args', '')
     profiler_args = args.get('profiler_args', '')
 
-    output_format = '--output-format=histograms'
-    if test_name in CHARTJSON_ALLOWLIST:
-      output_format += ' --output-format=chartjson'
-    # Decide whether the test will run locally or by a remote server.
-    if args.get('run_local', 'false').lower() == 'true':
-      # The telemetry scripts will run on DUT.
-      _ensure_deps(dut, test_name)
-      format_string = ('python %s --browser=system '
-                       '%s %s %s')
-      command = format_string % (
-          os.path.join(
-              CLIENT_CHROME_ROOT, RUN_BENCHMARK),
-          output_format, test_args, test_name)
-      runner = dut
-    else:
-      # The telemetry scripts will run on server.
-      format_string = ('python %s --browser=cros-chrome --remote=%s '
-                       '--output-dir="%s" '
-                       '%s %s %s')
-      command = format_string % (os.path.join(_find_chrome_root_dir(),
-                                              RUN_BENCHMARK), client_ip,
-                                 self.resultsdir,
-                                 output_format, test_args, test_name)
-      runner = utils
+    output_format = 'histograms'
+
+    # If run_local=true, telemetry benchmark will run on DUT, otherwise
+    # run remotely from host.
+    telemetry_on_dut = args.get('run_local').lower() == 'true'
+
+    # Init TelemetryRunner, do not use devserver by setting local=True.
+    tr = telemetry_runner.TelemetryRunner(
+        dut, local=True, telemetry_on_dut=telemetry_on_dut)
 
     # Run the test. And collect profile if needed.
-    stdout = StringIO.StringIO()
-    stderr = StringIO.StringIO()
     try:
       # If profiler_args specified, we want to add several more options
       # to the command so that run_benchmark will collect system wide
       # profiles.
       if profiler_args:
-        command += ' --interval-profiling-period=story_run' \
-            ' --interval-profiling-target=system_wide' \
-            ' --interval-profiler-options="%s"' \
-            % (profiler_args)
+        profiler_opts = ['--interval-profiling-period=story_run',
+                         '--interval-profiling-target=system_wide',
+                         '--interval-profiler-options="%s"' % profiler_args]
 
       run_cpuinfo = self.run_cpustats_in_background if dut \
           else self.no_background
@@ -366,58 +284,39 @@ class telemetry_Crosperf(test.test):
           run_turbostat(dut, TURBOSTAT_LOG) as _turbo_cm, \
           run_top(dut, TOP_LOG, top_interval) as _top_cm:
 
-        logging.info('CMD: %s', command)
-        result = runner.run(
-            command,
-            stdout_tee=stdout,
-            stderr_tee=stderr,
-            timeout=TELEMETRY_TIMEOUT_MINS * 60)
-        exit_code = result.exit_status
-        if exit_code != 0:
-          raise RuntimeError
+        arguments = []
+        if test_args:
+            arguments.extend(shlex.split(test_args))
+        if profiler_args:
+            arguments.extend(profiler_opts)
+        logging.debug('Telemetry Arguments: %s', arguments)
+        result = tr.run_telemetry_benchmark(test_name, None,
+                                            *arguments,
+                                            ex_output_format=output_format,
+                                            results_dir=self.resultsdir,
+                                            no_verbose=True)
+        logging.info('Telemetry completed with exit status: %s.',
+                     result.status)
+        logging.info('output: %s\n', result.output)
 
-    except RuntimeError:
-      logging.debug('Telemetry test failed.')
-      raise error.TestFail('Test failed while executing telemetry test.')
-    except error.CmdError as e:
-      logging.debug('Error occurred executing telemetry.')
-      exit_code = e.result_obj.exit_status
-      raise error.TestFail('An error occurred while executing '
-                           'telemetry test.')
+    except (error.TestFail, error.TestWarn):
+      logging.debug('Test did not succeed while executing telemetry test.')
+      raise
     except:
-      logging.debug('Telemetry aborted with unknown error.')
-      exit_code = -1
+      logging.debug('Unexpected failure on telemetry_Crosperf.')
       raise
     finally:
-      stdout_str = stdout.getvalue()
-      stderr_str = stderr.getvalue()
-      stdout.close()
-      stderr.close()
-      logging.info(
-          'Telemetry completed with exit code: %d.'
-          '\nstdout:%s\nstderr:%s', exit_code, stdout_str, stderr_str)
-
       if dut:
         self.run_cpuinfo(dut, CPUINFO_LOG)
 
-    # Copy the results-chart.json and histograms.json file into
-    # the test_that results directory, if necessary.
-    if args.get('run_local', 'false').lower() == 'true':
-      if test_name in CHARTJSON_ALLOWLIST:
-        result = self.scp_telemetry_results(
-            client_ip, dut,
-            os.path.join(DUT_CHROME_RESULTS_DIR, 'results-chart.json'),
-            self.resultsdir)
+    # Copy the histograms.json file into the test_that results directory,
+    # if necessary.
+    if telemetry_on_dut:
       result = self.scp_telemetry_results(
           client_ip, dut,
           os.path.join(DUT_CHROME_RESULTS_DIR, 'histograms.json'),
           self.resultsdir)
     else:
-      if test_name in CHARTJSON_ALLOWLIST:
-        filepath = os.path.join(self.resultsdir, 'results-chart.json')
-        if not os.path.exists(filepath):
-          exit_code = -1
-          raise RuntimeError('Missing results file: %s' % filepath)
       filepath = os.path.join(self.resultsdir, 'histograms.json')
       if not os.path.exists(filepath):
         exit_code = -1
