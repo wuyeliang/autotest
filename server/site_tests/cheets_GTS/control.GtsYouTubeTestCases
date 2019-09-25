@@ -21,6 +21,7 @@ def run_GTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=2,
+        needs_push_media=True,
         tag='GtsYouTubeTestCases',
         test_name='cheets_GTS.GtsYouTubeTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsYouTubeTestCases', '--ignore-business-logic-failure'],

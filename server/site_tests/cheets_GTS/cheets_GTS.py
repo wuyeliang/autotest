@@ -25,6 +25,9 @@ _GTS_TIMEOUT_SECONDS = 3600
 _PARTNER_GTS_BUCKET = 'gs://chromeos-partner-gts/'
 _PARTNER_GTS_LOCATION = _PARTNER_GTS_BUCKET + 'gts-7_r2-5805161.zip'
 _PARTNER_GTS_AUTHKEY = _PARTNER_GTS_BUCKET + 'gts-arc.json'
+_GTS_MEDIA_URI = ('https://storage.googleapis.com/youtube-test-media/gts/' +
+    'GtsYouTubeTestCases-media-1.2.zip')
+_GTS_MEDIA_LOCALPATH = '/tmp/android-gts-media/GtsYouTubeTestCases'
 
 
 class cheets_GTS(tradefed_test.TradefedTest):
@@ -137,7 +140,9 @@ class cheets_GTS(tradefed_test.TradefedTest):
                 timeout=timeout,
                 target_module=target_module,
                 target_plan=target_plan,
-                needs_push_media=needs_push_media,
+                media_asset=tradefed_test.MediaAsset(
+                    _GTS_MEDIA_URI if needs_push_media else None,
+                    _GTS_MEDIA_LOCALPATH),
                 login_precondition_commands=login_precondition_commands,
                 precondition_commands=precondition_commands)
         finally:

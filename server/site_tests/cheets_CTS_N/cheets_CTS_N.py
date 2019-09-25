@@ -30,8 +30,9 @@ _DL_CTS = 'https://dl.google.com/dl/android/cts/'
 _CTS_URI = {
     'arm': _DL_CTS + 'android-cts-7.1_r28-linux_x86-arm.zip',
     'x86': _DL_CTS + 'android-cts-7.1_r28-linux_x86-x86.zip',
-    'media': _DL_CTS + 'android-cts-media-1.4.zip',
 }
+_CTS_MEDIA_URI = _DL_CTS + 'android-cts-media-1.4.zip'
+_CTS_MEDIA_LOCALPATH = '/tmp/android-cts-media'
 
 
 class cheets_CTS_N(tradefed_test.TradefedTest):
@@ -211,7 +212,9 @@ class cheets_CTS_N(tradefed_test.TradefedTest):
             timeout=timeout,
             target_module=target_module,
             target_plan=target_plan,
-            needs_push_media=needs_push_media,
+            media_asset=tradefed_test.MediaAsset(
+                _CTS_MEDIA_URI if needs_push_media else None,
+                _CTS_MEDIA_LOCALPATH),
             enable_default_apps=enable_default_apps,
             bundle=bundle,
             extra_artifacts=extra_artifacts,

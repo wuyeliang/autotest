@@ -93,6 +93,7 @@ def run_GTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=gts_retry,
+        needs_push_media=True,
         tag=tag,
         test_name=NAME,
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',

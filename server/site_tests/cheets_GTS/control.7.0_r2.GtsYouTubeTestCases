@@ -20,6 +20,7 @@ def run_GTS(machine):
         'cheets_GTS',
         hosts=host_list,
         iterations=1,
+        needs_push_media=True,
         tag='7.0_r2.GtsYouTubeTestCases',
         test_name='cheets_GTS.7.0_r2.GtsYouTubeTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',

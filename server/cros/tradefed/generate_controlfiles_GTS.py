@@ -58,6 +58,9 @@ _CONTROLFILE_TEMPLATE = Template(
     {%- if max_retries != None %}
             max_retry={{max_retries}},
     {%- endif %}
+    {%- if needs_push_media %}
+            needs_push_media=True,
+    {%- endif %}
             tag='{{tag}}',
             test_name='{{name}}',
     {%- if authkey %}
@@ -139,8 +142,6 @@ _BVT_PERBUILD = [
 
 # Modules that are known to download and/or push media file assets.
 _MEDIA_MODULES = ['GtsYouTubeTestCases']
-# TODO(b/128874657): Wire _NEEDS_PUSH_MEDIA to the control file and the test
-# code, so that the download can be cached and shared among test runs.
 _NEEDS_PUSH_MEDIA = _MEDIA_MODULES + [_ALL]
 
 # Run `eject` for (and only for) each device with RM=1 in lsblk output.
@@ -604,6 +605,13 @@ def calculate_timeout(modules, suites, is_public):
     return timeout
 
 
+def needs_push_media(modules):
+    """Oracle to determine if to push several GB of media files to DUT."""
+    if modules.intersection(set(_NEEDS_PUSH_MEDIA)):
+        return True
+    return False
+
+
 def get_controlfile_content(combined,
                             modules,
                             revision,
@@ -644,6 +652,7 @@ def get_controlfile_content(combined,
         max_result_size_kb=get_max_result_size_kb(modules, is_public),
         revision=revision,
         build=build,
+        needs_push_media=needs_push_media(modules),
         tag=tag,
         uri=uri,
         DOC=get_doc(modules, is_public),

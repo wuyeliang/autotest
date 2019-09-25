@@ -21,6 +21,7 @@ def run_GTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
+        needs_push_media=True,
         tag='7.0_r2.all.GtsAccountsHostTestCases_-_GtsYouTubeTestCases',
         test_name='cheets_GTS.7.0_r2.all.GtsAccountsHostTestCases_-_GtsYouTubeTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
