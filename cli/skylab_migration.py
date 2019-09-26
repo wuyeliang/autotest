@@ -320,7 +320,7 @@ class AtestCmd(object):
         already_migrated_hostnames = set()
 
         for hostname in hostnames:
-            if hostnames.endswith("-migrated-do-not-use"):
+            if hostname.endswith("-migrated-do-not-use"):
                 already_migrated_hostnames.add(hostname)
             else:
                 to_migrate_hostnames.add(hostname)
