@@ -480,6 +480,8 @@ class host_statjson(host_stat):
             if self.verify:
                 validate_required_fields_for_skylab(skylab_json)
             if self.textpb:
+                # need leading "duts" preamble
+                print "duts ",
                 print_textpb(skylab_json)
             else:
                 print json.dumps(skylab_json, indent=4, sort_keys=True)

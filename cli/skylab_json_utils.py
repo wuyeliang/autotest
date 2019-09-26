@@ -338,6 +338,21 @@ def print_textpb_keyval(key, val, level=0):
         print_textpb(val, level=level)
 
 
+# accepts: string possibly in camelCase
+# returns: string in snake_case
+def to_snake_case(str):
+    out = []
+    for i, x in enumerate(str):
+        if i == 0:
+            out.append(x.lower())
+            continue
+        if x.isupper():
+            out.append("_")
+            out.append(x.lower())
+    return "".join(out)
+            
+
+
 # accepts: obj, indentation level
 # returns: nothing
 # emits: textual protobuf format, best effort
@@ -346,8 +361,10 @@ def print_textpb(obj, level=0):
     # an empty string seems like a good choice
     if obj is None:
         print((level * " ") + '""')
-    elif isinstance(obj, (int, long, float, bytes, unicode, bool)):
+    elif isinstance(obj, (int, long, float, bool)):
         print((level * " ") + json.dumps(obj))
+    elif isinstance(obj, (bytes, unicode)):
+        print((level * " ") + to_snake_case(json.dumps(obj)))
     elif isinstance(obj, dict):
         print((level * " ") + "{")
         for key in obj:
