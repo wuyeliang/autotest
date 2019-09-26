@@ -87,10 +87,5 @@ class camera_V4L2(test.test):
         if self.test_list:
             cmd.append("--test_list=%s" % self.test_list)
 
-        # snappy old SKU cannot meet the requirement. Skip the test to avoid
-        # alarm. Please see http://crbug.com/737874 for detail.
-        if self.dut_board == 'snappy' and self.test_list == 'default':
-            cmd.append("--gtest_filter=-*MaximumSupportedResolution*")
-
         logging.info("Running %s", cmd)
         stdout = utils.system_output(cmd, retain_output=True)
