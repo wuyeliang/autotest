@@ -378,7 +378,7 @@ def print_textpb(obj, level=0):
     if obj is None:
         writeln((level * " "), '""')
     elif isinstance(obj, (bytes, unicode)) and obj.startswith("[IGNORED]"):
-        writeln((level * " "), uuid.uuid4())
+        writeln((level * " "), str(uuid.uuid4()))
     elif isinstance(obj, (int, long, float, bool)):
         writeln((level * " "), json.dumps(obj))
     elif isinstance(obj, (bytes, unicode)):
