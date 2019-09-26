@@ -30,7 +30,7 @@ import time
 from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, skylab_migration
 from autotest_lib.cli import fair_partition
 from autotest_lib.client.bin import utils as bin_utils
-from autotest_lib.cli.skylab_json_utils import process_labels
+from autotest_lib.cli.skylab_json_utils import process_labels, print_textpb
 from autotest_lib.cli import skylab_rollback
 from autotest_lib.cli.skylab_json_utils import process_labels, validate_required_fields_for_skylab
 from autotest_lib.client.common_lib import error, host_protections
@@ -424,10 +424,16 @@ class host_statjson(host_stat):
                                help='Verify that required fields are provided',
                                action='store_true',
                                dest='verify')
+        self.parse.add_option('--textpb',
+                               default=False,
+                               help='Print in best effort textpb format',
+                               action='store_true',
+                               dest='textpb')
 
     def parse(self):
         (options, leftover) = super(host_statjson, self).parse()
         self.verify = options.verify
+        self.textpb = options.textpb
         return (options, leftover)
 
     def output(self, results):
@@ -473,7 +479,10 @@ class host_statjson(host_stat):
             # has all the required fields for skylab.
             if self.verify:
                 validate_required_fields_for_skylab(skylab_json)
-            print json.dumps(skylab_json, indent=4, sort_keys=True)
+            if self.textpb:
+                print_textpb(skylab_json)
+            else:
+                print json.dumps(skylab_json, indent=4, sort_keys=True)
 
 
 class host_jobs(host):

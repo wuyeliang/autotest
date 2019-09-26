@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import print_function
 import sys
 
 # Source of truth is DUTPool enum at
@@ -319,3 +320,37 @@ def process_labels(labels, platform):
         del out["self_serve_pools"]
 
     return out
+
+
+# accepts: key, value, indentation level
+# returns: nothing
+# emits: textual protobuf format, best effort
+def print_textpb_keyval(key, val, level=0):
+    # repeated field, repeat the key in every stanza
+    if isinstance(val, (list, tuple)):
+        for x in val:
+            # TODO(gregorynisbet): nested lists?
+            print_textpb_keyval(key, x, level=level)
+    # anything else, including a dictionary, print it normally
+    else:
+        print((level * " ") + key + ":", end="", level=level)
+        print_textpb(val, level=level)
+
+
+# accepts: obj, indentation level
+# returns: nothing
+# emits: textual protobuf format, best effort
+def print_textpb(obj, level=0):
+    if isinstance(obj, (int, long, float)):
+        print((level * " ") + obj)
+    elif isinstance(obj, (type(u""), type(b""))):
+        print((level * " ") + repr(obj))
+    elif isinstance(obj, dict):
+        print((level * " ") + "{")
+        for key in obj:
+            print_textpb_keyval(key=key, val=obj[key], level=(2 + level))
+        print((level * " ") + "}")
+    elif isinstance(obj, (list, tuple)):
+        raise RuntimeError("No sequences on toplevel")
+    else:
+        raise RuntimeError("Unsupported type (%s)" % type(obj))
