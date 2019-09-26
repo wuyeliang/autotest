@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 import sys
+import json
 
 # Source of truth is DUTPool enum at
 # https://cs.chromium.org/chromium/infra/go/src/infra/libs/skylab/inventory/device.proto
@@ -333,7 +334,7 @@ def print_textpb_keyval(key, val, level=0):
             print_textpb_keyval(key, x, level=level)
     # anything else, including a dictionary, print it normally
     else:
-        print((level * " ") + key + ":", end="", level=level)
+        print((level * " ") + key + ":", end="")
         print_textpb(val, level=level)
 
 
@@ -341,10 +342,12 @@ def print_textpb_keyval(key, val, level=0):
 # returns: nothing
 # emits: textual protobuf format, best effort
 def print_textpb(obj, level=0):
-    if isinstance(obj, (int, long, float)):
-        print((level * " ") + obj)
-    elif isinstance(obj, (type(u""), type(b""))):
-        print((level * " ") + repr(obj))
+    # not sure what we want for None
+    # an empty string seems like a good choice
+    if obj is None:
+        print((level * " ") + '""')
+    elif isinstance(obj, (int, long, float, bytes, unicode, bool)):
+        print((level * " ") + json.dumps(obj))
     elif isinstance(obj, dict):
         print((level * " ") + "{")
         for key in obj:

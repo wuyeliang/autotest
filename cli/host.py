@@ -424,7 +424,7 @@ class host_statjson(host_stat):
                                help='Verify that required fields are provided',
                                action='store_true',
                                dest='verify')
-        self.parse.add_option('--textpb',
+        self.parser.add_option('--textpb',
                                default=False,
                                help='Print in best effort textpb format',
                                action='store_true',
