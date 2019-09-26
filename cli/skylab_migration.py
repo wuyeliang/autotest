@@ -16,6 +16,7 @@ import time
 import shutil
 import sys
 import types
+import itertools
 
 import common
 
@@ -1029,7 +1030,48 @@ class Migration(object):
         return out
 
 
-migrate = Migration.migrate
+
+# accepts: iterable
+# returns: item or None, ok (true if item is real, false otherwise)
+def next_safe(it):
+    it = iter(it)
+    try:
+        return next(it), True
+    except StopIteration:
+        return None, False
+
+
+# accepts: n (stride length), it (iterable)
+# returns: iterator of arrays of n items each
+def natatime(n, it):
+    it = iter(it)
+    while True:
+        out = []
+        for i in range(n):
+            item, ok = next_safe(it)
+            if ok:
+                out.append(item)
+            else:
+                break
+        if len(out):
+            yield out
+        else:
+            return
+
+
+
+
+def migrate(batch_size=None, hostnames=None, **kwargs):
+    if batch_size is None:
+        return Migration.migrate(hostnames=hostnames, **kwargs)
+    if batch_size is not None:
+        it = natatime(n=batch_size, it=hostnames)
+        out = []
+        for batch in it:
+            res = Migration.migrate(hostnames=hostnames, **kwargs)
+            json.dumps(res, sys.stderr, indent=4)
+            out.append(res)
+        return out
 
 
 def setup(atest_exe=None, skylab_exe=None):

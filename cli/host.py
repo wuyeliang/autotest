@@ -1605,9 +1605,14 @@ class host_skylab_migrate(action_common.atest_list, host):
                                action='store_true')
         self.parser.add_option('-s',
                                '--slow',
-                               help='don\' use quick-add-duts',
+                               help='don\'t use quick-add-duts',
                                dest='no_use_quick_add',
                                action='store_true')
+        self.parser.add_option('-b',
+                               '--batch-size',
+                               help='process n duts at a time',
+                               dest="batch_size",
+                               default=None)
 
     def parse(self):
         (options, leftover) = super(host_skylab_migrate, self).parse()
@@ -1630,6 +1635,7 @@ class host_skylab_migrate(action_common.atest_list, host):
                 self.use_quick_add = False
             else:
                 self.invalid_syntax('must include either --quick or --slow.')
+        self.batch_size = options.batch_size
 
         return (options, leftover)
 
@@ -1685,6 +1691,7 @@ class host_skylab_migrate(action_common.atest_list, host):
             min_ready_intervals=10,
             immediately=True,
             use_quick_add=self.use_quick_add,
+            batch_size=self.batch_size,
         )
         return res
 
