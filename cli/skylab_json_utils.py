@@ -340,6 +340,13 @@ def to_snake_case(str):
     return "".join(out)
 
 
+def write(*args, **kwargs):
+    print(*args, sep="", end="", **kwargs)
+
+def writeln(*args, **kwargs):
+    print(*args, sep="", end="\n", **kwargs)
+
+
 # accepts: key, value, indentation level
 # returns: nothing
 # emits: textual protobuf format, best effort
@@ -349,10 +356,13 @@ def print_textpb_keyval(key, val, level=0):
         for x in val:
             # TODO(gregorynisbet): nested lists?
             print_textpb_keyval(to_snake_case(key), x, level=level)
-    # anything else, including a dictionary, print it normally
+    # if the value is a dictionary, don't print :
+    elif isinstance(val, dict):
+        write((level * " "), to_snake_case(key), " ")
+        print_textpb(val, level=level)        
     else:
-        print((level * " ") + to_snake_case(key) + ":", end="")
-        print_textpb(val, level=level)
+        write((level * " "), to_snake_case(key), ":", " ")
+        print_textpb(val, level=0)
 
 
             
@@ -365,9 +375,9 @@ def print_textpb(obj, level=0):
     # not sure what we want for None
     # an empty string seems like a good choice
     if obj is None:
-        print((level * " ") + '""')
+        writeln((level * " "), '""')
     elif isinstance(obj, (int, long, float, bool)):
-        print((level * " ") + json.dumps(obj))
+        writeln((level * " "), json.dumps(obj))
     elif isinstance(obj, (bytes, unicode)):
         # guess that something is not an enum if it
         # contains at least one lowercase letter or a space
@@ -380,14 +390,14 @@ def print_textpb(obj, level=0):
         # check for the underscore
         is_enum = is_enum and "_" in obj
         if is_enum:
-            print((level * " ") + obj)
+            writeln((level * " "), obj)
         else:
-            print((level * " ") + json.dumps(obj))
+            writeln((level * " "), json.dumps(obj))
     elif isinstance(obj, dict):
-        print((level * " ") + "{")
-        for key in obj:
+        writeln("{")
+        for key in sorted(obj):
             print_textpb_keyval(key=key, val=obj[key], level=(2 + level))
-        print((level * " ") + "}")
+        writeln((level * " "), "}")
     elif isinstance(obj, (list, tuple)):
         raise RuntimeError("No sequences on toplevel")
     else:

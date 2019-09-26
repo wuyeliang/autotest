@@ -30,7 +30,7 @@ import time
 from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, skylab_migration
 from autotest_lib.cli import fair_partition
 from autotest_lib.client.bin import utils as bin_utils
-from autotest_lib.cli.skylab_json_utils import process_labels, print_textpb
+from autotest_lib.cli.skylab_json_utils import process_labels, print_textpb, write, writeln
 from autotest_lib.cli import skylab_rollback
 from autotest_lib.cli.skylab_json_utils import process_labels, validate_required_fields_for_skylab
 from autotest_lib.client.common_lib import error, host_protections
@@ -481,7 +481,7 @@ class host_statjson(host_stat):
                 validate_required_fields_for_skylab(skylab_json)
             if self.textpb:
                 # need leading "duts" preamble
-                print "duts ",
+                write("duts ")
                 print_textpb(skylab_json)
             else:
                 print json.dumps(skylab_json, indent=4, sort_keys=True)
