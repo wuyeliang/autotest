@@ -20,11 +20,9 @@ for item in "$@"; do
     mangled+=("$item"-migrated-do-not-use)
 done
 
-echo y > /tmp/yfile
+atest host rename --for-rollback --non-interactive "${mangled[@]}"
 
-cat /tmp/yfile | atest host rename --for-rollback "${mangled[@]}"
-
-atest host mod --unlock "${mangled[@]}"
+atest host mod --unlock --no-confirmation "${mangled[@]}"
 """
 
 
