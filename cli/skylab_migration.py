@@ -608,11 +608,11 @@ def hostname_migrated_status(hostnames):
         # S -- not migrated to skylab
         hostname_flags = set()
         if hostname in atest_out_good:
-            hostname.add("A")
+            hostname_flags.add("A")
         if hostname in atest_renamed_out_bad:
-            hostname.add("A")
+            hostname_flags.add("A")
         if hostname in skylab_out_bad:
-            hostname.add("S")
+            hostname_flags.add("S")
 
         if hostname_flags == set():
             good.append(hostname)
