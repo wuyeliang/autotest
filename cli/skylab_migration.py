@@ -53,6 +53,13 @@ def find_atest_path():
 _ATEST_EXE = find_atest_path()
 
 
+def strip_suffix(str, suffix):
+    if str.endswith(suffix):
+        return str[:-len(suffix)]
+    else:
+        return str
+
+
 def call_with_tempfile(cmd, lines):
     """Execute command requiring a temporary file and return a CommandOutput struct.
 
@@ -809,16 +816,24 @@ class Migration(object):
                     pass
                 else:
                     good_hostnames.append(out_json)
-            # TODO(gregorynisbet): Currently we assume that
-            # SkylabCmd.add_many_duts worked for all DUTs.
-            # In the future, check the
-            # inventory or query Skylab in some way to check that the
-            # transfer was successful
+            # SkylabCmd.add_many_duts does not check for whether the action was successful
+            # we use hostname_migrated_status to check whether the duts we were supposed to migrate
+            # were actually migrated
             SkylabCmd.add_many_duts(dut_contents=dut_contents)
+
+            # strip the migrated suffix when checking the status of each of the hostnames
+            truncated_hostnames = [strip_suffix(hostname, "-migrated-do-not-use") for hostname in hostnames]
+            status_out = hostname_migrated_status(truncated_hostnames)
+
+            # anything in the good state or missing rename is fine
+            complete = status_out["good"] + status_out["not_renamed"]
+            # anything where the status indicates that the entity is not in skylab yet is not fine
+            not_started = status_out["not_in_skylab"] + status_out["not_renamed_not_in_skylab"]
+
             return AddToSkylabInventoryAndDroneStatus(
-                complete=hostnames,
+                complete=complete,
                 without_drone=set(),
-                not_started=set(),
+                not_started=not_started,
             )
 
         else:
