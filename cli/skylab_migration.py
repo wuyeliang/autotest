@@ -315,11 +315,31 @@ class AtestCmd(object):
         @return : iterator of successfully renamed hosts
         """
         hostnames = hostnames or set()
+
+        to_migrate_hostnames = set()
+        already_migrated_hostnames = set()
+
+        for hostname in hostnames:
+            if hostnames.endswith("-migrated-do-not-use"):
+                already_migrated_hostnames.add(hostname)
+            else:
+                to_migrate_hostnames.add(hostname)
+
         stderr_log('begin rename', time.time(), _humantime())
         items = call_with_tempfile(
             AtestCmd.rename_cmd(for_migration=for_migration),
-            lines=hostnames).output
+            lines=to_migrate_hostnames).output
+
         out = list(AtestCmd.rename_filter(items))
+        out_seen = set(out)
+
+        # out and already_migrated_hostnames should be disjoint
+        # but if they aren't we still don't want to list the same
+        # hostname twice
+        for hostname in already_migrated_hostnames:
+            if hostname not in out_seen:
+                out.append(hostname)
+
         stderr_log('end rename', time.time(), _humantime())
         return out
 
