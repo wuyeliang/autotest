@@ -727,6 +727,7 @@ def main():
             no_console_prefix=parser.options.no_console_prefix)
 
     logging.debug('autoserv is running in drone %s.', socket.gethostname())
+    logging.debug('autoserv environment: %r', os.environ)
     logging.debug('autoserv command was: %s', ' '.join(sys.argv))
     logging.debug('autoserv parsed options: %s', parser.options)
 
