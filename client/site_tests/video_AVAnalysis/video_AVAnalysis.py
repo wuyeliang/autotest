@@ -45,9 +45,9 @@ class video_AVAnalysis(test.test):
         if board is None:
             board = utils.get_board()
         self.dut_info.board = board
-        self.dut_info.build = utils.get_chromeos_version()
+        self.dut_info.build = utils.get_chromeos_version().replace('.', '_')
 
-        self.rec_info.vid_name = '{0}_{1}_{2}.mp4'.format(
+        self.rec_info.vid_name = '{}_{}_{}.mp4'.format(
             self.dut_info.build, self.dut_info.board, 'vp9')
         self.rec_info.duration = '5'
         self.rec_info.project_id = '40'
@@ -102,25 +102,26 @@ class video_AVAnalysis(test.test):
         recording and processes the response. The body of the post
         contains config file data.
         """
-        destination = 'http://{0}:{1}/{2}'.format(self.srv_info.ip,
-                                                  self.srv_info.port,
-                                                  self.srv_info.path)
+        destination = 'http://{}:{}/{}'.format(self.srv_info.ip,
+                                               self.srv_info.port,
+                                               self.srv_info.path)
         query_params = {'filename': self.rec_info.vid_name,
                         'duration': self.rec_info.duration}
         config_text = self.get_config_string()
         headers = {'content-type': 'text/plain'}
         response = requests.post(destination, params=query_params,
                                  data=config_text, timeout=60, headers=headers)
-        logging.debug('Response received is: ' + str(response))
-        status_code = int(response.status_code)
+        logging.debug('Response received is: ({}, {})'.format(
+            response.status_code, response.content))
 
-        if status_code != 200:
-            raise error.TestFail('Recording server failed with status code: ' +
-                                 str(status_code))
+        if response.status_code != 200:
+            raise error.TestFail(
+                'Recording server failed with response: ({}, {})'.format(
+                    response.status_code, response.content))
 
     def get_config_string(self):
         """Write up config text so that AVAS can correctly process video."""
-        path_prefix = '/bigstore/cros-av-analysis/{0}'
+        path_prefix = '/bigstore/cros-av-analysis/{}'
         filepath = path_prefix.format(self.rec_info.vid_name)
         config_dict = {'filepath': filepath, 'triggered_by': 'vsuley'}
         config_dict.update(vars(self.rec_info))
