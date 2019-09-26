@@ -140,7 +140,7 @@ class skylab_json_utils_unittest(unittest.TestCase):
     def test_ec_absent(self):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
-        self.assertIsNone(out["ecType"])
+        self.assertEqual(out["ecType"], "EC_TYPE_INVALID")
 
     def test_os_present(self):
         l = sky.Labels()

@@ -181,7 +181,7 @@ def _os_type(l):
 def _ec_type(l):
     """Get the ec type."""
     name = l.get_string("ec")
-    return EC_TYPE_ATEST_TO_SK.get(name, None)
+    return EC_TYPE_ATEST_TO_SK.get(name, "EC_TYPE_INVALID")
 
 
 def _video_acceleration(l):
@@ -323,20 +323,6 @@ def process_labels(labels, platform):
     return out
 
 
-# accepts: key, value, indentation level
-# returns: nothing
-# emits: textual protobuf format, best effort
-def print_textpb_keyval(key, val, level=0):
-    # repeated field, repeat the key in every stanza
-    if isinstance(val, (list, tuple)):
-        for x in val:
-            # TODO(gregorynisbet): nested lists?
-            print_textpb_keyval(key, x, level=level)
-    # anything else, including a dictionary, print it normally
-    else:
-        print((level * " ") + key + ":", end="")
-        print_textpb(val, level=level)
-
 
 # accepts: string possibly in camelCase
 # returns: string in snake_case
@@ -349,7 +335,26 @@ def to_snake_case(str):
         if x.isupper():
             out.append("_")
             out.append(x.lower())
+        else:
+            out.append(x.lower())
     return "".join(out)
+
+
+# accepts: key, value, indentation level
+# returns: nothing
+# emits: textual protobuf format, best effort
+def print_textpb_keyval(key, val, level=0):
+    # repeated field, repeat the key in every stanza
+    if isinstance(val, (list, tuple)):
+        for x in val:
+            # TODO(gregorynisbet): nested lists?
+            print_textpb_keyval(to_snake_case(key), x, level=level)
+    # anything else, including a dictionary, print it normally
+    else:
+        print((level * " ") + to_snake_case(key) + ":", end="")
+        print_textpb(val, level=level)
+
+
             
 
 
@@ -364,7 +369,20 @@ def print_textpb(obj, level=0):
     elif isinstance(obj, (int, long, float, bool)):
         print((level * " ") + json.dumps(obj))
     elif isinstance(obj, (bytes, unicode)):
-        print((level * " ") + to_snake_case(json.dumps(obj)))
+        # guess that something is not an enum if it
+        # contains at least one lowercase letter or a space
+        # or does not contain an underscore
+        is_enum = True
+        for ch in obj:
+            if ch.islower() or ch == " ":
+                is_enum = False
+                break
+        # check for the underscore
+        is_enum = is_enum and "_" in obj
+        if is_enum:
+            print((level * " ") + obj)
+        else:
+            print((level * " ") + json.dumps(obj))
     elif isinstance(obj, dict):
         print((level * " ") + "{")
         for key in obj:
