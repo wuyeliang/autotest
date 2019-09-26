@@ -22,7 +22,7 @@ done
 
 echo y > /tmp/yfile
 
-</tmp/yfile atest host rename --for-rollback "${mangled[@]}"
+cat /tmp/yfile | atest host rename --for-rollback "${mangled[@]}"
 
 atest host mod --unlock "${mangled[@]}"
 """
