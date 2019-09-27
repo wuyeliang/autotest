@@ -237,14 +237,12 @@ class flashrom_util(object):
             self._enable_bios_access()
 
     def _enable_bios_access(self):
-        if not self.os_if.target_hosted():
-            return
-        self._target_command = '-p host'
+        if self.os_if.test_mode or self.os_if.target_hosted():
+            self._target_command = '-p host'
 
     def _enable_ec_access(self):
-        if not self.os_if.target_hosted():
-            return
-        self._target_command = '-p ec'
+        if self.os_if.test_mode or self.os_if.target_hosted():
+            self._target_command = '-p ec'
 
     def _get_temp_filename(self, prefix):
         """Returns name of a temporary file in /tmp."""
@@ -272,9 +270,16 @@ class flashrom_util(object):
         return tmpfn
 
     def check_target(self):
-        """Check if the programmer is available, by specifying no commands."""
+        """Check if flashrom programmer is working, by specifying no commands.
+
+        The command executed is just 'flashrom -p <target>'.
+
+        @return: True if flashrom completed successfully
+        @raise ShellError: if flashrom exited with an error code
+        """
         cmd = 'flashrom %s' % self._target_command
-        return self.os_if.run_shell_command_get_status(cmd) == 0
+        self.os_if.run_shell_command(cmd)
+        return True
 
     def get_section(self, base_image, section_name):
         """

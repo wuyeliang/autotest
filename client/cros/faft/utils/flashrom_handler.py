@@ -16,7 +16,8 @@ import struct
 import tempfile
 
 from autotest_lib.client.common_lib.cros import chip_utils
-from autotest_lib.client.cros.faft.utils import saft_flashrom_util
+from autotest_lib.client.cros.faft.utils import (saft_flashrom_util,
+                                                 shell_wrapper)
 
 
 class FvSection(object):
@@ -141,6 +142,7 @@ class FlashromHandler(object):
         self.os_if = os_if
         self.initialized = False
         self._available = None
+        self._unavailable_err = None
 
         if subdir is None:
             subdir = target
@@ -180,7 +182,12 @@ class FlashromHandler(object):
         """
         if self._available is None:
             # Cache the status to avoid trying flashrom every time.
-            self._available = self.fum.check_target()
+            try:
+                self.fum.check_target()
+                self._available = True
+            except shell_wrapper.ShellError as e:
+                self._available = False
+                self._unavailable_err = str(e).capitalize()
         return self._available
 
     def section_file(self, *paths):
@@ -216,7 +223,8 @@ class FlashromHandler(object):
         if not self.is_available():
             # Can't tell for sure whether it's broken or simply nonexistent.
             raise FlashromHandlerError(
-                    "No usable %s flash was detected." % self.target)
+                    "Could not detect a usable %s flash device: %s."
+                    % (self.target, self._unavailable_err))
 
         if image_file and allow_fallback and not os.path.isfile(image_file):
             self.os_if.log(
