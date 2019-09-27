@@ -88,7 +88,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     UPSTART_ERROR_ALREADYSTARTED = \
             'com.ubuntu.Upstart0_6.Error.AlreadyStarted'
 
-    BLUETOOTHD_JOB = 'bluetoothd'
+    BLUETOOTHD_JOB = 'btdispatch'
 
     DBUS_ERROR_SERVICEUNKNOWN = 'org.freedesktop.DBus.Error.ServiceUnknown'
 
@@ -502,7 +502,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         """
         logging.debug('_set_powered %r', powered)
-        self._adapter.Set(self.BLUEZ_ADAPTER_IFACE, 'Powered', powered,
+        self._adapter.Set(self.BLUEZ_ADAPTER_IFACE, 'Powered',
+                          dbus.Boolean(powered, variant_level=1),
                           dbus_interface=dbus.PROPERTIES_IFACE)
 
 
@@ -521,7 +522,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             # has happened.
             return True
         self._adapter.Set(self.BLUEZ_ADAPTER_IFACE,
-                          'Discoverable', discoverable,
+                          'Discoverable',
+                          dbus.Boolean(discoverable, variant_level=1),
                           dbus_interface=dbus.PROPERTIES_IFACE)
         return True
 
@@ -593,7 +595,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         @return True on success, False otherwise.
 
         """
-        self._adapter.Set(self.BLUEZ_ADAPTER_IFACE, 'Pairable', pairable,
+        self._adapter.Set(self.BLUEZ_ADAPTER_IFACE, 'Pairable',
+                          dbus.Boolean(pairable, variant_level=1),
                           dbus_interface=dbus.PROPERTIES_IFACE)
         return True
 
