@@ -2,7 +2,7 @@ import os
 import subprocess
 
 
-BATCH_SIZE = 20
+BATCH_SIZE = 50
 
 
 # delete all the duts and un-migrate the corresponding entries in
@@ -12,9 +12,7 @@ BATCH_SIZE = 20
 ROLLBACK_CMD = r"""
 bug="${ROLLBACK_BUG:-b/7}"
 
-for item in "$@"; do
-    skylab remove-duts -delete -bug b/7 "$item"
-done
+skylab remove-duts -delete -bug b/7 "$@"
 
 declare -a mangled
 
