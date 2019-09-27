@@ -75,8 +75,6 @@ class network_DhcpFailureWithStaticIP(dhcp_test_base.DhcpTestBase):
                             dbus.Dictionary(config, signature='sv'))
 
         ipconfig = self.get_ipconfig()
-        ipconfig.Refresh()
-
         self.check_static_ip_config(ipconfig, static_ip_address, name_servers)
 
         # Make sure configuration is still correct after DHCP timeout.
