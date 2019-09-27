@@ -1971,10 +1971,36 @@ def ping(host, deadline=None, tries=None, timeout=60, user=None):
         args = [user, '-c', ' '.join([cmd] + args)]
         cmd = 'su'
 
-    return run(cmd, args=args, verbose=True,
-                          ignore_status=True, timeout=timeout,
-                          stdout_tee=TEE_TO_LOGS,
-                          stderr_tee=TEE_TO_LOGS).exit_status
+    result = run(cmd, args=args, verbose=True,
+                 ignore_status=True, timeout=timeout,
+                 stderr_tee=TEE_TO_LOGS)
+
+    rc = result.exit_status
+    lines = result.stdout.splitlines()
+
+    # rc=0: host reachable
+    # rc=1: host unreachable
+    # other: an error (do not abbreviate)
+    if rc in (0, 1):
+        # Report the two stats lines, as a single line.
+        # [-2]: packets transmitted, 1 received, 0% packet loss, time 0ms
+        # [-1]: rtt min/avg/max/mdev = 0.497/0.497/0.497/0.000 ms
+        stats = lines[-2:]
+        while '' in stats:
+            stats.remove('')
+
+        if stats or len(lines) < 2:
+            logging.debug('[rc=%s] %s', rc, '; '.join(stats))
+        else:
+            logging.debug('[rc=%s] Ping output:\n%s',
+                          rc, result.stdout)
+    else:
+        output = result.stdout.rstrip()
+        if output:
+            logging.debug('Unusual ping result (rc=%s):\n%s', rc, output)
+        else:
+            logging.debug('Unusual ping result (rc=%s).', rc)
+    return rc
 
 
 def host_is_in_lab_zone(hostname):
