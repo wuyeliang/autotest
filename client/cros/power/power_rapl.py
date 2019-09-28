@@ -243,12 +243,12 @@ def create_powercap():
         logging.debug("RAPL: no powercap driver found")
         return []
     rapl_map = {}
-    for root, dir, file in os.walk(powercap):
+    for root, dirs, files in os.walk(powercap):
         if os.path.isfile(root + '/energy_uj'):
             with open(root + '/name', 'r') as fn:
                 name = fn.read().rstrip()
-                rapl_map[name] = root + '/energy_uj'
-    return [Powercap(name, path) for name, path in rapl_map.iteritems()]
+                rapl_map[name] = root
+    return [Powercap(name, root) for name, root in rapl_map.iteritems()]
 
 
 class Powercap(power_status.PowerMeasurement):
@@ -264,15 +264,18 @@ class Powercap(power_status.PowerMeasurement):
 
     Private attributes:
         _file: sysfs reporting energy of the particular RAPL domain.
+        _energy_max: int, max energy count of the particular RAPL domain.
         _energy_start: float, micro-joule measured at the beginning.
         _time_start: float, time in seconds since Epoch.
     """
-    def __init__(self, name, path):
+    def __init__(self, name, root):
         """Constructor for Powercap class.
         """
         super(Powercap, self).__init__(name)
 
-        self._file = open(path, 'r')
+        with open(root + '/max_energy_range_uj', 'r') as fn:
+            self._energy_max = int(fn.read().rstrip())
+        self._file = open(root + '/energy_uj', 'r')
         self._energy_start = self._get_energy()
         self._time_start = time.time()
         logging.debug("RAPL: monitor domain %s", name)
@@ -296,9 +299,14 @@ class Powercap(power_status.PowerMeasurement):
         """
         energy_now = self._get_energy()
         time_now = time.time()
-        energy_used = (energy_now - self._energy_start) / 1000000.0
+        if energy_now >= self._energy_start:
+            energy_used = energy_now - self._energy_start
+        else:
+            energy_used = self._energy_max - self._energy_start + energy_now
         time_used = time_now - self._time_start
-        average_power = energy_used / time_used
+        average_power = energy_used / (time_used * 1000000)
+        logging.debug("RAPL: domain: %s, energy: %d, time: %f, power: %f",
+                      self.domain, energy_used, time_used, average_power)
         self._energy_start = energy_now
         self._time_start = time_now
         return average_power
