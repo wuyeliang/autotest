@@ -24,9 +24,6 @@ _RECOVERY_WAIT_SEC = 1
 # Delay to wait before polling whether the role as been changed successfully.
 _ROLE_SETTLING_DELAY_SEC = 1
 
-# Threshold (in millivolt) under which the test assumes that no charger
-# is attached on the v4 charger side.
-_CHG_ATTACHED_MIN_VOLTAGE_MV = 1000
 
 def _invert_role(role):
     """Helper to invert the role.
@@ -55,9 +52,11 @@ class ServoV4ChargeManager(object):
         super(ServoV4ChargeManager, self).__init__()
         self._host = host
         self._servo = servo
-        self._original_role = self._servo.get('servo_v4_role')
+        if not self._servo.supports_built_in_pd_control():
+            raise error.TestNAError('Servo setup does not support PD control. '
+                                    'Check logs for details.')
 
-        self._verify_v4()
+        self._original_role = self._servo.get('servo_v4_role')
         if self._original_role == 'snk':
             self.start_charging()
             self.stop_charging()
@@ -67,9 +66,6 @@ class ServoV4ChargeManager(object):
         else:
             raise error.TestNAError('Unrecognized Servo v4 power role: %s.' %
                                     self._original_role)
-        # Configure the INAs to read out power numbers later.
-        self._servo.set_nocheck('ppdut5_cfg_reg', 'regular_power')
-        self._servo.set_nocheck('ppchg5_cfg_reg', 'regular_power')
 
     # TODO(b/129882930): once both sides are stable, remove the _retry_wrapper
     # wrappers as they aren't needed anymore. The current motivation for the
@@ -130,22 +126,6 @@ class ServoV4ChargeManager(object):
         @param verify: whether to verify that original role was restored.
         """
         self._retry_wrapper(self._original_role, verify)
-
-    def _verify_v4(self):
-        """Verify that Servo is Servo v4."""
-        if self._servo.get_servo_version().startswith('servo_v4'):
-            servo_v4_version = self._servo.get('servo_v4_version')
-            logging.info('Servo v4 version: %s', servo_v4_version)
-        else:
-            raise error.TestNAError('This test needs to run with Servo v4. '
-                                    'Test skipped.')
-        if self._servo.get('servo_v4_type') != 'type-c':
-            raise error.TestNAError('Please use a type-c v4 to be able to '
-                                    'toggle PD.')
-        if self._servo.get('ppchg5_mv') < _CHG_ATTACHED_MIN_VOLTAGE_MV:
-            raise error.TestNAError('There seems to be no voltage on the '
-                                    'charger side. This test cannot run '
-                                    'without a PD charger attached to the v4.')
 
     def _change_role(self, role, verify=True):
         """Change Servo PD role and check if DUT responded accordingly.

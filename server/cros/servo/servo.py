@@ -26,6 +26,12 @@ _USB_PROBE_TIMEOUT = 40
 # Regex to match XMLRPC errors due to a servod control not existing.
 NO_CONTROL_RE = re.compile(r'No control named (\w*\.?\w*)')
 
+
+# The minimum voltage on the charger port on servo v4 that is expected. This is
+# to query whether a charger is plugged into servo v4 and thus pd control
+# capabilities can be used.
+V4_CHG_ATTACHED_MIN_VOLTAGE_MV = 4400
+
 class ControlUnavailableError(error.TestFail):
     """Custom error class to indicate a control is unavailable on servod."""
     pass
@@ -1288,6 +1294,26 @@ class Servo(object):
         else:
             logging.debug('Not a servo v4, unable to set role to %s.', role)
 
+
+    def supports_built_in_pd_control(self):
+        """Return whether the servo type supports pd charging and control."""
+        servo_type = self.get('servo_type')
+        if 'servo_v4' not in servo_type:
+            # Only servo v4 supports this feature.
+            logging.info('%r type does not support pd control.', servo_type)
+            return False
+        # On servo v4, it still needs ot be the type-c version.
+        if not self.get('servo_v4_type') == 'type-c':
+            logging.info('PD controls require a type-c servo v4.')
+            return False
+        # Lastly, one cannot really do anything without a plugged in charger.
+        chg_port_mv = self.get('ppchg5_mv')
+        if chg_port_mv < V4_CHG_ATTACHED_MIN_VOLTAGE_MV:
+            logging.warn('It appears that no charger is plugged into servo v4. '
+                         'Charger port voltage: %dmV', chg_port_mv)
+            return False
+        logging.info('Charger port voltage: %dmV', chg_port_mv)
+        return True
 
     def set_servo_v4_dts_mode(self, state):
         """Set servo v4 dts mode to off or on.
