@@ -27,11 +27,11 @@ class firmware_Cr50RddG3(Cr50Test):
             raise error.TestNAError('Leakage on the rdd signals breaks '
                                     'detection in G3')
 
-        self.servo.set_servo_v4_dts_mode('on')
+        self.servo.set_dts_mode('on')
         if not self.rdd_is_connected():
             raise error.TestNAError('Cr50 does not detect Rdd with dts mode on')
 
-        self.servo.set_servo_v4_dts_mode('off')
+        self.servo.set_dts_mode('off')
 
         if self.rdd_is_connected():
             raise error.TestFail('Cr50 detects Rdd with dts mode off')
@@ -43,7 +43,7 @@ class firmware_Cr50RddG3(Cr50Test):
         time.sleep(self.WAIT_FOR_STATE)
         rdd_connected = self.rdd_is_connected()
 
-        self.servo.set_servo_v4_dts_mode('on')
+        self.servo.set_dts_mode('on')
         self._try_to_bring_dut_up()
 
         if rdd_connected:

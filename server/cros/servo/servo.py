@@ -1078,6 +1078,25 @@ class Servo(object):
         """Whether the main servo device (no prefixes) is a legacy device."""
         return not self.main_device_is_ccd()
 
+
+    def main_device_is_active(self):
+        """Return whether the main device is the active device.
+
+        This is only relevant for a dual setup with ccd and legacy on the same
+        DUT. The main device is the servo that has no prefix on its controls.
+        This helper answers the question whether that device is also the
+        active device or not.
+        """
+        # TODO(coconutruben): The current implementation of the dual setup only
+        # ever has legacy as the main device. Therefore, it suffices to ask
+        # whether the active device is ccd.
+        if not self.dts_mode_is_valid():
+            # Use dts support as a proxy to whether the servo setup could
+            # support a dual role. Only those setups now support legacy and ccd.
+            return True
+        active_device = self.get('active_v4_device')
+        return 'ccd_cr50' not in active_device
+
     def _initialize_programmer(self, rw_only=False):
         """Initialize the firmware programmer.
 
@@ -1321,8 +1340,40 @@ class Servo(object):
         logging.info('Charger port voltage: %dmV', chg_port_mv)
         return True
 
-    def set_servo_v4_dts_mode(self, state):
-        """Set servo v4 dts mode to off or on.
+    def dts_mode_is_valid(self):
+        """Return whether servo setup supports dts mode control for cr50."""
+        if 'servo_v4' not in self._servo_type:
+            # Only servo v4 supports this feature.
+            logging.debug('%r type does not support dts mode control.',
+                          self._servo_type)
+            return False
+        # On servo v4, it still needs ot be the type-c version.
+        if not 'type-c' == self.get('servo_v4_type'):
+            logging.info('DTS controls require a type-c servo v4.')
+            return False
+        return True
+
+    def dts_mode_is_safe(self):
+        """Return whether servo setup supports dts mode without losing access.
+
+        DTS mode control exists but the main device might go through ccd.
+        In that case, it's only safe to control dts mode if the main device
+        is legacy as otherwise the connection to the main device cuts out.
+        """
+        return self.dts_mode_is_valid() and self.main_device_is_flex()
+
+    def get_dts_mode(self):
+        """Return servo dts mode.
+
+        @returns: on/off whether dts is on or off
+        """
+        if not self.dts_mode_is_valid():
+            logging.info('Not a valid servo setup. Unable to get dts mode.')
+            return
+        return self.get('servo_v4_dts_mode')
+
+    def set_dts_mode(self, state):
+        """Set servo dts mode to off or on.
 
         It does nothing if not a servo v4. Disable the ccd watchdog if we're
         disabling dts mode. CCD will disconnect. The watchdog only allows CCD
@@ -1331,8 +1382,9 @@ class Servo(object):
 
         @param state: Set servo v4 dts mode 'off' or 'on'.
         """
-        if not self._servo_type.startswith('servo_v4'):
-            logging.debug('Not a servo v4, unable to set dts mode %s.', state)
+        if not self.dts_mode_is_valid():
+            logging.info('Not a valid servo setup. Unable to set dts mode %s.',
+                         state)
             return
 
         # TODO(mruthven): remove watchdog check once the labstation has been

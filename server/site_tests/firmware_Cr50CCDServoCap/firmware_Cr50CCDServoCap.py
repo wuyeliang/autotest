@@ -109,7 +109,7 @@ class firmware_Cr50CCDServoCap(Cr50Test):
             'servo_v4_with_servo_micro'):
             raise error.TestNAError('Must use servo v4 with servo micro')
 
-        if not self.cr50.servo_v4_supports_dts_mode():
+        if not self.cr50.servo_dts_mode_is_valid():
             raise error.TestNAError('Need working servo v4 DTS control')
 
         self.check_servo_monitor()
@@ -250,7 +250,7 @@ class firmware_Cr50CCDServoCap(Cr50Test):
 
         @param state: string 'attach' or 'detach'
         """
-        self.servo.set_servo_v4_dts_mode('on' if state == 'attach' else 'off')
+        self.servo.set_dts_mode('on' if state == 'attach' else 'off')
         time.sleep(self.SLEEP)
 
 

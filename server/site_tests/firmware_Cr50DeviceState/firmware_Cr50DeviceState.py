@@ -471,7 +471,7 @@ class firmware_Cr50DeviceState(Cr50Test):
         self.all_errors = {}
         self.host = host
         self.is_arm = self.is_arm_family()
-        supports_dts_control = self.cr50.servo_v4_supports_dts_mode()
+        supports_dts_control = self.cr50.servo_dts_mode_is_valid()
 
         if supports_dts_control:
             self.cr50.ccd_disable(raise_error=True)
