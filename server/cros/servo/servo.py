@@ -435,6 +435,14 @@ class Servo(object):
         self.set_nocheck('power_key', press_secs)
 
 
+    def pwr_button(self, action='press'):
+        """Simulate a power button press.
+
+        @param action: str; could be press or could be release.
+        """
+        self.set_nocheck('pwr_button', action)
+
+
     def lid_open(self):
         """Simulate opening the lid and raise exception if all attempts fail"""
         self.set('lid_open', 'yes')
@@ -447,6 +455,12 @@ class Servo(object):
         """
         self.set('lid_open', 'no')
         time.sleep(Servo.SLEEP_DELAY)
+
+
+    def vbus_power_get(self):
+        """Get current vbus_power."""
+        return self.get('vbus_power')
+
 
     def volume_up(self, timeout=300):
         """Simulate pushing the volume down button.
