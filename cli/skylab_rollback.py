@@ -22,7 +22,7 @@ done
 
 atest host rename --for-rollback --non-interactive "${mangled[@]}"
 
-atest host mod --unlock --no-confirmation "${mangled[@]}"
+atest host mod --unlock --no-confirmation "$@"
 """
 
 
