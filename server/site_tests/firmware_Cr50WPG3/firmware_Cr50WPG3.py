@@ -29,7 +29,7 @@ class firmware_Cr50WPG3(Cr50Test):
         """Verify WP in G3."""
         if self.check_cr50_capability(['wp_on_in_g3'], suppress_warning=True):
             raise error.TestNAError('WP not pulled up in G3')
-        if 'servo_micro' not in self.servo.get_servo_version(True):
+        if self.servo.main_device_is_ccd():
             raise error.TestNAError('Need servo flex to check WP')
 
         self.fast_open(True)

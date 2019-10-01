@@ -152,7 +152,7 @@ class firmware_ECUsbPorts(FirmwareTest):
         if self._port_count == 0:
             raise error.TestNAError("No USB-A port; nothing needs to be tested")
 
-        if self.servo.running_through_ccd():
+        if self.servo.main_device_is_ccd():
             logging.info("Using CCD, ignore checking USB port connection.")
         else:
             logging.info("Turn off all USB ports and then turn them on again.")

@@ -1059,11 +1059,15 @@ class Servo(object):
         self.set('active_v4_device', self.get_main_servo_device())
 
 
-    def running_through_ccd(self):
-        """Returns True if the setup is using ccd to run."""
+    def main_device_is_ccd(self):
+        """Whether the main servo device (no prefixes) is a ccd device."""
         servo = self._server.get_version()
         return 'ccd_cr50' in servo and 'servo_micro' not in servo
 
+
+    def main_device_is_flex(self):
+        """Whether the main servo device (no prefixes) is a legacy device."""
+        return not self.main_device_is_ccd()
 
     def _initialize_programmer(self, rw_only=False):
         """Initialize the firmware programmer.
