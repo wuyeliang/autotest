@@ -470,7 +470,7 @@ class Suspender(object):
 
         @returns: a float representing arc resume timestamp in  CPU seconds
                   starting from the last boot if arc logcat resume log is parsed
-                  correctly; otherwise 'unknown'.
+                  correctly; otherwise None.
 
         """
         command = 'android-sh -c "logcat -v monotonic -t 300 *:silent' \
@@ -481,6 +481,7 @@ class Suspender(object):
             arc_logcat = utils.system_output(command, ignore_status=False)
             arc_logcat = arc_logcat.splitlines()
             for line in arc_logcat:
+                logging.debug('arc_resume: %s', line)
                 match_resume = regex_resume.search(line)
                 # ARC logcat is cleared before suspend so the first ARC resume
                 # timestamp is the one we are looking for.
@@ -489,7 +490,7 @@ class Suspender(object):
             time.sleep(0.005 * 2**retry)
         else:
             logging.error('ARC did not resume correctly.')
-            return 'unknown'
+            return None
 
 
     def get_suspend_delay(self):
@@ -603,8 +604,10 @@ class Suspender(object):
                 }
 
             if measure_arc:
-                successful_suspend['seconds_system_resume_arc'] = \
-                        self._arc_resume_ts() - start_resume
+                arc_resume_ts = self._arc_resume_ts()
+                if arc_resume_ts:
+                    successful_suspend['seconds_system_resume_arc'] = \
+                        arc_resume_ts - start_resume
 
             self.successes.append(successful_suspend)
 
