@@ -120,6 +120,7 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
         """Helper function for run()."""
         if connect_timeout > timeout:
             connect_timeout = int(timeout)
+        original_cmd = command
 
         ssh_cmd = self.ssh_command(connect_timeout, options)
         if not env.strip():
@@ -256,7 +257,8 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
             if re.search(r'^ssh: connect to host .* port .*: '
                          r'Connection timed out\r$', result.stderr):
                 counters_inc('run', 'final_timeout')
-                raise error.AutoservSSHTimeout("ssh timed out", result)
+                raise error.AutoservSSHTimeout(
+                        "ssh timed out: %s" % original_cmd.strip(), result)
             if "Permission denied." in result.stderr:
                 msg = "ssh permission denied"
                 counters_inc('run', 'final_eperm')
@@ -264,7 +266,13 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
 
         if not ignore_status and result.exit_status > 0:
             counters_inc('run', 'final_run_error')
-            raise error.AutoservRunError("command execution error", result)
+            msg = result.stderr.strip()
+            if not msg:
+                msg = result.stdout.strip()
+                if msg:
+                    msg = msg.splitlines()[-1]
+            raise error.AutoservRunError("command execution error (%d): %s" %
+                                         (result.exit_status, msg), result)
 
         counters_inc('run', failure_name)
         return result
@@ -439,7 +447,13 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
                         return
 
         if not ignore_status and result.exit_status > 0:
-            raise error.AutoservRunError("command execution error", result)
+            msg = result.stderr.strip()
+            if not msg:
+                msg = result.stdout.strip()
+                if msg:
+                    msg = msg.splitlines()[-1]
+            raise error.AutoservRunError("command execution error (%d): %s" %
+                                         (result.exit_status, msg), result)
 
 
     def setup_ssh_key(self):
