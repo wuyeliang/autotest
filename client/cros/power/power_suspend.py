@@ -476,7 +476,7 @@ class Suspender(object):
         command = 'android-sh -c "logcat -v monotonic -t 300 *:silent' \
                   ' ArcPowerManagerService:D"'
         regex_resume = re.compile(r'^\s*(\d+\.\d+).*ArcPowerManagerService: '
-                                  'Suspend is over; resuming all apps$')
+                                  'Device finished resuming$')
         for retry in xrange(retries + 1):
             arc_logcat = utils.system_output(command, ignore_status=False)
             arc_logcat = arc_logcat.splitlines()
