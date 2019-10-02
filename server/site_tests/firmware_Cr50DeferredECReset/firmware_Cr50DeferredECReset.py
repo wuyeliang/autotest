@@ -80,6 +80,13 @@ class firmware_Cr50DeferredECReset(Cr50Test):
         if not self.cr50.testlab_is_on():
             raise error.TestNAError('Cr50 testlab mode is not enabled')
 
+        # Check 'rdd_leakage' is marked in cr50 capability.
+        if self.check_cr50_capability(['rdd_leakage']):
+            self.rdd_leakage = True
+            logging.warn('RDD leakage is marked in cr50 cap config')
+        else:
+            self.rdd_leakage = False
+
         # Test if the power button is adjustable.
         self.servo.set('pwr_button', 'press')
         self.servo.set('pwr_button', 'release')
@@ -120,9 +127,9 @@ class firmware_Cr50DeferredECReset(Cr50Test):
             #         If not, terminate the test.
             ccdstate = self.cr50.get_ccdstate()
 
-            if ccdstate['Rdd'].lower() != 'disconnected':
-                raise error.TestNAError('This board has a RDD recognition'
-                                        ' issue')
+            if (ccdstate['Rdd'].lower() != 'disconnected') != self.rdd_leakage:
+                raise error.TestError('RDD leakage does not match capability'
+                                      ' configuration.')
         finally:
             self.servo.set_servo_v4_dts_mode(self.dts_restore)
             self.servo.set_nocheck('pwr_button', 'release')
@@ -181,8 +188,7 @@ class firmware_Cr50DeferredECReset(Cr50Test):
                 logging.error('EC should not respond')
                 raise error.TestFail(rv)
 
-    def test_deferred_ec_reset(self, power_button_hold, rdd_enable,
-            expect_ec_response):
+    def test_deferred_ec_reset(self, power_button_hold, rdd_enable):
         """Do a power-on reset, and check if EC responds.
 
         Args:
@@ -190,13 +196,18 @@ class firmware_Cr50DeferredECReset(Cr50Test):
                                False otherwise.
             rdd_enable: True if RDD should be detected on a system reset.
                         False otherwise.
-            expect_ec_response: True if EC should run and response on a system
-                                reset.
-                                False otherwise.
         """
+
+        # If the board has a rdd leakage issue, RDD shall be detected
+        # always in G3. EC_RST will be asserted if the power_button is
+        # being presed in this test.
+        expect_ec_response = not (power_button_hold and
+                                  (rdd_enable or self.rdd_leakage))
         logging.info('Test deferred_ec_reset starts')
-        logging.info('Power button held: %s', power_button_hold)
-        logging.info('RDD connection   : %s', rdd_enable)
+        logging.info('Power button held    : %s', power_button_hold)
+        logging.info('RDD connection       : %s', rdd_enable)
+        logging.info('RDD leakage          : %s', self.rdd_leakage)
+        logging.info('Expected EC response : %s', expect_ec_response)
 
         try:
             # enable RDD Connection (or disable) before power-on-reset
@@ -247,22 +258,18 @@ class firmware_Cr50DeferredECReset(Cr50Test):
 
         # Release power button and disable RDD on power-on reset.
         # EC should be running.
-        self.test_deferred_ec_reset(power_button_hold=False, rdd_enable=False,
-                                    expect_ec_response=True)
+        self.test_deferred_ec_reset(power_button_hold=False, rdd_enable=False)
 
         # Release power button but enable RDD on power-on reset.
         # EC should be running.
-        self.test_deferred_ec_reset(power_button_hold=False, rdd_enable=True,
-                                    expect_ec_response=True)
+        self.test_deferred_ec_reset(power_button_hold=False, rdd_enable=True)
 
         # Hold power button but disable RDD on power-on reset.
         # EC should be running.
-        self.test_deferred_ec_reset(power_button_hold=True, rdd_enable=False,
-                                    expect_ec_response=True)
+        self.test_deferred_ec_reset(power_button_hold=True, rdd_enable=False)
 
         # Hold power button and enable RDD on power-on reset.
         # EC should not be running.
-        self.test_deferred_ec_reset(power_button_hold=True, rdd_enable=True,
-                                    expect_ec_response=False)
+        self.test_deferred_ec_reset(power_button_hold=True, rdd_enable=True)
 
         logging.info('Test is done')
