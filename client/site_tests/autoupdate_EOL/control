@@ -19,4 +19,4 @@ current date.
 
 """
 
-job.run_test('autoupdate_EOL', eol_date=0)
+job.run_test('autoupdate_EOL', eol_date=1)
