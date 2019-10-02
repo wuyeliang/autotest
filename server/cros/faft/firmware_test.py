@@ -1733,15 +1733,20 @@ class FirmwareTest(FAFTBase):
         return self.FWMP_CLEARED_ERROR_MSG in res.stdout
 
 
+    def _tpm_is_owned(self):
+        """Returns True if the tpm is owned"""
+        result = self.host.run('cryptohome --action=tpm_more_status',
+                               ignore_status=True)
+        logging.debug(result)
+        return result.exit_status == 0 and 'owned: true' in result.stdout
+
     def clear_fwmp(self):
         """Clear the FWMP"""
         if self.fwmp_is_cleared():
             return
         tpm_utils.ClearTPMOwnerRequest(self.host, wait_for_ready=True)
-        status = self.host.run('cryptohome --action=tpm_status').stdout
-        logging.debug(status)
-        if 'TPM Owned: true' not in status:
-            self.host.run('cryptohome --action=tpm_take_ownership')
-            self.host.run('cryptohome --action=tpm_wait_ownership')
+        self.host.run('cryptohome --action=tpm_take_ownership')
+        if not utils.wait_for_value(self._tpm_is_owned, expected_value=True):
+            raise error.TestError('Unable to own tpm while clearing fwmp.')
         self.host.run('cryptohome '
                       '--action=remove_firmware_management_parameters')
