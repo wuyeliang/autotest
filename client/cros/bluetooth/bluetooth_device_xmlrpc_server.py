@@ -846,7 +846,10 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                                   self._bluetooth_service_name,
                                   self.BLUEZ_PROFILE_MANAGER_PATH),
                               self.BLUEZ_PROFILE_MANAGER_IFACE)
-        profile_manager.RegisterProfile(path, uuid, options)
+        dbus_object = self._system_bus.get_object(
+                            self._bluetooth_service_name, path)
+        profile_manager.RegisterProfile(dbus_object, uuid,
+                                    dbus.Dictionary(options, signature='sv'))
         return True
 
 
