@@ -1425,6 +1425,60 @@ class Servo(object):
             self.set_nocheck('watchdog_add', 'ccd')
 
 
+    def _get_servo_type_fw_version(self, servo_type, prefix=''):
+        """Helper to handle fw retrieval for micro/v4 vs ccd.
+
+        @param servo_type: one of 'servo_v4', 'servo_micro', 'ccd_cr50'
+        @param prefix: whether the control has a prefix
+
+        @returns: fw version for non-ccd devices, cr50 version for ccd device
+        """
+        if servo_type == 'ccd_cr50':
+            # ccd_cr50 runs on cr50, so need to query the cr50 fw.
+            servo_type = 'cr50'
+        cmd = '%s_version' % servo_type
+        try:
+            return self.get(cmd, prefix=prefix)
+        except error.TestFail:
+            # Do not fail here, simply report the version as unknown.
+            logging.warn('Unable to query %r to get servo fw version.', cmd)
+            return 'unknown'
+
+
+    def get_servo_fw_versions(self):
+        """Retrieve a summary of attached servos and their firmware.
+
+        Note: that only the Google firmware owned servos supports this e.g.
+        micro, v4, etc. For anything else, the dictionary will have no entry.
+        If no device is has Google owned firmware (e.g. v3) then the result
+        is an empty dictionary.
+
+        @returns: dict, a collection of each attached servo & their firmware.
+        """
+        def get_fw_version_tag(tag, dev):
+            return '%s_version.%s' % (dev, tag)
+
+        fw_versions = {}
+        if 'servo_v4' not in self._servo_type:
+            return {}
+        v4_tag = get_fw_version_tag('support', 'servo_v4')
+        fw_versions[v4_tag] = self._get_servo_type_fw_version('servo_v4')
+        if 'with' in self._servo_type:
+            dut_devs = self._servo_type.split('_with_')[1].split('_and_')
+            main_tag = get_fw_version_tag('main', dut_devs[0])
+            fw_versions[main_tag] = self._get_servo_type_fw_version(dut_devs[0])
+            if len(dut_devs) == 2:
+                # Right now, the only way for this to happen is for a dual setup
+                # to exist where ccd is attached on top of servo micro. Thus, we
+                # know that the prefix is ccd_cr50 and the type is ccd_cr50.
+                # TODO(coconutruben): If the new servod is not deployed by
+                # the time that there are more cases of '_and_' devices,
+                # this needs to be reworked.
+                dual_tag = get_fw_version_tag('ccd_flex_secondary', dut_devs[1])
+                fw = self._get_servo_type_fw_version(dut_devs[1], 'ccd_cr50')
+                fw_versions[dual_tag] = fw
+        return fw_versions
+
     @property
     def uart_logs_dir(self):
         """Return the directory to save UART logs."""

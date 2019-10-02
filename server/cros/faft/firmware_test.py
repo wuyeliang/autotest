@@ -270,12 +270,7 @@ class FirmwareTest(FAFTBase):
         }
 
         # Record the servo v4 and servo micro versions when possible
-        if 'servo_micro' in system_info['servo_type']:
-            system_info['servo_micro_version'] = self.servo.get(
-                    'servo_micro_version')
-
-        if 'servo_v4' in system_info['servo_type']:
-            system_info['servo_v4_version'] = self.servo.get('servo_v4_version')
+        system_info.update(self.servo.get_servo_fw_versions())
 
         if hasattr(self, 'cr50'):
             system_info['cr50_version'] = self.servo.get('cr50_version')
