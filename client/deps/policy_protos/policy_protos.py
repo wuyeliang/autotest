@@ -21,6 +21,7 @@ version = 2
 # them!
 PROTO_PATHS = [
         'usr/share/protofiles/chrome_device_policy.proto',
+        'usr/share/protofiles/policy_common_definitions.proto',
         'usr/share/protofiles/device_management_backend.proto',
         'usr/share/protofiles/cloud_policy.proto',
         'usr/share/protofiles/chrome_extension_policy.proto',
