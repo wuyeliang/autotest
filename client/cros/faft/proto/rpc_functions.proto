@@ -1,6 +1,9 @@
 syntax = "proto3";
 
 service Bios {
+  rpc IsAvailable
+    (BiosIsAvailableRequest)
+    returns (BiosIsAvailableResponse);
   rpc Reload
     (BiosReloadRequest)
     returns (BiosReloadResponse);
@@ -379,6 +382,11 @@ service Updater {
 }
 
 // Bios messages
+
+message BiosIsAvailableRequest {}
+message BiosIsAvailableResponse {
+  bool available = 1;
+}
 
 message BiosReloadRequest {}
 message BiosReloadResponse {}

@@ -395,6 +395,12 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_write_protect_status()
 
+    def IsAvailable(self):
+        """Return True if available, False if not."""
+        # Use the real handler, to avoid .init() raising an exception
+        return self._real_bios_handler.is_available()
+
+
 class CgptServicer(object):
     """Class to service all CGPT RPCs"""
 

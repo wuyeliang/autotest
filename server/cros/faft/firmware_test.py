@@ -179,6 +179,13 @@ class FirmwareTest(FAFTBase):
             if self.faft_client.System.GetCrossystemValue('mainfw_act') == 'B':
                 logging.info('mainfw_act is B. rebooting to set it A')
                 self.switcher.mode_aware_reboot()
+
+        # Check flashrom before first use, to avoid xmlrpclib.Fault.
+        if not self.faft_client.Bios.IsAvailable():
+            raise error.TestError(
+                    "flashrom is broken; check 'flashrom -p host'"
+                    "and rpc server log.")
+
         self._setup_gbb_flags()
         self.faft_client.Updater.StopDaemon()
         self._create_faft_lockfile()
