@@ -595,6 +595,7 @@ class BacklightController(object):
         num_steps_taken = 0
         while num_steps_taken < self._max_num_steps:
             self.increase_brightness()
+            time.sleep(0.05)
             num_steps_taken += 1
 
     def set_brightness_to_min(self, allow_off=False):
@@ -612,6 +613,7 @@ class BacklightController(object):
         num_steps_taken = 0
         while num_steps_taken < self._max_num_steps:
             self.decrease_brightness(allow_off)
+            time.sleep(0.05)
             num_steps_taken += 1
 
 
