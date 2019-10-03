@@ -760,8 +760,8 @@ class BluetoothDevice(object):
         """
         # Turn off the discoverable flag since it may affect future tests.
         self._proxy.set_discoverable(False)
-        # Leave the adapter powered off, but don't do a full reset.
-        self._proxy.set_powered(False)
+        # Reset the adapter and leave it on.
+        self._proxy.reset_on()
         # This kills the RPC server.
         if close_host:
           self.host.close()

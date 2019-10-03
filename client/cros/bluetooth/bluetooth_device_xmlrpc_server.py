@@ -461,14 +461,21 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         # Turn on the adapter in order to remove all remote devices.
         if not self._is_powered_on():
-            self._set_powered(True)
+            if not self._set_powered(True):
+                logging.warning('Unable to power on the adapter')
+                return False
 
         for device in devices:
             logging.debug('removing %s', device.get('Address'))
             self.remove_device_object(device.get('Address'))
 
-        if not set_power:
-            self._set_powered(False)
+        # Toggle power to the adapter.
+        if not self._set_powered(False):
+            logging.warning('Unable to power off adapter')
+            return False
+        if set_power and not self._set_powered(True):
+            logging.warning('Unable to power on adapter')
+            return False
 
         return True
 
@@ -490,8 +497,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             else:
                 logging.warning('Adapter not found!')
                 return False
-        self._set_powered(powered)
-        return True
+        return self._set_powered(powered)
 
 
     @xmlrpc_server.dbus_safe(False)
@@ -505,6 +511,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         self._adapter.Set(self.BLUEZ_ADAPTER_IFACE, 'Powered',
                           dbus.Boolean(powered, variant_level=1),
                           dbus_interface=dbus.PROPERTIES_IFACE)
+        return True
 
 
     @xmlrpc_server.dbus_safe(False)
