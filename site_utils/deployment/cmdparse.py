@@ -60,7 +60,11 @@ specific deployment steps:
         this will speed up operations when the stick is known to already
         have the proper image.
     `install_firmware`:  When true, enable firmware installation.
-    `install_test_image`:  When true, enable installing the test image.
+    `install_test_image`:  When true, enable installing the test image via
+     send ctrl_u to boot into USB, which only apply to initial DUT deployment.
+    `reinstall test image`: when true, enable installing test image through
+     recover mode.
+     `labstation`: when true, deploy labstation instead of DUT.
 
 The `dry_run` option is off by default.  The `upload` option is on by
 default, except for `deploy repair` and `repair_test`.  The values for
@@ -165,7 +169,8 @@ def _add_servo_subcommand(subcommands):
     subparser.set_defaults(stageusb=True,
                            labstation=False,
                            install_firmware=False,
-                           install_test_image=False)
+                           install_test_image=False,
+                           reinstall_test_image=False)
 
 
 def _add_stageusb_option(parser):
@@ -192,7 +197,8 @@ def _add_firmware_subcommand(subcommands):
             help='Flash DUT firmware directly using servo')
     subparser.set_defaults(labstation=False,
                            install_firmware=True,
-                           install_test_image=True)
+                           install_test_image=True,
+                           reinstall_test_image=False)
 
 
 def _add_test_image_subcommand(subcommands):
@@ -207,7 +213,8 @@ def _add_test_image_subcommand(subcommands):
     _add_stageusb_option(subparser)
     subparser.set_defaults(labstation=False,
                            install_firmware=False,
-                           install_test_image=True)
+                           install_test_image=True,
+                           reinstall_test_image=False)
 
 
 def _add_repair_subcommand(subcommands):
@@ -222,7 +229,8 @@ def _add_repair_subcommand(subcommands):
     _add_stageusb_option(subparser)
     subparser.set_defaults(labstation=False,
                            install_firmware=False,
-                           install_test_image=True)
+                           install_test_image=False,
+                           reinstall_test_image=True)
 
 
 def _add_labstation_subcommand(subcommands):
@@ -237,7 +245,8 @@ def _add_labstation_subcommand(subcommands):
         ' imaged with a labstation test image.')
     subparser.set_defaults(labstation=True,
                            install_firmware=False,
-                           install_test_image=False)
+                           install_test_image=False,
+                           reinstall_test_image=False)
 
 
 def parse_command(argv):
