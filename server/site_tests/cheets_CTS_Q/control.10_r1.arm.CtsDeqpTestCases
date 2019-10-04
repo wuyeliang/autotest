@@ -30,6 +30,6 @@ def run_CTS(machine):
         target_plan=None,
         bundle='arm',
         uri='gs://chromeos-arc-images/cts/bundle/Q/android-cts-10_r1-linux_x86-arm.zip',
-        timeout=72000)
+        timeout=108000)
 
 parallel_simple(run_CTS, machines)
