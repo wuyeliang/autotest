@@ -881,14 +881,6 @@ class TradefedTest(test.test):
                 logging.info('END: %s\n', command)
                 logging.debug(output)
 
-    def _run_precondition_scripts(self, commands, steps):
-        """Run precondition scripts on all the hosts.
-
-        Replaces {0} in commands (if any) with the retry count.
-        """
-        self._run_commands((command.format(steps) for command in commands),
-                           ignore_status=True)
-
     def _override_powerd_prefs(self):
         """Overrides powerd prefs to prevent screen from turning off, complying
         with CTS requirements.
@@ -1126,7 +1118,7 @@ class TradefedTest(test.test):
         while steps < self._max_retry:
             steps += 1
             keep_media = media_asset and media_asset.uri and steps >= 1
-            self._run_precondition_scripts(login_precondition_commands, steps)
+            self._run_commands(login_precondition_commands, ignore_status=True)
             with login.login_chrome(
                     hosts=self._hosts,
                     board=board,
@@ -1147,7 +1139,7 @@ class TradefedTest(test.test):
                         current_login.need_reboot(hard_reboot=hard_reboot)
                 self._ready_arc()
                 self._calculate_test_count_factor(bundle)
-                self._run_precondition_scripts(precondition_commands, steps)
+                self._run_commands(precondition_commands, ignore_status=True)
 
                 # Run tradefed.
                 if session_id == None:
