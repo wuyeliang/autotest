@@ -43,9 +43,14 @@ class HostInfo(object):
     _OS_PREFIX = 'os'
     _POOL_PREFIX = 'pool'
 
-    _VERSION_LABELS = (
+    _OS_VERSION_LABELS = (
             provision.CROS_VERSION_PREFIX,
             provision.CROS_ANDROID_VERSION_PREFIX,
+    )
+
+    _VERSION_LABELS = _OS_VERSION_LABELS + (
+            provision.FW_RO_VERSION_PREFIX,
+            provision.FW_RW_VERSION_PREFIX,
     )
 
     def __init__(self, labels=None, attributes=None):
@@ -67,7 +72,7 @@ class HostInfo(object):
         @returns The first build label for this host (if there are multiple).
                 None if no build label is found.
         """
-        for label_prefix in self._VERSION_LABELS:
+        for label_prefix in self._OS_VERSION_LABELS:
             build_labels = self._get_stripped_labels_with_prefix(label_prefix)
             if build_labels:
                 return build_labels[0]

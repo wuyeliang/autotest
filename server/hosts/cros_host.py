@@ -584,15 +584,11 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @param rw_only: True to only clear fwrw_version; otherewise, clear
                         both fwro_version and fwrw_version.
         """
-        labels = self._AFE.get_labels(
-                name__startswith=provision.FW_RW_VERSION_PREFIX,
-                host__hostname=self.hostname)
+        info = self.host_info_store.get()
+        info.clear_version_labels(provision.FW_RW_VERSION_PREFIX)
         if not rw_only:
-            labels = labels + self._AFE.get_labels(
-                    name__startswith=provision.FW_RO_VERSION_PREFIX,
-                    host__hostname=self.hostname)
-        for label in labels:
-            label.remove_hosts(hosts=[self.hostname])
+            info.clear_version_labels(provision.FW_RO_VERSION_PREFIX)
+        self.host_info_store.commit(info)
 
 
     def _add_fw_version_label(self, build, rw_only):
@@ -603,11 +599,11 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                         fwro_version and fwrw_version.
 
         """
-        fw_label = provision.fwrw_version_to_label(build)
-        self._AFE.run('label_add_hosts', id=fw_label, hosts=[self.hostname])
+        info = self.host_info_store.get()
+        info.set_version_label(provision.FW_RW_VERSION_PREFIX, build)
         if not rw_only:
-            fw_label = provision.fwro_version_to_label(build)
-            self._AFE.run('label_add_hosts', id=fw_label, hosts=[self.hostname])
+            info.set_version_label(provision.FW_RO_VERSION_PREFIX, build)
+        self.host_info_store.commit(info)
 
 
     def firmware_install(self, build=None, rw_only=False, dest=None):
