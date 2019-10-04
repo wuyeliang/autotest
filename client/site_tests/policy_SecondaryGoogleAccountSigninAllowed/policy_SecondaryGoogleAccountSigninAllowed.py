@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 import time
 
+import logging
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
@@ -37,17 +38,16 @@ class policy_SecondaryGoogleAccountSigninAllowed(
             timeout=30,
             sleep_interval=3)
 
-        # It takes another few ms to make the button clickable.
-        time.sleep(1)
-        self.ui.doDefault_on_obj(role='button',
-                                 name=self.ACC_REGEX,
-                                 isRegex=True)
+        self.ui.click_and_wait_for_item_with_retries(self.ACC_REGEX,
+                                                     '/Manage accounts/',
+                                                     isRegex_click=True,
+                                                     isRegex_wait=True,
+                                                     click_role='button',
+                                                     wait_role='link')
 
-        # This sleep is needed for the all available buttons to load.
-        time.sleep(1)
-        add_account_button = self.ui.doDefault_on_obj(role='link',
-                                                      name='/Manage accounts/',
-                                                      isRegex=True)
+        self.ui.doDefault_on_obj(role='link',
+                                 name='/Manage accounts/',
+                                 isRegex=True)
 
         if case is False:
             if not self.ui.did_obj_not_load(
@@ -55,7 +55,6 @@ class policy_SecondaryGoogleAccountSigninAllowed(
             isRegex=True):
                 raise error.TestFail(
                     'Add account button is present and it should not be.')
-
         else:
             self.ui.wait_for_ui_obj(
                 name='/Manage accounts on this device/',
