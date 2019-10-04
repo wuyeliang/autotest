@@ -520,6 +520,12 @@ def _install_test_image(host, arguments):
         except Exception as e:
             logging.exception('Failed to stage image on USB: %s', e)
             raise Exception('USB staging failed')
+    if arguments.install_test_image:
+        try:
+            preparedut.install_test_image(host)
+        except error.AutoservRunError as e:
+            logging.exception('Failed to install: %s', e)
+            raise Exception('chromeos-install failed')
     if arguments.install_firmware:
         try:
             if arguments.using_servo:
@@ -534,12 +540,21 @@ def _install_test_image(host, arguments):
                     'Flashing firmware using servo' if arguments.using_servo
                     else 'chromeos-firmwareupdate')
             raise Exception(msg)
-    if arguments.install_test_image:
+    if arguments.reinstall_test_image:
         try:
-            preparedut.install_test_image(host)
+            preparedut.reinstall_test_image(host)
         except error.AutoservRunError as e:
             logging.exception('Failed to install: %s', e)
             raise Exception('chromeos-install failed')
+    if arguments.install_test_image and arguments.install_firmware:
+        # we need to verify that DUT can successfully boot in to recovery mode
+        # if it's initial deploy.
+        try:
+            preparedut.verify_boot_into_rec_mode(host)
+        except error.AutoservRunError as e:
+            logging.exception('Failed to validate DUT can boot from '
+                              'recovery mode: %s', e)
+            raise Exception('recovery mode validation failed')
 
 
 def _install_and_update_afe(afe, hostname, host_attrs, arguments):
@@ -571,7 +586,8 @@ def _install_and_update_afe(afe, hostname, host_attrs, arguments):
                 _install_test_image(target_host, arguments)
                 _update_servo_type_attribute(target_host, host)
 
-        if arguments.install_test_image and not arguments.dry_run:
+        if ((arguments.install_test_image or arguments.reinstall_test_image)
+            and not arguments.dry_run):
             host.labels.update_labels(host)
             platform_labels = afe.get_labels(
                     host__hostname=hostname, platform=True)
