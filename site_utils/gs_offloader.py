@@ -373,7 +373,7 @@ def correct_results_folder_permission(dir_entry):
         owner = '%s:%s' % (os.getuid(), os.getgid())
         subprocess.check_call(
                 ['sudo', '-n', 'chown', '-R', owner, dir_entry])
-        subprocess.check_call(['chmod', '-R', 'u+r', dir_entry])
+        subprocess.check_call(['chmod', '-R', 'u+rw', dir_entry])
         subprocess.check_call(
                 ['find', dir_entry, '-type', 'd',
                  '-exec', 'chmod', 'u+x', '{}', ';'])
