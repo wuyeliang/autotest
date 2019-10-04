@@ -95,16 +95,10 @@ _PUBLIC_COLLECT = 'tradefed-run-collect-tests-only'
 
 _CTS_MAX_RETRIES = {}
 
-# The set of flaky modules that we want to seprate their run from other modules.
-_FLAKY_MODULES = {'CtsFileSystemTestCases'}
-
-# TODO(ihf): Update timeouts once P is more stable.
-# Timeout in hours.
 _CTS_TIMEOUT = {
-    'CtsFileSystemTestCases':            2.5,
-    _ALL:                               12.0,
-    _COLLECT:                            2.0,
-    _PUBLIC_COLLECT:                     2.0,
+    _ALL:             5.0,
+    _COLLECT:         2.0,
+    _PUBLIC_COLLECT:  2.0,
 }
 
 # Any test that runs as part as blocking BVT needs to be stable and fast. For
@@ -551,13 +545,11 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
         cmd.append('--retry')
         cmd.append('{session_id}')
     else:
-        if _ALL in modules:
-            for module in _FLAKY_MODULES:
-                cmd += ['--exclude-filter', module]
-        elif len(modules) == 1:
-            cmd += ['--module', list(modules)[0]]
-        else:
+        if len(modules) != 1:
             raise Exception('cts-instant cannot include multiple modules')
+        module = list(modules)[0]
+        if module != _ALL:
+            cmd += ['--module', module]
 
         # For runs create a logcat file for each individual failure.
         # Not needed on moblab, nobody is going to look at them.
@@ -931,10 +923,7 @@ def write_qualification_controlfiles(modules, abi, revision, build, uri,
     # For cts-instant, qualication control files are expected to cover
     # regressions as well. Hence the 'suite:arc-cts' is added.
     suites = ['suite:arc-cts', 'suite:arc-cts-qual']
-    for module in _FLAKY_MODULES.intersection(modules):
-        write_controlfile(module, set([module]), abi, revision, build, uri,
-                          suites, is_public)
-    write_controlfile('all.except-flaky', set([_ALL]), abi, revision, build,
+    write_controlfile('all', set([_ALL]), abi, revision, build,
                       uri, suites, is_public)
 
 
