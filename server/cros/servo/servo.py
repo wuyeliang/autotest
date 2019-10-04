@@ -314,16 +314,73 @@ class Servo(object):
         """Returns the serial number of the servo board."""
         return self._servo_serial
 
-    def fetch_servod_log(self, filename=None, skip_old=False):
-        """Save the servod log into the given local file.
+    def rotate_servod_logs(self, filename=None, directory=None):
+        """Save the latest servod log into a local directory, then rotate logs.
 
-        @param filename: save the contents into a file with the given name.
-        @param skip_old: if True, skip past the old data in the log file.
-        @type filename: str
-        @type skip_old: bool
-        @rtype: None
+        The files will be <filename>.DEBUG, <filename>.INFO, <filename>.WARNING,
+        or just <filename>.log if not using split level logging.
+
+        @param filename: local filename prefix (no file extension) to use.
+                         If None, rotate log but don't save it.
+        @param directory: local directory to save logs into (if unset, use cwd)
         """
-        return self._servo_host.fetch_servod_log(filename, skip_old)
+        if self.is_localhost():
+            # Local servod usually runs without log-dir, so can't be collected.
+            # TODO(crbug.com/1011516): allow localhost when rotation is enabled
+            return
+
+        log_dir = '/var/log/servod_%s' % self._servo_host.servo_port
+
+        if filename:
+            # TODO(crrev.com/c/1793030): remove no-level case once CL is pushed
+            for level_name in ('', 'DEBUG', 'INFO', 'WARNING'):
+
+                remote_path = os.path.join(log_dir, 'latest')
+                if level_name:
+                    remote_path += '.%s' % level_name
+
+                local_path = '%s.%s' % (filename, level_name or 'log')
+                if directory:
+                    local_path = os.path.join(directory, local_path)
+
+                try:
+                    self._servo_host.get_file(
+                            remote_path, local_path, try_rsync=False)
+
+                except error.AutoservRunError as e:
+                    result = e.result_obj
+                    if result.exit_status != 0:
+                        stderr = result.stderr.strip()
+
+                        # File not existing is okay, but warn for anything else.
+                        if 'no such' not in stderr.lower():
+                            logging.warn(
+                                    "Couldn't retrieve servod log: %s",
+                                    stderr or '\n%s' % result)
+
+                try:
+                    if os.stat(local_path).st_size == 0:
+                        os.unlink(local_path)
+                except EnvironmentError:
+                    pass
+
+        else:
+            # No filename given, so caller wants to discard the log lines.
+            # Remove the symlinks to prevent old log-dir links from being
+            # picked up multiple times when using servod without log-dir.
+            remote_path = os.path.join(log_dir, 'latest*')
+            self._servo_host.run(
+                    "rm %s" % remote_path,
+                    stderr_tee=None, ignore_status=True)
+
+        # Servod log rotation renames current log, then creates a new file with
+        # the old name: log.<date> -> log.<date>.1.tbz2 -> log.<date>.2.tbz2
+
+        # Must rotate after copying, or the copy would be the new, empty file.
+        try:
+            self.set_nocheck('rotate_servod_logs', 'yes')
+        except ControlUnavailableError as e:
+            logging.warn("Couldn't rotate servod logs: %s", str(e))
 
     def get_power_state_controller(self):
         """Return the power state controller for this Servo.

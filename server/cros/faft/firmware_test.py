@@ -35,11 +35,17 @@ class FAFTBase(test.test):
     firmware functions and interfaces. It also provides some methods to
     handle the reboot mechanism, in order to ensure FAFTClient is still
     connected after reboot.
+    @type servo: servo.Servo
     """
     def initialize(self, host):
         """Create a FAFTClient object and install the dependency."""
+
         self.servo = host.servo
+
+        # Rotate old logs out of the way before test starts, to avoid noise.
+        self.servo.rotate_servod_logs(filename=None)
         self.servo.initialize_dut()
+
         self._client = host
         self.faft_client = RPCProxy(host)
         self.lockfile = '/var/tmp/faft/lock'
@@ -170,7 +176,6 @@ class FirmwareTest(FAFTBase):
         self.base_ec = chrome_base_ec.create_base_ec(self.servo)
 
         self._setup_uart_capture()
-        self._setup_servo_log()
         self._record_system_info()
         self.fw_vboot2 = self.faft_client.System.GetFwVboot2()
         logging.info('vboot version: %d', 2 if self.fw_vboot2 else 1)
@@ -192,18 +197,28 @@ class FirmwareTest(FAFTBase):
         self._setup_ec_write_protect(ec_wp)
         # See chromium:239034 regarding needing this sync.
         self.blocking_sync()
+        self.servo.rotate_servod_logs('servod.init', self.resultsdir)
         logging.info('FirmwareTest initialize done (id=%s)', self.run_id)
 
     def cleanup(self):
         """Autotest cleanup function."""
         # Unset state checker in case it's set by subclass
         logging.info('FirmwareTest cleaning up (id=%s)', self.run_id)
+
+        # capture servod logs for body of test
+        self.servo.rotate_servod_logs('servod', self.resultsdir)
+
         # Capture UART before doing anything else, so we can guarantee we get
         # some uart results.
         try:
             self._record_uart_capture()
         except:
             logging.warn('Failed initial uart capture during cleanup')
+
+        # Discard redundant log messages containing the captured uart text:
+        # ... Servod - DEBUG - servo_server.py:765:get - ec_uart_stream = '...'
+        self.servo.rotate_servod_logs(filename=None)
+
         try:
             self.faft_client.System.IsAvailable()
         except:
@@ -217,9 +232,13 @@ class FirmwareTest(FAFTBase):
         self.faft_client.Updater.StartDaemon()
         self.faft_client.Updater.Cleanup()
         self._remove_faft_lockfile()
-        self._record_servo_log()
         self._record_faft_client_log()
+        self.servo.rotate_servod_logs('servod.cleanup', self.resultsdir)
+
+        # Capture any new uart output, then discard log messages again.
         self._cleanup_uart_capture()
+        self.servo.rotate_servod_logs(filename=None)
+
         super(FirmwareTest, self).cleanup()
         logging.info('FirmwareTest cleanup done (id=%s)', self.run_id)
 
@@ -905,32 +924,6 @@ class FirmwareTest(FAFTBase):
         cmd = '(sleep %d; powerd_dbus_suspend) &' % self.EC_SUSPEND_DELAY
         self.faft_client.System.RunShellCommand(cmd)
         time.sleep(self.EC_SUSPEND_DELAY)
-
-    def _setup_servo_log(self):
-        """Set up the servo log capturing."""
-        self.servo_log_original_size = 0
-        self.servo_log_original_inode = None
-        if self.servo.is_localhost():
-            # No servo log recorded when servod runs locally.
-            return
-
-        self.servo.fetch_servod_log(None, skip_old=False)
-
-    def _record_servo_log(self):
-        """Record the new portion of the servo log to the results directory."""
-        if self.servo.is_localhost():
-            # No servo log recorded when servod runs locally.
-            return
-
-        results_servod_log = os.path.join(self.resultsdir, 'servod.log')
-        self.servo.fetch_servod_log(results_servod_log, skip_old=True)
-        """Record the servo log to the results directory."""
-        if hasattr(self, 'servo_log_original_len'):
-            if self.servo_log_original_len != -1:
-                servo_log = self._fetch_servo_log()
-                servo_log_file = os.path.join(self.resultsdir, 'servod.log')
-                with open(servo_log_file, 'a') as f:
-                    f.write(servo_log[self.servo_log_original_len:])
 
     def _record_faft_client_log(self):
         """Record the faft client log to the results directory."""

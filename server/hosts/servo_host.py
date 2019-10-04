@@ -11,7 +11,6 @@
 
 import logging
 import os
-import shutil
 import xmlrpclib
 
 from autotest_lib.client.bin import utils
@@ -51,7 +50,10 @@ AUTOTEST_BASE = _CONFIG.get_config_value(
 
 class ServoHost(base_servohost.BaseServoHost):
     """Host class for a servo host(e.g. beaglebone, labstation)
-     that with a servo instance for a specific port."""
+     that with a servo instance for a specific port.
+
+     @type _servo: servo.Servo | None
+     """
 
     DEFAULT_PORT = int(os.getenv('SERVOD_PORT', '9999'))
 
@@ -108,9 +110,6 @@ class ServoHost(base_servohost.BaseServoHost):
         self._repair_strategy = (
                 servo_repair.create_servo_repair_strategy())
 
-        self._prev_log_size = 0
-        self._prev_log_inode = 0
-
     def connect_servo(self):
         """Establish a connection to the servod server on this host.
 
@@ -145,70 +144,6 @@ class ServoHost(base_servohost.BaseServoHost):
             # unknown ports.
             self.rpc_server_tracker.disconnect(self.servo_port)
             self._servo = None
-
-    def fetch_servod_log(self, filename, skip_old=False):
-        """Save the servod log into the given local file.
-
-        The inode number is used for checking whether the log was rotated:
-        it skips old data only if the log is actually the same file.
-
-        If filename is not set, this just refreshes the stored info about the
-        log file's size and inode, for use in future calls.
-
-        @param filename: save the contents into a file with the given name.
-        @param skip_old: if True, skip past the old data in the log file.
-        @type filename: str
-        @type skip_old: bool
-        @rtype: None
-        """
-        if self.is_localhost():
-            return
-
-        log_name = 'servod_%s' % self.servo_port
-        log_path = '/var/log/%s.log' % log_name
-
-        # %n = name, %i = inode, %s = size.
-        cmd = "/usr/bin/stat --format '%n|%i|%s' {}".format(log_path)
-        result = self.run(cmd, ignore_status=True)
-        if result.exit_status != 0:
-            if 'No such file or directory' not in result.stderr:
-                # Warn only if log file is broken/unreadable, not just missing.
-                logging.warn("Couldn't stat servod log: %s", result.stderr)
-
-            self._prev_log_size = 0
-            self._prev_log_inode = 0
-            return
-
-        (path, inode, size) = result.stdout.split('|')
-        inode = int(inode)
-        size = int(size)
-
-        prev_inode = self._prev_log_inode
-        prev_size = self._prev_log_size
-        if not prev_inode or not prev_size or inode != prev_inode:
-            # Don't skip if it's actually a different file, or it somehow shrunk
-            skip_old = False
-
-        if filename:
-            try:
-                if skip_old:
-                    # Fetch whole log to .log.tmp, then save only the new bytes.
-                    temp_filename = filename + '.tmp'
-                    self.get_file(log_path, temp_filename)
-
-                    with open(temp_filename, 'rb') as temp_log_file:
-                        temp_log_file.seek(prev_size)
-                        with open(filename, 'wb') as real_log_file:
-                            # read in pieces, in case the log file is big
-                            shutil.copyfileobj(temp_log_file, real_log_file)
-                    os.unlink(temp_filename)
-                else:
-                    self.get_file(log_path, filename)
-            except EnvironmentError:
-                logging.warn("Couldn't save copy of servod log:", exc_info=True)
-
-        self._prev_log_size = size
-        self._prev_log_inode = inode
 
     def get_servod_server_proxy(self):
         """Return a proxy that can be used to communicate with servod server.
