@@ -998,42 +998,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @raise error.AutoservError: If any mismatch between cros-version label
                                     and the build installed in dut is found.
         """
-        labels = self._AFE.get_labels(
-                name__startswith=ds_constants.VERSION_PREFIX,
-                host__hostname=self.hostname)
-        mismatch_found = False
-        if labels:
-            # Ask the DUT for its canonical image name.  This will be in
-            # a form like this:  kevin-release/R66-10405.0.0
-            release_builder_path = self.get_release_builder_path()
-            host_list = [self.hostname]
-            for label in labels:
-                # Remove any cros-version label that does not match
-                # the DUT's installed image.
-                #
-                # TODO(jrbarnette):  We make exceptions for certain
-                # known cases where the version label will not match the
-                # original CHROMEOS_RELEASE_BUILDER_PATH setting:
-                #  * Tests for the `arc-presubmit` pool append
-                #    "-cheetsth" to the label.
-                #  * Moblab use cases based on `cros stage` store images
-                #    under a name with the string "-custom" embedded.
-                #    It's not reliable to match such an image name to the
-                #    label.
-                label_version = label.name[len(ds_constants.VERSION_PREFIX):]
-                if '-custom' in label_version:
-                    continue
-                if label_version.endswith('-cheetsth'):
-                    label_version = label_version[:-len('-cheetsth')]
-                if label_version != release_builder_path:
-                    logging.warn(
-                        'version according to cros-version label "%s" does not '
-                        'match DUT-determined version %s. Removing the label.',
-                        label_version, release_builder_path)
-                    label.remove_hosts(hosts=host_list)
-                    mismatch_found = True
-        if mismatch_found:
-            raise error.AutoservError('The host has wrong cros-version label.')
+        # crbug.com/1007333: This check is being removed.
+        return True
 
 
     def cleanup_services(self):
