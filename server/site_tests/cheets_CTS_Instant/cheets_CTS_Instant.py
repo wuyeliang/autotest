@@ -27,8 +27,9 @@ _PARTNER_CTS = 'gs://chromeos-partner-cts/'
 _CTS_URI = {
     'arm': _PUBLIC_CTS + 'android-cts_instant-9.0_r9-linux_x86-arm.zip',
     'x86': _PUBLIC_CTS + 'android-cts_instant-9.0_r9-linux_x86-x86.zip',
-    'media': _PUBLIC_CTS + 'android-cts-media-1.4.zip',
 }
+_CTS_MEDIA_URI = _PUBLIC_CTS + 'android-cts-media-1.4.zip'
+_CTS_MEDIA_LOCALPATH = '/tmp/android-cts-media'
 
 
 class cheets_CTS_Instant(tradefed_test.TradefedTest):
@@ -138,6 +139,9 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
             timeout=timeout,
             target_module=target_module,
             target_plan=target_plan,
+            media_asset=tradefed_test.MediaAsset(
+                _CTS_MEDIA_URI if needs_push_media else None,
+                _CTS_MEDIA_LOCALPATH),
             needs_push_media=needs_push_media,
             bundle=bundle,
             cts_uri=_CTS_URI,
