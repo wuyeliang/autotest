@@ -11,6 +11,7 @@
 
 import logging
 import os
+import shutil
 import xmlrpclib
 
 from autotest_lib.client.bin import utils
@@ -50,10 +51,7 @@ AUTOTEST_BASE = _CONFIG.get_config_value(
 
 class ServoHost(base_servohost.BaseServoHost):
     """Host class for a servo host(e.g. beaglebone, labstation)
-     that with a servo instance for a specific port.
-
-     @type _servo: servo.Servo | None
-     """
+     that with a servo instance for a specific port."""
 
     DEFAULT_PORT = int(os.getenv('SERVOD_PORT', '9999'))
 
@@ -110,6 +108,9 @@ class ServoHost(base_servohost.BaseServoHost):
         self._repair_strategy = (
                 servo_repair.create_servo_repair_strategy())
 
+        self._prev_log_size = 0
+        self._prev_log_inode = 0
+
     def connect_servo(self):
         """Establish a connection to the servod server on this host.
 
@@ -145,47 +146,69 @@ class ServoHost(base_servohost.BaseServoHost):
             self.rpc_server_tracker.disconnect(self.servo_port)
             self._servo = None
 
-    def rotate_servod_logs(self, filename=None):
-        """Save the latest servod log into a local directory, then rotate logs.
+    def fetch_servod_log(self, filename, skip_old=False):
+        """Save the servod log into the given local file.
 
-        The files will be <filename>.DEBUG, <filename>.INFO, <filename>.WARNING,
-        or just <filename>.log if not using split level logging.
+        The inode number is used for checking whether the log was rotated:
+        it skips old data only if the log is actually the same file.
 
-        @param filename: local filename prefix (within results dir) to save to.
-                         If None, rotate log but don't save it.
+        If filename is not set, this just refreshes the stored info about the
+        log file's size and inode, for use in future calls.
+
+        @param filename: save the contents into a file with the given name.
+        @param skip_old: if True, skip past the old data in the log file.
+        @type filename: str
+        @type skip_old: bool
+        @rtype: None
         """
         if self.is_localhost():
-            # Local servod usually runs without log-dir, so can't be collected.
-            # Also, get_file uses ssh, so doesn't work with localhost.
             return
 
-        if not filename:
-            # Rotate logs, without saving a local copy.
-            self._servo.set_nocheck('rotate_servod_logs', 'yes')
+        log_name = 'servod_%s' % self.servo_port
+        log_path = '/var/log/%s.log' % log_name
+
+        # %n = name, %i = inode, %s = size.
+        cmd = "/usr/bin/stat --format '%n|%i|%s' {}".format(log_path)
+        result = self.run(cmd, ignore_status=True)
+        if result.exit_status != 0:
+            if 'No such file or directory' not in result.stderr:
+                # Warn only if log file is broken/unreadable, not just missing.
+                logging.warn("Couldn't stat servod log: %s", result.stderr)
+
+            self._prev_log_size = 0
+            self._prev_log_inode = 0
             return
 
-        latest_path = '/var/log/servod_%s/latest' % self.servo_port
+        (path, inode, size) = result.stdout.split('|')
+        inode = int(inode)
+        size = int(size)
 
-        for level_name in ('', 'DEBUG', 'INFO', 'WARNING'):
-            local_path = '%s.%s' % (filename, level_name or 'log')
-            remote_path = latest_path
-            if level_name:
-                remote_path += '.%s' % level_name
+        prev_inode = self._prev_log_inode
+        prev_size = self._prev_log_size
+        if not prev_inode or not prev_size or inode != prev_inode:
+            # Don't skip if it's actually a different file, or it somehow shrunk
+            skip_old = False
 
+        if filename:
             try:
-                self.get_file(remote_path, local_path, try_rsync=False)
-            except error.AutoservRunError as e:
-                stderr = e.result_obj.stderr.strip()
-                if 'no such' not in stderr.lower():
-                    # File not existing is normal, but warn for any other error.
-                    logging.warn("Couldn't retrieve servod log: %s:\n%s",
-                                 remote_path, stderr or str(e))
+                if skip_old:
+                    # Fetch whole log to .log.tmp, then save only the new bytes.
+                    temp_filename = filename + '.tmp'
+                    self.get_file(log_path, temp_filename)
 
-        # Servod log rotation renames current log, then creates a new file with
-        # the old name: log.<date> -> log.<date>.1.tbz2 -> log.<date>.2.tbz2
+                    with open(temp_filename, 'rb') as temp_log_file:
+                        temp_log_file.seek(prev_size)
+                        with open(filename, 'wb') as real_log_file:
+                            # read in pieces, in case the log file is big
+                            shutil.copyfileobj(temp_log_file, real_log_file)
+                    os.unlink(temp_filename)
+                else:
+                    self.get_file(log_path, filename)
+            except EnvironmentError:
+                logging.warn("Couldn't save copy of servod log:", exc_info=True)
 
-        # Must rotate after copying, or the copy would be the new, empty file.
-        self._servo.set_nocheck('rotate_servod_logs', 'yes')
+        self._prev_log_size = size
+        self._prev_log_inode = inode
 
     def get_servod_server_proxy(self):
         """Return a proxy that can be used to communicate with servod server.

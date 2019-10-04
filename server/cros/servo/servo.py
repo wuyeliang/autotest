@@ -314,16 +314,16 @@ class Servo(object):
         """Returns the serial number of the servo board."""
         return self._servo_serial
 
-    def rotate_servod_logs(self, filename=None):
-        """Save the servod logs into the given local file.
+    def fetch_servod_log(self, filename=None, skip_old=False):
+        """Save the servod log into the given local file.
 
-        The files will be <filename>.DEBUG, <filename>.INFO, <filename>.WARNING,
-        or just <filename>.log if not using split level logging.
-
-        @param filename: local filename prefix (within results dir) to save to.
-                         If None, rotate log but don't save it.
+        @param filename: save the contents into a file with the given name.
+        @param skip_old: if True, skip past the old data in the log file.
+        @type filename: str
+        @type skip_old: bool
+        @rtype: None
         """
-        return self._servo_host.rotate_servod_logs(filename)
+        return self._servo_host.fetch_servod_log(filename, skip_old)
 
     def get_power_state_controller(self):
         """Return the power state controller for this Servo.
