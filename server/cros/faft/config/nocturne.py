@@ -20,3 +20,5 @@ class Values(object):
 
     chrome_ec = True
     ec_capability = ['x86', 'battery', 'charging', 'lid']
+
+    cr50_capability = ['wp_on_in_g3']

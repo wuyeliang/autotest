@@ -11,3 +11,4 @@ class Values(object):
     servo_prog_state_delay = 10
     smm_store = False
     gsc_can_wake_ec_with_reset = False
+    cr50_capability = ['wp_on_in_g3']

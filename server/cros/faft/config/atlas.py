@@ -13,4 +13,4 @@ class Values(object):
     spi_voltage = 'pp3300'
     servo_prog_state_delay = 10
     dark_resume_capable = True
-    cr50_capability = ['rdd_leakage']
+    cr50_capability = ['rdd_leakage', 'wp_on_in_g3']
