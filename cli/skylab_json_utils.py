@@ -34,6 +34,18 @@ VIDEO_ACCELERATION_WHITELIST = {
 }
 
 
+PHASE_WHITELIST = {
+    "PHASE_INVALID",
+    "PHASE_EVT",
+    "PHASE_EVT2",
+    "PHASE_DVT",
+    "PHASE_DVT2",
+    "PHASE_PVT",
+    "PHASE_PVT2",
+    "PHASE_PVT3",
+    "PHASE_MP",
+}
+
 
 def _normalize_pools(l):
     """take in the list of pools and distribute them between criticalPools and
@@ -150,7 +162,6 @@ class Labels(object):
             if x.startswith(prefix):
                 yield x
 
-
 def _cr50_phase(l):
     return l.get_enum("cr50", prefix="CR50_PHASE_")
 
@@ -205,6 +216,15 @@ def _platform(l):
     return l.get_string("platform") or l.get_string("Platform")
 
 
+def _phase(l):
+    inferred_phase = l.get_enum("phase", prefix="PHASE_")
+    if inferred_phase in PHASE_WHITELIST:
+        return inferred_phase
+    else:
+        return "PHASE_INVALID"
+    
+
+
 def validate_required_fields_for_skylab(skylab_fields):
     """Does 'skylab_fields' have all required fields to add a DUT?
 
@@ -256,7 +276,7 @@ def process_labels(labels, platform):
         # enum keys
         "ecType": _ec_type(l),
         "osType": _os_type(l),
-        "phase": l.get_enum("phase", prefix="PHASE_"),
+        "phase": _phase(l),
         # list of enum keys
         "criticalPools": pools["criticalPools"],
         "ctsAbi": _cts_abi(l),
