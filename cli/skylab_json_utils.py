@@ -47,6 +47,13 @@ PHASE_WHITELIST = {
 }
 
 
+CR50_PHASE_WHITELIST = {
+    "CR50_PHASE_INVALID",
+    "CR50_PHASE_PREPVT",
+    "CR50_PHASE_PVT",
+}
+
+
 def _normalize_pools(l):
     """take in the list of pools and distribute them between criticalPools and
     self_serve_pools"""
@@ -163,7 +170,12 @@ class Labels(object):
                 yield x
 
 def _cr50_phase(l):
-    return l.get_enum("cr50", prefix="CR50_PHASE_")
+    inferred_cr50_phase = l.get_enum("cr50", prefix="CR50_PHASE_")
+    if inferred_cr50_phase in CR50_PHASE_WHITELIST:
+        return inferred_cr50_phase
+    else:
+        return "CR50_PHASE_INVALID"
+   
 
 
 def _cts_abi(l):

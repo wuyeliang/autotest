@@ -97,7 +97,9 @@ class skylab_json_utils_unittest(unittest.TestCase):
         l = sky.Labels()
         l._add_label("cr50:0.3.18")
         out = sky.process_labels(l, platform=None)
-        self.assertEqual(out["cr50Phase"], "CR50_PHASE_0.3.18")
+        # TODO(gregorynisbet): note! strictly speaking this is wrong,
+        # but skylab does not support version numbers in the CR50_PHASE
+        self.assertEqual(out["cr50Phase"], "CR50_PHASE_INVALID")
 
     def test_cr50phase_absent(self):
         l = sky.Labels()
