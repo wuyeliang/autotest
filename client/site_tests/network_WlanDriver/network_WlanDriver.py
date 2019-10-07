@@ -120,6 +120,9 @@ class network_WlanDriver(test.test):
                      '4.14': 'wireless/marvell/mwifiex/mwifiex_pcie.ko',
                      '4.19': 'wireless/marvell/mwifiex/mwifiex_pcie.ko',
             },
+            'Realtek 8822C PCIE': {
+                    '4.14': 'wireless/realtek/rtw88/rtwpci.ko',
+            },
     }
     EXCEPTION_BOARDS = [
             # Exhibits very similar symptoms to http://crbug.com/693724,
