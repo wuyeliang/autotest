@@ -1792,7 +1792,7 @@ class host_dump_duts(action_common.atest_list, host):
         super(host_dump_duts, self).__init__()
         self.parser.add_option('--output-dir',
                                help='directory to dump the board json files',
-                               dest='bug_number',
+                               dest='output_dir',
                                default=None)
 
     def parse(self):
@@ -1809,18 +1809,18 @@ class host_dump_duts(action_common.atest_list, host):
         else:
             hostnames = _host_skylab_migrate_get_hostnames(
                 obj=self,
-                class_=host_skylab_migrate,
+                class_=host_dump_duts,
                 model=self.model,
                 board=self.board,
                 pool=self.pool,
             )
 
-        good, bad, err = skylab_migration2.write_statjson_hostnames(hostnames=hostnames, outdir=self.outdir)
+        good, bad, err = skylab_migration2.write_statjson_hostnames(hostnames=hostnames, outdir=self.output_dir)
 
         if err is not None:
             return {"error": err}
 
-        hostname_err_map, err = skylab_migration2.validate_output(self.outdir)
+        hostname_err_map, err = skylab_migration2.validate_output(self.output_dir)
 
         if err is not None:
             return {"error": err}
@@ -1848,11 +1848,11 @@ class host_read_dump(action_common.atest_list, host):
         super(host_read_dump, self).__init__()
         self.parser.add_option('--output-dir',
                                help='directory to read json files from',
-                               dest='bug_number',
+                               dest='output_dir',
                                default=None)
 
     def parse(self):
-        (options, leftover) = super(host_dump_board, self).parse()
+        (options, leftover) = super(host_read_dump, self).parse()
         self.output_dir = options.output_dir
         return (options, leftover)
 
@@ -1862,7 +1862,7 @@ class host_read_dump(action_common.atest_list, host):
 
         json_obj, err = skylab_migration2.assemble_output_dir(output_dir=self.output_dir)
 
-        if err is None:
+        if err is not None:
             return {"error": err}
         else:
             return json_obj
@@ -1876,14 +1876,14 @@ class host_do_quick_add(action_common.atest_list, host):
 
     def __init__(self):
         super(host_do_quick_add, self).__init__()
-        self.parser.add_option('--output-dir',
+        self.parser.add_option('--data',
                                help='directory to read json files from',
-                               dest='bug_number',
+                               dest='data',
                                default=None)
 
     def parse(self):
-        (options, leftover) = super(host_skylab_verify, self).parse()
-        self.output_dir = options.output_dir
+        (options, leftover) = super(host_do_quick_add, self).parse()
+        self.data_dir = options.data
         return (options, leftover)
 
     def execute(self):
@@ -1892,14 +1892,14 @@ class host_do_quick_add(action_common.atest_list, host):
         else:
             hostnames = _host_skylab_migrate_get_hostnames(
                 obj=self,
-                class_=host_skylab_migrate,
+                class_=host_do_quick_add,
                 model=self.model,
                 board=self.board,
                 pool=self.pool,
             )
         if not hostnames:
             return {'error': 'no hosts to add'}
-        error_msg = skylab_migration2.do_quick_add(hostnames=hostnames)
+        error_msg = skylab_migration2.do_quick_add_duts(hostnames=hostnames, dirpath=self.data_dir)
         return {'error' : error_msg}
 
     def output(self, result):

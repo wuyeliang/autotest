@@ -253,7 +253,7 @@ def pretty_process_board(board, output_dir):
 #       should be impossible, but also isn't enough to prevent assemble_output_dir
 #       from doing something reasonable.
 def assemble_output_dir(output_dir):
-    _, err = validate_result(output_dir)
+    _, err = validate_output(output_dir)
     if err is not None:
         return None, err
     out = []
@@ -419,11 +419,11 @@ def do_quick_add_duts(hostnames, dirpath):
     missing_hostnames = set([])
     for hostname in hostnames:
         if hostname not in hostnames_map:
-            missing_hostnames.append(hostnames_map)
+            missing_hostnames.add(hostname)
 
     if missing_hostnames:
         for hostname in sorted(missing_hostnames):
-            print("MISSING %s\n", hostname)
+            print(("MISSING %s\n" % hostname))
         return "%s missing hostnames" % len(missing_hostnames)
 
     try:
