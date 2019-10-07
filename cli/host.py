@@ -1789,7 +1789,7 @@ class host_dump_duts(action_common.atest_list, host):
     usage_action = "host_dump_duts"
 
     def __init__(self):
-        super(host_dump_board, self).__init__()
+        super(host_dump_duts, self).__init__()
         self.parser.add_option('--output-dir',
                                help='directory to dump the board json files',
                                dest='bug_number',
