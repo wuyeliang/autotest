@@ -39,6 +39,7 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         device = self.devices['BLE_MOUSE'][0]
         self.connect_disconnect_loop(device=device, loops=3)
 
+
     @test_wrapper('Mouse Reports', devices={'BLE_MOUSE':1})
     def le_mouse_reports(self):
         """Run all bluetooth mouse reports tests"""
@@ -54,7 +55,35 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         self.test_pairing(device.address, device.pin, trusted=True)
         time.sleep(self.TEST_SLEEP_SECS)
         self.test_connection_by_adapter(device.address)
+
+        # With raspberry pi peer, it takes a moment before the device is
+        # registered as an input device. Without delay, the input recorder
+        # doesn't find the device
+        time.sleep(1)
         self.run_mouse_tests(device=device)
+
+
+    @test_wrapper('Keyboard Reports', devices={'BLE_KEYBOARD':1})
+    def le_keyboard_reports(self):
+        """Run all bluetooth keyboard reports tests"""
+
+        device = self.devices['BLE_KEYBOARD'][0]
+        # Let the adapter pair, and connect to the target device.
+        self.test_discover_device(device.address)
+        # self.bluetooth_facade.is_discovering() doesn't work as expected:
+        # crbug:905374
+        # self.test_stop_discovery()
+        self.bluetooth_facade.stop_discovery()
+        time.sleep(self.TEST_SLEEP_SECS)
+        self.test_pairing(device.address, device.pin, trusted=True)
+        time.sleep(self.TEST_SLEEP_SECS)
+        self.test_connection_by_adapter(device.address)
+
+        # With raspberry pi peer, it takes a moment before the device is
+        # registered as an input device. Without delay, the input recorder
+        # doesn't find the device
+        time.sleep(1)
+        self.run_keyboard_tests(device=device)
 
 
     @test_wrapper('Auto Reconnect', devices={'BLE_MOUSE':1})
@@ -80,6 +109,7 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         """
         self.le_connect_disconnect_loop()
         self.le_mouse_reports()
+        self.le_keyboard_reports()
         self.le_auto_reconnect()
 
 

@@ -404,6 +404,13 @@ class ChameleonBoard(object):
         """
         return self._chameleond_proxy.ble_mouse
 
+    def get_ble_keyboard(self):
+        """Gets the BLE keyboard on chameleon host.
+
+        @return: A BluetoothHIDFlow object.
+        """
+        return self._chameleond_proxy.ble_keyboard
+
 
 class ChameleonPort(object):
     """ChameleonPort is an abstraction of a general port of a Chameleon board.

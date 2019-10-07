@@ -56,7 +56,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
         # Grab currect device list for initialization
         connected_devices = self.devices
-        self.cleanup()
+        self.cleanup(on_start=False)
 
         for device_type, device_list in connected_devices.items():
             for device in device_list:
