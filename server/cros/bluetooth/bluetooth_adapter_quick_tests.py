@@ -53,9 +53,12 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         """Restart and clear peer devices"""
         # Restart the link to device
         logging.info('Restarting peer devices...')
+
+        # Grab currect device list for initialization
+        connected_devices = self.devices
         self.cleanup()
 
-        for device_type, device_list in self.devices.items():
+        for device_type, device_list in connected_devices.items():
             for device in device_list:
                 if device is not None:
                     logging.info('Restarting %s', device_type)
