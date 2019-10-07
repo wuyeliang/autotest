@@ -1785,8 +1785,8 @@ class host_skylab_verify(action_common.atest_list, host):
         json.dump(result, sys.stdout, indent=4)
 
 
-class host_dump_board(action_common.atest_list, host):
-    usage_action = "host_dump_board"
+class host_dump_duts(action_common.atest_list, host):
+    usage_action = "host_dump_duts"
 
     def __init__(self):
         super(host_dump_board, self).__init__()
@@ -1801,15 +1801,27 @@ class host_dump_board(action_common.atest_list, host):
         return (options, leftover)
 
     def execute(self):
-        if not hasattr(self, 'board') or not self.board:
-            return {'error': "must specify board"}
-
         if not hasattr(self, 'output_dir') or not self.output_dir:
             return {'error': "must specify output directory"}
 
-        number_bad_hosts = skylab_migration2.pretty_process_board(board=self.board, output_dir=self.output_dir)
+        if self.hosts:
+            hostnames = self.hosts
+        else:
+            hostnames = _host_skylab_migrate_get_hostnames(
+                obj=self,
+                class_=host_skylab_migrate,
+                model=self.model,
+                board=self.board,
+                pool=self.pool,
+            )
 
-        return {"number of failed hosts": number_bad_hosts}
+        good, bad, err = skylab_migration2.write_statjson_hostnames(hostnames=hostnames, outdir=self.outdir)
+
+        if err is not None:
+            return {"error": err}
+        else:
+            return {"good": good, "bad": bad}
+
 
     def output(self, result):
         json.dump(result, sys.stdout, indent=4)

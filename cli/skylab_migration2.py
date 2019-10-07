@@ -3,7 +3,7 @@
 
 # user facing commands:
 #
-#  -- pretty_dump_board
+#  -- write_statjson_hostnames
 #  -- do_quick_add
 
 
