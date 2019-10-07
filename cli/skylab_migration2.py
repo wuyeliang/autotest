@@ -77,6 +77,12 @@ TEXT = (type(b""), type(u""))
 NONETYPE = type(None)
 
 
+def flush_sync(fh):
+    fh.flush()
+    os.fsync(fh)
+    return
+
+
 # accepts: shell command, rest of args
 # returns: exit_status, stdout, stderr
 def shell_capture_all(cmd, *rest):
@@ -283,7 +289,7 @@ def assemble_output_dir(output_dir):
 def validate_single_dut_json(obj):
     with tempfile.NamedTemporaryFile(delete=True) as fh:
         json.dump(obj, fh)
-        fh.close()
+        flush_sync(fh)
         cmd = VALIDATE_CMD
         cmd = cmd.replace('%%%PATH%%%', pipes.quote(fh.name))
         returncode, out, err = shell_capture_all(cmd)
@@ -356,6 +362,9 @@ def load_hostname_map_file(filepath):
                 warnings.warn(("duplicate hostname %s" % hostname))
             out[hostname] = subobj
 
+    if len(out) == 0:
+        return out, "out cannot be empty"
+
     return out, None
 
 
@@ -374,9 +383,11 @@ def load_hostname_map(dirpath):
         items = os.listdir(dirpath)
     except OSError:
         return None, ("cannot load from nonexistent directory %s" % dirpath)
+    if len(items) == 0:
+        return None, ("nothing in directory %s" % dirpath)
     out = {}
     for item in items:
-        hostname_map, err = load_hostname_map_file(item)
+        hostname_map, err = load_hostname_map_file(os.path.join(dirpath, item))
         if err is not None:
             warnings.warn(err)
             continue
@@ -423,7 +434,7 @@ def do_quick_add_duts(hostnames, dirpath):
 
     if missing_hostnames:
         for hostname in sorted(missing_hostnames):
-            print(("MISSING %s\n" % hostname))
+            print(("MISSING %s" % hostname))
         return "%s missing hostnames" % len(missing_hostnames)
 
     try:
@@ -432,12 +443,12 @@ def do_quick_add_duts(hostnames, dirpath):
         for hostname in hostnames:
             newpath = os.path.join(tdir, hostname)
             with open(newpath, "w") as fh:
-                fh.write(hostnames_map[hostname])
+                json.dump(obj=hostnames_map[hostname], fp=fh)
 
         # paranoia, check number of files.
         num_files = len(os.listdir(tdir))
-        if num_files != len(hostnames_map):
-            return "internal error. hostnames: %s, files: %s" % (len(hostnames_map), num_files)
+        if num_files != len(hostnames):
+            return "internal error. hostnames: %s, files: %s, tdir: %s" % (len(hostnames_map), num_files, tdir)
 
         # validate directory contents before proceeding
         _, err = validate_output(tdir)
@@ -464,4 +475,4 @@ def do_quick_add_duts(hostnames, dirpath):
         else:
             return ("%s\n%s" % (out, err))
     finally:
-        shutil.rmtree(tdir, ignore_errors=True)
+        print("path to tempdir: %s", tdir)
