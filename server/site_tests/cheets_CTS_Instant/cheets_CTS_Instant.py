@@ -142,7 +142,6 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
             media_asset=tradefed_test.MediaAsset(
                 _CTS_MEDIA_URI if needs_push_media else None,
                 _CTS_MEDIA_LOCALPATH),
-            needs_push_media=needs_push_media,
             bundle=bundle,
             cts_uri=_CTS_URI,
             login_precondition_commands=login_precondition_commands,
