@@ -14,7 +14,8 @@ from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 
 
-def CheckInterfaceForDestination(host, expected_interface):
+def CheckInterfaceForDestination(host, expected_interface,
+                                 family=socket.AF_UNSPEC):
     """
     Checks that routes for host go through a given interface.
 
@@ -57,7 +58,7 @@ def CheckInterfaceForDestination(host, expected_interface):
 
     # addrinfo records: (family, type, proto, canonname, (addr, port))
     server_addresses = [record[4][0]
-                        for record in socket.getaddrinfo(host, 80)]
+                        for record in socket.getaddrinfo(host, 80, family)]
     for address in server_addresses:
         # Routes may not always be up by this point. Note that routes for v4 or
         # v6 may come up before the other, so we simply do this poll for all
