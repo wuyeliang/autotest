@@ -470,9 +470,11 @@ def do_quick_add_duts(hostnames, dirpath):
         if " nothing to commit" in out:
             warnings.warn("nothing to commit ... no change made to inventory")
             return None
-        elif "missing deploy task ID in request entry" in out:
+        elif "missing deploy task ID in deploy request entry" in out:
+            print("SUCCESS!")
+            print(out)
             return None
         else:
             return ("%s\n%s" % (out, err))
     finally:
-        print("path to tempdir: %s", tdir)
+        print(("path to tempdir: %s" % tdir))
