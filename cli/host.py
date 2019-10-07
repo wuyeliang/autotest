@@ -1796,7 +1796,7 @@ class host_dump_duts(action_common.atest_list, host):
                                default=None)
 
     def parse(self):
-        (options, leftover) = super(host_dump_board, self).parse()
+        (options, leftover) = super(host_dump_duts, self).parse()
         self.output_dir = options.output_dir
         return (options, leftover)
 
@@ -1819,8 +1819,22 @@ class host_dump_duts(action_common.atest_list, host):
 
         if err is not None:
             return {"error": err}
-        else:
-            return {"good": good, "bad": bad}
+
+        hostname_err_map, err = skylab_migration2.validate_output(self.outdir)
+
+        if err is not None:
+            return {"error": err}
+
+        invalid_entries = {}
+        for hostname in hostname_err_map:
+            if hostname_err_map[hostname] is not None:
+                invalid_entries[hostname] = hostname_err_map[hostname]
+
+        return {
+            "not-processed": bad,
+            "errors": invalid_entries,
+        }
+
 
 
     def output(self, result):
