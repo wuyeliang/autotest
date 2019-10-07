@@ -27,7 +27,7 @@ import socket
 import sys
 import time
 
-from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, skylab_migration
+from autotest_lib.cli import action_common, rpc, topic_common, skylab_utils, skylab_migration, skylab_migration2
 from autotest_lib.cli import fair_partition
 from autotest_lib.client.bin import utils as bin_utils
 from autotest_lib.cli.skylab_json_utils import process_labels, print_textpb, write, writeln
@@ -1780,6 +1780,101 @@ class host_skylab_verify(action_common.atest_list, host):
         )
         return res
 
+
+    def output(self, result):
+        json.dump(result, sys.stdout, indent=4)
+
+
+class host_dump_board(action_common.atest_list, host):
+    usage_action = "host_dump_board"
+
+    def __init__(self):
+        super(host_dump_board, self).__init__()
+        self.parser.add_option('--output-dir',
+                               help='directory to dump the board json files',
+                               dest='bug_number',
+                               default=None)
+
+    def parse(self):
+        (options, leftover) = super(host_dump_board, self).parse()
+        self.output_dir = options.output_dir
+        return (options, leftover)
+
+    def execute(self):
+        if not hasattr(self, 'board') or not self.board:
+            return {'error': "must specify board"}
+
+        if not hasattr(self, 'output_dir') or not self.output_dir:
+            return {'error': "must specify output directory"}
+
+        number_bad_hosts = skylab_migration2.pretty_process_board(board=self.board, output_dir=self.output_dir)
+
+        return {"number of failed hosts": number_bad_hosts}
+
+    def output(self, result):
+        json.dump(result, sys.stdout, indent=4)
+
+
+class host_read_dump(action_common.atest_list, host):
+    usage_action = "host_read_dump"
+
+    def __init__(self):
+        super(host_read_dump, self).__init__()
+        self.parser.add_option('--output-dir',
+                               help='directory to read json files from',
+                               dest='bug_number',
+                               default=None)
+
+    def parse(self):
+        (options, leftover) = super(host_dump_board, self).parse()
+        self.output_dir = options.output_dir
+        return (options, leftover)
+
+    def execute(self):
+        if not hasattr(self, 'output_dir') or not self.output_dir:
+            return {'error': "must specify output directory"}
+
+        json_obj, err = skylab_migration2.assemble_output_dir(output_dir=self.output_dir)
+
+        if err is None:
+            return {"error": err}
+        else:
+            return json_obj
+
+    def output(self, result):
+        json.dump(result, sys.stdout, indent=4)
+
+
+class host_do_quick_add(action_common.atest_list, host):
+    usage_action = "do_quick_add"
+
+    def __init__(self):
+        super(host_do_quick_add, self).__init__()
+        self.parser.add_option('--output-dir',
+                               help='directory to read json files from',
+                               dest='bug_number',
+                               default=None)
+
+    def parse(self):
+        (options, leftover) = super(host_skylab_verify, self).parse()
+        self.output_dir = options.output_dir
+        return (options, leftover)
+
+    def execute(self):
+        if self.hosts:
+            hostnames = self.hosts
+        else:
+            hostnames = _host_skylab_migrate_get_hostnames(
+                obj=self,
+                class_=host_skylab_migrate,
+                model=self.model,
+                board=self.board,
+                pool=self.pool,
+            )
+        if not hostnames:
+            return {'error': 'no hosts to add'}
+        error_msg = skylab_migration2.do_quick_add(hostnames=hostnames)
+        return {'error' : error_msg}
 
     def output(self, result):
         json.dump(result, sys.stdout, indent=4)
