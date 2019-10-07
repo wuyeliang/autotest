@@ -29,6 +29,6 @@ def run_GTS(machine):
         target_module=None,
         target_plan=None,
         uri='gs://chromeos-arc-images/cts/bundle/android-gts-7_r2-5805161.zip',
-        timeout=900)
+        timeout=1800)
 
 parallel_simple(run_GTS, machines)
