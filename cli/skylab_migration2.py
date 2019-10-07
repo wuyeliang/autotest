@@ -478,3 +478,45 @@ def do_quick_add_duts(hostnames, dirpath):
             return ("%s\n%s" % (out, err))
     finally:
         print(("path to tempdir: %s" % tdir))
+
+
+# free vars: %%%MLIST%%%
+ATEST_LOCK_RENAME_CMD = r"""
+
+tdir="$(mktemp -d)"
+test -d "$tdir" || exit 10
+
+# produce the unmangled hostnames
+cat -- %%%MLIST%%% | sed -e 's/-migrated-do-not-use$//' > "$tdir"/unmangled
+cat -- "$tdir"/unmangled | sed -e 's/$/-migrated-do-not-use//' > "$tdir"/mangled
+
+# just attempt to lock, discard results
+# first process unmangled names
+atest host mod --lock -r 'migration to skylab' --mlist "$tdir"/unmangled 2>&1
+# then process mangled names
+atest host mod --lock -r 'migration to skylab' --mlist "$tdir"/mangled   2>&1
+
+# next attempt to rename only the unmangled names
+atest host rename --for-migration --non-interactive --mlist "$tdir"/unmangled 2>&1
+
+"""
+
+
+# accepts: hostnames
+# returns: error message (None if no error)
+# emits:   output
+def atest_lock_rename(hostnames):
+    if isinstance(hostnames, TEXT):
+        return "hostnames cannot be text"
+    
+    with tempfile.NamedTemporaryFile(delete=True) as fh:
+        for hostname in hostnames:
+            fh.write(hostname.strip())
+            fh.write("\n")
+        flush_sync(fh)
+        cmd = ATEST_LOCK_RENAME_CMD
+        cmd = cmd.replace('%%%MLIST%%%', pipes.quote(fh.name))
+        returncode, out, err = shell_capture_all(cmd)
+
+        print(out)        
+        return None

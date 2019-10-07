@@ -1760,6 +1760,9 @@ class host_skylab_verify(action_common.atest_list, host):
 
     def parse(self):
         (options, leftover) = super(host_skylab_verify, self).parse()
+        self.model = getattr(options, 'model', None)
+        self.pool = getattr(options, 'pool', None)
+        self.board = getattr(options, 'board', None)
         return (options, leftover)
 
     def execute(self):
@@ -1798,6 +1801,9 @@ class host_dump_duts(action_common.atest_list, host):
     def parse(self):
         (options, leftover) = super(host_dump_duts, self).parse()
         self.output_dir = options.output_dir
+        self.model = getattr(options, 'model', None)
+        self.pool = getattr(options, 'pool', None)
+        self.board = getattr(options, 'board', None)
         return (options, leftover)
 
     def execute(self):
@@ -1854,6 +1860,9 @@ class host_read_dump(action_common.atest_list, host):
     def parse(self):
         (options, leftover) = super(host_read_dump, self).parse()
         self.output_dir = options.output_dir
+        self.model = getattr(options, 'model', None)
+        self.pool = getattr(options, 'pool', None)
+        self.board = getattr(options, 'board', None)
         return (options, leftover)
 
     def execute(self):
@@ -1884,6 +1893,9 @@ class host_do_quick_add(action_common.atest_list, host):
     def parse(self):
         (options, leftover) = super(host_do_quick_add, self).parse()
         self.data_dir = options.data
+        self.model = getattr(options, 'model', None)
+        self.pool = getattr(options, 'pool', None)
+        self.board = getattr(options, 'board', None)
         return (options, leftover)
 
     def execute(self):
@@ -1904,3 +1916,32 @@ class host_do_quick_add(action_common.atest_list, host):
 
     def output(self, result):
         json.dump(result, sys.stdout, indent=4)
+
+
+class host_lock_rename(action_common.atest_list, host):
+    usage_action = "lock_rename"
+
+    def __init__(self):
+        super(host_lock_rename, self).__init__()
+
+    def parse(self):
+        (options, leftover) = super(host_lock_rename, self).parse()
+        self.model = getattr(options, 'model', None)
+        self.pool = getattr(options, 'pool', None)
+        self.board = getattr(options, 'board', None)
+        return (options, leftover)
+
+    def execute(self):
+        if self.hosts:
+            hostnames = self.hosts
+        else:
+            hostnames = _host_skylab_migrate_get_hostnames(
+                obj=self,
+                class_=host_lock_rename,
+                model=self.model,
+                board=self.board,
+                pool=self.pool,
+            )
+        if not hostnames:
+            return {'error': 'no hostnames'}
+        skylab_migration2.atest_lock_rename(hostnames=hostnames)
