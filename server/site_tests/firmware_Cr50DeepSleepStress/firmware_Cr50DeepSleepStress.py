@@ -285,6 +285,10 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         # be run if the test succeeds. Do this here to make sure this is
         # always run immediately after the suspend/resume cycles.
         self.cr50.dump_nvmem()
+        # Reenable CCD. Reestablish network connection.
+        rv = self.wait_for_client_after_changing_ccd(True)
+        if rv:
+            errors.append(rv)
         rv = self.check_flog_output(original_flog)
         if rv:
             errors.append(rv)
@@ -295,10 +299,6 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         if rv:
             errors.append(rv)
         rv = self.check_cr50_version(self.original_cr50_version)
-        if rv:
-            errors.append(rv)
-        # Reenable CCD
-        rv = self.wait_for_client_after_changing_ccd(True)
         if rv:
             errors.append(rv)
         secondary_error = 'Suspend issues: %s' % ', '.join(errors)
