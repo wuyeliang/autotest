@@ -1049,6 +1049,13 @@ class Servo(object):
                 raise error.TestError('Failed to extract the %s image from '
                                       'tarball' % firmware_name)
 
+        # Extract subsidiary binaries for EC
+        if firmware_name == 'EC':
+            # Find a monitor binary for NPCX_UUT chip type, if any.
+            mon_candidates = [ w.replace('ec.bin', 'npcx_monitor.bin')
+                                   for w in image_candidates ]
+            _extract_image_from_tarball(tarball_path, dest_dir, mon_candidates)
+
         logging.info('Will re-program %s %snow', firmware_name,
                      'RW ' if rw_only else '')
 
