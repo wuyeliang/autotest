@@ -15,6 +15,16 @@ class firmware_Cr50WPG3(Cr50Test):
 
     WAIT_FOR_STATE = 10
 
+    def cleanup(self):
+        """Reenable servo wp."""
+        try:
+            if hasattr(self, '_start_fw_wp_vref'):
+                self.servo.set_nocheck('fw_wp_state', self._start_fw_wp_state)
+                self.servo.set_nocheck('fw_wp_vref', self._start_fw_wp_vref)
+        finally:
+            super(firmware_Cr50WPG3, self).cleanup()
+
+
     def run_once(self):
         """Verify WP in G3."""
         if self.check_cr50_capability(['wp_on_in_g3'], suppress_warning=True):
@@ -24,6 +34,8 @@ class firmware_Cr50WPG3(Cr50Test):
 
         self.fast_open(True)
 
+        self._start_fw_wp_state = self.servo.get('fw_wp_state')
+        self._start_fw_wp_vref = self.servo.get('fw_wp_vref')
         # Stop forcing wp using servo, so we can set it with ccd.
         self.servo.set_nocheck('fw_wp_state', 'reset')
         self.servo.set_nocheck('fw_wp_vref', 'off')
