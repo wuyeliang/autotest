@@ -415,6 +415,8 @@ def do_quick_add_duts(hostnames, dirpath):
     # validation
     if isinstance(hostnames, TEXT):
         return "hostnames cannot be %s" % type(hostnames)
+    # defensively prevent hostnames from being modified
+    hostnames = tuple(hostnames)
     for hostname in hostnames:
         if hostname.startswith("."):
             return "hostname cannot start with '.' (%s)" % hostname
@@ -448,7 +450,7 @@ def do_quick_add_duts(hostnames, dirpath):
         # paranoia, check number of files.
         num_files = len(os.listdir(tdir))
         if num_files != len(hostnames):
-            return "internal error. hostnames: %s, files: %s, tdir: %s" % (len(hostnames_map), num_files, tdir)
+            return "internal error. hostnames: %s, files: %s, tdir: %s" % (len(hostnames), num_files, tdir)
 
         # validate directory contents before proceeding
         _, err = validate_output(tdir)
