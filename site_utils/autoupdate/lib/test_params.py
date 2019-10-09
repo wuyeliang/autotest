@@ -88,7 +88,7 @@ class TestConfig(object):
     def __init__(self, board, name, is_delta_update, source_release,
                  target_release, source_payload_uri, target_payload_uri,
                  suite_name=_DEFAULT_AU_SUITE_NAME, source_archive_uri=None,
-                 payload_type=None, applicable_models=None):
+                 payload_type=None):
         """Initialize a test configuration.
 
         @param board: the board being tested (e.g. 'x86-alex')
@@ -103,9 +103,7 @@ class TestConfig(object):
         @param payload_type: The type of update we are doing with this payload.
                              Possible types are in defined in PAYLOAD_TYPES at
                              chromite/lib/paygen/paygen_build_lib
-        @param applicable_models: A list of models that this config should run
-                                  against. Only used for FSI configs. None
-                                  indicates it can run on any board.
+
         """
         self.board = board
         self.name = name
@@ -117,7 +115,6 @@ class TestConfig(object):
         self.suite_name = suite_name
         self.source_archive_uri = source_archive_uri
         self.payload_type = payload_type
-        self.applicable_models = applicable_models
 
 
     def get_update_type(self):
@@ -127,9 +124,13 @@ class TestConfig(object):
     def unique_name_suffix(self):
         """Unique name suffix for the test config given the target version."""
 
-        return '%s_%s_%s_%s' % (self.name,
+        payload_type_ending = ''
+        if self.payload_type:
+            payload_type_ending = '_%s' % self.payload_type.lower()
+        return '%s_%s_%s%s' % (self.name,
                                'delta' if self.is_delta_update else 'full',
-                                self.source_release, self.payload_type.lower())
+                               self.source_release,
+                               payload_type_ending)
 
 
     def get_autotest_name(self):
