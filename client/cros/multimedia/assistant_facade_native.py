@@ -44,11 +44,7 @@ class AssistantFacadeNative(object):
 
         if enable_dsp_hotword:
             custom_chrome_setup["extra_browser_args"] = (
-                ["--enable-features=ChromeOSAssistant,EnableDspHotword"])
-        else:
-            custom_chrome_setup["extra_browser_args"] = (
-                ["--enable-features=ChromeOSAssistant"])
-
+                ["--enable-features=EnableDspHotword"])
         self._resource.start_custom_chrome(custom_chrome_setup)
 
 
