@@ -335,7 +335,7 @@ class Servo(object):
         return self._power_state
 
 
-    def initialize_dut(self, cold_reset=False):
+    def initialize_dut(self, cold_reset=False, enable_main=True):
         """Initializes a dut for testing purposes.
 
         This sets various servo signals back to default values
@@ -354,7 +354,13 @@ class Servo(object):
 
         @param cold_reset If True, cold reset the device after
                           initialization.
+        @param enable_main If True, make sure the main servo device has
+                           control of the dut.
+
         """
+        if enable_main:
+            self.enable_main_servo_device()
+
         try:
             self._server.hwinit()
         except socket.error as e:
@@ -956,6 +962,19 @@ class Servo(object):
         logging.warn("%s is active even though it's not in servo type",
                      active_device)
         return servo_type
+
+
+    def get_main_servo_device(self):
+        """Return the main servo device"""
+        servo_type = self.get_servo_version()
+        return servo_type.split('_with_')[-1].split('_and_')[0]
+
+
+    def enable_main_servo_device(self):
+        """Make sure the main device has control of the dut."""
+        if not self.has_control('active_v4_device'):
+            return
+        self.set('active_v4_device', self.get_main_servo_device())
 
 
     def running_through_ccd(self):
