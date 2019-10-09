@@ -59,24 +59,50 @@ class BluetoothTest(test.test):
 
         super(BluetoothTest, self).cleanup()
 
-def newblue_enable_disable(host, newblue_enable=False):
-    """Enable or disable newblue for the kernal
+
+NEWBLUE_CONFIG_FILE = '/var/lib/bluetooth/newblue'
+
+
+def _is_newblue_enabled(host):
+    """Returns whether newblue is currently enabled
     :param host: the host DUT
-    :param newblue_enable: parsed command line arg
+    :return True if newblue is enabled, false otherwise
+    """
+
+    # Print 1 if NEWBLUE_CONFIG_FILE exists and contains '1', '0' otherwise
+    host_nb_status_cmd = ('if [ -f {0} ] ; then echo $(cat {0}) ; '
+                          'else echo "0" ; fi').format(NEWBLUE_CONFIG_FILE)
+
+    cmd_out = host.run(command=host_nb_status_cmd, ignore_status=True)
+
+    return '1' in cmd_out.stdout
+
+
+def enable_newblue(host, enable=False):
+    """Enable or disable newblue for the kernel
+    :param host: the host DUT
+    :param enable: parsed command line arg
     :return: none
     """
-    if newblue_enable:
+
+    current_newblue_status = _is_newblue_enabled(host)
+
+    # Provide debugging information
+    if enable:
         logging.info('Test will perform with newblue ENABLED')
-        host.run_background("crosh<<<'newblue enable'")
+
     else:
         logging.info('Test will perform with newblue DISABLED')
-        host.run_background("crosh<<<'newblue disable'")
 
-    # crosh usually exit with an unrelated error (see below), but it will abort
-    # the test. Ignore the status here.
-    # mktemp: failed to create file via template '/root/.crosh_history.XXXXXX':
-    # Read-only file system
-    crosh_out = host.run(command="crosh<<<newblue", ignore_status=True)
-    if 'reboot' in str(crosh_out):
-        logging.info('Reboot is required for newblue setting to take effect')
-        host.reboot()
+    # Exit if we're already in correct state
+    if current_newblue_status == enable:
+        return
+
+    # Create the file if it doesn't exist and write the new state
+    change_state_cmd = 'echo {} > {}'.format(int(enable), NEWBLUE_CONFIG_FILE)
+
+    host.run(command=change_state_cmd, ignore_status=True)
+
+    # We've changed config, so reboot is required
+    logging.info('Reboot is required for newblue setting to take effect')
+    host.reboot()

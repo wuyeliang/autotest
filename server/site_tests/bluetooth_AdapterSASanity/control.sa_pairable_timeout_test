@@ -35,8 +35,7 @@ newblue_enable = args_dict['newblue'] == 'enable'\
 
 def run(machine):
     host = hosts.create_host(machine,chameleon_args=chameleon_args)
-    bluetooth_test.newblue_enable_disable(host=host,
-                                          newblue_enable=newblue_enable)
+    bluetooth_test.enable_newblue(host=host, enable=newblue_enable)
     job.run_test('bluetooth_AdapterSASanity', host=host,
                  num_iterations=1, test_name=NAME.split('.')[1])
 
