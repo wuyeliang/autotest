@@ -52,17 +52,18 @@ class Crossystem(object):
 class OSInterface(object):
     """An object to encapsulate OS services functions."""
 
-    def __init__(self, state_dir=None, log_file=None):
+    def __init__(self, state_dir=None, log_file=None, test_mode=False):
         """Object initialization (side effect: creates the state_dir)
 
         @param state_dir: the name of the directory to use for storing state.
                             The contents of this directory persist over system
                             restarts and power cycles.
         @param log_file: the name of the log file kept in the state directory.
+        @param test_mode: if true, skip (and just log) any shell call
+                          marked with modifies_device=True
         """
-        # We keep the state of FAFT test in a permanent directory over reboots.
-        self.test_mode = False
 
+        # We keep the state of FAFT test in a permanent directory over reboots.
         if state_dir is None:
             state_dir = '/var/tmp/faft'
 
@@ -74,6 +75,7 @@ class OSInterface(object):
 
         self.state_dir = state_dir
         self.log_file = log_file
+        self.test_mode = test_mode
 
         self.shell = shell_wrapper.LocalShell(self)
         self.host_shell = None
