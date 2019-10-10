@@ -209,13 +209,21 @@ class ContainerBucket(object):
         if control:
             container.install_control_file(safe_control)
 
-        mount_entries = [(constants.SITE_PACKAGES_PATH,
-                          constants.CONTAINER_SITE_PACKAGES_PATH,
-                          True),
-                         (result_path,
-                          os.path.join(constants.RESULT_DIR_FMT % job_folder),
-                          False),
-        ]
+        # Use a pre-packaged Trusty-compatible Autotest site_packages
+        # instead if it exists.  crbug.com/1013241
+        if os.path.exists(constants.TRUSTY_SITE_PACKAGES_PATH):
+            mount_entries = [(constants.TRUSTY_SITE_PACKAGES_PATH,
+                              constants.CONTAINER_SITE_PACKAGES_PATH,
+                              True)]
+        else:
+            mount_entries = [(constants.SITE_PACKAGES_PATH,
+                              constants.CONTAINER_SITE_PACKAGES_PATH,
+                              True)]
+        mount_entries.extend([
+                (result_path,
+                 os.path.join(constants.RESULT_DIR_FMT % job_folder),
+                 False),
+        ])
 
         # Update container config to mount directories.
         for source, destination, readonly in mount_entries:

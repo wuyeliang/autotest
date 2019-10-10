@@ -70,6 +70,10 @@ else:
     CONTAINER_SITE_PACKAGES_PATH = os.path.join(CONTAINER_AUTOTEST_DIR,
                                                 'site-packages')
 
+# This is an alternate site_packages that is built to be Trusty
+# compatible.  crbug.com/1013241
+TRUSTY_SITE_PACKAGES_PATH = '/opt/trusty_site_packages'
+
 # TODO(dshi): If we are adding more logic in how lxc should interact with
 # different systems, we should consider code refactoring to use a setting-style
 # object to store following flags mapping to different systems.
