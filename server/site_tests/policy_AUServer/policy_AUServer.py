@@ -16,19 +16,11 @@ class policy_AUServer(update_engine_test.UpdateEngineTest):
     """
     version = 1
 
-    def clear_tpm_if_owned(self):
-        """Clear the TPM only if device is already owned."""
-        tpm_status = tpm_utils.TPMStatus(self._host)
-        logging.info('TPM status: %s', tpm_status)
-        if tpm_status['Owned']:
-            logging.info('Clearing TPM because this device is owned.')
-            tpm_utils.ClearTPMOwnerRequest(self._host)
-
 
     def cleanup(self):
         """Cleanup for this test."""
         super(policy_AUServer, self).cleanup()
-        self.clear_tpm_if_owned()
+        tpm_utils.ClearTPMIfOwned(self._host)
         self._host.reboot()
 
 
@@ -50,7 +42,7 @@ class policy_AUServer(update_engine_test.UpdateEngineTest):
         self._job_repo_url = job_repo_url
 
         # Clear TPM to ensure that client test can enroll device.
-        self.clear_tpm_if_owned()
+        tpm_utils.ClearTPMIfOwned(self._host)
 
         # Figure out the payload to use for the current build.
         payload = self._get_payload_url(full_payload=full_payload)

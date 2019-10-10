@@ -18,15 +18,6 @@ class policy_GlobalNetworkSettingsServer(wifi_cell_test_base.WiFiCellTestBase):
     version = 1
 
 
-    def clear_tpm_if_owned(self):
-        """Clear the TPM only if device is already owned."""
-        tpm_status = tpm_utils.TPMStatus(self.host)
-        logging.info('TPM status: %s', tpm_status)
-        if tpm_status['Owned']:
-            logging.info('Clearing TPM because this device is owned.')
-            tpm_utils.ClearTPMOwnerRequest(self.host)
-
-
     def cleanup(self):
         """Clear TPM and catch errant socket exceptions."""
         try:
@@ -37,7 +28,7 @@ class policy_GlobalNetworkSettingsServer(wifi_cell_test_base.WiFiCellTestBase):
             # again.
             logging.info(e)
 
-        self.clear_tpm_if_owned()
+        tpm_utils.ClearTPMIfOwned(self.host)
         self.host.reboot()
 
 
@@ -76,7 +67,7 @@ class policy_GlobalNetworkSettingsServer(wifi_cell_test_base.WiFiCellTestBase):
         self.host = host
 
         # Clear TPM to ensure that client test can enroll device.
-        self.clear_tpm_if_owned()
+        tpm_utils.ClearTPMIfOwned(self.host)
 
         self.context.router.require_capabilities(
                 [site_linux_system.LinuxSystem.CAPABILITY_MULTI_AP])

@@ -119,6 +119,17 @@ def ClearTPMOwnerRequest(client, wait_for_ready=False, timeout=60):
             time.sleep(1)
 
 
+def ClearTPMIfOwned(client):
+    """Clear the TPM only if device is already owned.
+
+    @param client: client object to run commands on."""
+    tpm_status = TPMStatus(client)
+    logging.info('TPM status: %s', tpm_status)
+    if tpm_status['Owned']:
+        logging.info('Clearing TPM because this device is owned.')
+        ClearTPMOwnerRequest(client)
+
+
 def CleanupAndReboot(client):
     """Cleanup and reboot the device.
 
