@@ -28,13 +28,9 @@ class policy_DefaultSearchProvider(
         @param case: Value of the test being run.
 
         """
+        self.ui.start_ui_root(self.cr)
         self.keyboard = keyboard.Keyboard()
-
-        # Open new tab.
-        self.keyboard.press_key('ctrl+t')
-        # Let the new tab load
-        time.sleep(1)
-
+        self.ui.doDefault_on_obj(name='Address and search bar')
         # The keys to be pressed for the test
         if case == 'Keyword':
             buttons = ['d', 'a', 'd', 'tab', 's', 's', 'enter']
@@ -47,12 +43,18 @@ class policy_DefaultSearchProvider(
         for button in buttons:
             self.keyboard.press_key(button)
 
-        current_url = self.cr.browser.tabs[-1].GetUrl()
+        tabFound = False
+        startTime = time.time()
+        while time.time() - startTime < 1:
+            tabs = set([tab.GetUrl() for tab in self.cr.browser.tabs])
+            if expected in tabs:
+                tabFound = True
+                break
 
-        if current_url != expected:
+        if not tabFound:
             raise error.TestFail(
                 'Search not formated correctly. expected {} got {}'
-                .format(expected, current_url))
+                .format(expected, tabs))
 
     def run_once(self, case):
         """
