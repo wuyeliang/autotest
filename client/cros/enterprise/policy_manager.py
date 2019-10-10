@@ -185,6 +185,19 @@ class Policy_Manager(object):
         self._obtained.set_policy(self.LOCAL, self.raw_data[DEVICELOCALACCOUNT])
         self._obtained.set_extension_policy(self.raw_data[EXTENSIONPOLICIES])
 
+    def verify_policy(self, policyName, policy_value, extID=None):
+        """Verifies the configured policies are == to the policies obtained."""
+        recieved_value = self.get_policy_value_from_DUT(policyName=policyName,
+                                                        extID=extID,
+                                                        refresh=True)
+        if not recieved_value == policy_value:
+            raise error.TestError(
+                'Policy {} value was not set correctly. \nExpected:\t {}'
+                '\nReceived: \t'.format(policyName,
+                                        policy_value,
+                                        recieved_value))
+        logging.info('Policy verification successful')
+
     def verify_policies(self):
         """Verifies the configured policies are == to the policies obtained."""
         if not self._configured == self._obtained:
@@ -221,6 +234,7 @@ class Policy_Manager(object):
     def updateDMServer(self):
         """Updates the Fake DM server with the current configured policy."""
         fake_dm_json = self.getDMConfig()
+        logging.info('Policy blob {}'.format(fake_dm_json))
         if not self.fake_dm_server:
             raise error.TestError(
                 'Cannot update DM server. DM server not provided')
