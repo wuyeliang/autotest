@@ -558,7 +558,7 @@ RPC_CATEGORIES = [
                     "GetKeysPath",
                     "GetWorkPath",
                     "GetBiosRelativePath",
-                    "GetEcRelativePath",
+                    "GetEcRelativePath"
                 ],
                 "passing_args": [
                     NO_ARGS,
@@ -658,9 +658,9 @@ RPC_CATEGORIES = [
                     ("bootok", ),
                     ("factory_install", ),
                     ("bootok", None),
-                    ("bootok", "foo"),
-                    ("bootok", "foo", ()),
-                    ("bootok", "foo", ("--noupdate_ec", "--wp=1")),
+                    ("bootok", "test"),
+                    ("bootok", "test", ()),
+                    ("bootok", "test", ("--noupdate_ec", "--wp=1")),
                 ],
                 "failing_args": [NO_ARGS],
             },
@@ -669,7 +669,9 @@ RPC_CATEGORIES = [
                     "RunAutoupdate",
                     "RunBootok",
                 ],
-                "passing_args": [ONE_STR_ARG],
+                "passing_args": [
+                    ("test",),
+                ],
                 "failing_args": [
                     NO_ARGS,
                     ("foo", "bar"),
