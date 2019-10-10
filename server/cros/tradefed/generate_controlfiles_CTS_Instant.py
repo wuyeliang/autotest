@@ -168,9 +168,10 @@ CONFIG['CTS_MAX_RETRIES'] = {}
 # TODO(ihf): Update timeouts once P is more stable.
 # Timeout in hours.
 CONFIG['CTS_TIMEOUT'] = {
-    _ALL:             5.0,
-    _COLLECT:         2.0,
-    _PUBLIC_COLLECT:  2.0,
+    _ALL: 5.0,
+    _COLLECT: 2.0,
+    _PUBLIC_COLLECT: 2.0,
+    'CtsFileSystemTestCases': 2.5,
 }
 
 # Any test that runs as part as blocking BVT needs to be stable and fast. For
