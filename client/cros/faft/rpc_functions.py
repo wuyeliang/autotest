@@ -1118,3 +1118,22 @@ class UpdaterServicer(object):
     def CopyBios(self, filename):
         """Make a copy of the shellball bios.bin"""
         return self._updater.copy_bios(filename)
+
+    def GetImageGbbFlags(self, filename=None):
+        """Get the GBB flags in the given image (shellball image if unspecified)
+
+        @param filename: the image path to act on (None to use shellball image)
+        @return: An integer of the GBB flags.
+        """
+        return self._updater.get_image_gbb_flags(filename)
+
+    def SetImageGbbFlags(self, flags, filename=None):
+        """Set the GBB flags in the given image (shellball image if unspecified)
+
+        @param flags: the flags to set
+        @param filename: the image path to act on (None to use shellball image)
+
+        @type flags: int
+        @type filename: str | None
+        """
+        return self._updater.set_image_gbb_flags(flags, filename)

@@ -367,6 +367,12 @@ service Updater {
   rpc CopyBios
     (UpdaterCopyBiosRequest)
     returns (UpdaterCopyBiosResponse);
+  rpc GetImageGbbFlags
+    (UpdaterGetImageGbbFlagsRequest)
+    returns (UpdaterGetImageGbbFlagsResponse);
+  rpc SetImageGbbFlags
+      (UpdaterSetImageGbbFlagsRequest)
+      returns (UpdaterSetImageGbbFlagsResponse);
 }
 
 // Bios messages
@@ -1049,3 +1055,17 @@ message UpdaterCopyBiosRequest {
 message UpdaterCopyBiosResponse {
   string full_path = 1;
 }
+
+
+message UpdaterGetImageGbbFlagsRequest {
+  string filename = 1; // optional
+}
+message UpdaterGetImageGbbFlagsResponse {
+  int32 flags = 1;
+}
+
+message UpdaterSetImageGbbFlagsRequest {
+  int32 flags = 1;
+  string filename = 2; // optional
+}
+message UpdaterSetImageGbbFlagsResponse {}

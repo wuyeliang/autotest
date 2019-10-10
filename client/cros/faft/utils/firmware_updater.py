@@ -766,3 +766,36 @@ class FirmwareUpdater(object):
     def get_ec_relative_path(self):
         """Gets the relative path of the ec image in the shellball."""
         return self._ec_path
+
+    def get_image_gbb_flags(self, filename=None):
+        """Get the GBB flags in the given image (shellball image if unspecified)
+
+        @param filename: the image path to act on (None to use shellball image)
+        @return: An integer of the GBB flags.
+        """
+        if filename:
+            filename = os.path.join(self._temp_path, filename)
+            handler = self._create_handler('bios', 'image')
+            handler.new_image(filename)
+        else:
+            handler = self._get_handler('bios')
+        return handler.get_gbb_flags()
+
+    def set_image_gbb_flags(self, flags, filename=None):
+        """Set the GBB flags in the given image (shellball image if unspecified)
+
+        @param flags: the flags to set
+        @param filename: the image path to act on (None to use shellball image)
+
+        @type flags: int
+        @type filename: str | None
+        """
+        if filename:
+            filename = os.path.join(self._temp_path, filename)
+            handler = self._create_handler('bios', 'image')
+            handler.new_image(filename)
+        else:
+            filename = self._bios_path
+            handler = self._get_handler('bios')
+        handler.set_gbb_flags(flags)
+        handler.dump_whole(filename)

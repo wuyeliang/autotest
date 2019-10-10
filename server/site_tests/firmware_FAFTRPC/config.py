@@ -703,6 +703,28 @@ RPC_CATEGORIES = [
                 ],
                 "expected_return_type": str
             },
+            {
+                "method_name": "GetImageGbbFlags",
+                "passing_args": [
+                    NO_ARGS,
+                    ('/tmp/fake-bios.bin',)
+                ],
+                "failing_args": [
+                    ('/tmp/fake-bios.bin', 'bogus')
+                ],
+                "store_result_as": "gbb_flags"
+            },
+            {
+                "method_name": "SetImageGbbFlags",
+                "passing_args": [
+                    (operator.itemgetter('gbb_flags'),),
+                    (operator.itemgetter('gbb_flags'), '/tmp/fake-bios.bin'),
+                ],
+                "failing_args": [
+                    NO_ARGS,
+                    ('too', 'many', 'args')
+                ]
+            }
         ]
     },
     {
