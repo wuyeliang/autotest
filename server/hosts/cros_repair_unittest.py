@@ -31,6 +31,7 @@ CROS_VERIFY_DAG = (
     (cros_repair.PythonVerifier, 'python', ('ssh',)),
     (repair_utils.LegacyHostVerifier, 'cros', ('ssh',)),
     (cros_repair.KvmExistsVerifier, 'ec_reset', ('ssh',)),
+    (cros_repair.StopStartUIVerifier, 'stop_start_ui', ('ssh',)),
 )
 
 CROS_REPAIR_ACTIONS = (
@@ -45,17 +46,17 @@ CROS_REPAIR_ACTIONS = (
      'coldboot', ('ssh',), ('ec_reset',)),
     (cros_repair.AutoUpdateRepair,
      'au',
-     ('ssh', 'writable', 'tpm', 'good_au', 'ext4'),
+     ('ssh', 'writable', 'stop_start_ui', 'tpm', 'good_au', 'ext4'),
      ('power', 'rwfw', 'python', 'cros', 'ec_reset')),
     (cros_repair.PowerWashRepair,
      'powerwash',
-     ('ssh', 'writable'),
+     ('ssh', 'writable', 'stop_start_ui'),
      ('tpm', 'good_au', 'ext4', 'power', 'rwfw', 'python', 'cros', 'ec_reset')),
     (cros_repair.ServoInstallRepair,
      'usb',
      (),
-     ('ssh', 'writable', 'tpm', 'good_au', 'ext4', 'power', 'rwfw',
-      'python', 'cros', 'ec_reset')),
+     ('ssh', 'writable', 'stop_start_ui', 'tpm', 'good_au', 'ext4', 'power',
+      'rwfw', 'python', 'cros', 'ec_reset')),
 )
 
 MOBLAB_VERIFY_DAG = (
