@@ -17,7 +17,7 @@ class firmware_Cr50Open(Cr50Test):
         super(firmware_Cr50Open, self).initialize(host, cmdline_args,
                 full_args)
 
-        if not self.faft_config.has_power_button:
+        if not self.faft_config.has_powerbutton:
             raise error.TestNAError('No power button. Unable to test ccd open')
 
         self.ccd_open_restricted = ccd_open_restricted

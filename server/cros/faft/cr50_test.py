@@ -805,7 +805,7 @@ class Cr50Test(FirmwareTest):
 
         @param enable_testlab: If True, enable testlab mode after cr50 is open.
         """
-        if not self.faft_config.has_power_button:
+        if not self.faft_config.has_powerbutton:
             logging.warning('No power button', exc_info=True)
             enable_testlab = False
         # Try to use testlab open first, so we don't have to wait for the
@@ -896,7 +896,7 @@ class Cr50Test(FirmwareTest):
         """Set the ccd password"""
         # Testlab mode can't be enabled if there is no power button, so we
         # shouldn't allow setting the password.
-        if not self.faft_config.has_power_button:
+        if not self.faft_config.has_powerbutton:
             raise error.TestError('No power button')
 
         # If for some reason the test sets a password and is interrupted before

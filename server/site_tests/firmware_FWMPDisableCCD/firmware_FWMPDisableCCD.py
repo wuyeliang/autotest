@@ -89,7 +89,7 @@ class firmware_FWMPDisableCCD(Cr50Test):
 
         logging.info('Flags are set to %s ccd is%s permitted', flags,
                      ' not' if fwmp_disabled_ccd else '')
-        if not self.faft_config.has_power_button:
+        if not self.faft_config.has_powerbutton:
             logging.info('Can not test ccd without power button')
             return
 

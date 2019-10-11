@@ -128,9 +128,6 @@
     "serial_number_length": 0,
     "serial_number_length.DOC": "Length of serial number that can be set in firmware; if serial number cannot be set then 0",
 
-    "has_power_button": true,
-    "has_power_button.DOC": "True if the chrome device has a power button",
-
     "has_diagnostics_image": false,
     "has_diagnostics_image.DOC": "True if altfw/diag is build into RW_LEGACY"
 }

@@ -19,7 +19,7 @@ class firmware_Cr50Unlock(Cr50Test):
         """Check cr50 can see dev mode open works correctly"""
         # Make sure testlab mode is enabled, so we can guarantee the password
         # can be cleared.
-        if not self.faft_config.has_power_button:
+        if not self.faft_config.has_powerbutton:
             raise error.TestNAError('Can not run test without power button')
             return
 

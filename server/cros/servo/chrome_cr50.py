@@ -738,7 +738,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         if self._servo.running_through_ccd():
             raise error.TestError('Cannot set testlab mode with CCD. Use flex '
                     'cable instead.')
-        if not self.faft_config.has_power_button:
+        if not self.faft_config.has_powerbutton:
             raise error.TestError('No power button on device')
 
         request_on = self._state_to_bool(state)
