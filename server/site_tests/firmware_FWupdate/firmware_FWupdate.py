@@ -239,7 +239,7 @@ class firmware_FWupdate(FirmwareTest):
             # try only the specified wp= value
             errors += self.run_case(append, self.wp, before_fwids, modded_fwids)
 
-        elif self.images_specified:
+        elif self.images_specified or self.mode == 'factory':
             # apply images with wp=0 by default
             errors += self.run_case(append, 0, before_fwids, modded_fwids)
 

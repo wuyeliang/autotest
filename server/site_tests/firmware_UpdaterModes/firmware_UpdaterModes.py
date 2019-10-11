@@ -41,7 +41,7 @@ class firmware_UpdaterModes(FirmwareTest):
         return self.faft_client.Updater.GetAllInstalledFwids('bios', path)
 
     def run_case(self, mode, write_protected, written, modify_ro=True,
-                 should_abort=False):
+                 should_abort=False, writes_gbb=False):
         """Run chromeos-firmwareupdate with given sub-case
 
         @param mode: factory or recovery or autoupdate
@@ -49,12 +49,16 @@ class firmware_UpdaterModes(FirmwareTest):
         @param modify_ro: should ro fwid be modified?
         @param written: list of bios areas expected to change
         @param should_abort: if True, the updater should abort with no changes
+        @param writes_gbb: if True, the updater should rewrite gbb flags.
         @return: a list of failure messages for the case
         """
         self.faft_client.Updater.ResetShellball()
 
         fake_bios_path = self.faft_client.Updater.CopyBios('fake-bios.bin')
+        self.faft_client.Updater.SetImageGbbFlags(0, fake_bios_path)
+
         before_fwids = {'bios': self.get_bios_fwids(fake_bios_path)}
+        before_gbb = self.faft_client.Updater.GetImageGbbFlags(fake_bios_path)
 
         case_desc = ('chromeos-firmwareupdate --mode=%s --wp=%s'
                      % (mode, write_protected))
@@ -68,6 +72,7 @@ class firmware_UpdaterModes(FirmwareTest):
         # Repack the shellball with modded fwids
         self.modify_shellball(append, modify_ro)
         modded_fwids = self.identify_shellball()
+        image_gbb = self.faft_client.Updater.GetImageGbbFlags()
 
         options = ['--emulate', fake_bios_path, '--wp=%s' % write_protected]
 
@@ -79,6 +84,7 @@ class firmware_UpdaterModes(FirmwareTest):
             logging.debug('updater aborted as expected')
 
         after_fwids = {'bios': self.get_bios_fwids(fake_bios_path)}
+        after_gbb = self.faft_client.Updater.GetImageGbbFlags(fake_bios_path)
         expected_written = {'bios': written or []}
 
         errors = self.check_fwids_written(
@@ -91,6 +97,20 @@ class firmware_UpdaterModes(FirmwareTest):
             msg = ("...updater: with current mode and write-protect value, "
                    "should abort (rc!=0) and not modify anything")
             errors.insert(0, msg)
+
+        if writes_gbb:
+            if after_gbb != image_gbb:
+                # Expect rewritten, but it might not be different from before
+                errors.append(
+                        "...GBB flags weren't rewritten to match the image: "
+                        "before=0x%x, image=0x%x, after=0x%x."
+                        % (before_gbb, image_gbb, after_gbb))
+        else:
+            if after_gbb != before_gbb:
+                errors.append(
+                        "...GBB flags were unexpectedly rewritten: "
+                        "before=0x%x, image=0x%x, after=0x%x."
+                        % (before_gbb, image_gbb, after_gbb))
 
         if self.restore_firmware():
             # If real writes happen, fail immediately to avoid flash wear.
@@ -111,7 +131,7 @@ class firmware_UpdaterModes(FirmwareTest):
         # TODO(dgoyette): Add a test that checks EC versions (can't be emulated)
 
         # factory: update A, B, and RO; reset gbb flags.  If WP=1, abort.
-        errors += self.run_case('factory', 0, ['ro', 'a', 'b'])
+        errors += self.run_case('factory', 0, ['ro', 'a', 'b'], writes_gbb=True)
         errors += self.run_case('factory', 1, [], should_abort=True)
 
         # recovery: update A and B, and RO if WP=0.
