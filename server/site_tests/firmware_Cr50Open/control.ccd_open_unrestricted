@@ -1,13 +1,13 @@
-# Copyright 2018 The Chromium OS Authors. All rights reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 from autotest_lib.server import utils
 
 AUTHOR = "mruthven"
-NAME = "firmware_Cr50Open"
+NAME = "firmware_Cr50Open.ccd_open_unrestricted"
 PURPOSE = "Verify cr50 open"
-ATTRIBUTES = "suite:faft_cr50_pvt"
+ATTRIBUTES = "suite:faft_cr50_prepvt, suite:faft_cr50_tot"
 TIME = "SHORT"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
@@ -19,6 +19,9 @@ in dev mode.
 
 This test must be run with servo instead of CCD, because we need to be able to
 fake power button presses.
+
+This test is applicable when ccd open is unrestricted.
+TODO(crbug.com/1014572) Drop separate control files for ccd open state.
 """
 
 if 'args_dict' not in locals():
@@ -29,13 +32,12 @@ servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
-
     iterations = int(args_dict.get("iterations", 1))
-    ccd_open_restricted = args_dict.get("ccd_open_restricted", "true").lower()
+    ccd_open_restricted = args_dict.get("ccd_open_restricted", "false").lower()
     ccd_open_restricted = ccd_open_restricted != "false"
 
     job.run_test("firmware_Cr50Open", host=host, cmdline_args=args,
-                 ccd_open_restricted=ccd_open_restricted, full_args=args_dict,
-                 iterations=iterations)
+                 ccd_open_restricted=ccd_open_restricted,
+                 full_args=args_dict, iterations=iterations)
 
 parallel_simple(run, machines)

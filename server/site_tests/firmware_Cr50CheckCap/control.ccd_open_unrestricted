@@ -1,13 +1,13 @@
-# Copyright 2018 The Chromium OS Authors. All rights reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 from autotest_lib.server import utils
 
 AUTHOR = "mruthven"
-NAME = "firmware_Cr50CheckCap"
+NAME = "firmware_Cr50CheckCap.ccd_open_unrestricted"
 PURPOSE = "Verify cr50 ccd capabilities."
-ATTRIBUTES = "suite:faft_cr50_pvt"
+ATTRIBUTES = "suite:faft_cr50_prepvt, suite:faft_cr50_tot"
 TIME = "SHORT"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
@@ -16,6 +16,9 @@ DOC = """Verify cr50 ccd capabilities.
 
 Check the cr50 ccd capabilities. Make sure the default values are ok and the
 settings work as expected.
+
+This test is applicable when ccd open is unrestricted.
+TODO(crbug.com/1014572) Drop separate control files for ccd open state.
 """
 
 if 'args_dict' not in locals():
@@ -26,11 +29,9 @@ servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
-
     iterations = int(args_dict.get("iterations", 1))
-    ccd_open_restricted = args_dict.get("ccd_open_restricted", "").lower()
+    ccd_open_restricted = args_dict.get("ccd_open_restricted", "false").lower()
     ccd_open_restricted = ccd_open_restricted != "false"
-
     job.run_test("firmware_Cr50CheckCap", host=host, cmdline_args=args,
                  ccd_open_restricted=ccd_open_restricted,
                  full_args=args_dict, iterations=iterations)
