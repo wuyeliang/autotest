@@ -729,17 +729,22 @@ class Servo(object):
 
         @param gpio_name Name of the gpio.
         @param gpio_value New setting for the gpio.
+        @raise error.TestFail: if the control value fails to change.
         """
         self.set_nocheck(gpio_name, gpio_value)
         retry_count = Servo.GET_RETRY_MAX
-        while gpio_value != self.get(gpio_name) and retry_count:
+        actual_value = self.get(gpio_name)
+        while gpio_value != actual_value and retry_count:
             logging.warning("%s != %s, retry %d", gpio_name, gpio_value,
-                         retry_count)
+                            retry_count)
             retry_count -= 1
             time.sleep(Servo.SHORT_DELAY)
-        if not retry_count:
-            assert gpio_value == self.get(gpio_name), \
-                'Servo failed to set %s to %s' % (gpio_name, gpio_value)
+            actual_value = self.get(gpio_name)
+
+        if gpio_value != actual_value:
+            raise error.TestFail(
+                    'Servo failed to set %s to %s. Got %s.'
+                    % (gpio_name, gpio_value, actual_value))
 
 
     def set_nocheck(self, gpio_name, gpio_value):
