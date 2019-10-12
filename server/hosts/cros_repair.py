@@ -68,7 +68,7 @@ _DEV_MODE_ALWAYS_ALLOWED = global_config.global_config.get_config_value(
 _CROS_AU_TRIGGERS = ('power', 'rwfw', 'python', 'cros',)
 _CROS_EXTENDED_AU_TRIGGERS = _CROS_AU_TRIGGERS + ('ec_reset',)
 _CROS_POWERWASH_TRIGGERS = ('tpm', 'good_au', 'ext4',)
-_CROS_USB_TRIGGERS = ('ssh', 'writable', 'stop_start_ui')
+_CROS_USB_TRIGGERS = ('ssh', 'writable',)
 
 
 class ACPowerVerifier(hosts.Verifier):
@@ -425,26 +425,6 @@ class KvmExistsVerifier(hosts.Verifier):
         return '/dev/kvm should exist if device supports Linux VMs'
 
 
-class StopStartUIVerifier(hosts.Verifier):
-    """Verify that command 'stop ui' won't crash the DUT.
-
-    We run 'stop ui' in AU and provision. We found some bad images broke
-    this command and then broke all the provision of all following test. We add
-    this verifier to ensure it works and will trigger reimaging to a good
-    version if it fails.
-    """
-    def verify(self, host):
-        try:
-            host.run('stop ui && start ui', timeout=5)
-        except error.AutoservSSHTimeout:
-            raise hosts.AutoservVerifyError(
-                "Got timeout when stop ui/start ui. DUT might crash.")
-
-    @property
-    def description(self):
-        return 'The DUT image works fine when stop ui/start ui.'
-
-
 class ServoTypeVerifier(hosts.Verifier):
     """Verify that servo_type attribute exists"""
 
@@ -699,7 +679,6 @@ def _cros_verify_dag():
         (PythonVerifier,                  'python',   ('ssh',)),
         (repair_utils.LegacyHostVerifier, 'cros',     ('ssh',)),
         (KvmExistsVerifier,               'ec_reset', ('ssh',)),
-        (StopStartUIVerifier,             'stop_start_ui', ('ssh',)),
     )
     return verify_dag
 
