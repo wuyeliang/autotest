@@ -4,7 +4,6 @@
 
 import logging
 
-from autotest_lib.server.cros import vboot_constants as vboot
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 from autotest_lib.server.cros.faft.firmware_test import ConnectionError
 
@@ -13,11 +12,7 @@ class firmware_CorruptFwBodyA(FirmwareTest):
     """
     Servo based firmware body A corruption test.
 
-    The expected behavior is different if the firmware preamble USE_RO_NORMAL
-    flag is enabled. In the case USE_RO_NORMAL ON, the firmware corruption
-    doesn't hurt the boot results since it boots the RO path directly and does
-    not load and verify the RW firmware body. In the case USE_RO_NORMAL OFF,
-    the RW firwmare A corruption will result booting the firmware B.
+    The RW firmware A corruption will result booting the firmware B.
     """
     version = 1
 
@@ -37,31 +32,16 @@ class firmware_CorruptFwBodyA(FirmwareTest):
 
     def run_once(self):
         """Runs a single iteration of the test."""
-        if (self.faft_client.Bios.GetPreambleFlags('a') &
-                vboot.PREAMBLE_USE_RO_NORMAL):
-            # USE_RO_NORMAL flag is ON. Firmware body corruption doesn't
-            # hurt the booting results.
-            logging.info('The firmware USE_RO_NORMAL flag is enabled.')
-            logging.info("Corrupt firmware body A.")
-            self.check_state((self.checkers.fw_tries_checker, 'A'))
-            self.faft_client.Bios.CorruptBody('a')
-            self.switcher.mode_aware_reboot()
+        logging.info("Corrupt firmware body A.")
+        self.check_state((self.checkers.fw_tries_checker, 'A'))
+        self.faft_client.Bios.CorruptBody('a')
+        self.switcher.mode_aware_reboot()
 
-            logging.info("Still expected firmware A boot and restore.")
-            self.check_state((self.checkers.fw_tries_checker, 'A'))
-            self.faft_client.Bios.RestoreBody('a')
-        else:
-            logging.info('The firmware USE_RO_NORMAL flag is disabled.')
-            logging.info("Corrupt firmware body A.")
-            self.check_state((self.checkers.fw_tries_checker, 'A'))
-            self.faft_client.Bios.CorruptBody('a')
-            self.switcher.mode_aware_reboot()
+        logging.info("Expected firmware B boot and restore firmware A.")
+        self.check_state((self.checkers.fw_tries_checker, ('B', False)))
+        self.faft_client.Bios.RestoreBody('a')
+        self.switcher.mode_aware_reboot()
 
-            logging.info("Expected firmware B boot and restore firmware A.")
-            self.check_state((self.checkers.fw_tries_checker, ('B', False)))
-            self.faft_client.Bios.RestoreBody('a')
-            self.switcher.mode_aware_reboot()
-
-            expected_slot = 'B' if self.fw_vboot2 else 'A'
-            logging.info("Expected firmware " + expected_slot + " boot, done.")
-            self.check_state((self.checkers.fw_tries_checker, expected_slot))
+        expected_slot = 'B' if self.fw_vboot2 else 'A'
+        logging.info("Expected firmware " + expected_slot + " boot, done.")
+        self.check_state((self.checkers.fw_tries_checker, expected_slot))
