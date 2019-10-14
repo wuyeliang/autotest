@@ -983,8 +983,10 @@ class CPUPackageStats(CPUCStateStats):
                 'Airmont':      self.SILVERMONT,
                 'Atom':         self.ATOM,
                 'Broadwell':    self.BROADWELL,
+                'Comet Lake':   self.BROADWELL,
                 'Goldmont':     self.GOLDMONT,
                 'Haswell':      self.SANDY_BRIDGE,
+                'Ice Lake':     self.BROADWELL,
                 'Ivy Bridge':   self.SANDY_BRIDGE,
                 'Ivy Bridge-E': self.SANDY_BRIDGE,
                 'Kaby Lake':    self.BROADWELL,
@@ -992,6 +994,7 @@ class CPUPackageStats(CPUCStateStats):
                 'Sandy Bridge': self.SANDY_BRIDGE,
                 'Silvermont':   self.SILVERMONT,
                 'Skylake':      self.BROADWELL,
+                'Tiger Lake':   self.BROADWELL,
                 'Westmere':     self.NEHALEM,
                 }.get(cpu_uarch, None)
 
