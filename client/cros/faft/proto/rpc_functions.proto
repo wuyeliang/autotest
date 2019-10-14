@@ -205,6 +205,9 @@ service System {
   rpc GetPlatformName
     (SystemGetPlatformNameRequest)
     returns (SystemGetPlatformNameResponse);
+  rpc GetModelName
+    (SystemGetModelNameRequest)
+    returns (SystemGetModelNameResponse);
   rpc DevTpmPresent
     (SystemDevTpmPresentRequest)
     returns (SystemDevTpmPresentResponse);
@@ -750,6 +753,11 @@ message SystemRunShellCommandGetStatusResponse {
 
 message SystemGetPlatformNameRequest {}
 message SystemGetPlatformNameResponse {
+  string name = 1;
+}
+
+message SystemGetModelNameRequest {}
+message SystemGetModelNameResponse {
   string name = 1;
 }
 

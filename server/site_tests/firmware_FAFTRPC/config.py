@@ -77,6 +77,7 @@ RPC_CATEGORIES = [
                 "method_names": [
                     "IsAvailable",
                     "GetPlatformName",
+                    "GetModelName",
                     "DevTpmPresent",
                     "GetRootDev",
                     "GetRootPart",
