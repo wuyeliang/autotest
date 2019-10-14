@@ -440,12 +440,8 @@ class AudioFacadeNative(object):
 
         @param file_path: The path to dump results.
 
-        @returns: True
-
         """
-        with open(file_path, 'w') as f:
-            f.write(audio_helper.get_audio_diagnostics())
-        return True
+        audio_helper.dump_diagnostics(file_path)
 
 
     def start_counting_signal(self, signal_name):
