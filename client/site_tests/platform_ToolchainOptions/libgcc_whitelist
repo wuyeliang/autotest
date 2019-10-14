@@ -17,3 +17,20 @@
 # https://crbug.com/808264
 /usr/lib/dri/kms_swrast_dri.so
 /usr/lib/dri/swrast_dri.so
+# Prebuilt binaries installed by Mediatek Camera HAL on kukui boards.
+/usr/lib/lib3a.ae.core.so
+/usr/lib/lib3a.ae.so
+/usr/lib/lib3a.af.core.so
+/usr/lib/lib3a.af.so
+/usr/lib/lib3a.awb.core.so
+/usr/lib/lib3a.awb.so
+/usr/lib/lib3a.flash.so
+/usr/lib/lib3a.gma.so
+/usr/lib/lib3a.lce.so
+/usr/lib/libcamalgo.eis.so
+/usr/lib/libcamalgo.fdft.so
+/usr/lib/libcamalgo.flicker.so
+/usr/lib/libcamalgo.ispfeature.so
+/usr/lib/libcamalgo.lsc.so
+/usr/lib/libcamalgo.nr.so
+/usr/lib/libcamalgo.utility.so
