@@ -145,3 +145,28 @@ running you can check the results here:
 If a test is failing remotely, on stainless, you can view the logs there by
 clicking on the Logs link. You can also see the screenshot of the last screen
 before the test finished although they are rarely useful.
+
+### Using Servo board with Autotests
+
+Some tests require the use of the [Servo Board](http://go/servo-ent).
+If you want to get ahold of a servo board you need to reach out to crosdistros@
+and request one. You can either get a Servo type A or Servo type C, in case
+your test involves controlling the power to the DUT.
+
+Setting up the servo, hopefully you'll find this
+[screenshot](https://screenshot.googleplex.com/PcZGhW5eqk3) useful. You can see
+that two cables on the left go to the DUT and the cable on the right goes into
+the host machine. If you're going to be feeding the power to the DUT you will
+also need to connect a Type-C charger to the Servo by plugging it into the
+slot marked "Dut Power". Note: if you grabbed the micro usb -> USB A cables
+in the tech stop make sure that the light on the switch glows orange and not
+green. If it's green the tests will not work.
+
+Starting the servo, from chroot run: "sudo servo_updater" make sure everything
+is up to date. Then run "sudo servod -b BOARD_NAME" BOARD_NAME being the board
+you have built on your server. While this is running, in another terminal tab
+you can now execute dut-control commands such as
+"dut-control servo_v4_role:scr".
+
+With the servod running you can now execute local tests using the servo board.
+[Example test using servo](http://go/servo-ent-example-test).
