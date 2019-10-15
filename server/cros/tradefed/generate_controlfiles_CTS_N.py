@@ -36,6 +36,7 @@ CONFIG['TRADEFED_MAY_SKIP_DEVICE_INFO'] = True
 # As this is not called for the "all" runs we can safely assume that each module
 # runs in suite:arc-cts.
 CONFIG['INTERNAL_SUITE_NAMES'] = ['suite:arc-cts']
+CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440

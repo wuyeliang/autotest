@@ -276,10 +276,6 @@ def get_suites(modules, abi, is_public):
         return sorted(list(suites))
 
     for module in modules:
-        if module in get_collect_modules(is_public):
-            # We collect all tests both in arc-cts and arc-cts-qual as both have
-            # a chance to be complete (and used for submission).
-            suites.add('suite:arc-cts-qual')
         if module in CONFIG['EXTRA_ATTRIBUTES']:
             # Special cases come with their own suite definitions.
             suites |= set(CONFIG['EXTRA_ATTRIBUTES'][module])
@@ -289,7 +285,7 @@ def get_suites(modules, abi, is_public):
         if module in CONFIG['HARDWARE_DEPENDENT_MODULES']:
             # CTS modules to be run on all unibuild models.
             suites.add('suite:arc-cts-unibuild-hw')
-        if module not in get_collect_modules(is_public) and abi == 'x86':
+        if abi == 'x86':
             # Handle a special builder for running all of CTS in a betty VM.
             # TODO(ihf): figure out if this builder is still alive/needed.
             vm_suite = None
@@ -382,7 +378,8 @@ def get_max_retries(modules, abi, suites, is_public):
                 'suite:bvt-perbuild' in suites and abi == 'arm'):
             retry = 3
         # During qualification we want at least 9 retries, possibly more.
-        if 'suite:arc-cts-qual' in suites:
+        # TODO(kinaba&yoshiki): do not abuse suite names
+        if set(CONFIG['QUAL_SUITE_NAMES']) & set(suites):
             retry = max(retry, CONFIG['CTS_QUAL_RETRIES'])
         # Collection should never have a retry. This needs to be last.
         if module in get_collect_modules(is_public):
@@ -611,8 +608,8 @@ def calculate_timeout(modules, suites, is_public):
     """
     if 'suite:bvt-arc' in suites:
         return int(3600 * CONFIG['BVT_TIMEOUT'])
-    if 'suite:arc-cts-qual' in suites and not (_COLLECT in modules or
-                                               _PUBLIC_COLLECT in modules):
+    if ((set(CONFIG['QUAL_SUITE_NAMES']) & set(suites)) and
+            not (_COLLECT in modules or _PUBLIC_COLLECT in modules)):
         return int(3600 * CONFIG['QUAL_TIMEOUT'])
 
     timeout = 0
@@ -968,7 +965,7 @@ def write_qualification_controlfiles(modules, abi, revision, build, uri,
     combined = combine_modules_by_bookmark(set(modules))
     for key in combined:
         write_controlfile('all.' + key, combined[key], abi, revision, build,
-                          uri, ['suite:arc-cts-qual'], is_public)
+                          uri, CONFIG['QUAL_SUITE_NAMES'], is_public)
 
 
 def write_collect_controlfiles(_modules, abi, revision, build, uri, is_public):
@@ -976,9 +973,10 @@ def write_collect_controlfiles(_modules, abi, revision, build, uri, is_public):
 
     compute completeness (missing tests) on the CTS dashboard.
     """
-    suites = ['suite:arc-cts', 'suite:arc-cts-qual']
     if is_public:
         suites = [CONFIG['MOBLAB_SUITE_NAME']]
+    else:
+        suites = CONFIG['INTERNAL_SUITE_NAMES'] + CONFIG['QUAL_SUITE_NAMES']
     for module in get_collect_modules(is_public):
         write_controlfile(module, set([module]), abi, revision, build, uri,
                           suites, is_public)
