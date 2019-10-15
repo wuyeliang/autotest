@@ -9,6 +9,7 @@ import collections
 CONFIG = {}
 
 CONFIG['TEST_NAME'] = 'cheets_CTS_N'
+CONFIG['DOC_TITLE'] = 'Android Compatibility Test Suite (CTS)'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_N'
 CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
 CONFIG['COPYRIGHT_YEAR'] = 2016
@@ -21,6 +22,7 @@ CONFIG['LARGE_MAX_RESULT_SIZE'] = 500 * 1024
 # ranging from 4MB to 50MB. 500MB should be sufficient to handle all the cases.
 CONFIG['NORMAL_MAX_RESULT_SIZE'] = 500 * 1024
 
+CONFIG['TRADEFED_CTS_COMMAND'] = 'cts'
 CONFIG['TRADEFED_RETRY_COMMAND'] = 'cts'
 
 # TODO(yoshiki, kinaba): Flip this to false (and remove the flag itself). On N,
@@ -38,11 +40,18 @@ CONFIG['TRADEFED_MAY_SKIP_DEVICE_INFO'] = True
 CONFIG['INTERNAL_SUITE_NAMES'] = ['suite:arc-cts']
 CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 
+CONFIG['WRITE_EXTRA_CONTROLFILES'] = True
+
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440
 # Do not change the name/tag without adjusting the dashboard.
 _COLLECT = 'tradefed-run-collect-tests-only-internal'
 _PUBLIC_COLLECT = 'tradefed-run-collect-tests-only'
+
+CONFIG['LAB_DEPENDENCY'] = {
+    'x86': ['cts_abi_x86']
+}
+
 CONFIG['CTS_JOB_RETRIES_IN_PUBLIC'] = 2
 CONFIG['CTS_QUAL_RETRIES'] = 9
 CONFIG['CTS_MAX_RETRIES'] = {}
@@ -322,6 +331,8 @@ CONFIG['EXTRA_ATTRIBUTES'] = {
 
 CONFIG['EXTRA_ARTIFACTS'] = {
 }
+
+CONFIG['TRADEFED_EXECUTABLE_PATH'] = 'android-cts/tools/cts-tradefed'
 
 
 from generate_controlfiles_common import main

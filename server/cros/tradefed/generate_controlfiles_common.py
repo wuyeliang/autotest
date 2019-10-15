@@ -129,6 +129,8 @@ _PUBLIC_COLLECT = 'tradefed-run-collect-tests-only'
 
 _TEST_LENGTH = {1: 'FAST', 2: 'SHORT', 3: 'MEDIUM', 4: 'LONG', 5: 'LENGTHY'}
 
+_ALL = 'all'
+
 
 def get_tradefed_build(line):
     """Gets the build of Android CTS from tradefed.
@@ -137,7 +139,9 @@ def get_tradefed_build(line):
                 Android Compatibility Test Suite 7.0 (3423912)
     @return Tradefed CTS build. Example: 2813453.
     """
-    # Sample string: Android Compatibility Test Suite 7.0 (3423912)
+    # Sample string:
+    # - Android Compatibility Test Suite 7.0 (3423912)
+    # - Android Compatibility Test Suite for Instant Apps 1.0 (4898911)
     m = re.search(r' \((.*)\)', line)
     if m:
         return m.group(1)
@@ -148,11 +152,14 @@ def get_tradefed_build(line):
 def get_tradefed_revision(line):
     """Gets the revision of Android CTS from tradefed.
 
-    @param line Tradefed identification output on startup. Example:
-                Android CTS 6.0_r6 build:2813453
+    @param line Tradefed identification output on startup.
+                Example:
+                 Android Compatibility Test Suite 6.0_r6 (2813453)
+                 Android Compatibility Test Suite for Instant Apps 1.0 (4898911)
     @return Tradefed CTS revision. Example: 6.0_r6.
     """
-    m = re.search(r'Android Compatibility Test Suite (.*) \(', line)
+    m = re.search(
+        r'Android Compatibility Test Suite(?: for Instant Apps)? (.*) \(', line)
     if m:
         return m.group(1)
     logging.warning('Could not identify revision in line "%s".', line)
@@ -213,13 +220,12 @@ def get_doc(modules, abi, is_public):
     """Defines the control file DOC string."""
     if not modules.intersection(get_collect_modules(is_public)):
         # Generate per-module DOC
-        doc = ('Run module %s of the '
-               'Android Compatibility Test Suite (CTS) using %s ABI in '
-               'the ARC++ container.' % (', '.join(sorted(list(modules))), abi))
+        doc = ('Run module %s of the %s using %s ABI in '
+               'the ARC++ container.'
+               % (', '.join(sorted(list(modules))), CONFIG['DOC_TITLE'], abi))
     else:
-        doc = ('Run all of the '
-               'Android Compatibility Test Suite (CTS) using %s ABI in '
-               'the ARC++ container.' % (abi))
+        doc = ('Run all of the %s using %s ABI in '
+               'the ARC++ container.' % (CONFIG['DOC_TITLE'], abi))
 
     return doc
 
@@ -320,9 +326,8 @@ def get_dependencies(modules, abi, is_public, is_camerabox_test):
                               related test.
     """
     dependencies = ['arc']
-    if abi == 'x86':
-        # We only want to run x86 ABI on DUTs that have an Intel/AMD CPU.
-        dependencies.append('cts_abi_x86')
+    if abi in CONFIG['LAB_DEPENDENCY']:
+        dependencies += CONFIG['LAB_DEPENDENCY'][abi]
 
     if is_camerabox_test:
         dependencies.append('camerabox')
@@ -347,8 +352,9 @@ def get_job_retries(modules, is_public):
     retries = 1  # 0 is NO job retries, 1 is one retry etc.
     for module in modules:
         # We don't want job retries for module collection or special cases.
-        if (module in get_collect_modules(is_public) or
-            module in CONFIG['EXTRA_MODULES']['CtsDeqpTestCases']):
+        if (module in get_collect_modules(is_public) or module == _ALL or
+            ('CtsDeqpTestCases' in CONFIG['EXTRA_MODULES'] and
+             module in CONFIG['EXTRA_MODULES']['CtsDeqpTestCases'])):
             retries = 0
     return retries
 
@@ -522,15 +528,27 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
         cmd = ['run', 'commandAndExit', CONFIG['TRADEFED_RETRY_COMMAND'],
                '--retry', '{session_id}']
     else:
-        cmd = ['run', 'commandAndExit', 'cts']
-        special_cmd = _get_special_command_line(modules, is_public)
-        if special_cmd:
-            cmd.extend(special_cmd)
-        # We run each module with its own --include-filter command/option.
-        # https://source.android.com/compatibility/cts/run
-        elif modules:
-            for module in sorted(modules):
-                cmd += ['--include-filter', module]
+        # For runs create a logcat file for each individual failure.
+        cmd = ['run', 'commandAndExit', CONFIG['TRADEFED_CTS_COMMAND']]
+        # TODO(yoshiki): remove this branching and consolidate them with the
+        # unified one rule.
+        if CONFIG['TRADEFED_CTS_COMMAND'] == 'cts':
+            special_cmd = _get_special_command_line(modules, is_public)
+            if special_cmd:
+                cmd.extend(special_cmd)
+            # We run each module with its own --include-filter command/option.
+            # https://source.android.com/compatibility/cts/run
+            elif modules:
+                for module in sorted(modules):
+                    cmd += ['--include-filter', module]
+        elif CONFIG['TRADEFED_CTS_COMMAND'] == 'cts-instant':
+            if _ALL in modules:
+                pass
+            elif len(modules) == 1:
+                cmd += ['--module', list(modules)[0]]
+            else:
+                raise Exception('cts-instant cannot include multiple modules')
+
         # For runs create a logcat file for each individual failure.
         # Not needed on moblab, nobody is going to look at them.
         if not (modules.intersection(CONFIG['DISABLE_LOGCAT_ON_FAILURE']) or
@@ -539,7 +557,6 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
 
     if CONFIG['TRADEFED_DISABLE_REBOOT']:
         cmd.append('--disable-reboot')
-
     if (CONFIG['TRADEFED_MAY_SKIP_DEVICE_INFO'] and
         not (modules.intersection(CONFIG['BVT_ARC'] + CONFIG['SMOKE'] +
              CONFIG['NEEDS_DEVICE_INFO']))):
@@ -552,7 +569,10 @@ def get_run_template(modules, is_public, retry=False):
     """Command to run the modules specified by a control file."""
     cmd = None
     if modules.intersection(get_collect_modules(is_public)):
-        cmd = _format_collect_cmd(retry=retry)
+        if _COLLECT in modules or _PUBLIC_COLLECT in modules:
+            cmd = _format_collect_cmd(retry=retry)
+        elif _ALL in modules:
+            cmd = _format_modules_cmd(is_public, modules, retry=retry)
     else:
         cmd = _format_modules_cmd(is_public, modules, retry=retry)
     return cmd
@@ -561,6 +581,7 @@ def get_run_template(modules, is_public, retry=False):
 def get_retry_template(modules, is_public):
     """Command to retry the failed modules as specified by a control file."""
     return get_run_template(modules, is_public, retry=True)
+
 
 def get_extra_modules_dict(is_public, abi):
     if not is_public:
@@ -674,7 +695,7 @@ def get_controlfile_content(combined,
     attributes = ', '.join(suites)
     uri = None if is_public else uri
     target_module = None
-    if combined not in get_collect_modules(is_public):
+    if (combined not in get_collect_modules(is_public) and combined != _ALL):
         target_module = combined
     for target, m in get_extra_modules_dict(is_public, abi).items():
         if combined in m:
@@ -719,7 +740,7 @@ def get_tradefed_data(path, is_public, abi):
 
     Notice that the parsing gets broken at times with major new CTS drops.
     """
-    tradefed = os.path.join(path, 'android-cts/tools/cts-tradefed')
+    tradefed = os.path.join(path, CONFIG['TRADEFED_EXECUTABLE_PATH'])
     # Forgive me for I have sinned. Same as: chmod +x tradefed.
     os.chmod(tradefed, os.stat(tradefed).st_mode | stat.S_IEXEC)
     cmd_list = [tradefed, 'list', 'modules']
@@ -734,6 +755,7 @@ def get_tradefed_data(path, is_public, abi):
     build = '<unknown>'
     line = ''
     revision = None
+    is_in_intaractive_mode = True
     # The process does not terminate, but we know the last test is vm-tests-tf.
     while True:
         line = p.stdout.readline().strip()
@@ -742,6 +764,8 @@ def get_tradefed_data(path, is_public, abi):
             logging.info('Unpacking: %s.', line)
             build = get_tradefed_build(line)
             revision = get_tradefed_revision(line)
+        elif line.startswith('Non-interactive mode: '):
+            is_in_intaractive_mode = False
         elif line.startswith('arm') or line.startswith('x86'):
             # Newer CTS shows ABI-module pairs like "arm64-v8a CtsNetTestCases"
             modules.add(line.split()[1])
@@ -754,13 +778,17 @@ def get_tradefed_data(path, is_public, abi):
         elif line.startswith('vm-tests-tf'):
             modules.add(line)
             break  # TODO(ihf): Fix using this as EOS.
-        elif 'Saved log to' in line:
-            # TODO(kinaba): Fix using more robust criteria.
-            break
         elif not line:
-            if p.poll() is not None:
-                # The process has exited unexpectedly.
-                modules = set()
+            exit_code = p.poll()
+            if exit_code is not None:
+                # The process has automatically exited.
+                if is_in_intaractive_mode or exit_code != 0:
+                    # The process exited unexpectedly in interactive mode,
+                    # or exited with error in non-interactive mode.
+                    logging.warning(
+                        'The process has exited unexpectedly (exit code: %d)',
+                        exit_code)
+                    modules = set()
                 break
         elif line.isspace() or line.startswith('Use "help"'):
             pass
@@ -968,6 +996,17 @@ def write_qualification_controlfiles(modules, abi, revision, build, uri,
                           uri, CONFIG['QUAL_SUITE_NAMES'], is_public)
 
 
+def write_qualification_and_regression_controlfile(abi, revision, build, uri,
+                                                   is_public):
+    """Write a control file to run "all" tests for qualification and regression.
+    """
+    # For cts-instant, qualication control files are expected to cover
+    # regressions as well. Hence the 'suite:arc-cts' is added.
+    suites = ['suite:arc-cts', 'suite:arc-cts-qual']
+    write_controlfile('all', set([_ALL]), abi, revision, build, uri, suites,
+                      is_public)
+
+
 def write_collect_controlfiles(_modules, abi, revision, build, uri, is_public):
     """Write all control files for test collection used as reference to
 
@@ -1035,18 +1074,23 @@ def run(uris, is_public):
             if is_public:
                 write_moblab_controlfiles(modules, abi, revision, build, uri,
                                           is_public)
+            elif not CONFIG['WRITE_EXTRA_CONTROLFILES']:
+                write_qualification_and_regression_controlfile(
+                    abi, revision, build, uri, is_public)
             else:
                 write_regression_controlfiles(modules, abi, revision, build,
                                               uri, is_public)
                 write_qualification_controlfiles(modules, abi, revision, build,
                                                  uri, is_public)
-                write_extra_camera_controlfiles(abi, revision, build,
-                                                uri, is_public)
+                write_extra_camera_controlfiles(abi, revision, build, uri,
+                                                is_public)
 
             write_collect_controlfiles(modules, abi, revision, build, uri,
                                        is_public)
-            write_extra_deqp_controlfiles(None, abi, revision, build, uri,
-                                          is_public)
+
+            if CONFIG['WRITE_EXTRA_CONTROLFILES']:
+                write_extra_deqp_controlfiles(None, abi, revision, build, uri,
+                                              is_public)
 
 
 def main(config):
