@@ -2402,6 +2402,23 @@ def get_root_device():
     return utils.system_output('rootdev -s -d')
 
 
+def get_other_device():
+    """
+    Return the non root devices.
+    Will return a list of other block devices, that are not the root device.
+    """
+
+    cmd = 'lsblk -dpn -o NAME | grep -v loop | grep -v zram'
+    devs = utils.system_output(cmd).splitlines()
+
+    for dev in devs[:]:
+        if not re.match(r'/dev/(sd[a-z]|mmcblk[0-9]+|nvme[0-9]+)p?[0-9]*', dev):
+            devs.remove(dev)
+        if dev == get_root_device():
+            devs.remove(dev)
+    return devs
+
+
 def get_root_partition():
     """
     Return current root partition
