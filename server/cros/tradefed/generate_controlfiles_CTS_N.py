@@ -20,7 +20,7 @@ CONFIG['LARGE_MAX_RESULT_SIZE'] = 500 * 1024
 
 # Individual module normal produces less results than all modules, which is
 # ranging from 4MB to 50MB. 500MB should be sufficient to handle all the cases.
-CONFIG['NORMAL_MAX_RESULT_SIZE'] = 500 * 1024
+CONFIG['NORMAL_MAX_RESULT_SIZE'] = 300 * 1024
 
 CONFIG['TRADEFED_CTS_COMMAND'] = 'cts'
 CONFIG['TRADEFED_RETRY_COMMAND'] = 'cts'

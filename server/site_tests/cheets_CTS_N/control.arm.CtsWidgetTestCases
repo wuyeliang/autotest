@@ -24,7 +24,7 @@ def run_CTS(machine):
         tag='arm.CtsWidgetTestCases',
         test_name='cheets_CTS_N.arm.CtsWidgetTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsWidgetTestCases', '--disable-reboot', '--skip-device-info'],
-        retry_template=['run', 'commandAndExit', 'cts', '--disable-reboot', '--skip-device-info', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsWidgetTestCases',
         target_plan=None,
         bundle='arm',

@@ -24,7 +24,7 @@ def run_CTS(machine):
         tag='arm.CtsNetSecConfigAttributeTestCases',
         test_name='cheets_CTS_N.arm.CtsNetSecConfigAttributeTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetSecConfigAttributeTestCases', '--disable-reboot', '--skip-device-info'],
-        retry_template=['run', 'commandAndExit', 'cts', '--disable-reboot', '--skip-device-info', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsNetSecConfigAttributeTestCases',
         target_plan=None,
         bundle='arm',
