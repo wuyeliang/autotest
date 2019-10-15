@@ -132,3 +132,16 @@ policy test you will also need another control file and another .py server
 file to kick off the client test.
 [Example](http://go/ent-cont-example) of the control file.
 [Example](http://go/ent-test-example) of the .py server file.
+
+### Debugging an autotest
+
+Unfortunately there's no good debugging tool in autotest and you can't use pdb
+so you're left with using time.sleep and logging. With time.sleep you can pause
+the test and see what's going on in the actual device. When using logging you
+can run 'logging.info("what you want to log")' and then when the test is done
+running you can check the results here:
+/tmp/test_that_latest/results-1-TESTNAME/TESTNAME/debug/TESTNAME.INFO
+
+If a test is failing remotely, on stainless, you can view the logs there by
+clicking on the Logs link. You can also see the screenshot of the last screen
+before the test finished although they are rarely useful.
