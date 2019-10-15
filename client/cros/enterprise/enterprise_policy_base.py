@@ -490,7 +490,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                 elif isinstance(value, dict):
                     policies_dict[Policy] = encode_json_string(value)
                 # "account" is the Kiosk Policy, which has special formatting.
-                elif isinstance(value, list) and Policy != 'account':
+                elif isinstance(value, list) and Policy != 'device_local_accounts.account':
                     if value and isinstance(value[0], dict):
                         policies_dict[Policy] = encode_json_string(value)
             for Policy in policies_to_pop:
@@ -924,18 +924,9 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                     expect_policy_fetch=True)
             if self.dms_is_fake:
                 if self._kiosk_mode:
-                    # This try is needed for kiosk; without it the test fails
-                    # in telemtry code in _WaitForEnterpriseWebview. Webview
-                    # never loads since it's kiosk.
-                    # TODO(rzakarian): Try to modify telemetry code to not
-                    # wait for Webview when in kiosk mode.
-                    # http://crbug.com/934876.
-                    try:
-                        enrollment.EnterpriseFakeEnrollment(
-                            self.cr.browser, self.username, self.password,
-                            self.gaia_id, auto_login=auto_login)
-                    except TimeoutException:
-                        pass
+                    enrollment.KioskEnrollment(
+                        self.cr.browser, self.username, self.password,
+                        self.gaia_id)
                 else:
                     enrollment.EnterpriseFakeEnrollment(
                         self.cr.browser, self.username, self.password,
