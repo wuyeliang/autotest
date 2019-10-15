@@ -2145,7 +2145,7 @@ def _run_paygen_with_skylab(options, override_pool, override_qs_account):
             if not override_pool else override_pool)
     paygen_tests = paygen.get_paygen_tests(test_source_build, options.name)
     for test in paygen_tests:
-        cmd = [skylab_tool, 'create-test', '-bb=False']
+        cmd = [skylab_tool, 'create-test']
         cmd += paygen.paygen_skylab_args(
                 test, options.name, test_source_build, pool, options.board,
                 options.model, options.timeout_mins,
@@ -2179,7 +2179,7 @@ def _run_with_skylab(options, override_pool, override_qs_account):
     pool = override_pool or options.pool
     if options.mock_job_id:
         taskID = options.mock_job_id
-        cmd = [skylab_tool, 'wait-task', '-bb=False',
+        cmd = [skylab_tool, 'wait-task',
                '-timeout-mins', str(options.timeout_mins),
                '-service-account-json', _SKYLAB_SERVICE_ACCOUNT,
                taskID]
@@ -2198,7 +2198,7 @@ def _run_with_skylab(options, override_pool, override_qs_account):
         _log_skylab_for_buildbot(task_stdout)
         return run_suite_common.SuiteResult(return_code)
     else:
-        cmd = [skylab_tool, 'create-suite', '-bb=False',
+        cmd = [skylab_tool, 'create-suite',
                '-board', options.board,
                '-image', builds[provision.CROS_VERSION_PREFIX],
                '-pool', pool,
