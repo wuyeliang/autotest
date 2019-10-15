@@ -24,7 +24,7 @@ def run_CTS(machine):
         tag='x86.CtsAbiOverrideHostTestCases',
         test_name='cheets_CTS_N.x86.CtsAbiOverrideHostTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAbiOverrideHostTestCases', '--disable-reboot', '--skip-device-info'],
-        retry_template=['run', 'commandAndExit', 'cts', '--disable-reboot', '--skip-device-info', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsAbiOverrideHostTestCases',
         target_plan=None,
         bundle='x86',

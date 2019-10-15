@@ -24,7 +24,7 @@ def run_CTS(machine):
         tag='arm.CtsVoiceInteractionTestCases',
         test_name='cheets_CTS_N.arm.CtsVoiceInteractionTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsVoiceInteractionTestCases', '--disable-reboot', '--skip-device-info'],
-        retry_template=['run', 'commandAndExit', 'cts', '--disable-reboot', '--skip-device-info', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsVoiceInteractionTestCases',
         target_plan=None,
         bundle='arm',

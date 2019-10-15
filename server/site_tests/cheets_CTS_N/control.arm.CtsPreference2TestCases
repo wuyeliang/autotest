@@ -24,7 +24,7 @@ def run_CTS(machine):
         tag='arm.CtsPreference2TestCases',
         test_name='cheets_CTS_N.arm.CtsPreference2TestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsPreference2TestCases', '--disable-reboot', '--skip-device-info'],
-        retry_template=['run', 'commandAndExit', 'cts', '--disable-reboot', '--skip-device-info', '--retry', '{session_id}'],
+        retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsPreference2TestCases',
         target_plan=None,
         bundle='arm',
