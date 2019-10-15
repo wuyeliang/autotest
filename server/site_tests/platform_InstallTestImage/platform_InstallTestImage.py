@@ -29,7 +29,7 @@ class platform_InstallTestImage(test.test):
                 # Succeeded, so stage the build and get its URL.
                 # N.B. Failures from staging the build at this point
                 # are fatal by design.
-                self.image_url = host.stage_image_for_servo(image_name)
+                _, self.image_url = host.stage_image_for_servo(image_name)
                 logging.info("Using staged image:  %s", image_url)
 
 

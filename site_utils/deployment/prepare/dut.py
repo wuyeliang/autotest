@@ -86,7 +86,8 @@ def download_image_to_servo_usb(host, build):
     @param host   A server.hosts.Host object.
     @param build  A Chrome OS version string for the build to download.
     """
-    host.servo.image_to_servo_usb(host.stage_image_for_servo(build))
+    _, update_url = host.stage_image_for_servo(build)
+    host.servo.image_to_servo_usb(update_url)
 
 
 def install_test_image(host):

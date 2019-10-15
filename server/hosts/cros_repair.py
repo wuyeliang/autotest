@@ -603,7 +603,8 @@ class ServoInstallRepair(hosts.RepairAction):
     def repair(self, host):
         # pylint: disable=missing-docstring
         repair_utils.require_servo(host)
-        host.servo_install(host.stage_image_for_servo())
+        _, update_url = host.stage_image_for_servo()
+        host.servo_install(update_url)
 
     @property
     def description(self):

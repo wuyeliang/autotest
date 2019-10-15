@@ -30,8 +30,8 @@ class provision_FirmwareUpdate(test.test):
             logging.warning('Failed to get build label from the DUT, skip '
                             'staging ChromeOS image on the servo USB stick.')
         else:
-            host.servo.image_to_servo_usb(
-                    host.stage_image_for_servo(info.build))
+            _, update_url = host.stage_image_for_servo(info.build)
+            host.servo.image_to_servo_usb(update_url)
             logging.debug('ChromeOS image %s is staged on the USB stick.',
                           info.build)
 

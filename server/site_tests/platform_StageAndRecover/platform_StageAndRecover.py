@@ -54,10 +54,10 @@ class platform_StageAndRecover(test.test):
         @param artifact: image type - recovery_image or test_image
         """
         # Stage the image on dev server
-        image_path = self.host.stage_image_for_servo(
+        _, image_path = self.host.stage_image_for_servo(
             self.release_builder_path,
             artifact=artifact)
-        logging.info('%s staged at %s' % (artifact, image_path))
+        logging.info('%s staged at %s', artifact, image_path)
 
         # Make servo sees only DUT_HUB1
         self.set_servo_usb_reimage()
@@ -78,8 +78,8 @@ class platform_StageAndRecover(test.test):
 
         @raise error.TestFail: if timeout is reached
         """
-        logging.info('Started %s. Will wait up to %d seconds to complete' %
-                     (process, timeout))
+        logging.info('Started %s. Will wait up to %d seconds to complete',
+                     process, timeout)
         start_time = time.time()
         result = self.host.ping_wait_up(timeout=timeout)
         if result:
@@ -108,7 +108,7 @@ class platform_StageAndRecover(test.test):
                 log_list = recovery_info.split('\n')
                 failure_tag = 'Failed Command'
                 reasons = [line for line in log_list if failure_tag in line]
-                logging.info('Recovery log:\n%s\n' % (recovery_info))
+                logging.info('Recovery log:\n%s\n', recovery_info)
                 self.error_messages.append(' %s ' % (','.join(reasons)))
         else:
             self.error_messages.append('Recovery log is missing.')
