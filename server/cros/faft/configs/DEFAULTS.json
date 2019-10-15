@@ -5,6 +5,9 @@
     "parent": null,
     "parent.DOC": "Name of the platform whose overrides to inherit",
 
+    "models": {},
+    "models.DOC": "Model-specific attribute overrides for this platform",
+
     "mode_switcher_type": "keyboard_dev_switcher",
     "mode_switcher_type.DOC": "Version of mode-switcher used for mode-aware reboot",
 

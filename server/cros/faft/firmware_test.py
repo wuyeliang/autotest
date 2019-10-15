@@ -137,7 +137,8 @@ class FirmwareTest(FAFTBase):
                 self._no_ec_sync = True
 
         self.faft_config = FAFTConfig(
-                self.faft_client.System.GetPlatformName())
+                self.faft_client.System.GetPlatformName(),
+                self.faft_client.System.GetModelName())
         self.checkers = FAFTCheckers(self)
         self.switcher = mode_switcher.create_mode_switcher(self)
 

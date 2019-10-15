@@ -38,46 +38,71 @@ class Config(object):
     It gets the values from the JSON files in CONFIG_DIR.
     Default values are declared in the DEFAULTS.json.
     Platform-specific overrides come from <platform>.json.
-    Boards can also inherit overrides from a parent platform, with the child
-    platform's overrides taking precedence over the parent's.
+    If the platform has model-specific overrides, then those take precedence
+    over the platform's config.
+    If the platform inherits overrides from a parent platform, then the child
+    platform's overrides take precedence over the parent's.
 
-    TODO(gredelston): Move the JSON out of this directory, as per
+    TODO(gredelston): Move the JSON out of this Autotest, as per
     go/cros-fw-testing-configs
 
-    @ivar platform: string containing the board/model name being tested.
+    @ivar platform: string containing the board name being tested.
+    @ivar model: string containing the model name being tested
     """
 
-    def __init__(self, platform):
+    def __init__(self, platform, model=None):
         """Initialize an object with FAFT settings.
 
         @param platform: The name of the platform being tested.
         """
-        # Load JSON files order of importance (platform, parent/s, DEFAULTS)
+        # Load JSON in order of importance (model, platform, parent/s, DEFAULTS)
         self.platform = platform.rsplit('_', 1)[-1].lower().replace("-", "_")
-        _precedence_list = []
+        self._precedence_list = []
+        self._precedence_names = []
         if _has_config_file(self.platform):
-            _precedence_list.append(_load_config(self.platform))
-            parent_platform = _precedence_list[-1].get('parent', None)
+            platform_config = _load_config(self.platform)
+            self._add_cfg_to_precedence(self.platform, platform_config)
+            model_configs = platform_config.get('models', {})
+            model_config = model_configs.get(model, None)
+            if model_config is not None:
+                self._add_cfg_to_precedence(
+                        'MODEL:%s' % model, model_config, prepend=True)
+                logging.debug('Using model override for %s', model)
+            parent_platform = self._precedence_list[-1].get('parent', None)
             while parent_platform is not None:
-                _precedence_list.append(_load_config(parent_platform))
-                parent_platform = _precedence_list[-1].get('parent', None)
+                parent_config = _load_config(parent_platform)
+                self._add_cfg_to_precedence(parent_platform, parent_config)
+                parent_platform = self._precedence_list[-1].get('parent', None)
         else:
             logging.debug(
                     'No platform config file found at %s. Using default.',
                     _get_config_filepath(self.platform))
-        _precedence_list.append(_load_config('DEFAULTS'))
+        default_config = _load_config('DEFAULTS')
+        self._add_cfg_to_precedence('DEFAULTS', default_config)
 
         # Set attributes
-        all_attributes = _precedence_list[-1].keys()
+        all_attributes = self._precedence_list[-1].keys()
         self.attributes = {}
         self.attributes['platform'] = self.platform
         for attribute in all_attributes:
-            if attribute.endswith('.DOC'):
+            if attribute.endswith('.DOC') or attribute == 'models':
                 continue
-            for config_dict in _precedence_list:
+            for config_dict in self._precedence_list:
                 if attribute in config_dict:
                     self.attributes[attribute] = config_dict[attribute]
                     break
+
+    def _add_cfg_to_precedence(self, cfg_name, cfg, prepend=False):
+        """Add a configuration to self._precedence_list.
+
+        @ivar cfg_name: The name of the config.
+        @ivar cfg: The config dict.
+        @ivar prepend: If true, add to the beginning of self._precedence_list.
+                       Otherwise, add it to the end.
+        """
+        position = 0 if prepend else len(self._precedence_list)
+        self._precedence_list.insert(position, cfg)
+        self._precedence_names.insert(position, cfg_name)
 
     def __getattr__(self, attr):
         if attr in self.attributes:
@@ -87,6 +112,7 @@ class Config(object):
     def __str__(self):
         str_list = []
         str_list.append('----------[ FW Testing Config Variables ]----------')
+        str_list.append('--- Precedence list: %s ---' % self._precedence_names)
         for attr in sorted(self.attributes):
             str_list.append('  %s: %s' % (attr, self.attributes[attr]))
         str_list.append('---------------------------------------------------')

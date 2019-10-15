@@ -113,6 +113,57 @@ class InheritanceTestCase(_MockConfigTestCaseBaseClass):
         str(child_config)  # pylint: disable=pointless-statement
 
 
+class ModelOverrideTestCase(_MockConfigTestCaseBaseClass):
+    """Verify that models of boards inherit overrides with proper precedence"""
+    mock_configs = {
+            'parentboard': {
+                    'attr1': 'parent_attr1',
+                    'attr2': 'parent_attr2',
+                    'models': {
+                            'modelA': {
+                                    'attr1': 'parent_modelA_attr1'
+                            }
+                    }
+            },
+            'childboard': {
+                    'parent': 'parentboard',
+                    'attr1': 'child_attr1',
+                    'models': {
+                            'modelA': {
+                                    'attr1': 'child_modelA_attr1'
+                            }
+                    }
+            },
+            'DEFAULTS': {
+                    'models': None,
+                    'attr1': 'default',
+                    'attr2': 'default'
+            }
+    }
+
+    def runTest(self):
+        """Run assertions on test data"""
+        child_config = config.Config('childboard')
+        child_modelA_config = config.Config('childboard', 'modelA')
+        child_modelB_config = config.Config('childboard', 'modelB')
+        parent_config = config.Config('parentboard')
+        parent_modelA_config = config.Config('parentboard', 'modelA')
+        parent_modelB_config = config.Config('parentboard', 'modelB')
+
+        self.assertEqual(child_config.attr1, 'child_attr1')
+        self.assertEqual(child_config.attr2, 'parent_attr2')
+        self.assertEqual(child_modelA_config.attr1, 'child_modelA_attr1')
+        self.assertEqual(child_modelA_config.attr2, 'parent_attr2')
+        self.assertEqual(child_modelB_config.attr1, 'child_attr1')
+        self.assertEqual(child_modelB_config.attr2, 'parent_attr2')
+        self.assertEqual(parent_config.attr1, 'parent_attr1')
+        self.assertEqual(parent_config.attr2, 'parent_attr2')
+        self.assertEqual(parent_modelA_config.attr1, 'parent_modelA_attr1')
+        self.assertEqual(parent_modelA_config.attr2, 'parent_attr2')
+        self.assertEqual(parent_modelB_config.attr1, 'parent_attr1')
+        self.assertEqual(parent_modelB_config.attr2, 'parent_attr2')
+
+
 class PlatformNamesTestCase(unittest.TestCase):
     """Ensure that each config has a correct 'platform' attribute"""
 

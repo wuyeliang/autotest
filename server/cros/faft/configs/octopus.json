@@ -19,5 +19,8 @@
         "EN_USB_A0_5V",
         "EN_USB_A1_5V"
     ],
-    "smm_store": false
+    "smm_store": false,
+    "models": {
+        "bobba360": {}
+    }
 }
