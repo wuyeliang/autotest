@@ -11,6 +11,7 @@ CONFIG = {}
 CONFIG['TEST_NAME'] = 'cheets_CTS_Q'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_Q'
 CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = True
+CONFIG['COPYRIGHT_YEAR'] = 2019
 
 # Both arm, x86 tests results normally is below 200MB.
 # 1000MB should be sufficient for CTS tests and dump logs for android-cts.
@@ -44,20 +45,25 @@ CONFIG['CTS_MAX_RETRIES'] = {
 # Timeout in hours.
 CONFIG['CTS_TIMEOUT'] = {
     'CtsAutoFillServiceTestCases':       2.5,  # TODO(b/134662826)
-    'CtsDeqpTestCases':                 20.0,
+    'CtsDeqpTestCases':                 30.0,
     'CtsDeqpTestCases.dEQP-EGL'  :       2.0,
     'CtsDeqpTestCases.dEQP-GLES2':       2.0,
     'CtsDeqpTestCases.dEQP-GLES3':       6.0,
     'CtsDeqpTestCases.dEQP-GLES31':      6.0,
     'CtsDeqpTestCases.dEQP-VK':         15.0,
     'CtsFileSystemTestCases':            3.0,
+    'CtsHardwareTestCases':              2.0,
     'CtsIcuTestCases':                   2.0,
     'CtsLibcoreOjTestCases':             2.0,
     'CtsMediaStressTestCases':           5.0,
     'CtsMediaTestCases':                10.0,
+    'CtsNNAPIBenchmarkTestCases':        2.0,
     'CtsPrintTestCases':                 1.5,
     'CtsSecurityTestCases':              2.0,
+    'CtsSensorTestCases':                2.0,
+    'CtsStatsdHostTestCases':            2.0,
     'CtsVideoTestCases':                 1.5,
+    'CtsWidgetTestCases':                2.0,
     _COLLECT:                            2.5,
     _PUBLIC_COLLECT:                     2.5,
 }

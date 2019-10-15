@@ -11,6 +11,7 @@ CONFIG = {}
 CONFIG['TEST_NAME'] = 'cheets_CTS_P'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_P'
 CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
+CONFIG['COPYRIGHT_YEAR'] = 2018
 
 # Both arm, x86 tests results normally is below 200MB.
 # 1000MB should be sufficient for CTS tests and dump logs for android-cts.
@@ -176,8 +177,14 @@ _CONFIG_MODULE_COMMAND = "\'modprobe configs\'"
 # TODO(b/126741318): Fix performance regression and remove this.
 _SLEEP_60_COMMAND = "\'sleep 60\'"
 
+# TODO(b/138431480): Fix CTS and remove this.
+_DROP_DISCONNECTED_IF_COMMAND = ("\'ip -o link show | grep \"state DOWN\" | " +
+    "grep -o \"\\<\\(eth\\|mlan\\|wlan\\)[[:digit:]]\" | " +
+    "xargs -L1 -I{} ip link delete veth_{}\'")
+
 # Preconditions applicable to public and internal tests.
 CONFIG['PRECONDITION'] = {
+    'CtsLibcoreTestCases': [_DROP_DISCONNECTED_IF_COMMAND],
     'CtsSecurityHostTestCases': [
         _SECURITY_PARANOID_COMMAND, _CONFIG_MODULE_COMMAND
     ],

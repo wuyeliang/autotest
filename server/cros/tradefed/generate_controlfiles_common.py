@@ -23,7 +23,7 @@ from jinja2 import Template
 # job, downgrade all others. Make sure this still works in CQ/smoke suite.
 _CONTROLFILE_TEMPLATE = Template(
     textwrap.dedent("""\
-    # Copyright 2016 The Chromium OS Authors. All rights reserved.
+    # Copyright {{year}} The Chromium OS Authors. All rights reserved.
     # Use of this source code is governed by a BSD-style license that can be
     # found in the LICENSE file.
 
@@ -683,6 +683,7 @@ def get_controlfile_content(combined,
         if combined in m:
             target_module = target
     return _CONTROLFILE_TEMPLATE.render(
+        year=CONFIG['COPYRIGHT_YEAR'],
         name=name,
         base_name=CONFIG['TEST_NAME'],
         attributes=attributes,
@@ -732,7 +733,7 @@ def get_tradefed_data(path, is_public, abi):
 
     # TODO(ihf): Get a tradefed command which terminates then refactor.
     p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE)
-    modules = []
+    modules = set()
     build = '<unknown>'
     line = ''
     revision = None
@@ -744,19 +745,25 @@ def get_tradefed_data(path, is_public, abi):
             logging.info('Unpacking: %s.', line)
             build = get_tradefed_build(line)
             revision = get_tradefed_revision(line)
+        elif line.startswith('arm') or line.startswith('x86'):
+            # Newer CTS shows ABI-module pairs like "arm64-v8a CtsNetTestCases"
+            modules.add(line.split()[1])
         elif line.startswith('Cts'):
-            modules.append(line)
+            modules.add(line)
         elif line.startswith('cts-'):
-            modules.append(line)
+            modules.add(line)
         elif line.startswith('signed-Cts'):
-            modules.append(line)
+            modules.add(line)
         elif line.startswith('vm-tests-tf'):
-            modules.append(line)
+            modules.add(line)
             break  # TODO(ihf): Fix using this as EOS.
+        elif 'Saved log to' in line:
+            # TODO(kinaba): Fix using more robust criteria.
+            break
         elif not line:
             if p.poll() is not None:
                 # The process has exited unexpectedly.
-                del modules[:]
+                modules = set()
                 break
         elif line.isspace() or line.startswith('Use "help"'):
             pass
@@ -770,7 +777,7 @@ def get_tradefed_data(path, is_public, abi):
         modules.remove(module)
     if not modules:
       raise Exception("no modules found.")
-    return modules, build, revision
+    return list(modules), build, revision
 
 
 def download(uri, destination):

@@ -105,8 +105,8 @@ _GTS_TIMEOUT = {
     'GtsMediaTestCases': 8,
     'GtsOsTestCases': 0.25,
     _ALL: 24,
-    _COLLECT: 0.25,
-    _PUBLIC_COLLECT: 0.25,
+    _COLLECT: 0.5,
+    _PUBLIC_COLLECT: 0.5,
 }
 
 # Any test that runs as part as blocking BVT needs to be stable and fast. For

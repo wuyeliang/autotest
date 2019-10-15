@@ -11,6 +11,7 @@ CONFIG = {}
 CONFIG['TEST_NAME'] = 'cheets_CTS_N'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_N'
 CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
+CONFIG['COPYRIGHT_YEAR'] = 2016
 
 # Both arm, x86 tests results normally is below 100MB.
 # 500MB should be sufficient for CTS tests and dump logs for android-cts.
