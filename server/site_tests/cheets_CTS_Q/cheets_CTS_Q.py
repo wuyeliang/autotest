@@ -16,7 +16,7 @@ import logging
 import os
 
 from autotest_lib.server import utils
-from autotest_lib.server.cros import tradefed_test
+from autotest_lib.server.cros.tradefed import tradefed_test
 
 # Maximum default time allowed for each individual CTS module.
 _CTS_TIMEOUT_SECONDS = 3600
