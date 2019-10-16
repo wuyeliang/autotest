@@ -8,7 +8,8 @@ import uuid
 # https://cs.chromium.org/chromium/infra/go/src/infra/libs/skylab/inventory/device.proto
 MANAGED_POOLS = {
     "cq": "DUT_POOL_CQ",
-    "bvt": "DUT_POOL_BVT",
+    # TODO(gregorynisbet): BVT is obsolete, send stuff to QUOTA intead
+    "bvt": "DUT_POOL_QUOTA",
     "suites": "DUT_POOL_SUITES",
     "cts": "DUT_POOL_CTS",
     "cts-perbuild": "DUT_POOL_CTS_PERBUILD",
