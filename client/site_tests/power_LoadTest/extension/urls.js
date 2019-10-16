@@ -27,7 +27,7 @@ var tasks = [
     tabs: [
      'https://www.google.com/search?q=google',
      'https://news.google.com',
-     'https://finance.yahoo.com',
+     'https://www.reddit.com',
      'https://www.amazon.com',
      'https://www.facebook.com/facebook'
     ]
