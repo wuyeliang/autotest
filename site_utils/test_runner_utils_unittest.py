@@ -273,6 +273,7 @@ class TestRunnerUnittests(mox.MoxTestBase):
         ssh_options = '-F /dev/null -i /dev/null'
         args = 'matey'
         ignore_deps = False
+        retry = True
 
         # Fake suite objects that will be returned by fetch_local_suite
         class fake_suite(object):
@@ -319,7 +320,8 @@ class TestRunnerUnittests(mox.MoxTestBase):
                 afe, test_arg=test_arg, remote=remote, build=build,
                 board=board, results_directory=results_dir,
                 no_experimental=False,
-                ignore_deps=ignore_deps
+                ignore_deps=ignore_deps,
+                job_retry=retry
                 ).AndReturn(fake_suite(suite_control_files, [remote]))
         self.mox.StubOutWithMock(test_runner_utils, 'run_job')
         self.mox.StubOutWithMock(test_runner_utils, 'run_provisioning_job')
@@ -354,7 +356,7 @@ class TestRunnerUnittests(mox.MoxTestBase):
                 afe, autotest_path, ['suite:'+suite_name], remote, fast_mode,
                 build=build, board=board, ignore_deps=False,
                 ssh_verbosity=ssh_verbosity, ssh_options=ssh_options,
-                args=args, results_directory=results_dir)
+                args=args, results_directory=results_dir, job_retry=retry)
 
 
 if __name__ == '__main__':

@@ -125,6 +125,8 @@ class LocalSuite(suite.Suite):
         """
         logging.debug('Parsing test results for job %s',job_id)
         code = generate_report(results_dir, just_status_code=True)
+        if not self._retry_handler:
+            return None
         logging.debug('Handling result of job %s',job_id)
         logging.debug(self._retry_handler._retry_map)
         if code == 0:
@@ -170,7 +172,7 @@ class LocalSuite(suite.Suite):
 def fetch_local_suite(autotest_path, suite_predicate, afe, test_arg, remote,
                       build=NO_BUILD, board=NO_BOARD,
                       results_directory=None, no_experimental=False,
-                      ignore_deps=True):
+                      ignore_deps=True, job_retry=True):
     """Create a suite from the given suite predicate.
 
     Satisfaction of dependencies is enforced by Suite.schedule() if
@@ -194,6 +196,7 @@ def fetch_local_suite(autotest_path, suite_predicate, afe, test_arg, remote,
                               (results will be stored in subdirectory of this).
     @param no_experimental: Skip experimental tests when scheduling a suite.
     @param ignore_deps: If True, test dependencies will be ignored.
+    @param job_retry: If False, tests will not be retried at all.
 
     @returns: A LocalSuite object.
 
@@ -208,7 +211,7 @@ def fetch_local_suite(autotest_path, suite_predicate, afe, test_arg, remote,
         ignore_deps=ignore_deps,
         results_dir=results_directory,
         forgiving_parser=False,
-        job_retry=True
+        job_retry=job_retry
     )
     if len(my_suite.tests) == 0:
         (similarity_predicate, similarity_description) = (
@@ -502,7 +505,8 @@ def perform_local_run(afe, autotest_path, tests, remote, fast_mode,
                       ssh_options=None,
                       autoserv_verbose=False,
                       iterations=1,
-                      host_attributes={}):
+                      host_attributes={},
+                      job_retry=True):
     """Perform local run of tests.
 
     This method enforces satisfaction of test dependencies for tests that are
@@ -532,6 +536,7 @@ def perform_local_run(afe, autotest_path, tests, remote, fast_mode,
     @param autoserv_verbose: If true, pass the --verbose flag to autoserv.
     @param iterations: int number of times to schedule tests.
     @param host_attributes: Dict of host attributes to pass into autoserv.
+    @param job_retry: If False, tests will not be retried at all.
 
     @returns: A list of return codes each job that has run. Or [1] if
               provision failed prior to running any jobs.
@@ -572,7 +577,8 @@ def perform_local_run(afe, autotest_path, tests, remote, fast_mode,
                                   build=build, board=board,
                                   results_directory=results_directory,
                                   no_experimental=no_experimental,
-                                  ignore_deps=ignore_deps)
+                                  ignore_deps=ignore_deps,
+                                  job_retry=job_retry)
         suites_and_descriptions.append((suite, description))
 
     jobs_to_suites = {}
@@ -763,7 +769,7 @@ def perform_run_from_autotest_root(autotest_path, argv, tests, remote,
                                    ssh_options=None,
                                    iterations=1, fast_mode=False, debug=False,
                                    whitelist_chrome_crashes=False,
-                                   host_attributes={}):
+                                   host_attributes={}, job_retry=True):
     """
     Perform a test_that run, from the |autotest_path|.
 
@@ -796,8 +802,9 @@ def perform_run_from_autotest_root(autotest_path, argv, tests, remote,
     @param debug: Logging and autoserv verbosity.
     @param whitelist_chrome_crashes: If True, whitelist chrome crashes.
     @param host_attributes: Dict of host attributes to pass into autoserv.
+    @param job_retry: If False, tests will not be retried at all.
 
-    @returns: A return code that test_that should exit with.
+    @return: A return code that test_that should exit with.
     """
     if results_directory is None or not os.path.exists(results_directory):
         raise ValueError('Expected valid results directory, got %s' %
@@ -828,7 +835,8 @@ def perform_run_from_autotest_root(autotest_path, argv, tests, remote,
                       ssh_options=ssh_options,
                       autoserv_verbose=debug,
                       iterations=iterations,
-                      host_attributes=host_attributes)
+                      host_attributes=host_attributes,
+                      job_retry=job_retry)
     if pretend:
         logging.info('Finished pretend run. Exiting.')
         return 0

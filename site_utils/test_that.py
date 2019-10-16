@@ -166,6 +166,10 @@ def parse_local_arguments(argv):
     parser.add_argument('-x', '--max_runtime_mins', type=int,
                         dest='max_runtime_mins', default=20,
                         help='Default time allowed for the tests to complete.')
+    parser.add_argument('--no-retries', '--no-retry',
+                        dest='retry', action='store_false', default=True,
+                        help='For local runs only, ignore any retries '
+                             'specified in the control files.')
     _, remaining_argv = parser.parse_known_args(argv)
     return parser, remaining_argv
 
@@ -297,7 +301,7 @@ def _main_for_local_run(argv, arguments):
                 iterations=arguments.iterations,
                 fast_mode=arguments.fast_mode, debug=arguments.debug,
                 whitelist_chrome_crashes=arguments.whitelist_chrome_crashes,
-                pretend=arguments.pretend)
+                pretend=arguments.pretend, job_retry=arguments.retry)
 
 
 def _main_for_lab_run(argv, arguments):
