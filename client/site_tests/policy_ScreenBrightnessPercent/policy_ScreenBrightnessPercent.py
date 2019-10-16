@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import logging
 import time
 
 from autotest_lib.client.common_lib import error
@@ -40,12 +41,12 @@ class policy_ScreenBrightnessPercent(
 
         # Get the minimum value brightness value to compute the HW brightness
         bl_contr = power_utils.BacklightController()
+        logging.info('Original brightness level: {}'
+                     .format(self._backlight.get_level()))
         bl_contr.set_brightness_to_min()
 
         # Give the hardware a tiny bit of time to settle
-        time.sleep(1)
-        min_level = self._backlight.get_level()
-
+        min_level = self._let_backlight_settle()
         # Use the formula defined in the link above
         fract = (percent - 6.25) / (100 - 6.25)
         level = min_level + ((fract ** 2) * (max_level - min_level))
@@ -72,6 +73,24 @@ class policy_ScreenBrightnessPercent(
             raise error.TestError(
                 "Screen brightness incorrect ({}) when it should be {}"
                 .format(set_percent, actual_percent))
+
+    def _let_backlight_settle(self):
+        """Loops until the backlight settles. Returns the settled value."""
+        startTime = time.time()
+        level = self._backlight.get_level()
+        while time.time() - startTime < 5:
+            time.sleep(0.5)
+            new_level = self._backlight.get_level()
+            if abs(level - new_level) < 0.5:
+                logging.info('First & Second brightness level: {} {}'
+                             .format(level, new_level))
+                level = new_level
+                break
+            level = new_level
+        else:
+            raise error.TestError('Backlight never settled')
+
+        return level
 
     def run_once(self, case):
         """
