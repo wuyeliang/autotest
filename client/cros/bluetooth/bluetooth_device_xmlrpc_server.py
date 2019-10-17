@@ -1354,7 +1354,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                 lambda error: logging.error(
                     'register_advertisement: failed: %s', str(error)),
                 # other arguments
-                adv.get_path(), {})
+                adv.get_path(), dbus.Dictionary({}, signature='sv'))
 
 
     def unregister_advertisement(self, advertisement_data):
@@ -1416,7 +1416,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                 lambda error: logging.error(
                     'set_advertising_intervals: failed: %s', str(error)),
                 # other arguments
-                min_adv_interval_ms, max_adv_interval_ms)
+                dbus.UInt16(min_adv_interval_ms),
+                dbus.UInt16(max_adv_interval_ms))
 
 
     def reset_advertising(self):
