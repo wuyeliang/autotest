@@ -1,3 +1,7 @@
+# Copyright (c) 2008 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 import os, time, socket, shutil, glob, logging, tempfile, re
 import shlex
 import subprocess
@@ -961,7 +965,7 @@ class AbstractSSHHost(remote.RemoteHost):
         RPC server connection.
 
         @param tunnel_proc: a tunnel process returned from |create_ssh_tunnel|.
-        @param port: remote port on the DUT, used in ADBHost.
+        @param port: remote port on the DUT, used in ADBHost (deprecated).
 
         """
         if tunnel_proc.poll() is None:

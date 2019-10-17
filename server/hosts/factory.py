@@ -1,3 +1,7 @@
+# Copyright (c) 2008 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 """Provides a factory method to create a host object."""
 
 import logging
@@ -10,7 +14,6 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import global_config
 from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros.dynamic_suite import constants
-from autotest_lib.server.hosts import adb_host
 from autotest_lib.server.hosts import cros_host
 from autotest_lib.server.hosts import host_info
 from autotest_lib.server.hosts import jetstream_host
@@ -38,10 +41,8 @@ _started_hostnames = set()
 # overhead in checking for less common host types.
 host_types = [cros_host.CrosHost, labstation_host.LabstationHost,
               moblab_host.MoblabHost, jetstream_host.JetstreamHost,
-              sonic_host.SonicHost, adb_host.ADBHost, gce_host.GceHost,]
-OS_HOST_DICT = {'android': adb_host.ADBHost,
-                'brillo': adb_host.ADBHost,
-                'cros' : cros_host.CrosHost,
+              sonic_host.SonicHost, gce_host.GceHost]
+OS_HOST_DICT = {'cros': cros_host.CrosHost,
                 'jetstream': jetstream_host.JetstreamHost,
                 'moblab': moblab_host.MoblabHost,
                 'labstation': labstation_host.LabstationHost}
@@ -249,10 +250,6 @@ def create_target_machine(machine, **kwargs):
 
     @returns: The target machine to be used for verify/repair.
     """
-    # For Brillo/Android devices connected to moblab, the `machine` name is
-    # either `localhost` or `127.0.0.1`. It needs to be translated to the host
-    # container IP if the code is running inside a container. This way, autoserv
-    # can ssh to the moblab and run actual adb/fastboot commands.
     is_moblab = CONFIG.get_config_value('SSP', 'is_moblab', type=bool,
                                         default=False)
     hostname = machine['hostname'] if isinstance(machine, dict) else machine

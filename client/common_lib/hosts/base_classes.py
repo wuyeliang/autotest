@@ -682,8 +682,6 @@ class Host(object):
         `job_repo_url` is a devserver url pointed to autotest packages for
         CrosHost, it needs to be removed before provision starts for tests to
         run reliably.
-        For ADBHost, the job repo url has a different format, i.e., appended by
-        adb_serial, so this method should be overriden in ADBHost.
         """
         return ['job_repo_url']
 
