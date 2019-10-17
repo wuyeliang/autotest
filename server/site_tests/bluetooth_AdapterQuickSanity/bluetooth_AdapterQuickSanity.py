@@ -22,7 +22,7 @@ class bluetooth_AdapterQuickSanity(
     time of about 90-120 second per test.
     """
 
-    def run_once(self, host, num_iterations=1):
+    def run_once(self, host, num_iterations=1, flag='Quick Sanity'):
         """Run the package of Bluetooth LE sanity tests
 
         @param host: the DUT, usually a chromebook
@@ -30,7 +30,7 @@ class bluetooth_AdapterQuickSanity(
         """
 
         # Init the quick test and start the package
-        self.quick_test_init(host, use_chameleon=True)
+        self.quick_test_init(host, use_chameleon=True, flag=flag)
         self.quick_test_package_start('BT Quick Sanity')
 
         # Run sanity package

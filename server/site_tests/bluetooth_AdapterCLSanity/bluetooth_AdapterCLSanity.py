@@ -96,7 +96,8 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         #self.cl_HID_reports_reboot_test()
         self.cl_connect_disconnect_loop_test()
 
-    def run_once(self, host, num_iterations=1, test_name=None):
+    def run_once(self, host, num_iterations=1, test_name=None,
+                 flag='Quick Sanity'):
         """Run the batch of Bluetooth Classic sanity tests
 
         @param host: the DUT, usually a chromebook
@@ -105,6 +106,6 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         """
 
         # Initialize and run the test batch or the requested specific test
-        self.quick_test_init(host, use_chameleon=True)
+        self.quick_test_init(host, use_chameleon=True, flag=flag)
         self.cl_sanity_batch_run(num_iterations, test_name)
         self.quick_test_cleanup()

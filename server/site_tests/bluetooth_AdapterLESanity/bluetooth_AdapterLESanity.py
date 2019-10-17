@@ -4,7 +4,6 @@
 
 """A Batch of of Bluetooth LE sanity tests"""
 
-import logging
 import time
 
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
@@ -84,7 +83,8 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         self.le_auto_reconnect()
 
 
-    def run_once(self, host, num_iterations=1, test_name=None):
+    def run_once(self, host, num_iterations=1, test_name=None,
+                 flag='Quick Sanity'):
         """Run the batch of Bluetooth LE sanity tests
 
         @param host: the DUT, usually a chromebook
@@ -93,6 +93,6 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         """
 
         # Initialize and run the test batch or the requested specific test
-        self.quick_test_init(host, use_chameleon=True)
+        self.quick_test_init(host, use_chameleon=True, flag=flag)
         self.le_sanity_batch_run(num_iterations, test_name)
         self.quick_test_cleanup()

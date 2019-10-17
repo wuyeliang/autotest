@@ -25,11 +25,11 @@ class bluetooth_AdapterMDSanity(BluetoothAdapterQuickTests):
 
     @test_wrapper('Two connections', devices={'MOUSE':1, 'BLE_MOUSE':1})
     def md_two_connections_test(self):
-        devices = [self.devices['MOUSE'][0], self.devices['BLE_MOUSE'][0]]
-
         """test whether DUT can connect to classic mouse and ble mouse at the
            same time
         """
+        devices = [self.devices['MOUSE'][0], self.devices['BLE_MOUSE'][0]]
+
         for device in devices:
             self.test_discover_device(device.address)
             self.bluetooth_facade.stop_discovery()
@@ -58,14 +58,15 @@ class bluetooth_AdapterMDSanity(BluetoothAdapterQuickTests):
         """
         self.md_two_connections_test()
 
-    def run_once(self, host, num_iterations=1, test_name=None):
+    def run_once(self, host, num_iterations=1, test_name=None,
+                 flag='Quick Sanity'):
         """Run the batch of Bluetooth stand sanity tests
 
         @param host: the DUT, usually a chromebook
         @param num_iterations: the number of rounds to execute the test
         """
         # Initialize and run the test batch or the requested specific test
-        self.quick_test_init(host, use_chameleon=True)
+        self.quick_test_init(host, use_chameleon=True, flag=flag)
         self.md_sanity_batch_run(num_iterations, test_name)
         self.quick_test_cleanup()
 

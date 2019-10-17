@@ -81,7 +81,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         logging.info('=======================================================')
 
 
-    def quick_test_init(self, host, use_chameleon=True):
+    def quick_test_init(self, host, use_chameleon=True, flag='Quick Sanity'):
         """Inits the test batch"""
         self.host = host
         factory = remote_facade_factory.RemoteFacadeFactory(host,
@@ -99,6 +99,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 self.chameleon_group = dict()
                 self.group_chameleons_type()
 
+        self.flag = flag
         self.test_iter = None
 
         self.bat_tests_results = []
@@ -115,15 +116,18 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.pkg_is_running = False
 
     @staticmethod
-    def quick_test_test_decorator(test_name, devices={}):
+    def quick_test_test_decorator(test_name, devices={}, flags=['All']):
         """A decorator providing a wrapper to a quick test.
            Using the decorator a test method can implement only the core
            test and let the decorator handle the quick test wrapper methods
            (test_start and test_end).
 
-           @param test_name: the name of the test to log
+           @param test_name: the name of the test to log.
            @param devices:   list of device names which are going to be used
-                             in the following test
+                             in the following test.
+           @param flags: list of string to describe who should run the
+                         test. The string could be one of the following:
+                         ['AVL', 'Quick Sanity', 'All'].
         """
 
         def decorator(test_method):
@@ -132,16 +136,31 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                @returns the wrapper of the test method.
             """
 
-            @functools.wraps(test_method)
-            def wrapper(self):
+            def _check_runnable(self):
+                """Check if the test could be run"""
+
+                # Check that the test is runnable in current setting
+                if not(self.flag in flags or 'All' in flags):
+                    logging.info('SKIPPING TEST %s', test_name)
+                    logging.info('flag %s not in %s', self.flag, flags)
+                    self._print_delimiter()
+                    return False
+
                 # Check that chameleon has all required devices before running
                 for device_type, number in devices.items():
                     if self.available_devices.get(device_type, 0) < number:
-                        logging.info('SKIPPING TEST {}'.format(test_name))
-                        logging.info('{} not available'.format(device_type))
+                        logging.info('SKIPPING TEST %s', test_name)
+                        logging.info('%s not available', device_type)
                         self._print_delimiter()
-                        return
+                        return False
 
+                return True
+
+            @functools.wraps(test_method)
+            def wrapper(self):
+                """A wrapper of the decorated method."""
+                if not _check_runnable(self):
+                    return
                 self.quick_test_test_start(test_name, devices)
                 test_method(self)
                 self.quick_test_test_end()
