@@ -226,18 +226,6 @@ def get_tradefed_revision(line):
     return None
 
 
-def get_bundle_revision(filename):
-    """Makes an educated guess about the revision.
-
-    In this case we chose to guess by filename, but we could also parse the
-    xml files in the module.
-    """
-    m = re.search(r'(?<=gts-)(.*)-linux', filename)
-    if m is not None:
-        return m.group(1)
-    return None
-
-
 def get_extension(module, revision, public=False):
     """Defines a unique string.
 
@@ -564,14 +552,6 @@ def get_extra_modules_dict(is_public):
     if is_public:
         return _PUBLIC_EXTRA_MODULES
     return _EXTRA_MODULES
-
-
-def get_extra_modules(is_public):
-    extra_modules_dict = get_extra_modules_dict(is_public)
-    modules = []
-    for _, extra_modules in extra_modules_dict.items():
-        modules += extra_modules
-    return set(modules)
 
 
 def get_modules_to_remove(is_public):

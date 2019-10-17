@@ -179,18 +179,6 @@ def get_bundle_abi(filename):
     raise Exception('Could not determine ABI from "%s".' % filename)
 
 
-def get_bundle_revision(filename):
-    """Makes an educated guess about the revision.
-
-    In this case we chose to guess by filename, but we could also parse the
-    xml files in the module.
-    """
-    m = re.search(r'(?<=android-cts-)(.*)-linux', filename)
-    if m is not None:
-        return m.group(1)
-    return None
-
-
 def get_extension(module, abi, revision, is_public=False, camera_facing=None):
     """Defines a unique string.
 
@@ -594,14 +582,6 @@ def get_extra_modules_dict(is_public, abi):
             new_dict[module] = submodules
         return new_dict
     return CONFIG['PUBLIC_EXTRA_MODULES']
-
-
-def get_extra_modules(is_public, abi):
-    extra_modules_dict = get_extra_modules_dict(is_public, abi)
-    modules = []
-    for _, extra_modules in extra_modules_dict.items():
-        modules += extra_modules
-    return set(modules)
 
 
 def get_modules_to_remove(is_public, abi):
