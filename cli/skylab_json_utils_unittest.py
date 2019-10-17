@@ -449,12 +449,18 @@ class skylab_json_utils_unittest(unittest.TestCase):
 
     def test_conductive_present(self):
         l = sky.Labels()
-        l._add_label("conductive")
+        l._add_label("conductive:True")
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["peripherals"]["conductive"], True)
 
     def test_conductive_absent(self):
         l = sky.Labels()
+        out = sky.process_labels(l, platform=None)
+        self.assertEqual(out["peripherals"]["conductive"], False)
+
+    def test_conductive_false(self):
+        l = sky.Labels()
+        l._add_label("conductive:False")
         out = sky.process_labels(l, platform=None)
         self.assertEqual(out["peripherals"]["conductive"], False)
 
