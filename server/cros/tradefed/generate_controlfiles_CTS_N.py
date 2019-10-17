@@ -13,6 +13,7 @@ CONFIG['DOC_TITLE'] = 'Android Compatibility Test Suite (CTS)'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_N'
 CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
 CONFIG['COPYRIGHT_YEAR'] = 2016
+CONFIG['AUTHKEY'] = ''
 
 # Both arm, x86 tests results normally is below 100MB.
 # 500MB should be sufficient for CTS tests and dump logs for android-cts.
@@ -35,12 +36,18 @@ CONFIG['TRADEFED_DISABLE_REBOOT_ON_COLLECTION'] = False
 # TODO(yoshiki, kinaba): Flip this to False (and remove the flag itself).
 CONFIG['TRADEFED_MAY_SKIP_DEVICE_INFO'] = True
 
+CONFIG['TRADEFED_EXECUTABLE_PATH'] = 'android-cts/tools/cts-tradefed'
+CONFIG['TRADEFED_IGNORE_BUSINESS_LOGIC_FAILURE'] = False
+
 # As this is not called for the "all" runs we can safely assume that each module
 # runs in suite:arc-cts.
 CONFIG['INTERNAL_SUITE_NAMES'] = ['suite:arc-cts']
 CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 
-CONFIG['WRITE_EXTRA_CONTROLFILES'] = True
+CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_CTS'
+CONFIG['CONTROLFILE_WRITE_SIMPLE_QUAL_AND_REGRESS'] = False
+CONFIG['CONTROLFILE_WRITE_CAMERA'] = True
+CONFIG['CONTROLFILE_WRITE_DEQP'] = True
 
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440
@@ -329,8 +336,6 @@ CONFIG['EXTRA_ATTRIBUTES'] = {
 
 CONFIG['EXTRA_ARTIFACTS'] = {
 }
-
-CONFIG['TRADEFED_EXECUTABLE_PATH'] = 'android-cts/tools/cts-tradefed'
 
 
 from generate_controlfiles_common import main

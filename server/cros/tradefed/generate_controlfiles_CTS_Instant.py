@@ -18,6 +18,7 @@ CONFIG['DOC_TITLE'] = \
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_P'
 CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
 CONFIG['COPYRIGHT_YEAR'] = 2018
+CONFIG['AUTHKEY'] = ''
 
 CONFIG['LARGE_MAX_RESULT_SIZE'] = 1000 * 1024
 CONFIG['NORMAL_MAX_RESULT_SIZE'] = 500 * 1024
@@ -27,6 +28,9 @@ CONFIG['TRADEFED_RETRY_COMMAND'] = 'retry'
 CONFIG['TRADEFED_DISABLE_REBOOT'] = False
 CONFIG['TRADEFED_DISABLE_REBOOT_ON_COLLECTION'] = True
 CONFIG['TRADEFED_MAY_SKIP_DEVICE_INFO'] = False
+CONFIG['TRADEFED_EXECUTABLE_PATH'] = \
+    'android-cts_instant/tools/cts-instant-tradefed'
+CONFIG['TRADEFED_IGNORE_BUSINESS_LOGIC_FAILURE'] = False
 
 CONFIG['INTERNAL_SUITE_NAMES'] = ['suite:arc-cts']
 CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
@@ -35,7 +39,10 @@ CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 # unlikely to fail alone (= regression almost always caught by the
 # corresponding CTS module.) For now we don't generate this type of control
 # files.
-CONFIG['WRITE_EXTRA_CONTROLFILES'] = False
+CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_CTS'
+CONFIG['CONTROLFILE_WRITE_SIMPLE_QUAL_AND_REGRESS'] = True
+CONFIG['CONTROLFILE_WRITE_CAMERA'] = False
+CONFIG['CONTROLFILE_WRITE_DEQP'] = False
 
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440
@@ -163,9 +170,6 @@ CONFIG['EXTRA_ATTRIBUTES'] = {
 }
 
 CONFIG['EXTRA_ARTIFACTS'] = {}
-
-CONFIG['TRADEFED_EXECUTABLE_PATH'] = \
-    'android-cts_instant/tools/cts-instant-tradefed'
 
 
 if __name__ == '__main__':
