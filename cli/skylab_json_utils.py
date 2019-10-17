@@ -78,6 +78,8 @@ def _get_chameleon(l):
     out = l.get_enum("chameleon", prefix="CHAMELEON_TYPE_")
     # send CHAMELEON_TYPE_['HDMI'] -> CHAMELEON_TYPE_HDMI
     out = "".join(ch for ch in out if ch not in "[']")
+    if out == "CHAMELEON_TYPE_INVALID":
+        return None
     if out == "CHAMELEON_TYPE_":
         return None
     good_val = False

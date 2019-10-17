@@ -445,8 +445,7 @@ class skylab_json_utils_unittest(unittest.TestCase):
     def test_chameleon_type_absent(self):
         l = sky.Labels()
         out = sky.process_labels(l, platform=None)
-        self.assertEqual(out["peripherals"]["chameleonType"],
-                         "CHAMELEON_TYPE_INVALID")
+        self.assertIsNone(out["peripherals"]["chameleonType"])
 
     def test_conductive_present(self):
         l = sky.Labels()
