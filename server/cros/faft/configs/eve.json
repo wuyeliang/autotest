@@ -16,6 +16,7 @@
     "firmware_screen": 15,
     "smm_store": false,
     "cr50_capability": [
-        "rdd_leakage"
+        "rdd_leakage",
+	"wp_on_in_g3"
     ]
 }
