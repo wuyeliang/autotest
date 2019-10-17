@@ -158,9 +158,6 @@ class FingerprintTest(test.test):
         """Asserts if a compatible servo version is not attached."""
         servo_version = self.servo.get_servo_version()
         logging.info('servo version: %s', servo_version)
-        if not servo_version.startswith('servo_v4'):
-            raise error.TestFail(
-                'These tests have only been tested while using servo v4')
 
     def _generate_test_firmware_images(self, gen_script, build_fw_file,
                                        dut_working_dir):
