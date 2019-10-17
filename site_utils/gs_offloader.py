@@ -498,11 +498,15 @@ def _parse_cts_job_results_file_path(path):
     # cheets_CTS.android.dpi/results/cts-results/2016.04.28_01.41.44
 
     # Swarming paths look like:
-    # /swarming-458e3a3a7fc6f210/autoserv_test/
+    # /swarming-458e3a3a7fc6f210/1/autoserv_test/
     # cheets_CTS.android.dpi/results/cts-results/2016.04.28_01.41.44
 
     folders = path.split(os.sep)
-    job_id = folders[-6]
+    if 'swarming' in folders[1]:
+        # Swarming job and attempt combined
+        job_id = "%s-%s" % (folders[-7], folders[-6])
+    else:
+        job_id = folders[-6]
 
     cts_package = folders[-4]
     timestamp = folders[-1]

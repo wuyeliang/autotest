@@ -927,12 +927,12 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
 
 
         # A skylab path
-        path = ('/swarming-458e3a3a7fc6f210/autoserv_test/'
+        path = ('/swarming-458e3a3a7fc6f210/1/autoserv_test/'
                 'cheets_CTS.android.dpi/results/cts-results/'
                 '2016.04.28_01.41.44')
         job_id, package, timestamp = \
             gs_offloader._parse_cts_job_results_file_path(path)
-        self.assertEqual('swarming-458e3a3a7fc6f210', job_id)
+        self.assertEqual('swarming-458e3a3a7fc6f210-1', job_id)
         self.assertEqual('cheets_CTS.android.dpi', package)
         self.assertEqual('2016.04.28_01.41.44', timestamp)
 
