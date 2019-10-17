@@ -112,7 +112,7 @@ def extract_tarball(tarball):
         topdir = line.split('/')[0]
         if os.path.isdir(topdir):
             if dir:
-                assert(dir == topdir)
+                assert(dir == topdir), 'tarball must be a a single directory'
             else:
                 dir = topdir
     if dir:
