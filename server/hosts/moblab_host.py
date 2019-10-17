@@ -116,8 +116,7 @@ class MoblabHost(cros_host.CrosHost):
         """
         try:
             result = host.run(
-                    'grep -q moblab /etc/lsb-release && '
-                    '! test -f /mnt/stateful_partition/.android_tester',
+                    'grep -q moblab /etc/lsb-release',
                     ignore_status=True, timeout=timeout)
         except (error.AutoservRunError, error.AutoservSSHTimeout):
             return False
