@@ -20,17 +20,14 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import collections
 import json
 import logging
 import os
+import re
 import sys
-import time
 
 from lucifer import autotest
 from lucifer import loglib
-from skylab_staging import errors
-from skylab_staging import swarming
 
 
 cros_build_lib = autotest.deferred_chromite_load('cros_build_lib')
@@ -39,29 +36,11 @@ ts_mon_config = autotest.deferred_chromite_load('ts_mon_config')
 
 
 _METRICS_PREFIX = 'chromeos/autotest/test_push/skylab'
-_POLLING_INTERVAL_S = 10
 _WAIT_FOR_DUTS_TIMEOUT_S = 20 * 60
 
-# Dictionary of test results expected in suite:skylab_staging_test.
-_EXPECTED_TEST_RESULTS = {'login_LoginSuccess.*':         ['GOOD'],
-                          'provision_AutoUpdate.double':  ['GOOD'],
-                          'dummy_Pass$':                  ['GOOD'],
-                          'dummy_Pass.actionable$':       ['GOOD'],
-                          'dummy_Pass.bluetooth$':        ['GOOD'],
-                          # ssp and nossp.
-                          'dummy_PassServer$':            ['GOOD', 'GOOD'],
-                          'dummy_Fail.Fail$':             ['FAIL'],
-                          'dummy_Fail.Error$':            ['ERROR'],
-                          'dummy_Fail.Warn$':             ['WARN'],
-                          'dummy_Fail.NAError$':          ['TEST_NA'],
-                          'dummy_Fail.Crash$':            ['GOOD'],
-                          'tast.*':                       ['GOOD'],
-                          }
-
-# Some test could be missing from the test results for various reasons. Add
-# such test in this list and explain the reason.
-_IGNORED_TESTS = [
-]
+# TODO(crbug.com/1014685): Make the DUT to repair a commandline parameter,
+# or autodetected by a swarming query.
+_REPAIR_DUT = 'chromeos4-row7-rack6-host21'
 
 _logger = logging.getLogger(__name__)
 
@@ -80,6 +59,7 @@ def main():
       with metrics.SecondsTimer(_METRICS_PREFIX + '/durations/total',
                                 add_exception_field=True):
         _run_test_push(args)
+      logging.info('run_test_push completed successfully')
       success = True
     finally:
       metrics.Counter(_METRICS_PREFIX + '/tick').increment(
@@ -90,48 +70,48 @@ def _get_parser():
       description='Run test_push against Skylab instance.')
   parser.add_argument(
       '--swarming-url',
-      required=True,
+      required=False,
       help='Full URL to the Swarming instance to use',
   )
   parser.add_argument(
       '--swarming-cli',
-      required=True,
+      required=False,
       help='Path to the Swarming cli tool.',
   )
   # TODO(crbug.com/867969) Use model instead of board once skylab inventory has
   # model information.
   parser.add_argument(
       '--dut-board',
-      required=True,
-      help='Label board of the DUTs to use for testing',
+      required=False,
+      help='Deprecated.',
   )
   parser.add_argument(
       '--dut-pool',
-      required=True,
+      required=False,
       choices=('DUT_POOL_CQ', 'DUT_POOL_BVT', 'DUT_POOL_SUITES'),
-      help='Label pool of the DUTs to use for testing',
+      help='Deprecated.',
   )
   parser.add_argument(
       '--build',
-      required=True,
-      help='ChromeOS build to use for provisioning'
-           ' (e.g.: gandolf-release/R54-8743.25.0).',
+      required=False,
+      help='Deprecated.',
   )
   parser.add_argument(
       '--timeout-mins',
       type=int,
-      required=True,
-      help='(Optional) Overall timeout for the test_push. On timeout, test_push'
+      required=False,
+      default=20,
+      help='Overall timeout for the test_push. On timeout, test_push'
            ' attempts to abort any in-flight test suites before quitting.',
   )
   parser.add_argument(
       '--num-min-duts',
       type=int,
-      help='Minimum number of Ready DUTs required for test suite.',
+      help='Deprecated.',
   )
   parser.add_argument(
       '--service-account-json',
-      required=True,
+      required=False,
       help='(Optional) Path to the service account credentials file to'
            ' authenticate with Swarming service.',
   )
@@ -143,141 +123,42 @@ def _skylab_tool():
   return os.environ.get('SKYLAB_TOOL', '/opt/infra-tools/skylab')
 
 
+class TestPushFailure(Exception):
+  """Raised when test push fails."""
+
+
 def _run_test_push(args):
   """Meat of the test_push flow."""
-  deadline = time.time() + (args.timeout_mins * 60)
-  swclient = swarming.Client(args.swarming_cli, args.swarming_url,
-                             args.service_account_json)
-  if args.num_min_duts:
-    _ensure_duts_ready(
-        swclient,
-        args.dut_board,
-        args.dut_pool,
-        args.num_min_duts,
-        min(deadline - time.time(), _WAIT_FOR_DUTS_TIMEOUT_S),
-    )
-
-  # Just like the builders, first run a provision suite to provision required
-  # DUTs, then run the actual suite.
-  with metrics.SecondsTimer(_METRICS_PREFIX + '/durations/provision_suite',
-                            add_exception_field=True):
-    _create_suite_and_wait(
-        args.dut_board, args.dut_pool, args.build, deadline,
-        args.service_account_json, 'provision')
-
-  with metrics.SecondsTimer(_METRICS_PREFIX + '/durations/push_to_prod_suite',
-                            add_exception_field=True):
-    task_id = _create_suite_and_wait(
-        args.dut_board, args.dut_pool, args.build, deadline,
-        args.service_account_json, 'skylab_staging_test',
-        require_success=False)
-
-  _verify_test_results(task_id, _EXPECTED_TEST_RESULTS)
-
-
-def _create_suite_and_wait(dut_board, dut_pool, build, deadline,
-                           service_account_json, suite, require_success=True):
-  """Create and wait for a skylab suite (in staging).
-
-  Returns: string task run id of the completed suite.
-
-  Raises: errors.TestPushError if the suite failed and require_success is True.
-  """
-  mins_remaining = int((deadline - time.time())/60)
-  cmd = [
-    _skylab_tool(), 'create-suite', '-bb=False',
-    # test_push always runs in dev instance of skylab
-    '-dev',
-    '-board', dut_board,
-    '-pool', dut_pool,
-    '-image', build,
-    '-timeout-mins', str(mins_remaining),
-    '-service-account-json', service_account_json,
-    '-json',
-    suite,
-  ]
-
-  cmd_result = cros_build_lib.RunCommand(cmd, redirect_stdout=True)
-  task_id = json.loads(cmd_result.output)['task_id']
-  _logger.info('Triggered suite %s. Task id: %s', suite, task_id)
+  service_account_json = args.service_account_json
 
   cmd = [
-    _skylab_tool(), 'wait-task', '-bb=False',
-    '-dev',
-    '-service-account-json', service_account_json,
-    task_id
+    _skylab_tool(), 'repair', '-dev'
   ]
+  if service_account_json:
+    cmd += ['-service-account-json', service_account_json]
+  cmd.append(_REPAIR_DUT)
+
   cmd_result = cros_build_lib.RunCommand(cmd, redirect_stdout=True)
+  m = re.search('task\?id=(\w*)', cmd_result.output)
+  if not m:
+    raise TestPushFailure('Found no task ID in `skylab repair` output:\n%s',
+                          cmd_result.output)
+  task_id = m.group(1)
+  logging.info('Launched repair task with ID %s', task_id)
 
-  _logger.info(
-      'Finished suite %s with output: \n%s', suite,
-      json.loads(cmd_result.output)['stdout']
-  )
-  if (require_success and
-      not json.loads(cmd_result.output)['task-result']['success']):
-    raise errors.TestPushError('Suite %s did not succeed.' % suite)
+  cmd = [
+    _skylab_tool(), 'wait-task', '-dev', '-bb=False',
+    '-timeout-mins', str(args.timeout_mins)
+  ]
+  if service_account_json:
+    cmd += ['-service-account-json', service_account_json]
+  cmd.append(task_id)
 
-  return json.loads(cmd_result.output)['task-result']['task-run-id']
-
-
-def _verify_test_results(task_id, expected_results):
-  """Verify if test results are expected."""
-  _logger.info('Comparing test results for suite task %s...', task_id)
-  test_views = _get_test_views(task_id)
-  available_views = [v for v in test_views if _view_is_preserved(v)]
-  logging.debug('Test results:')
-  for v in available_views:
-    logging.debug('%s%s', v['test_name'].ljust(30), v['status'])
-
-  summary = _verify_and_summarize(available_views, expected_results)
-  if summary:
-    logging.error('\n'.join(summary))
-    raise errors.TestPushError('Test results are not consistent with '
-                               'expected results')
-
-
-def _get_test_views(task_id):
-  """Retrieve test views from TKO for skylab task id."""
-  tko_db = autotest.load('tko.db')
-  db = tko_db.db()
-  return db.get_child_tests_by_parent_task_id(task_id)
-
-
-def _view_is_preserved(view):
-  """Detect whether to keep the test view for further comparison."""
-  job_status = autotest.load('server.cros.dynamic_suite.job_status')
-  return (job_status.view_is_relevant(view) and
-          (not job_status.view_is_for_suite_job(view)))
-
-
-def _verify_and_summarize(available_views, expected_results):
-  """Verify and generate summaries for test_push results."""
-  test_push_common = autotest.load('site_utils.test_push_common')
-  views = collections.defaultdict(list)
-  for view in available_views:
-    views[view['test_name']].append(view['status'])
-  return test_push_common.summarize_push(views, expected_results,
-                                         _IGNORED_TESTS)
-
-
-def _ensure_duts_ready(swclient, board, pool, min_duts, timeout_s):
-  """Ensure that at least num_duts are in the ready dut_state."""
-  start_time = time.time()
-  while True:
-    _logger.debug('Checking whether %d DUTs are available', min_duts)
-    num_duts = swclient.num_ready_duts(board, pool)
-    if num_duts >= min_duts:
-      _logger.info(
-          '%d available DUTs satisfy the minimum requirement of %d DUTs',
-          num_duts, min_duts,
-      )
-      return
-    if time.time() - start_time > timeout_s:
-      raise errors.TestPushError(
-          'Could not find %d ready DUTs with (board:%s, pool:%s) within %d'
-          ' seconds' % (min_duts, board, pool, timeout_s)
-      )
-    time.sleep(_POLLING_INTERVAL_S)
+  cmd_result = cros_build_lib.RunCommand(cmd, redirect_stdout=True)
+  result = json.loads(cmd_result.output)
+  logging.info('Returned from wait with parsed output:\n%s', result)
+  if not result['task-result']['success']:
+    raise TestPushFailure('repair task did not succeed; test_push failed.')
 
 
 if __name__ == '__main__':
