@@ -1,7 +1,6 @@
 # Copyright (c) 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-import logging
 import time
 
 from autotest_lib.client.common_lib import error
@@ -25,15 +24,6 @@ class policy_DeviceBootOnAcEnabled(test.test):
     version = 1
 
 
-    def clear_tpm_if_owned(self):
-        """Clear the TPM only if device is already owned."""
-        tpm_status = tpm_utils.TPMStatus(self.host)
-        logging.info('TPM status: %s', tpm_status)
-        if tpm_status['Owned']:
-            logging.info('Clearing TPM because this device is owned.')
-            tpm_utils.ClearTPMOwnerRequest(self.host)
-
-
     def cleanup(self):
         """Clean up DUT.
 
@@ -43,7 +33,7 @@ class policy_DeviceBootOnAcEnabled(test.test):
         """
         self._if_device_off_turn_back_on()
         self.host.servo.set_servo_v4_role('src')
-        self.clear_tpm_if_owned()
+        tpm_utils.ClearTPMIfOwned(self.host)
 
 
     def _check_power_discharging(self):
@@ -86,7 +76,7 @@ class policy_DeviceBootOnAcEnabled(test.test):
         @param case: the case to run for the given Client test.
         """
         self.host = host
-        self.clear_tpm_if_owned()
+        tpm_utils.ClearTPMIfOwned(self.host)
 
         self.autotest_client = autotest.Autotest(self.host)
         self.autotest_client.run_test(
@@ -119,4 +109,3 @@ class policy_DeviceBootOnAcEnabled(test.test):
             # Bring device back up.
             self._turn_device_on()
             self._confirm_dut_on()
-
