@@ -29,7 +29,7 @@ def run_CTS(machine):
         target_plan=None,
         bundle='arm',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r9-linux_x86-arm.zip',
-        precondition_commands=['ip -o link show | grep "state DOWN" | grep -o "\<\(eth\|mlan\|wlan\)[[:digit:]]" | xargs -L1 -I{} ip link delete veth_{}'],
+        precondition_commands=['ip -o link show | grep "state DOWN" | grep -o "\<\(eth\|mlan\|wlan\|wwan\)[[:digit:]]" | xargs -L1 -I{} ip link delete veth_{}'],
         timeout=21600)
 
 parallel_simple(run_CTS, machines)
