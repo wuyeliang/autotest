@@ -947,12 +947,17 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                                             self.BLUEZ_AGENT_MANAGER_PATH),
                 self.BLUEZ_AGENT_MANAGER_IFACE)
         try:
-            agent_manager.RegisterAgent(self.AGENT_PATH, self._capability)
+            agent_obj = self._system_bus.get_object(
+                            self._bluetooth_service_name,
+                            self.AGENT_PATH)
+            agent_manager.RegisterAgent(agent_obj,
+                                        dbus.String(self._capability))
         except dbus.exceptions.DBusException, e:
             if e.get_dbus_name() == self.BLUEZ_ERROR_ALREADY_EXISTS:
                 logging.info('Unregistering old agent and registering the new')
-                agent_manager.UnregisterAgent(self.AGENT_PATH)
-                agent_manager.RegisterAgent(self.AGENT_PATH, self._capability)
+                agent_manager.UnregisterAgent(agent_obj)
+                agent_manager.RegisterAgent(agent_obj,
+                                            dbus.String(self._capability))
             else:
                 logging.error('Error setting up pin agent: %s', e)
                 raise
@@ -1017,7 +1022,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         """
         try:
             properties = dbus.Interface(device, self.DBUS_PROP_IFACE)
-            properties.Set(self.BLUEZ_DEVICE_IFACE, 'Trusted', trusted)
+            properties.Set(self.BLUEZ_DEVICE_IFACE, 'Trusted',
+                           dbus.Boolean(trusted, variant_level=1))
             return True
         except Exception as e:
             logging.error('_set_trusted_by_device: %s', e)
