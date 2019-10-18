@@ -211,11 +211,9 @@ CONFIG['LOGIN_PRECONDITION'] = {
 }
 
 _WIFI_CONNECT_COMMANDS = [
-    # These need to stay in order. And the escaping is crazy, I know.
-    """
-    \'/usr/local/autotest/cros/scripts/wifi connect %s %s\' % (ssid, wifipass),
-    '/usr/local/autotest/cros/scripts/reorder-services-moblab.sh wifi\'
-"""
+    # These needs to be in order.
+    "'/usr/local/autotest/cros/scripts/wifi connect %s %s\' % (ssid, wifipass)",
+    "'/usr/local/autotest/cros/scripts/reorder-services-moblab.sh wifi'"
 ]
 
 # Preconditions applicable to public tests.

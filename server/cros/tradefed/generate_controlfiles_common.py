@@ -420,35 +420,32 @@ def get_extra_args(modules, is_public):
     @param modules: List of CTS modules to be tested by the control file.
     """
     extra_args = set()
-    preconditions = set()
-    login_preconditions = set()
+    preconditions = []
+    login_preconditions = []
     for module in modules:
         if is_public:
             extra_args.add('warn_on_test_retry=False')
             extra_args.add('retry_manual_tests=True')
-            if module in CONFIG['PUBLIC_PRECONDITION']:
-                preconditions = preconditions | set(
-                    CONFIG['PUBLIC_PRECONDITION'][module])
+            preconditions.extend(CONFIG['PUBLIC_PRECONDITION'].get(module, []))
         else:
-            if module in CONFIG['LOGIN_PRECONDITION']:
-                login_preconditions = login_preconditions | set(
-                    CONFIG['LOGIN_PRECONDITION'][module])
-            if module in CONFIG['PRECONDITION']:
-                preconditions = \
-                    preconditions | set(CONFIG['PRECONDITION'][module])
-    # Notice: we are just squishing the preconditions for all modules together.
-    # We do not honor any ordering, instead we ensure every precondition is
-    # added only once. This may not always be correct. In such a case one should
-    # split the bookmarks in a way that the modules with conflicting
-    # preconditions end up in separate control files.
+            preconditions.extend(CONFIG['PRECONDITION'].get(module, []))
+            login_preconditions.extend(
+                CONFIG['LOGIN_PRECONDITION'].get(module, []))
+    # Notice: we are just squishing the preconditions for all modules together
+    # with duplicated command removed. This may not always be correct.
+    # In such a case one should split the bookmarks in a way that the modules
+    # with conflicting preconditions end up in separate control files.
+    def deduped(lst):
+       """Keep only the first occurrence of each element."""
+       return [e for i, e in enumerate(lst) if e not in lst[0:i]]
     if preconditions:
         # To properly escape the public preconditions we need to format the list
         # manually using join.
         extra_args.add('precondition_commands=[%s]' % ', '.join(
-            sorted(list(preconditions))))
+            deduped(preconditions)))
     if login_preconditions:
         extra_args.add('login_precondition_commands=[%s]' % ', '.join(
-            sorted(list(login_preconditions))))
+            deduped(login_preconditions)))
     return sorted(list(extra_args))
 
 
