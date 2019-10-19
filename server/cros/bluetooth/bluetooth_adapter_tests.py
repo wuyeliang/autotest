@@ -1432,6 +1432,7 @@ class BluetoothAdapterTests(test.test):
 
 
         method_name = 'test_device_is_not_connected'
+        not_connected = False
         if self.bluetooth_facade.has_device(device_address):
             try:
                 utils.poll_for_condition(
@@ -1445,6 +1446,7 @@ class BluetoothAdapterTests(test.test):
                 logging.error('%s: %s', method_name, e)
             except:
                 logging.error('%s: unexpected error', method_name)
+                raise
         else:
             not_connected = True
         self.results = {'not_connected': not_connected}
