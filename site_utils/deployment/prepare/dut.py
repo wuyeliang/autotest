@@ -16,7 +16,6 @@ import contextlib
 import time
 
 import common
-import logging
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 from autotest_lib.server import hosts
@@ -91,101 +90,8 @@ def download_image_to_servo_usb(host, build):
     host.servo.image_to_servo_usb(update_url)
 
 
-def power_cycle_via_servo(host):
-    """Power cycle a host though it's attached servo.
-
-    @param host   A server.hosts.Host object.
-    """
-    logging.info("Shutting down the host...")
-    host.halt()
-
-    logging.info('Power cycling DUT through servo...')
-    host.servo.get_power_state_controller().power_off()
-    host.servo.switch_usbkey('off')
-    time.sleep(host.SHUTDOWN_TIMEOUT)
-    # N.B. The Servo API requires that we use power_on() here
-    # for two reasons:
-    #  1) After turning on a DUT in recovery mode, you must turn
-    #     it off and then on with power_on() once more to
-    #     disable recovery mode (this is a Parrot specific
-    #     requirement).
-    #  2) After power_off(), the only way to turn on is with
-    #     power_on() (this is a Storm specific requirement).
-    time.sleep(host.SHUTDOWN_TIMEOUT)
-    host.servo.get_power_state_controller().power_on()
-
-    logging.info('Waiting for DUT to come back up.')
-    if not host.wait_up(timeout=host.BOOT_TIMEOUT):
-        raise error.AutoservError('DUT failed to come back after %d seconds' %
-                                  host.BOOT_TIMEOUT)
-
-
-def verify_boot_into_rec_mode(host):
-    """Verify that we can boot into USB when in recover mode, and reset tpm.
-
-    The new deploy process will install test image before firmware update, so
-    we don't need boot into recovery mode during deploy, but we still want to
-    make sure that DUT can boot into recover mode as it's critical for
-    auto-repair capability.
-
-    @param host   servers.host.Host object.
-    """
-    logging.info("Shutting down DUT...")
-    host.halt()
-    host.servo.get_power_state_controller().power_off()
-    time.sleep(host.SHUTDOWN_TIMEOUT)
-    logging.info("Booting DUT into recovery mode...")
-    host.servo.boot_in_recovery_mode()
-
-    if not host.wait_up(timeout=host.USB_BOOT_TIMEOUT):
-        raise Exception('DUT failed to boot into recovery mode.')
-
-    logging.info('Resetting the TPM status')
-    try:
-        host.run('chromeos-tpm-recovery')
-    except error.AutoservRunError:
-        logging.warn('chromeos-tpm-recovery is too old.')
-
-    logging.info("Rebooting host into normal mode.")
-    power_cycle_via_servo(host)
-    logging.info("Verify boot into recovery mode completed successfully.")
-
-
 def install_test_image(host):
-    """Initial install a test image on a DUT.
-
-    This function assumes that the required image is already downloaded onto the
-    USB key connected to the DUT via servo, and the DUT is in dev mode with
-    dev_boot_usb enabled.
-
-    @param host   servers.host.Host object.
-    """
-    servo = host.servo
-    # First power on.  We sleep to allow the firmware plenty of time
-    # to display the dev-mode screen; some boards take their time to
-    # be ready for the ctrl+U after power on.
-    servo.get_power_state_controller().power_off()
-    time.sleep(host.SHUTDOWN_TIMEOUT)
-    servo.switch_usbkey('dut')
-    servo.get_power_state_controller().power_on()
-
-    # Dev mode screen should be up now:  type ctrl+U and wait for
-    # boot from USB to finish.
-    time.sleep(10)
-    servo.ctrl_u()
-
-    if not host.wait_up(timeout=host.USB_BOOT_TIMEOUT):
-        raise Exception('DUT failed to boot from USB for install test image.')
-
-    host.run('chromeos-install --yes', timeout=host.INSTALL_TIMEOUT)
-
-    logging.info("Rebooting DUT to boot from hard drive.")
-    power_cycle_via_servo(host)
-    logging.info("Install test image completed successfully.")
-
-
-def reinstall_test_image(host):
-    """Install the test image of given build to DUT.
+    """Install the test image for the given build to DUT.
 
     This function assumes that the required image is already downloaded onto the
     USB key connected to the DUT via servo.
@@ -220,6 +126,20 @@ def install_firmware(host):
 
     @param host   Host instance to use for servo and ssh operations.
     """
+    servo = host.servo
+    # First power on.  We sleep to allow the firmware plenty of time
+    # to display the dev-mode screen; some boards take their time to
+    # be ready for the ctrl+U after power on.
+    servo.get_power_state_controller().power_off()
+    servo.switch_usbkey('dut')
+    servo.get_power_state_controller().power_on()
+    time.sleep(10)
+    # Dev mode screen should be up now:  type ctrl+U and wait for
+    # boot from USB to finish.
+    servo.ctrl_u()
+    if not host.wait_up(timeout=host.USB_BOOT_TIMEOUT):
+        raise Exception('DUT failed to boot in dev mode for '
+                        'firmware update')
     # Disable software-controlled write-protect for both FPROMs, and
     # install the RO firmware.
     for fprom in ['host', 'ec']:
@@ -233,16 +153,11 @@ def install_firmware(host):
 
     # Get us out of dev-mode and clear GBB flags.  GBB flags are
     # non-zero because boot from USB was enabled.
-    logging.info("Resting gbb flags and disable dev mode.")
     host.run('/usr/share/vboot/bin/set_gbb_flags.sh 0',
              ignore_status=True)
     host.run('crossystem disable_dev_request=1',
              ignore_status=True)
-
-    logging.info("Rebooting DUT in normal mode(non-dev).")
-    power_cycle_via_servo(host)
-    logging.info("Install firmware completed successfully.")
-
+    host.halt()
 
 
 def _start_firmware_update(host, result_file):
@@ -257,7 +172,8 @@ def _start_firmware_update(host, result_file):
 
     @returns The process id."""
     # TODO(guocb): Use `make_dev_firmware` to re-sign from MP to test/dev.
-    fw_update_cmd = 'chromeos-firmwareupdate --mode=factory --force'
+    # Use --host_only option here due to crbug.com/950090.
+    fw_update_cmd = 'chromeos-firmwareupdate --mode=factory --force --host_only'
 
     cmd = [
         "date > %s" % result_file,

@@ -28,7 +28,6 @@ RETURN_CODES = enum.Enum(
         'STAGE_USB_FAILURE',
         'INSTALL_FIRMWARE_FAILURE',
         'INSTALL_TEST_IMAGE_FAILURE',
-        'BOOT_FROM_RECOVERY_MODE_FAILURE'
         'OTHER_FAILURES',
 )
 
@@ -62,13 +61,6 @@ def main():
         logging.error("fail to stage image to usb: %s", err)
         return RETURN_CODES.STAGE_USB_FAILURE
 
-    if 'install-test-image' in opts.actions:
-      try:
-        preparedut.install_test_image(host)
-      except Exception as err:
-        logging.error("fail to install test image: %s", err)
-        return RETURN_CODES.INSTALL_TEST_IMAGE_FAILURE
-
     if 'install-firmware' in opts.actions:
       try:
         preparedut.install_firmware(host)
@@ -76,12 +68,12 @@ def main():
         logging.error("fail to install firmware: %s", err)
         return RETURN_CODES.INSTALL_FIRMWARE_FAILURE
 
-    if 'verify-recovery-mode' in opts.actions:
+    if 'install-test-image' in opts.actions:
       try:
-        preparedut.verify_rec_mode_boot_into_usb(host)
+        preparedut.install_test_image(host)
       except Exception as err:
-        logging.error("fail to boot from recovery mode: %s", err)
-        return RETURN_CODES.BOOT_FROM_RECOVERY_MODE_FAILURE
+        logging.error("fail to install test image: %s", err)
+        return RETURN_CODES.INSTALL_TEST_IMAGE_FAILURE
 
   return RETURN_CODES.OK
 
@@ -97,8 +89,7 @@ def _parse_args():
   parser.add_argument(
       'actions',
       nargs='+',
-      choices=['stage-usb', 'install-test-image', 'install-firmware',
-               'verify-recovery-mode'],
+      choices=['stage-usb', 'install-firmware', 'install-test-image'],
       help='DUT preparation actions to execute.',
   )
   parser.add_argument(
