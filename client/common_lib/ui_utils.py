@@ -156,6 +156,8 @@ class UI_Handler(object):
             if name is None:
                 raise error.TestError('If regex is True name must be given')
             name = self._format_obj(name, isRegex)
+        elif name is not None:
+            name = self._format_obj(name, isRegex)
         name = self.REGEX_ALL if name is None else name
         role = self.REGEX_ALL if role is None else self._format_obj(role, False)
 
@@ -252,7 +254,6 @@ class UI_Handler(object):
             If button did appear, stop clicking.
 
         """
-
         self.doDefault_on_obj(item_to_click,
                                  role=click_role,
                                  isRegex=isRegex_click)
