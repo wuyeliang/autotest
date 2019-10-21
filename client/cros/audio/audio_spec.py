@@ -97,6 +97,9 @@ def get_num_internal_microphone(board, model, sku):
     return 1
 
 INTERNAL_MIC_NODE = {
+        ('nami', 'pantheon'): 'FRONT_MIC',
+        ('nami', 'sona'): 'FRONT_MIC',
+        ('nami', 'syndra'): 'FRONT_MIC',
         ('nami', 'vayne'): 'FRONT_MIC',
 }
 
