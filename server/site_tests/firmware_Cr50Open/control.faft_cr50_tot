@@ -5,9 +5,9 @@
 from autotest_lib.server import utils
 
 AUTHOR = "mruthven"
-NAME = "firmware_Cr50Open.ccd_open_unrestricted"
+NAME = "firmware_Cr50Open.faft_cr50_tot"
 PURPOSE = "Verify cr50 open"
-ATTRIBUTES = "suite:faft_cr50_prepvt"
+ATTRIBUTES = "suite:faft_cr50_tot"
 TIME = "SHORT"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
@@ -20,7 +20,7 @@ in dev mode.
 This test must be run with servo instead of CCD, because we need to be able to
 fake power button presses.
 
-This test is applicable when ccd open is unrestricted.
+This test is applicable when ccd open is unrestricted and using cr50 TOT module.
 TODO(crbug.com/1014572) Drop separate control files for ccd open state.
 """
 
@@ -29,6 +29,9 @@ if 'args_dict' not in locals():
 
 args_dict.update(utils.args_to_dict(args))
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
+
+# crbug.com/1014572: Inject test args.
+args_dict['tot_test_run'] = 'true'
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)

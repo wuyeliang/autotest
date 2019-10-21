@@ -5,9 +5,9 @@
 from autotest_lib.server import utils
 
 AUTHOR = "mruthven"
-NAME = "firmware_Cr50TpmManufactured"
+NAME = "firmware_Cr50TpmManufactured.faft_cr50_tot"
 PURPOSE = "Check if the TPM is manufactured."
-ATTRIBUTES = "suite:faft_cr50_prepvt, suite:faft_cr50_pvt"
+ATTRIBUTES = "suite:faft_cr50_tot"
 TIME = "SHORT"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
@@ -21,6 +21,9 @@ This test can be used to find bad boards and possibly find issues with Cr50
 images. Most of the time this issue is caused by bad DBG images, so it can
 highlight those issues, but the test is mainly to make sure there aren't broken
 boards in the lab.
+
+This test is applicable when using ToT cr50 module.
+TODO(crbug.com/1014572) Drop this control file once suites can inject test args.
 """
 
 if 'args_dict' not in locals():
@@ -28,6 +31,9 @@ if 'args_dict' not in locals():
 
 args_dict.update(utils.args_to_dict(args))
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
+
+# crbug.com/1014572: Inject test args.
+args_dict['tot_test_run'] = 'true'
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
