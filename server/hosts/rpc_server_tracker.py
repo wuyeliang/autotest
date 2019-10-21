@@ -295,7 +295,7 @@ class RpcServerTracker(object):
                     raise error.TestError('Failed to shutdown RPC server %s' %
                                           remote_name)
 
-        self._host.disconnect_ssh_tunnel(tunnel_proc, port)
+        self._host.disconnect_ssh_tunnel(tunnel_proc)
         del self._rpc_proxy_map[port]
 
 

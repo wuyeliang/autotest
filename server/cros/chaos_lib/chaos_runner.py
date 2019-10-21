@@ -268,8 +268,7 @@ class ChaosRunner(object):
                 batch_locker.unlock_aps()
 
             if webdriver_tunnel:
-                webdriver_instance.disconnect_ssh_tunnel(webdriver_tunnel,
-                                                         WEBDRIVER_PORT)
+                webdriver_instance.disconnect_ssh_tunnel(webdriver_tunnel)
                 webdriver_instance.close()
             capturer.close()
             logging.info('Powering off VM %s', webdriver_instance)

@@ -959,14 +959,12 @@ class AbstractSSHHost(remote.RemoteHost):
         return tunnel_proc
 
 
-    def disconnect_ssh_tunnel(self, tunnel_proc, port):
+    def disconnect_ssh_tunnel(self, tunnel_proc):
         """
         Disconnects a previously forwarded port from the server to the DUT for
         RPC server connection.
 
         @param tunnel_proc: a tunnel process returned from |create_ssh_tunnel|.
-        @param port: remote port on the DUT, used in ADBHost (deprecated).
-
         """
         if tunnel_proc.poll() is None:
             tunnel_proc.terminate()
