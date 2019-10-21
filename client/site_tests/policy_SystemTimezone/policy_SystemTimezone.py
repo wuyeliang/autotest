@@ -5,6 +5,8 @@
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
+
+import logging
 import time
 
 
@@ -33,7 +35,8 @@ class policy_SystemTimezone(
         self.ui.click_and_wait_for_item_with_retries('Date and time',
                                                      'Time zone')
         self.ui.click_and_wait_for_item_with_retries('Time zone',
-                                                     'Choose from list')
+                                                     'Choose from list',
+                                                     click_role='link')
 
     def _is_timezone_selectable(self):
         """
@@ -65,7 +68,9 @@ class policy_SystemTimezone(
 
         """
         def check_timezone(expected):
-            return utils.system_output('date +%z') == expected
+            result = utils.system_output('date +%z')
+            logging.info('date result {}'.format(result))
+            return result == expected
 
         utils.poll_for_condition(
             lambda: check_timezone(expected),
@@ -84,25 +89,20 @@ class policy_SystemTimezone(
         luck.
 
         """
-        cases = [{'policy': 'America/Costa_Rica', 'expected': '-0600'},
-                 {'policy': 'Asia/Kathmandu', 'expected': '+0545'}]
+        case = {'policy': 'Asia/Kathmandu', 'expected': '+0545'}
 
-        for setting in cases:
-            policy_value = setting['policy']
-            expected = setting['expected']
-            policies = {self.POLICY_NAME: policy_value}
-            self.setup_case(device_policies=policies, enroll=True)
-            self.ui.start_ui_root(self.cr)
-            # Logout so the policy can take effect
-            if self._is_timezone_selectable():
-                raise error.TestError(
-                    'Timezone is selectable when the policy is set')
-            self.log_out_via_keyboard()
-            self._test_timezone(expected)
+        policy_value = case['policy']
+        expected = case['expected']
+        policies = {self.POLICY_NAME: policy_value}
+        self.setup_case(device_policies=policies, enroll=True)
+        self.ui.start_ui_root(self.cr)
+        # Logout so the policy can take effect
+        if self._is_timezone_selectable():
+            raise error.TestError(
+                'Timezone is selectable when the policy is set')
+        self.log_out_via_keyboard()
+        self._test_timezone(expected)
 
-            # The device needs a bit of time to reliably clean up between
-            # iterations.
-            time.sleep(20)
 
     def set_empty_timezone(self):
         """
