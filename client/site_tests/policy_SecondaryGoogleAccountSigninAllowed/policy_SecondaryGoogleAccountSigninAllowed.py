@@ -49,6 +49,10 @@ class policy_SecondaryGoogleAccountSigninAllowed(
                                  name='/Manage accounts/',
                                  isRegex=True)
 
+        # Sometimes a confirmation to leave page will appear.
+        if self.ui.item_present(role='button', name='Leave'):
+            self.ui.doDefault_on_obj(role='button', name='Leave')
+
         if case is False:
             if not self.ui.did_obj_not_load(
             name='/Manage accounts on this device/',
