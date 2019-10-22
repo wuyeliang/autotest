@@ -1135,9 +1135,12 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             finally:
                 mainloop.quit()
 
-
-        device.Pair(reply_handler=pair_reply, error_handler=pair_error,
-                    timeout=timeout * 1000)
+        try:
+            device.Pair(reply_handler=pair_reply, error_handler=pair_error,
+                        timeout=timeout * 1000)
+        except Exception as e:
+            logging.error('Exception %s in pair_legacy_device', e)
+            return False
         mainloop.run()
         return self._is_paired(device)
 
@@ -1309,7 +1312,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         @returns: an empty string '' on success;
                   None if there is no _advertising interface manager; and
-                  an error string if the dbus method fails.
+                  an error string if the dbus method fails or exception occurs
 
         """
 
@@ -1331,7 +1334,12 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             return None
 
         # Call dbus_method with handlers.
-        dbus_method(*args, reply_handler=successful_cb, error_handler=error_cb)
+        try:
+            dbus_method(*args, reply_handler=successful_cb,
+                        error_handler=error_cb)
+        except Exception as e:
+            logging.error('Exception %s in advertising_async_method ', e)
+            return str(e)
 
         self._adv_mainloop.run()
 
