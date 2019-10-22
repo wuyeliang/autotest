@@ -73,7 +73,7 @@ def EnterpriseFakeEnrollment(browser, user_id, password, gaia_id,
     if auto_login:
         browser.oobe.NavigateFakeLogin(user_id, password, gaia_id)
         # TODO(achuith): Replace with WaitForLogin.
-        utils.poll_for_condition(lambda: not browser.oobe_exists, timeout=30)
+        utils.poll_for_condition(lambda: not browser.oobe_exists, timeout=45)
 
 
 def OnlineDemoMode(browser):
