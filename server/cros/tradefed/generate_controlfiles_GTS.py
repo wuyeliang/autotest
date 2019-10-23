@@ -69,10 +69,7 @@ CONFIG['QUAL_BOOKMARKS'] = sorted([
     'zzzzz'  # A bookend to simplify algorithm.
 ])
 
-CONFIG['SMOKE'] = [
-    # Non-signed test with non-zero tests running
-    'GtsContactsTest',
-]
+CONFIG['SMOKE'] = []
 
 CONFIG['BVT_ARC'] = [
     'GtsContactsTest',
