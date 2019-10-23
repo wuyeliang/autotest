@@ -887,6 +887,17 @@ class BluetoothAdapterTests(test.test):
            Note : Value of 0 mean it never timeouts, so the test will
                  end after 30 seconds.
         """
+        def check_timeout(timeout):
+            """Check for timeout value in loop while recording failures."""
+            actual_timeout = get_timeout()
+            if timeout != actual_timeout:
+                logging.error('%s timeout value read %s does not '
+                              'match value set %s', property_name,
+                              actual_timeout, timeout)
+                return False
+            else:
+                return True
+
         def _test_timeout_property(timeout):
             # minium time after timeout before checking property
             MIN_DELTA_SECS = 3
@@ -897,11 +908,12 @@ class BluetoothAdapterTests(test.test):
             if not set_timeout(timeout):
                 logging.error('Setting the %s timeout failed',property_name)
                 return False
-            actual_timeout = get_timeout()
-            if timeout != actual_timeout:
-                logging.error('%s timeout value read %s does not '
-                              'match value set %s', property_name,
-                              actual_timeout, timeout)
+
+
+            if not self._wait_for_condition(lambda : check_timeout(timeout),
+                                            'check_'+property_name):
+                logging.error('checking %s_timeout value timed out',
+                              property_name)
                 return False
 
             #
