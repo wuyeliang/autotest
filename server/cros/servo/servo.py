@@ -977,6 +977,13 @@ class Servo(object):
 
     def enable_main_servo_device(self):
         """Make sure the main device has control of the dut."""
+        # Cr50 detects servo using the EC uart. It doesn't work well if the
+        # board doesn't use EC uart. The lab active_v4_device doesn't handle
+        # this correctly. Check ec_uart_pty before trying to change the active
+        # device.
+        # TODO(crbug.com/1016842): reenable the setting the main device when
+        # active device works on labstations.
+        return
         if not self.has_control('active_v4_device'):
             return
         self.set('active_v4_device', self.get_main_servo_device())
