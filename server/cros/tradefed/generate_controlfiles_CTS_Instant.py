@@ -42,7 +42,7 @@ CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_TS'
 CONFIG['CONTROLFILE_WRITE_SIMPLE_QUAL_AND_REGRESS'] = True
 CONFIG['CONTROLFILE_WRITE_CAMERA'] = False
-CONFIG['CONTROLFILE_WRITE_DEQP'] = False
+CONFIG['CONTROLFILE_WRITE_EXTRA'] = False
 
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440

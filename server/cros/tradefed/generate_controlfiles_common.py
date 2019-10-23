@@ -5,6 +5,7 @@
 
 import argparse
 import contextlib
+import copy
 import logging
 import os
 import re
@@ -364,7 +365,8 @@ def get_job_retries(modules, is_public):
         # We don't want job retries for module collection or special cases.
         if (module in get_collect_modules(is_public) or module == _ALL or
             ('CtsDeqpTestCases' in CONFIG['EXTRA_MODULES'] and
-             module in CONFIG['EXTRA_MODULES']['CtsDeqpTestCases'])):
+             module in CONFIG['EXTRA_MODULES']['CtsDeqpTestCases']['SUBMODULES']
+             )):
             retries = 0
     return retries
 
@@ -618,16 +620,18 @@ def get_extra_modules_dict(is_public, abi):
     if not is_public:
         return CONFIG['EXTRA_MODULES']
 
+    extra_modules = copy.deepcopy(CONFIG['PUBLIC_EXTRA_MODULES'])
     if abi in CONFIG['EXTRA_SUBMODULE_OVERRIDE']:
-        new_dict  = dict()
-        for module, submodules in CONFIG['PUBLIC_EXTRA_MODULES'].items():
-            submodules = submodules[:]
+        for _, submodules in extra_modules.items():
             for old, news in CONFIG['EXTRA_SUBMODULE_OVERRIDE'][abi].items():
                 submodules.remove(old)
                 submodules.extend(news)
-            new_dict[module] = submodules
-        return new_dict
-    return CONFIG['PUBLIC_EXTRA_MODULES']
+    return {
+        module: {
+            'SUBMODULES': submodules,
+            'SUITES': [CONFIG['MOBLAB_SUITE_NAME']],
+        } for module, submodules in extra_modules.items()
+    }
 
 
 def get_modules_to_remove(is_public, abi):
@@ -720,8 +724,8 @@ def get_controlfile_content(combined,
     target_module = None
     if (combined not in get_collect_modules(is_public) and combined != _ALL):
         target_module = combined
-    for target, m in get_extra_modules_dict(is_public, abi).items():
-        if combined in m:
+    for target, config in get_extra_modules_dict(is_public, abi).items():
+        if combined in config['SUBMODULES']:
             target_module = target
     return _CONTROLFILE_TEMPLATE.render(
         year=CONFIG['COPYRIGHT_YEAR'],
@@ -1050,21 +1054,18 @@ def write_collect_controlfiles(_modules, abi, revision, build, uri, is_public):
                           suites, is_public)
 
 
-def write_extra_deqp_controlfiles(_modules, abi, revision, build, uri,
-                                  is_public):
-    """Write all control files for splitting Deqp into pieces.
+def write_extra_controlfiles(_modules, abi, revision, build, uri,
+                             is_public):
+    """Write all extra control files as specified in config.
 
-    This is used in particular by moblab to load balance. A similar approach
-    was also used during bringup of grunt to split media tests.
+    This is used by moblab to load balance large modules like Deqp, as well as
+    making custom modules such as WM presubmit. A similar approach was also used
+    during bringup of grunt to split media tests.
     """
-    submodules = \
-        get_extra_modules_dict(is_public, abi).get('CtsDeqpTestCases', [])
-    suites = ['suite:arc-cts-deqp', 'suite:graphics_per-day']
-    if is_public:
-        suites = [CONFIG['MOBLAB_SUITE_NAME']]
-    for module in submodules:
-        write_controlfile(module, set([module]), abi, revision, build, uri,
-                          suites, is_public)
+    for module, config in get_extra_modules_dict(is_public, abi).items():
+        for submodule in config['SUBMODULES']:
+            write_controlfile(submodule, set([submodule]), abi, revision, build,
+                              uri, config['SUITES'], is_public)
 
 
 def write_extra_camera_controlfiles(abi, revision, build, uri, is_public):
@@ -1126,9 +1127,9 @@ def run(uris, is_public, cache_dir):
             write_collect_controlfiles(modules, abi, revision, build, uri,
                                        is_public)
 
-            if CONFIG['CONTROLFILE_WRITE_DEQP']:
-                write_extra_deqp_controlfiles(None, abi, revision, build, uri,
-                                              is_public)
+            if CONFIG['CONTROLFILE_WRITE_EXTRA']:
+                write_extra_controlfiles(None, abi, revision, build, uri,
+                                         is_public)
 
 
 def main(config):

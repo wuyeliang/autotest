@@ -39,7 +39,7 @@ CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_TS'
 CONFIG['CONTROLFILE_WRITE_SIMPLE_QUAL_AND_REGRESS'] = False
 CONFIG['CONTROLFILE_WRITE_CAMERA'] = True
-CONFIG['CONTROLFILE_WRITE_DEQP'] = True
+CONFIG['CONTROLFILE_WRITE_EXTRA'] = True
 
 # The dashboard suppresses upload to APFE for GS directories (based on autotest
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440
@@ -288,13 +288,16 @@ CONFIG['DISABLE_LOGCAT_ON_FAILURE'] = set([
 ])
 
 CONFIG['EXTRA_MODULES'] = {
-    'CtsDeqpTestCases' : set([
-        'CtsDeqpTestCases.dEQP-EGL',
-        'CtsDeqpTestCases.dEQP-GLES2',
-        'CtsDeqpTestCases.dEQP-GLES3',
-        'CtsDeqpTestCases.dEQP-GLES31',
-        'CtsDeqpTestCases.dEQP-VK'
-    ])
+    'CtsDeqpTestCases': {
+        'SUBMODULES': set([
+            'CtsDeqpTestCases.dEQP-EGL',
+            'CtsDeqpTestCases.dEQP-GLES2',
+            'CtsDeqpTestCases.dEQP-GLES3',
+            'CtsDeqpTestCases.dEQP-GLES31',
+            'CtsDeqpTestCases.dEQP-VK'
+        ]),
+        'SUITES': ['suite:arc-cts-deqp', 'suite:graphics_per-day'],
+    },
 }
 
 # Moblab wants to shard dEQP really finely. This isn't needed anymore as it got
