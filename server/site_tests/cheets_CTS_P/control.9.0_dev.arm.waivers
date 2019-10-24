@@ -14,7 +14,7 @@ TIME = 'MEDIUM'
 MAX_RESULT_SIZE_KB = 512000
 DOC = 'Run waived tests of the Android Compatibility Test Suite (CTS) using arm ABI in the ARC++ container.'
 
-def run_CTS(machine):
+def run_TS(machine):
     host_list = [hosts.create_host(machine)]
     job.run_test(
         'cheets_CTS_P',
@@ -32,4 +32,4 @@ def run_CTS(machine):
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-6019594-linux_x86-arm.zip',
         timeout=7200)
 
-parallel_simple(run_CTS, machines)
+parallel_simple(run_TS, machines)
