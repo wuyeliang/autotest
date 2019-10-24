@@ -142,6 +142,10 @@ CONFIG['PUBLIC_MODULE_RETRY_COUNT'] = {
     _PUBLIC_COLLECT: 0,
 }
 
+CONFIG['PUBLIC_OVERRIDE_TEST_PRIORITY'] = {
+    _PUBLIC_COLLECT: 70,
+}
+
 # This information is changed based on regular analysis of the job run time on
 # partner moblabs.
 

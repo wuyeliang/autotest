@@ -2,8 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# This file is not auto-generated. Don't delete it.
-# TODO(b/138915146): auto-generate this file.
+# This file has been automatically generated. Do not edit!
 
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_P.arm.CtsDeqpTestCases'
@@ -22,11 +21,10 @@ def run_TS(machine):
         'cheets_CTS_P',
         hosts=host_list,
         iterations=1,
-	max_retry=15,
-        needs_push_media=False,
+        max_retry=15,
         tag='arm.CtsDeqpTestCases',
         test_name='cheets_CTS_P.arm.CtsDeqpTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDeqpTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsDeqpTestCases',
         target_plan=None,

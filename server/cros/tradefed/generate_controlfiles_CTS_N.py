@@ -250,6 +250,10 @@ CONFIG['PUBLIC_MODULE_RETRY_COUNT'] = {
     'CtsBluetoothTestCases': 10,
 }
 
+CONFIG['PUBLIC_OVERRIDE_TEST_PRIORITY'] = {
+    _PUBLIC_COLLECT: 70,
+}
+
 # This information is changed based on regular analysis of the job run time on
 # partner moblabs.
 
