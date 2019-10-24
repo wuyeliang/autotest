@@ -43,7 +43,7 @@ VK_MASTER_FILE = os.path.join(test_file_folder, 'vk-master.txt')
 hasty_exclude_list = ['dEQP-VK-master']
 
 tests = [
-    Test('bvt',                    Suite.bvtcq, shards=1,  hasty=False, time='FAST',     tag='bvt',           test_file=BVT_MASTER_FILE,    perf_failure_description='Failures_BVT'),
+    Test('bvt',                    Suite.daily, shards=1,  hasty=False, time='FAST',     tag='bvt',           test_file=BVT_MASTER_FILE,    perf_failure_description='Failures_BVT'),
     Test('dEQP-GLES2-master',      Suite.daily, shards=1,  hasty=False, time='LENGTHY',  tag='gles2-master',  test_file=GLES2_MASTER_FILE,  perf_failure_description='Failures_GLES2'),
     # As we are following tot with dEQP the hasty shards have too much noise that is impossible to expect.
     #Test('dEQP-GLES2-master',      Suite.bvtpb, shards=10, hasty=True,  time='FAST',     tag='gles2-master',  test_file=GLES2_MASTER_FILE,  perf_failure_description=None),
