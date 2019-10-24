@@ -89,14 +89,21 @@ _CONTROLFILE_TEMPLATE = Template(
     {%- if enable_default_apps %}
             enable_default_apps=True,
     {%- endif %}
+    {%- if needs_push_media %}
             needs_push_media={{needs_push_media}},
+    {%- endif %}
             tag='{{tag}}',
             test_name='{{name}}',
+    {%- if authkey %}
+            authkey='{{authkey}}',
+    {%- endif %}
             run_template={{run_template}},
             retry_template={{retry_template}},
             target_module={% if target_module %}'{{target_module}}'{% else %}None{%endif%},
             target_plan={% if target_plan %}'{{target_plan}}'{% else %}None{% endif %},
+    {%- if abi %}
             bundle='{{abi}}',
+    {%- endif %}
     {%- if extra_artifacts %}
             extra_artifacts={{extra_artifacts}},
     {%- endif %}
