@@ -419,7 +419,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         if compare_output:
             logging.info('No consistent output for %r %s', command,
                          pprint.pformat(past_rv))
-        raise error.TestError('Issue sending %r command: %s', command, err)
+        raise error.TestError('Issue sending %r command: %s' % (command, err))
 
 
     def get_deep_sleep_count(self):
