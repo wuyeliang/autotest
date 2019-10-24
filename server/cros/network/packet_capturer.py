@@ -324,7 +324,7 @@ class PacketCapturer(object):
         If |capture_pid| is given, stops that capture, otherwise stops all
         ongoing captures.
 
-        This method will sleep for a small amount of time, to ensure that
+        This method may sleep for a small amount of time, to ensure that
         libpcap has completed its last poll(). The caller must ensure that
         no unwanted traffic is received during this time.
 
@@ -335,12 +335,13 @@ class PacketCapturer(object):
         @return list of RemoteCaptureResult tuples
 
         """
-        time.sleep(self.LIBPCAP_POLL_FREQ_SECS * 2)
-
         if capture_pid:
             pids_to_kill = [capture_pid]
         else:
             pids_to_kill = list(self._ongoing_captures.keys())
+
+        if pids_to_kill:
+            time.sleep(self.LIBPCAP_POLL_FREQ_SECS * 2)
 
         results = []
         for pid in pids_to_kill:
