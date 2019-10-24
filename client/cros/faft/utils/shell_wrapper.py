@@ -48,23 +48,42 @@ class LocalShell(object):
         all output.
 
         @raise error.CmdError: if block is True and command fails (rc!=0)
-        @return: the result, if block is True
-
-        @rtype: utils.CmdResult | None
         """
         start_time = time.time()
-        process = self._run_command(cmd)
-        if block:
+        process = self._run_command(cmd, block)
+        if process.returncode:
             returncode = process.returncode
             stdout = process.stdout.read()
             stderr = process.stderr.read()
             duration = time.time() - start_time
             result = utils.CmdResult(cmd, stdout, stderr, returncode, duration)
-            if returncode:
-                self._os_if.log('Command failed.\n%s' % result)
-                raise error.CmdError(cmd, result)
-            else:
-                return result
+            self._os_if.log('Command failed.\n%s' % result)
+            raise error.CmdError(cmd, result)
+
+    def run_command_get_result(self, cmd, ignore_status=False):
+        """Run a shell command, and get the result (output and returncode).
+
+        @param ignore_status: if True, do not raise CmdError, even if rc != 0.
+        @raise error.CmdError: if command fails (rc!=0) and not ignore_result
+        @return the result of the command
+        @rtype: utils.CmdResult
+        """
+        start_time = time.time()
+
+        process = self._run_command(cmd, block=True)
+
+        returncode = process.returncode
+        stdout = process.stdout.read()
+        stderr = process.stderr.read()
+        duration = time.time() - start_time
+        result = utils.CmdResult(cmd, stdout, stderr, returncode, duration)
+
+        if returncode and not ignore_status:
+            self._os_if.log('Command failed:\n%s' % result)
+            raise error.CmdError(cmd, result)
+
+        self._os_if.log('Command result:\n%s' % result)
+        return result
 
     def run_command_check_output(self, cmd, success_token):
         """Run a command and check whether standard output contains some string.

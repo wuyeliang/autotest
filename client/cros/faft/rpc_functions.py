@@ -766,8 +766,8 @@ class SystemServicer(object):
 
         @return: A string of the model name.
         """
-        model = cros_config.call_cros_config_get_output('/ name',
-                self._os_if.run_shell_command)
+        model = cros_config.call_cros_config_get_output(
+                '/ name', self._os_if.run_shell_command_get_result)
         if not model:
             raise Exception('Failed getting model name from cros_config')
         return model

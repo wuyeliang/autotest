@@ -405,7 +405,7 @@ class FirmwareUpdater(object):
         @type shellball: str | None
         """
         model_result = cros_config.call_cros_config_get_output(
-                '/ name', self.os_if.run_shell_command)
+                '/ name', self.os_if.run_shell_command_get_result)
 
         if not model_result:
             return
