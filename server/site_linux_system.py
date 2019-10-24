@@ -48,6 +48,8 @@ class LinuxSystem(object):
     MAC_BIT_MULTICAST = 0x1
     MAC_RETRY_LIMIT = 1000
 
+    _UMA_EVENTS = '/var/lib/metrics/uma-events'
+
 
     @property
     def capabilities(self):
@@ -122,6 +124,12 @@ class LinuxSystem(object):
         self._ping_runner = ping_runner.PingRunner(host=self.host)
         self._bridge_interface = None
         self._virtual_ethernet_pair = None
+
+        # TODO(crbug.com/839164): some routers fill their stateful partition
+        # with uncollected metrics.
+        if self.host.path_exists(self._UMA_EVENTS):
+            self.host.run('truncate -s 0 %s' % self._UMA_EVENTS,
+                          ignore_status=True)
 
 
     @property
