@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = 'quiche, wiley, pstew'
-NAME = 'network_WiFi_VisibleScan'
+NAME = 'network_WiFi_VisibleScan.11b'
 TIME = 'SHORT'
 TEST_TYPE = 'Server'
 ATTRIBUTES = ('suite:wifi_matfunc')
@@ -17,11 +17,19 @@ a broadcast scan.
 
 """
 
+from autotest_lib.server.cros.network import hostap_config
+
 
 def run(machine):
     host = hosts.create_host(machine)
+    # This configuration uses as many defaults as possible
+    configurations = [hostap_config.HostapConfig(channel=1,
+            mode=hostap_config.HostapConfig.MODE_11B)]
     job.run_test('network_WiFi_VisibleScan',
-                 host=host, raw_cmdline_args=args)
+                 tag=NAME.split('.')[1],
+                 host=host,
+                 raw_cmdline_args=args,
+                 additional_params=configurations)
 
 
 parallel_simple(run, machines)
