@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 
 AUTHOR = "Chrome OS Team"
-NAME = "firmware_PDVbusRequest.flip"
+NAME = "firmware_PDVbusRequest.dts"
 PURPOSE = "Servo based PD VBUS voltage level test"
 ATTRIBUTES = "suite:faft_pd"
 CRITERIA = "This test will fail if actual voltage does not meet expected"
@@ -19,8 +19,6 @@ This test checks:
   - PD Dual role mode is operational in the DUT
   - Ability to initiate new PD contract with 5/12/20 VBUS value.
   - Receive Source capabilty messages from PDTester
-
-This subtest is testing the other CC pin.
 """
 
 args_dict = utils.args_to_dict(args)
@@ -31,7 +29,7 @@ def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args,
                              pdtester_args=pdtester_args)
     job.run_test("firmware_PDVbusRequest", host=host, cmdline_args=args,
-                 disable_sysinfo=True, flip_cc=True, dts_mode=False,
-                 tag="flip")
+                 disable_sysinfo=True, flip_cc=False, dts_mode=True,
+                 tag="dts")
 
 parallel_simple(run, machines)

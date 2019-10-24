@@ -37,9 +37,9 @@ class firmware_PDResetSoft(FirmwareTest):
                     logging.warn('Device cant soft reset ... skipping')
                     break
 
-    def initialize(self, host, cmdline_args, flip_cc=False):
+    def initialize(self, host, cmdline_args, flip_cc=False, dts_mode=False):
         super(firmware_PDResetSoft, self).initialize(host, cmdline_args)
-        self.setup_pdtester(flip_cc)
+        self.setup_pdtester(flip_cc, dts_mode)
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         # Turn off console prints, except for USBPD.

@@ -115,9 +115,9 @@ class firmware_PDPowerSwap(FirmwareTest):
             raise error.TestFail('PD not connected! pd_state = %r' %
                                  pd_state)
 
-    def initialize(self, host, cmdline_args, flip_cc=False):
+    def initialize(self, host, cmdline_args, flip_cc=False, dts_mode=False):
         super(firmware_PDPowerSwap, self).initialize(host, cmdline_args)
-        self.setup_pdtester(flip_cc)
+        self.setup_pdtester(flip_cc, dts_mode)
         # Only run in normal mode
         self.switcher.setup_mode('normal')
         # Turn off console prints, except for USBPD.
