@@ -39,7 +39,7 @@ CONFIG['QUAL_SUITE_NAMES'] = ['suite:arc-cts-qual']
 # unlikely to fail alone (= regression almost always caught by the
 # corresponding CTS module.) For now we don't generate this type of control
 # files.
-CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_CTS'
+CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_TS'
 CONFIG['CONTROLFILE_WRITE_SIMPLE_QUAL_AND_REGRESS'] = True
 CONFIG['CONTROLFILE_WRITE_CAMERA'] = False
 CONFIG['CONTROLFILE_WRITE_DEQP'] = False
