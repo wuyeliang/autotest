@@ -28,7 +28,8 @@ RETURN_CODES = enum.Enum(
         'STAGE_USB_FAILURE',
         'INSTALL_FIRMWARE_FAILURE',
         'INSTALL_TEST_IMAGE_FAILURE',
-        'BOOT_FROM_RECOVERY_MODE_FAILURE'
+        'BOOT_FROM_RECOVERY_MODE_FAILURE',
+        'UPDATE_LABEL_FAILURE',
         'OTHER_FAILURES',
 )
 
@@ -83,6 +84,13 @@ def main():
         logging.error("fail to boot from recovery mode: %s", err)
         return RETURN_CODES.BOOT_FROM_RECOVERY_MODE_FAILURE
 
+    if 'update-label' in opts.actions:
+      try:
+        host.labels.update_labels(host)
+      except Exception as err:
+        logging.error("fail to update label: %s", err)
+        return RETURN_CODES.UPDATE_LABEL_FAILURE
+
   return RETURN_CODES.OK
 
 
@@ -98,7 +106,7 @@ def _parse_args():
       'actions',
       nargs='+',
       choices=['stage-usb', 'install-test-image', 'install-firmware',
-               'verify-recovery-mode'],
+               'verify-recovery-mode', 'update-label'],
       help='DUT preparation actions to execute.',
   )
   parser.add_argument(
