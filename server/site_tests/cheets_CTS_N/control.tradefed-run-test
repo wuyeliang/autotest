@@ -90,7 +90,7 @@ DOC = ('Run a test of the Android Compatibility Test Suite (CTS) in the ARC++ '
        'container.')
 
 # And launch.
-def run_CTS(machine):
+def run_TS(machine):
     host_list = [hosts.create_host(machine)]
     job.run_test(
         'cheets_CTS_N',
@@ -115,4 +115,4 @@ def run_CTS(machine):
         ],
         timeout=cts_timeout)
 
-parallel_simple(run_CTS, machines)
+parallel_simple(run_TS, machines)
