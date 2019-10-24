@@ -14,7 +14,7 @@ TIME = 'LONG'
 MAX_RESULT_SIZE_KB = 1024000
 DOC = 'Run module CtsDeqpTestCases of the Android Compatibility Test Suite (CTS) using x86 ABI in the ARC++ container.'
 
-def run_CTS(machine):
+def run_TS(machine):
     host_list = [hosts.create_host(machine)]
     job.run_test(
         'cheets_CTS_P',
@@ -32,4 +32,4 @@ def run_CTS(machine):
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r9-linux_x86-x86.zip',
         timeout=172800)
 
-parallel_simple(run_CTS, machines)
+parallel_simple(run_TS, machines)

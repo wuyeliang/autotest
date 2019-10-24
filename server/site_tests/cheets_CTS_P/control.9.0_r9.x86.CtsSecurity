@@ -14,7 +14,7 @@ TIME = 'LONG'
 MAX_RESULT_SIZE_KB = 512000
 DOC = 'Run module CtsSecurityBulletinHostTestCases, CtsSecurityHostTestCases, CtsSecurityTestCases of the Android Compatibility Test Suite (CTS) using x86 ABI in the ARC++ container.'
 
-def run_CTS(machine):
+def run_TS(machine):
     host_list = [hosts.create_host(machine)]
     job.run_test(
         'cheets_CTS_P',
@@ -32,4 +32,4 @@ def run_CTS(machine):
         precondition_commands=['echo 3 > /proc/sys/kernel/perf_event_paranoid', 'modprobe configs'],
         timeout=12600)
 
-parallel_simple(run_CTS, machines)
+parallel_simple(run_TS, machines)
