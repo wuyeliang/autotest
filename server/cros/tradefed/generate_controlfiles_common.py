@@ -389,28 +389,17 @@ def get_max_retries(modules, abi, suites, is_public):
                 retry = max(retry, CONFIG['CTS_MAX_RETRIES'][module])
 
     # Ugly overrides.
-    for module in modules:
-        # In bvt we don't want to hold the CQ/PFQ too long.
-        # TODO(yoshiki&kinaba): Simplize the condition. Initialiy, we dare to
-        # introduce this to keep the controlfile content at the timing of large
-        # refactoring.
-        if 'suite:bvt-arc' in suites:
-            if abi == '':
-                retry = 2
-            else:
-                retry = 3
-        if 'suite:bvt-perbuild' in suites:
-            if abi == 'arm':
-                retry = 3
-            else:
-                retry = 2
-        # During qualification we want at least 9 retries, possibly more.
-        # TODO(kinaba&yoshiki): do not abuse suite names
-        if set(CONFIG['QUAL_SUITE_NAMES']) & set(suites):
-            retry = max(retry, CONFIG['CTS_QUAL_RETRIES'])
-        # Collection should never have a retry. This needs to be last.
-        if module in get_collect_modules(is_public):
-            retry = 0
+    # In bvt we don't want to hold the CQ/PFQ too long.
+    if 'suite:bvt-arc' in suites or 'suite:bvt-perbuild' in suites:
+        retry = 3
+    # During qualification we want at least 9 retries, possibly more.
+    # TODO(kinaba&yoshiki): do not abuse suite names
+    if set(CONFIG['QUAL_SUITE_NAMES']) & set(suites):
+        retry = max(retry, CONFIG['CTS_QUAL_RETRIES'])
+    # Collection should never have a retry. This needs to be last.
+    if modules.intersection(get_collect_modules(is_public)):
+        retry = 0
+
     if retry >= 0:
         return retry
     # Default case omits the retries in the control file, so tradefed_test.py
