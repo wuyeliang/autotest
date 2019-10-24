@@ -238,7 +238,9 @@ class servo_LabstationVerification(test.test):
         # Make sure recovery is quick in case of failure.
         self.job.fast = True
         # First, stop all servod instances running on the labstation to test.
-        host.run('sudo servodutil stop -p 9999')
+        host.run('sudo stop servod PORT=9999')
+        # Wait for existing servod turned down.
+        time.sleep(3)
         # Then, restart servod ourselves.
         host.run_background('start servod BOARD=nami PORT=9999')
         # Give servod plenty of time to come up.

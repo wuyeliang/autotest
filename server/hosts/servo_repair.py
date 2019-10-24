@@ -261,6 +261,9 @@ class _RestartServod(hosts.RepairAction):
                     'embedded Chrome OS.',
                     'servo_not_applicable_to_non_cros_host')
         host.run('stop servod PORT=%d || true' % host.servo_port)
+        # Wait for existing servod process turned down.
+        time.sleep(3)
+
         serial = 'SERIAL=%s' % host.servo_serial if host.servo_serial else ''
         model = 'MODEL=%s' % host.servo_model if host.servo_model else ''
         if host.servo_board:
