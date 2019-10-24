@@ -24,9 +24,23 @@ DEV_MODE_STATION = 'managed'
 SUPPORTED_DEV_MODES = (DEV_MODE_AP, DEV_MODE_IBSS, DEV_MODE_MONITOR,
                        DEV_MODE_MESH_POINT, DEV_MODE_STATION)
 
-HT20 = 'HT20'
-HT40_ABOVE = 'HT40+'
-HT40_BELOW = 'HT40-'
+class _PrintableWidth:
+    """Printable width constant objects used by packet_capturer."""
+    def __init__(self, name):
+        self._name = name
+
+    def __repr__(self):
+        return '\'%s\'' % self._name
+
+    def __str__(self):
+        return self._name
+
+WIDTH_HT20 = _PrintableWidth('HT20')
+WIDTH_HT40_PLUS = _PrintableWidth('HT40+')
+WIDTH_HT40_MINUS = _PrintableWidth('HT40-')
+WIDTH_VHT80 = _PrintableWidth('VHT80')
+WIDTH_VHT160 = _PrintableWidth('VHT160')
+WIDTH_VHT80_80 = _PrintableWidth('VHT80+80')
 
 SECURITY_OPEN = 'open'
 SECURITY_WEP = 'wep'
@@ -38,9 +52,9 @@ SECURITY_MIXED = 'mixed'
 # Table of lookups between the output of item 'secondary channel offset:' from
 # iw <device> scan to constants.
 
-HT_TABLE = {'no secondary': HT20,
-            'above': HT40_ABOVE,
-            'below': HT40_BELOW}
+HT_TABLE = {'no secondary': WIDTH_HT20,
+            'above': WIDTH_HT40_PLUS,
+            'below': WIDTH_HT40_MINUS}
 
 IwBand = collections.namedtuple(
     'Band', ['num', 'frequencies', 'frequency_flags', 'mcs_indices'])

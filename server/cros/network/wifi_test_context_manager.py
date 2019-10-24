@@ -182,7 +182,7 @@ class WiFiTestContextManager(object):
                                       snaplen=self._packet_capture_snaplen)
         if self._enable_packet_captures:
            self.capture_host.start_capture(ap_config.frequency,
-                    ht_type=ap_config.ht_packet_capture_mode,
+                    width_type=ap_config.packet_capture_mode,
                     snaplen=self._packet_capture_snaplen)
 
 

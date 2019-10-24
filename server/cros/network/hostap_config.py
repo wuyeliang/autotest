@@ -8,6 +8,7 @@ import logging
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros.network import xmlrpc_security_types
+from autotest_lib.server.cros.network import packet_capturer
 
 
 class HostapConfig(object):
@@ -131,7 +132,7 @@ class HostapConfig(object):
             AC_CAPABILITY_RXLDPC: '[RXLDPC]',
             AC_CAPABILITY_SHORT_GI_80: '[SHORT_GI_80]',
             AC_CAPABILITY_SHORT_GI_160: '[SHORT_GI_160]',
-            AC_CAPABILITY_TX_STBC_2BY1: '[TX_STBC_2BY1',
+            AC_CAPABILITY_TX_STBC_2BY1: '[TX_STBC_2BY1]',
             AC_CAPABILITY_RX_STBC_1: '[RX_STBC_1]',
             AC_CAPABILITY_RX_STBC_12: '[RX_STBC_12]',
             AC_CAPABILITY_RX_STBC_123: '[RX_STBC_123]',
@@ -156,6 +157,16 @@ class HostapConfig(object):
             AC_CAPABILITY_VHT_LINK_ADAPT3: '[VHT_LINK_ADAPT3]',
             AC_CAPABILITY_RX_ANTENNA_PATTERN: '[RX_ANTENNA_PATTERN]',
             AC_CAPABILITY_TX_ANTENNA_PATTERN: '[TX_ANTENNA_PATTERN]'}
+
+    HT_CHANNEL_WIDTH_20 = object()
+    HT_CHANNEL_WIDTH_40_PLUS = object()
+    HT_CHANNEL_WIDTH_40_MINUS = object()
+
+    HT_NAMES = {
+        HT_CHANNEL_WIDTH_20: 'HT20',
+        HT_CHANNEL_WIDTH_40_PLUS: 'HT40+',
+        HT_CHANNEL_WIDTH_40_MINUS: 'HT40-',
+    }
 
     VHT_CHANNEL_WIDTH_40 = object()
     VHT_CHANNEL_WIDTH_80 = object()
@@ -379,29 +390,49 @@ class HostapConfig(object):
 
 
     @property
-    def ht_packet_capture_mode(self):
-        """Get an appropriate packet capture HT parameter.
+    def _ht_mode(self):
+        """@return string one of (None, HT20, HT40+, HT40-)"""
+        if not self._is_11n:
+            return None
+        if self._ht40_plus_allowed:
+            return self.HT_NAMES[self.HT_CHANNEL_WIDTH_40_PLUS]
+        if self._ht40_minus_allowed:
+            return self.HT_NAMES[self.HT_CHANNEL_WIDTH_40_MINUS]
+        return self.HT_NAMES[self.HT_CHANNEL_WIDTH_20]
+
+
+    @property
+    def packet_capture_mode(self):
+        """Get an appropriate packet capture HT/VHT parameter.
 
         When we go to configure a raw monitor we need to configure
         the phy to listen on the correct channel.  Part of doing
-        so is to specify the channel width for HT channels.  In the
+        so is to specify the channel width for HT/VHT channels.  In the
         case that the AP is configured to be either HT40+ or HT40-,
         we could return the wrong parameter because we don't know which
         configuration will be chosen by hostap.
 
-        @return string HT parameter for frequency configuration.
+        @return object width_type parameter from packet_capturer.
 
         """
-        if not self._is_11n:
-            return None
 
-        if self._ht40_plus_allowed:
-            return 'HT40+'
+        if (not self.vht_channel_width or
+                self.vht_channel_width == self.VHT_CHANNEL_WIDTH_40):
+            # if it is VHT40, capture packets on the correct 40MHz band since
+            # for packet capturing purposes, only the channel width matters
+            ht_mode = self._ht_mode
+            if ht_mode == self.HT_CHANNEL_WIDTH_40_PLUS:
+                return packet_capturer.WIDTH_HT40_PLUS
+            if ht_mode == self.HT_CHANNEL_WIDTH_40_MINUS:
+                return packet_capturer.WIDTH_HT40_MINUS
 
-        if self._ht40_minus_allowed:
-            return 'HT40-'
-
-        return 'HT20'
+        if self.vht_channel_width == self.VHT_CHANNEL_WIDTH_80:
+            return packet_capturer.WIDTH_VHT80
+        if self.vht_channel_width == self.VHT_CHANNEL_WIDTH_160:
+            return packet_capturer.WIDTH_VHT160
+        if self.vht_channel_width == self.VHT_CHANNEL_WIDTH_80_80:
+            return packet_capturer.WIDTH_VHT80_80
+        return None
 
 
     @property
@@ -417,13 +448,12 @@ class HostapConfig(object):
     def printable_mode(self):
         """@return human readable mode string."""
 
-        # Note: VHT capture is not yet supported in ht_packet_capture_mode()
-        # (nor cros.network.packet_capturer).
         if self.vht_channel_width is not None:
             return self.VHT_NAMES[self.vht_channel_width]
 
-        if self._is_11n:
-            return self.ht_packet_capture_mode
+        ht_mode = self._ht_mode
+        if ht_mode:
+            return ht_mode
 
         return '11' + self._hw_mode.upper()
 

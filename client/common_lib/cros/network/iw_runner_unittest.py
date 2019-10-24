@@ -67,7 +67,7 @@ class IwRunnerTest(unittest.TestCase):
 
     HT20_IW_BSS = iw_runner.IwBss('aa:aa:aa:aa:aa:aa', 2412,
                                   'support_ht20', iw_runner.SECURITY_OPEN,
-                                  iw_runner.HT20, -50.00)
+                                  iw_runner.WIDTH_HT20, -50.00)
 
     HT20_2 = str('BSS 11:11:11:11:11:11 (on wlan0)\n'
         '     freq: 2462\n'
@@ -79,7 +79,7 @@ class IwRunnerTest(unittest.TestCase):
 
     HT20_2_IW_BSS = iw_runner.IwBss('11:11:11:11:11:11', 2462,
                                     'support_ht20', iw_runner.SECURITY_WPA,
-                                    iw_runner.HT40_BELOW, -42.00)
+                                    iw_runner.WIDTH_HT40_MINUS, -42.00)
 
     HT40_ABOVE = str('BSS bb:bb:bb:bb:bb:bb (on wlan0)\n'
         '    freq: 5180\n'
@@ -92,7 +92,7 @@ class IwRunnerTest(unittest.TestCase):
     HT40_ABOVE_IW_BSS = iw_runner.IwBss('bb:bb:bb:bb:bb:bb', 5180,
                                         'support_ht40_above',
                                         iw_runner.SECURITY_WPA2,
-                                        iw_runner.HT40_ABOVE, -55.00)
+                                        iw_runner.WIDTH_HT40_PLUS, -55.00)
 
     HT40_BELOW = str('BSS cc:cc:cc:cc:cc:cc (on wlan0)\n'
         '    freq: 2462\n'
@@ -106,7 +106,7 @@ class IwRunnerTest(unittest.TestCase):
     HT40_BELOW_IW_BSS = iw_runner.IwBss('cc:cc:cc:cc:cc:cc', 2462,
                                         'support_ht40_below',
                                         iw_runner.SECURITY_MIXED,
-                                        iw_runner.HT40_BELOW, -44.00)
+                                        iw_runner.WIDTH_HT40_MINUS, -44.00)
 
     NO_HT = str('BSS dd:dd:dd:dd:dd:dd (on wlan0)\n'
         '    freq: 2412\n'
@@ -130,7 +130,7 @@ class IwRunnerTest(unittest.TestCase):
 
     HIDDEN_SSID_IW_BSS = iw_runner.IwBss('ee:ee:ee:ee:ee:ee', 2462,
                                          None, iw_runner.SECURITY_OPEN,
-                                         iw_runner.HT20, -70.00)
+                                         iw_runner.WIDTH_HT20, -70.00)
 
     STATION_LINK_INFORMATION = str(
         'Connected to 12:34:56:ab:cd:ef (on wlan0)\n'

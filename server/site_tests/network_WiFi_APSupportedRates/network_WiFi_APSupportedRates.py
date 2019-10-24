@@ -83,7 +83,7 @@ class network_WiFi_APSupportedRates(wifi_cell_test_base.WiFiCellTestBase):
         self.context.configure(ap_config)
         self.context.capture_host.start_capture(
                 ap_config.frequency,
-                ht_type=ap_config.ht_packet_capture_mode)
+                width_type=ap_config.packet_capture_mode)
         assoc_params = xmlrpc_datatypes.AssociationParameters(
                 ssid=self.context.router.get_ssid())
         self.context.assert_connect_wifi(assoc_params)

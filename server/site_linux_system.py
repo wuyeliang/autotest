@@ -320,11 +320,11 @@ class LinuxSystem(object):
 
 
     def start_capture(self, frequency,
-                      ht_type=None, snaplen=None, filename=None):
+                      width_type=None, snaplen=None, filename=None):
         """Start a packet capture.
 
         @param frequency int frequency of channel to capture on.
-        @param ht_type string one of (None, 'HT20', 'HT40+', 'HT40-').
+        @param width_type object width type from iw_runner.
         @param snaplen int number of bytes to retain per capture frame.
         @param filename string filename to write capture to.
 
@@ -335,12 +335,12 @@ class LinuxSystem(object):
         full_interface = [net_dev for net_dev in self._interfaces
                           if net_dev.if_name == self._capture_interface][0]
         # If this is the only interface on this phy, we ought to configure
-        # the phy with a channel and ht_type.  Otherwise, inherit the settings
-        # of the phy as they stand.
+        # the phy with a channel and a width.  Otherwise, inherit the
+        # settings of the phy as they stand.
         if len([net_dev for net_dev in self._interfaces
                 if net_dev.phy == full_interface.phy]) == 1:
             self._packet_capturer.configure_raw_monitor(
-                    self._capture_interface, frequency, ht_type=ht_type)
+                    self._capture_interface, frequency, width_type=width_type)
         else:
             self.host.run('%s link set %s up' %
                           (self.cmd_ip, self._capture_interface))
