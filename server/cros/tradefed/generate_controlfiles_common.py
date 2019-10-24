@@ -600,7 +600,7 @@ def get_extra_artifacts(modules):
     return artifacts
 
 
-def calculate_timeout(modules, suites, is_public):
+def calculate_timeout(modules, suites):
     """Calculation for timeout of tradefed run.
 
     Timeout is at least one hour, except if part of BVT_ARC.
@@ -616,18 +616,19 @@ def calculate_timeout(modules, suites, is_public):
     # First module gets 1h (standard), all other half hour extra (heuristic).
     delta = 3600
     for module in modules:
-        if is_public and module.startswith('CtsDeqpTestCases'):
-            timeout = max(timeout, int(3600 * 12))
-        else:
+        if module in CONFIG['CTS_TIMEOUT']:
             # Modules that run very long are encoded here.
-            if module in CONFIG['CTS_TIMEOUT']:
-                timeout += int(3600 * CONFIG['CTS_TIMEOUT'][module])
+            timeout += int(3600 * CONFIG['CTS_TIMEOUT'][module])
+        elif module.startswith('CtsDeqpTestCases.dEQP-VK.'):
+            # TODO: Optimize this temporary hack by reducing this value or
+            # setting appropriate values for each test if possible.
+            timeout = max(timeout, int(3600 * 12))
+        elif 'Jvmti' in module:
             # We have too many of these modules and they run fast.
-            elif 'Jvmti' in module:
-                timeout += 300
-            else:
-                timeout += delta
-                delta = 1800
+            timeout += 300
+        else:
+            timeout += delta
+            delta = 1800
     return timeout
 
 
@@ -702,7 +703,7 @@ def get_controlfile_content(combined,
         DOC=get_doc(modules, abi, is_public),
         servo_support_needed = servo_support_needed(modules, is_public),
         max_retries=get_max_retries(modules, abi, suites, is_public),
-        timeout=calculate_timeout(modules, suites, is_public),
+        timeout=calculate_timeout(modules, suites),
         run_template=get_run_template(modules, is_public),
         retry_template=get_retry_template(modules, is_public),
         target_module=target_module,

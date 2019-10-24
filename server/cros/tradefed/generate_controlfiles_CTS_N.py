@@ -53,7 +53,7 @@ CONFIG['CTS_MAX_RETRIES'] = {}
 # Timeout in hours.
 CONFIG['CTS_TIMEOUT'] = {
     'CtsAppSecurityHostTestCases':      1.5,
-    'CtsDeqpTestCases':                 24.0,
+    'CtsDeqpTestCases':                 12.0,
     'CtsDeqpTestCases.dEQP-EGL'  :       2.0,
     'CtsDeqpTestCases.dEQP-GLES2':       2.0,
     'CtsDeqpTestCases.dEQP-GLES3':       6.0,
