@@ -836,10 +836,16 @@ def get_tradefed_data(path, is_public, abi):
 
 def download(uri, destination):
     """Download |uri| to local |destination|."""
-    if uri.startswith('http'):
+    if uri.startswith('http://') or uri.startswith('https://'):
         subprocess.check_call(['wget', uri, '-P', destination])
-    elif uri.startswith('gs'):
+    elif uri.startswith('gs://'):
         subprocess.check_call(['gsutil', 'cp', uri, destination])
+    elif uri.startswith('file:///'):
+        # Absolute file URIs with file:// scheme
+        shutil.copyfile(uri[7:], destination)
+    elif os.path.exists(uri):
+        # Relative file URIs
+        shutil.copyfile(uri, destination)
     else:
         raise Exception
 
