@@ -21,7 +21,7 @@ DOC = 'Run module CtsBluetoothTestCases of the Android Compatibility Test Suite 
 args_dict = utils.args_to_dict(args)
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
-def run_CTS(machine):
+def run_TS(machine):
     # REMOVE 'servo_args=servo_args' arg for local debugging if your test
     # setup doesn't have servo.
     try:
@@ -44,4 +44,4 @@ def run_CTS(machine):
         hard_reboot_on_failure=True,
         timeout=3600)
 
-parallel_simple(run_CTS, machines)
+parallel_simple(run_TS, machines)
