@@ -44,7 +44,6 @@ CONFIG['CONTROLFILE_WRITE_EXTRA'] = True
 # tag) that contain 'tradefed-run-collect-tests'. b/119640440
 # Do not change the name/tag without adjusting the dashboard.
 _COLLECT = 'tradefed-run-collect-tests-only-internal'
-_PUBLIC_COLLECT = 'tradefed-run-collect-tests-only'
 
 CONFIG['LAB_DEPENDENCY'] = {
    'x86': ['cts_abi_x86']
@@ -81,7 +80,6 @@ CONFIG['CTS_TIMEOUT'] = {
     'CtsVideoTestCases':                 1.5,
     'CtsWidgetTestCases':                2.0,
     _COLLECT:                            2.5,
-    _PUBLIC_COLLECT:                     2.5,
 }
 
 # Any test that runs as part as blocking BVT needs to be stable and fast. For
@@ -162,11 +160,6 @@ _EJECT_REMOVABLE_DISK_COMMAND = (
 # Behave more like in the verififed mode.
 _SECURITY_PARANOID_COMMAND = (
     "\'echo 3 > /proc/sys/kernel/perf_event_paranoid\'")
-# TODO(kinaba): Come up with a less hacky way to handle the situation.
-# {0} is replaced with the retry count. Writes either 1 (required by
-# CtsSimpleperfTestCases) or 3 (CtsSecurityHostTestCases).
-_ALTERNATING_PARANOID_COMMAND = (
-    "\'echo $(({0} % 2 * 2 + 1)) > /proc/sys/kernel/perf_event_paranoid\'")
 # Expose /proc/config.gz
 _CONFIG_MODULE_COMMAND = "\'modprobe configs\'"
 
@@ -190,41 +183,16 @@ CONFIG['LOGIN_PRECONDITION'] = {
     'CtsProviderTestCases': [_EJECT_REMOVABLE_DISK_COMMAND],
 }
 
-_WIFI_CONNECT_COMMANDS = [
-    # These needs to be in order.
-    "'/usr/local/autotest/cros/scripts/wifi connect %s %s\' % (ssid, wifipass)",
-    "'/usr/local/autotest/cros/scripts/reorder-services-moblab.sh wifi'"
-]
-
 # Preconditions applicable to public tests.
 CONFIG['PUBLIC_PRECONDITION'] = {
-    'CtsSecurityHostTestCases': [
-        _SECURITY_PARANOID_COMMAND, _CONFIG_MODULE_COMMAND
-    ],
-    'CtsUsageStatsTestCases': _WIFI_CONNECT_COMMANDS,
-    'CtsNetTestCases': _WIFI_CONNECT_COMMANDS,
-    'CtsLibcoreTestCases': _WIFI_CONNECT_COMMANDS,
 }
 
 CONFIG['PUBLIC_DEPENDENCIES'] = {
-    'CtsCameraTestCases': ['lighting'],
-    'CtsMediaTestCases': ['noloopback'],
 }
 
 # This information is changed based on regular analysis of the failure rate on
 # partner moblabs.
 CONFIG['PUBLIC_MODULE_RETRY_COUNT'] = {
-    'CtsAccessibilityServiceTestCases':  12,
-    'CtsActivityManagerDeviceTestCases': 12,
-    'CtsBluetoothTestCases':             10,
-    'CtsFileSystemTestCases':            10,
-    'CtsGraphicsTestCases':              12,
-    'CtsIncidentHostTestCases':          12,
-    'CtsNetTestCases':                   10,
-    'CtsSecurityHostTestCases':          10,
-    'CtsSensorTestCases':                12,
-    'CtsUsageStatsTestCases':            10,
-    _PUBLIC_COLLECT: 0,
 }
 
 # This information is changed based on regular analysis of the job run time on
