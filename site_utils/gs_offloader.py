@@ -47,6 +47,7 @@ except ImportError:
 from autotest_lib.tko import models
 from autotest_lib.utils import labellib
 from autotest_lib.utils import gslib
+from autotest_lib.utils.side_effects import config_loader
 from chromite.lib import timeout_util
 
 # Autotest requires the psutil module from site-packages, so it must be imported
@@ -774,9 +775,25 @@ class GSOffloader(BaseGSOffloader):
         start_time = time.time()
         metrics_fields = _get_metrics_fields(dir_entry)
         error_obj = _OffloadError(start_time)
+        config = config_loader.load(dir_entry)
+        cts_enabled = True
+        if config:
+          # TODO(linxinan): use credential file assigned by the side_effect
+          # config.
+          if not config.cts.enabled:
+            cts_enabled = config.cts.enabled
+          if config.google_storage.bucket:
+            gs_prefix = ('' if config.google_storage.bucket.startswith('gs://')
+                         else 'gs://')
+            self._gs_uri = gs_prefix + config.google_storage.bucket
+        else:
+          # For now, the absence of config does not block gs_offloader
+          # from uploading files via default credential.
+          logging.debug('Failed to load the side effects config in %s.',
+                        dir_entry)
         try:
             sanitize_dir(dir_entry)
-            if DEFAULT_CTS_RESULTS_GSURI:
+            if DEFAULT_CTS_RESULTS_GSURI and cts_enabled:
                 _upload_cts_testresult(dir_entry, self._multiprocessing)
 
             if LIMIT_FILE_COUNT:

@@ -5,11 +5,13 @@
 
 import __builtin__
 import Queue
+import json
 import logging
 import os
 import shutil
 import signal
 import stat
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -55,6 +57,21 @@ def is_fifo(path):
   @param path: fifo path string.
   """
   return stat.S_ISFIFO(os.lstat(path).st_mode)
+
+
+def _get_fake_process():
+  return FakeProcess()
+
+
+class FakeProcess(object):
+    """Fake process object."""
+
+    def __init__(self):
+        self.returncode = 0
+
+
+    def wait(self):
+        return True
 
 
 class OffloaderOptionsTests(mox.MoxTestBase):
@@ -982,6 +999,89 @@ class OffloadDirectoryTests(_TempResultsDirTestBase):
             self.mox.VerifyAll()
         finally:
             shutil.rmtree(results_folder)
+
+
+class OffladerConfigTests(_TempResultsDirTestBase):
+    """Tests for the `Offloader` to follow side_effect config."""
+
+    def setUp(self):
+        super(OffladerConfigTests, self).setUp()
+        gs_offloader.GS_OFFLOADING_ENABLED = True
+        gs_offloader.GS_OFFLOADER_MULTIPROCESSING = True
+        self.dest_path = '/results'
+        self.mox.StubOutWithMock(gs_offloader, '_get_metrics_fields')
+        self.mox.StubOutWithMock(gs_offloader, '_OffloadError')
+        self.mox.StubOutWithMock(gs_offloader, '_upload_cts_testresult')
+        self.mox.StubOutWithMock(gs_offloader, '_emit_offload_metrics')
+        self.mox.StubOutWithMock(gs_offloader, '_get_cmd_list')
+        self.mox.StubOutWithMock(subprocess, 'Popen')
+        self.mox.StubOutWithMock(gs_offloader, '_emit_gs_returncode_metric')
+
+
+    def _run(self, results_dir, gs_bucket, expect_dest, cts_enabled):
+        stdout = os.path.join(results_dir, 'std.log')
+        stderr = os.path.join(results_dir, 'std.err')
+        config = {
+            'tko': {
+                'proxy_socket': '/file-system/foo-socket',
+                'mysql_user': 'foo-user',
+                'mysql_password_file': '/file-system/foo-password-file'
+            },
+            'google_storage': {
+                'bucket': gs_bucket,
+                'credentials_file': '/foo-creds'
+            },
+            'cts': {
+                'enabled': cts_enabled,
+            },
+            'this_field_is_ignored': True
+        }
+        path = os.path.join(results_dir, 'side_effects_config.json')
+        with open(path, 'w') as f:
+            f.write(json.dumps(config))
+        gs_offloader._get_metrics_fields(results_dir)
+        if cts_enabled:
+            gs_offloader._upload_cts_testresult(results_dir, True)
+        gs_offloader._get_cmd_list(
+            True,
+            mox.IgnoreArg(),
+            expect_dest).AndReturn(['test', '-d', expect_dest])
+        subprocess.Popen(mox.IgnoreArg(),
+                         stdout=stdout,
+                         stderr=stderr).AndReturn(_get_fake_process())
+        gs_offloader._OffloadError(mox.IgnoreArg())
+        gs_offloader._emit_gs_returncode_metric(mox.IgnoreArg()).AndReturn(True)
+        gs_offloader._emit_offload_metrics(mox.IgnoreArg()).AndReturn(True)
+        sub_offloader = gs_offloader.GSOffloader(results_dir, True, 0, None)
+        self.mox.ReplayAll()
+        sub_offloader._try_offload(results_dir, self.dest_path, stdout, stderr)
+        self.mox.VerifyAll()
+        self.mox.ResetAll()
+        shutil.rmtree(results_dir)
+
+
+    def test_upload_files_to_dev(self):
+        """Test upload results to dev gs bucket and skip cts uploading."""
+        res = tempfile.mkdtemp()
+        gs_bucket = 'dev-bucket'
+        expect_dest = 'gs://' + gs_bucket + self.dest_path
+        self._run(res, gs_bucket, expect_dest, False)
+
+
+    def test_upload_files_prod(self):
+        """Test upload results to the prod gs bucket and also upload to cts."""
+        res = tempfile.mkdtemp()
+        gs_bucket = 'prod-bucket'
+        expect_dest = 'gs://' + gs_bucket + self.dest_path
+        self._run(res, gs_bucket, expect_dest, True)
+
+
+    def test_skip_gs_prefix(self):
+        """Test skip the 'gs://' prefix if already presented."""
+        res = tempfile.mkdtemp()
+        gs_bucket = 'gs://prod-bucket'
+        expect_dest = gs_bucket + self.dest_path
+        self._run(res, gs_bucket, expect_dest, True)
 
 
 class JobDirectoryOffloadTests(_TempResultsDirTestBase):
