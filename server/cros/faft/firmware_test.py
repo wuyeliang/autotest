@@ -198,6 +198,12 @@ class FirmwareTest(FAFTBase):
         """Autotest cleanup function."""
         # Unset state checker in case it's set by subclass
         logging.info('FirmwareTest cleaning up (id=%s)', self.run_id)
+        # Capture UART before doing anything else, so we can guarantee we get
+        # some uart results.
+        try:
+            self._record_uart_capture()
+        except:
+            logging.warn('Failed initial uart capture during cleanup')
         try:
             self.faft_client.System.IsAvailable()
         except:
