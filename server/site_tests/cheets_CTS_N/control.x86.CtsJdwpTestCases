@@ -22,7 +22,7 @@ def run_CTS(machine):
         iterations=1,
         tag='x86.CtsJdwpTestCases',
         test_name='cheets_CTS_N.x86.CtsJdwpTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsJdwpTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsJdwpTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsJdwpTestCases',
         target_plan=None,

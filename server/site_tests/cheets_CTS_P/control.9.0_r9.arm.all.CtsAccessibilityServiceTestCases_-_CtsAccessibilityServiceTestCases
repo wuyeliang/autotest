@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=9,
         tag='9.0_r9.arm.all.CtsAccessibilityServiceTestCases_-_CtsAccessibilityServiceTestCases',
         test_name='cheets_CTS_P.9.0_r9.arm.all.CtsAccessibilityServiceTestCases_-_CtsAccessibilityServiceTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAccessibilityServiceTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAccessibilityServiceTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='all.CtsAccessibilityServiceTestCases_-_CtsAccessibilityServiceTestCases',
         target_plan=None,

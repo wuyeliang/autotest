@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAndroidTestMockCurrentApiSignatureTestCases',
         test_name='cheets_CTS_P.arm.CtsAndroidTestMockCurrentApiSignatureTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAndroidTestMockCurrentApiSignatureTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAndroidTestMockCurrentApiSignatureTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAndroidTestMockCurrentApiSignatureTestCases',
         target_plan=None,

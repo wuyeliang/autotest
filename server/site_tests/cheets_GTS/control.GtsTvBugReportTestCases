@@ -23,7 +23,7 @@ def run_GTS(machine):
         max_retry=2,
         tag='GtsTvBugReportTestCases',
         test_name='cheets_GTS.GtsTvBugReportTestCases',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsTvBugReportTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsTvBugReportTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsTvBugReportTestCases',
         target_plan=None,

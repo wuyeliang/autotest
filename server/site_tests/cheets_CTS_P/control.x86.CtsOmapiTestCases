@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsOmapiTestCases',
         test_name='cheets_CTS_P.x86.CtsOmapiTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsOmapiTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsOmapiTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsOmapiTestCases',
         target_plan=None,

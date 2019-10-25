@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsJobSchedulerTestCases',
         test_name='cheets_CTS_P.x86.CtsJobSchedulerTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsJobSchedulerTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsJobSchedulerTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsJobSchedulerTestCases',
         target_plan=None,

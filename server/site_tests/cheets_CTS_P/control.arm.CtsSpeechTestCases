@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsSpeechTestCases',
         test_name='cheets_CTS_P.arm.CtsSpeechTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSpeechTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSpeechTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsSpeechTestCases',
         target_plan=None,

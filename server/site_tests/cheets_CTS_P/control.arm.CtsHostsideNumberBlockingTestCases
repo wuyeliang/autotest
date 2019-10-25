@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsHostsideNumberBlockingTestCases',
         test_name='cheets_CTS_P.arm.CtsHostsideNumberBlockingTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsHostsideNumberBlockingTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsHostsideNumberBlockingTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsHostsideNumberBlockingTestCases',
         target_plan=None,

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsPerfettoTestCases',
         test_name='cheets_CTS_P.arm.CtsPerfettoTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsPerfettoTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsPerfettoTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsPerfettoTestCases',
         target_plan=None,

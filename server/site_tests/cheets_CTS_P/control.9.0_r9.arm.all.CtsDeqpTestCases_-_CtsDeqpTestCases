@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=15,
         tag='9.0_r9.arm.all.CtsDeqpTestCases_-_CtsDeqpTestCases',
         test_name='cheets_CTS_P.9.0_r9.arm.all.CtsDeqpTestCases_-_CtsDeqpTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeqpTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDeqpTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='all.CtsDeqpTestCases_-_CtsDeqpTestCases',
         target_plan=None,

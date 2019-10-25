@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsDynamicLinkerTestCases',
         test_name='cheets_CTS_P.arm.CtsDynamicLinkerTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDynamicLinkerTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDynamicLinkerTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsDynamicLinkerTestCases',
         target_plan=None,

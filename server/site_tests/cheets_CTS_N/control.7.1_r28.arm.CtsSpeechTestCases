@@ -23,7 +23,7 @@ def run_CTS(machine):
         max_retry=3,
         tag='7.1_r28.arm.CtsSpeechTestCases',
         test_name='cheets_CTS_N.7.1_r28.arm.CtsSpeechTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSpeechTestCases', '--logcat-on-failure', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSpeechTestCases', '--logcat-on-failure', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsSpeechTestCases',
         target_plan=None,

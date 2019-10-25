@@ -23,7 +23,7 @@ def run_CTS(machine):
         enable_default_apps=True,
         tag='x86.CtsAppSecurityHostTestCases',
         test_name='cheets_CTS_N.x86.CtsAppSecurityHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAppSecurityHostTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAppSecurityHostTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsAppSecurityHostTestCases',
         target_plan=None,

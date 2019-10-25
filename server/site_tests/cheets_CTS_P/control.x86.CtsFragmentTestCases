@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsFragmentTestCases',
         test_name='cheets_CTS_P.x86.CtsFragmentTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsFragmentTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsFragmentTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsFragmentTestCases',
         target_plan=None,

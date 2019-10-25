@@ -23,7 +23,7 @@ def run_GTS(machine):
         max_retry=2,
         tag='GtsPrivacyTestCases',
         test_name='cheets_GTS.GtsPrivacyTestCases',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsPrivacyTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsPrivacyTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsPrivacyTestCases',
         target_plan=None,

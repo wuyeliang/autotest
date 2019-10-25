@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.cts-system-all.api',
         test_name='cheets_CTS_P.x86.cts-system-all.api',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'cts-system-all.api'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'cts-system-all.api'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='cts-system-all.api',
         target_plan=None,

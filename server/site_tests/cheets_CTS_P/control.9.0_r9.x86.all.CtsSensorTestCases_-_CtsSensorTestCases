@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=30,
         tag='9.0_r9.x86.all.CtsSensorTestCases_-_CtsSensorTestCases',
         test_name='cheets_CTS_P.9.0_r9.x86.all.CtsSensorTestCases_-_CtsSensorTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSensorTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSensorTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='all.CtsSensorTestCases_-_CtsSensorTestCases',
         target_plan=None,

@@ -23,7 +23,7 @@ def run_GTS(machine):
         max_retry=2,
         tag='GtsStorageTestCases',
         test_name='cheets_GTS.GtsStorageTestCases',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsStorageTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsStorageTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsStorageTestCases',
         target_plan=None,

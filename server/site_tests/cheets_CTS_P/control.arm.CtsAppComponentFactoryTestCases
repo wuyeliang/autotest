@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAppComponentFactoryTestCases',
         test_name='cheets_CTS_P.arm.CtsAppComponentFactoryTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAppComponentFactoryTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAppComponentFactoryTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAppComponentFactoryTestCases',
         target_plan=None,

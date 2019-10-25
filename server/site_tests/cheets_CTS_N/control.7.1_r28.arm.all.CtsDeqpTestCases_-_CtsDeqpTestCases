@@ -23,7 +23,7 @@ def run_CTS(machine):
         max_retry=9,
         tag='7.1_r28.arm.all.CtsDeqpTestCases_-_CtsDeqpTestCases',
         test_name='cheets_CTS_N.7.1_r28.arm.all.CtsDeqpTestCases_-_CtsDeqpTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeqpTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDeqpTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='all.CtsDeqpTestCases_-_CtsDeqpTestCases',
         target_plan=None,

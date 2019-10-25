@@ -23,7 +23,7 @@ def run_GTS(machine):
         tag='7.0_r2.GtsPartnerBookmarksTestCases',
         test_name='cheets_GTS.7.0_r2.GtsPartnerBookmarksTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsPartnerBookmarksTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsPartnerBookmarksTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsPartnerBookmarksTestCases',
         target_plan=None,

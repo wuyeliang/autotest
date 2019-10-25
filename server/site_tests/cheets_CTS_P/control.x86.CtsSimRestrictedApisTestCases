@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsSimRestrictedApisTestCases',
         test_name='cheets_CTS_P.x86.CtsSimRestrictedApisTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSimRestrictedApisTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSimRestrictedApisTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsSimRestrictedApisTestCases',
         target_plan=None,

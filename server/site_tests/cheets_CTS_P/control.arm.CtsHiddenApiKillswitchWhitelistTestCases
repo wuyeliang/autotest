@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsHiddenApiKillswitchWhitelistTestCases',
         test_name='cheets_CTS_P.arm.CtsHiddenApiKillswitchWhitelistTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsHiddenApiKillswitchWhitelistTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsHiddenApiKillswitchWhitelistTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsHiddenApiKillswitchWhitelistTestCases',
         target_plan=None,

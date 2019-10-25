@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsSecurityBulletinHostTestCases',
         test_name='cheets_CTS_P.x86.CtsSecurityBulletinHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSecurityBulletinHostTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSecurityBulletinHostTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsSecurityBulletinHostTestCases',
         target_plan=None,

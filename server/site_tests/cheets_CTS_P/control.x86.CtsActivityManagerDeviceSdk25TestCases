@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsActivityManagerDeviceSdk25TestCases',
         test_name='cheets_CTS_P.x86.CtsActivityManagerDeviceSdk25TestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsActivityManagerDeviceSdk25TestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsActivityManagerDeviceSdk25TestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsActivityManagerDeviceSdk25TestCases',
         target_plan=None,

@@ -23,7 +23,7 @@ def run_GTS(machine):
         max_retry=2,
         tag='GtsDialerDeviceTestCases',
         test_name='cheets_GTS.GtsDialerDeviceTestCases',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsDialerDeviceTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsDialerDeviceTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsDialerDeviceTestCases',
         target_plan=None,

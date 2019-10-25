@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsLibcoreJsr166TestCases',
         test_name='cheets_CTS_P.arm.CtsLibcoreJsr166TestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsLibcoreJsr166TestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsLibcoreJsr166TestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsLibcoreJsr166TestCases',
         target_plan=None,

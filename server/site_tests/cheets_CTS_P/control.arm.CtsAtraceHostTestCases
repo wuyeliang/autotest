@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAtraceHostTestCases',
         test_name='cheets_CTS_P.arm.CtsAtraceHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAtraceHostTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAtraceHostTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAtraceHostTestCases',
         target_plan=None,

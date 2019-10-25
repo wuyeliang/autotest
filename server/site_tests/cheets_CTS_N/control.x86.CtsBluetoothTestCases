@@ -23,7 +23,7 @@ def run_CTS(machine):
         max_retry=10,
         tag='x86.CtsBluetoothTestCases',
         test_name='cheets_CTS_N.x86.CtsBluetoothTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsBluetoothTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsBluetoothTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsBluetoothTestCases',
         target_plan=None,

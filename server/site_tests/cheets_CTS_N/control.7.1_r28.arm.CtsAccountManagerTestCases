@@ -23,7 +23,7 @@ def run_CTS(machine):
         max_retry=3,
         tag='7.1_r28.arm.CtsAccountManagerTestCases',
         test_name='cheets_CTS_N.7.1_r28.arm.CtsAccountManagerTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAccountManagerTestCases', '--logcat-on-failure', '--disable-reboot'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAccountManagerTestCases', '--logcat-on-failure', '--disable-reboot'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot'],
         target_module='CtsAccountManagerTestCases',
         target_plan=None,

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='9.0_r9.x86.CtsWindowManagerDeviceTestCases',
         test_name='cheets_CTS_P.9.0_r9.x86.CtsWindowManagerDeviceTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsWindowManagerDeviceTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsWindowManagerDeviceTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsWindowManagerDeviceTestCases',
         target_plan=None,

@@ -23,7 +23,7 @@ def run_GTS(machine):
         tag='7.0_r2.GtsCameraTestCases',
         test_name='cheets_GTS.7.0_r2.GtsCameraTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsCameraTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsCameraTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsCameraTestCases',
         target_plan=None,

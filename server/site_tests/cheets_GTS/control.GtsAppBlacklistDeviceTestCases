@@ -23,7 +23,7 @@ def run_GTS(machine):
         max_retry=2,
         tag='GtsAppBlacklistDeviceTestCases',
         test_name='cheets_GTS.GtsAppBlacklistDeviceTestCases',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsAppBlacklistDeviceTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsAppBlacklistDeviceTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsAppBlacklistDeviceTestCases',
         target_plan=None,

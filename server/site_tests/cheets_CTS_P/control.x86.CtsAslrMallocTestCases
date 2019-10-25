@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsAslrMallocTestCases',
         test_name='cheets_CTS_P.x86.CtsAslrMallocTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAslrMallocTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAslrMallocTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAslrMallocTestCases',
         target_plan=None,

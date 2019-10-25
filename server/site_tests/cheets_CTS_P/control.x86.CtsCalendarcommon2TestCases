@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsCalendarcommon2TestCases',
         test_name='cheets_CTS_P.x86.CtsCalendarcommon2TestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsCalendarcommon2TestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsCalendarcommon2TestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsCalendarcommon2TestCases',
         target_plan=None,

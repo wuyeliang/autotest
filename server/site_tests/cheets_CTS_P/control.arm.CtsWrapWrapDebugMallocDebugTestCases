@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsWrapWrapDebugMallocDebugTestCases',
         test_name='cheets_CTS_P.arm.CtsWrapWrapDebugMallocDebugTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsWrapWrapDebugMallocDebugTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsWrapWrapDebugMallocDebugTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsWrapWrapDebugMallocDebugTestCases',
         target_plan=None,

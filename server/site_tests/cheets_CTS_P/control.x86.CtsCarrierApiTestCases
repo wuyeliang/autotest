@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsCarrierApiTestCases',
         test_name='cheets_CTS_P.x86.CtsCarrierApiTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsCarrierApiTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsCarrierApiTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsCarrierApiTestCases',
         target_plan=None,
