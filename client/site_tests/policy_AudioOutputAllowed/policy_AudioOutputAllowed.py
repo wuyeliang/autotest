@@ -47,8 +47,8 @@ class policy_AudioOutputAllowed(
             lambda: cras_utils.get_active_stream_count() == expected_count,
             exception=error.TestError(
                 'Timeout waiting active stream count to become %d' %
-                 expected_count))
-
+                 expected_count),
+            timeout=10)
 
     def is_muted(self):
         """
@@ -95,10 +95,10 @@ class policy_AudioOutputAllowed(
             cras_utils.set_system_mute(muted)
 
             # Play the audio file and capture the output
-            self.wait_for_active_stream_count(0)
+            self.wait_for_active_stream_count(1)
             p = cmd_utils.popen(cras_utils.playback_cmd(RAW_FILE))
             try:
-                self.wait_for_active_stream_count(1)
+                self.wait_for_active_stream_count(2)
                 cras_utils.capture(recorded_file, duration=self.SAMPLE_DURATION)
 
                 if p.poll() is not None:
@@ -116,7 +116,7 @@ class policy_AudioOutputAllowed(
         self.write_perf_keyval({'rms_diff': rms_diff})
 
         if audio_allowed:
-            if rms_diff < 0.4:
+            if rms_diff < 0.3:
                 raise error.TestFail('RMS difference not large enough between '
                                      'mute and ummute: %s' % rms_diff)
         else:
