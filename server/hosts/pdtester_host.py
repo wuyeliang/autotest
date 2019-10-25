@@ -15,8 +15,6 @@ from autotest_lib.server.hosts import servo_host
 # the pdtester_host and pdtester_port for a PD tester connected to the DUT.
 PDTESTER_HOST_ATTR = 'pdtester_host'
 PDTESTER_PORT_ATTR = 'pdtester_port'
-SERVO_HOST_ATTR = servo_host.SERVO_HOST_ATTR
-SERVO_PORT_ATTR = servo_host.SERVO_PORT_ATTR
 
 
 def make_pdtester_hostname(dut_hostname):
@@ -52,7 +50,7 @@ class PDTesterHost(servo_host.ServoHost):
         self.connect_servo()
 
 
-def create_pdtester_host(pdtester_args, servo_args):
+def create_pdtester_host(pdtester_args, servo_host):
     """Create a PDTesterHost object used to access pdtester servo
 
     The `pdtester_args` parameter is a dictionary specifying optional
@@ -65,10 +63,8 @@ def create_pdtester_host(pdtester_args, servo_args):
                           a PDTesterHost object,
                           e.g. {'pdtester_host': '172.11.11.111',
                                 'pdtester_port': 9999}.
-    @param servo_args: A dictionary that contains args for creating
-                       a ServoHost object,
-                       e.g. {'servo_host': '172.11.11.111',
-                             'servo_port': 9999}.
+    @param servo_host: If PDTester and Servo are the same, this
+                       servo_host object will be returned.
     @returns: A PDTesterHost object or None.
 
     """
@@ -78,12 +74,16 @@ def create_pdtester_host(pdtester_args, servo_args):
 
     # If an user doesn't pass the PDTester info, fall back to use the servo
     # info. Usually we use Servo v4 as PDTester, so make it default.
-    if (PDTESTER_HOST_ATTR not in pdtester_args and
-        SERVO_HOST_ATTR in servo_args):
-        pdtester_args[PDTESTER_HOST_ATTR] = servo_args[SERVO_HOST_ATTR]
+    if PDTESTER_HOST_ATTR not in pdtester_args:
+        pdtester_args[PDTESTER_HOST_ATTR] = servo_host.hostname
 
-    if (PDTESTER_PORT_ATTR not in pdtester_args and
-        SERVO_PORT_ATTR in servo_args):
-        pdtester_args[PDTESTER_PORT_ATTR] = servo_args[SERVO_PORT_ATTR]
+    if PDTESTER_PORT_ATTR not in pdtester_args:
+        pdtester_args[PDTESTER_PORT_ATTR] = servo_host.servo_port
+
+    # Just return the servo_host object, if the hostname and the port are the
+    # same as servo_host.
+    if (pdtester_args[PDTESTER_HOST_ATTR] == servo_host.hostname and
+        pdtester_args[PDTESTER_PORT_ATTR] == servo_host.servo_port):
+        return servo_host
 
     return PDTesterHost(**pdtester_args)

@@ -333,7 +333,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
         # Add pdtester host if pdtester args were added on command line
         self._pdtester_host = pdtester_host.create_pdtester_host(
-                pdtester_args, servo_args)
+                pdtester_args, self._servo_host)
 
         if self._pdtester_host:
             self.pdtester_servo = self._pdtester_host.get_servo()
