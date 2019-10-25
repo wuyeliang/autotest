@@ -835,10 +835,12 @@ def get_tradefed_data(path, is_public, abi):
 
 
 def download(uri, destination):
-    """Download |uri| to local |destination|."""
-    if uri.startswith('http'):
-        subprocess.check_call(['wget', uri, '-P', destination])
-    elif uri.startswith('gs'):
+    """Download |uri| to local |destination|.
+
+       |destination| must be a file path (not a directory path)."""
+    if uri.startswith('http://') or uri.startswith('https://'):
+        subprocess.check_call(['wget', uri, '-O', destination])
+    elif uri.startswith('gs://'):
         subprocess.check_call(['gsutil', 'cp', uri, destination])
     else:
         raise Exception
@@ -1078,7 +1080,7 @@ def write_extra_camera_controlfiles(abi, revision, build, uri, is_public):
             f.write(content)
 
 
-def run(uris, is_public):
+def run(uris, is_public, cache_dir):
     """Downloads each bundle in |uris| and generates control files for each
 
     module as reported to us by tradefed.
@@ -1087,9 +1089,16 @@ def run(uris, is_public):
         abi = get_bundle_abi(uri)
         # Get tradefed data by downloading & unzipping the files
         with TemporaryDirectory(prefix='cts-android_') as tmp:
-            logging.info('Downloading to %s.', tmp)
-            download(uri, tmp)
-            bundle = os.path.join(tmp, os.path.basename(uri))
+            if cache_dir is not None:
+                assert(os.path.isdir(cache_dir))
+                bundle = os.path.join(cache_dir, os.path.basename(uri))
+                if not os.path.exists(bundle):
+                    logging.info('Downloading to %s.', cache_dir)
+                    download(uri, bundle)
+            else:
+                bundle = os.path.join(tmp, os.path.basename(uri))
+                logging.info('Downloading to %s.', tmp)
+                download(uri, bundle)
             logging.info('Extracting %s.', bundle)
             unzip(bundle, tmp)
             modules, build, revision = get_tradefed_data(tmp, is_public, abi)
@@ -1145,5 +1154,13 @@ def main(config):
         action='store_true',
         help='Generate the public control files for CTS, default generate'
         ' the internal control files')
+    parser.add_argument(
+        '--cache_dir',
+        dest='cache_dir',
+        default=None,
+        action='store',
+        help='Cache directory for downloaded bundle file. Uses the cached '
+             'bundle file if exists, or caches a downloaded file to this '
+             'directory if not.')
     args = parser.parse_args()
-    run(args.uris, args.is_public)
+    run(args.uris, args.is_public, args.cache_dir)
