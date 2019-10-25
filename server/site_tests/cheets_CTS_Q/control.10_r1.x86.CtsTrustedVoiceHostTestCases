@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.x86.CtsTrustedVoiceHostTestCases',
         test_name='cheets_CTS_Q.10_r1.x86.CtsTrustedVoiceHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsTrustedVoiceHostTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsTrustedVoiceHostTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsTrustedVoiceHostTestCases',
         target_plan=None,

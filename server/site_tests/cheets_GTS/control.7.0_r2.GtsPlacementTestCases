@@ -24,7 +24,7 @@ def run_TS(machine):
         tag='7.0_r2.GtsPlacementTestCases',
         test_name='cheets_GTS.7.0_r2.GtsPlacementTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsPlacementTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsPlacementTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsPlacementTestCases',
         target_plan=None,

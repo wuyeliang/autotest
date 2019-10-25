@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsApacheHttpLegacy27ApiSignatureTestCases',
         test_name='cheets_CTS_P.arm.CtsApacheHttpLegacy27ApiSignatureTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsApacheHttpLegacy27ApiSignatureTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsApacheHttpLegacy27ApiSignatureTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsApacheHttpLegacy27ApiSignatureTestCases',
         target_plan=None,

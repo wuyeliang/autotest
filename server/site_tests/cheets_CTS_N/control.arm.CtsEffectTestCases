@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsEffectTestCases',
         test_name='cheets_CTS_N.arm.CtsEffectTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsEffectTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsEffectTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsEffectTestCases',
         target_plan=None,

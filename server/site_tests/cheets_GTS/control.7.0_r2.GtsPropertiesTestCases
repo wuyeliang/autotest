@@ -23,7 +23,7 @@ def run_TS(machine):
         tag='7.0_r2.GtsPropertiesTestCases',
         test_name='cheets_GTS.7.0_r2.GtsPropertiesTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsPropertiesTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsPropertiesTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsPropertiesTestCases',
         target_plan=None,

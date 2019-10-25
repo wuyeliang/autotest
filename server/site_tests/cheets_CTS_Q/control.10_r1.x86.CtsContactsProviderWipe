@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.x86.CtsContactsProviderWipe',
         test_name='cheets_CTS_Q.10_r1.x86.CtsContactsProviderWipe',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsContactsProviderWipe', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsContactsProviderWipe', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsContactsProviderWipe',
         target_plan=None,

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsNetTestCasesLegacyPermission22',
         test_name='cheets_CTS_P.arm.CtsNetTestCasesLegacyPermission22',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetTestCasesLegacyPermission22'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsNetTestCasesLegacyPermission22'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsNetTestCasesLegacyPermission22',
         target_plan=None,

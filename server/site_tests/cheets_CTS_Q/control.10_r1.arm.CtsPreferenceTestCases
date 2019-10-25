@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.arm.CtsPreferenceTestCases',
         test_name='cheets_CTS_Q.10_r1.arm.CtsPreferenceTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsPreferenceTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsPreferenceTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsPreferenceTestCases',
         target_plan=None,

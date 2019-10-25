@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='9.0_r9.x86.CtsWebkitTestCases',
         test_name='cheets_CTS_P.9.0_r9.x86.CtsWebkitTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsWebkitTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsWebkitTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsWebkitTestCases',
         target_plan=None,

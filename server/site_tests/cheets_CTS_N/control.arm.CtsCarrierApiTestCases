@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsCarrierApiTestCases',
         test_name='cheets_CTS_N.arm.CtsCarrierApiTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsCarrierApiTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsCarrierApiTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsCarrierApiTestCases',
         target_plan=None,

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsNetSecConfigInvalidPinTestCases',
         test_name='cheets_CTS_P.x86.CtsNetSecConfigInvalidPinTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetSecConfigInvalidPinTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsNetSecConfigInvalidPinTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsNetSecConfigInvalidPinTestCases',
         target_plan=None,

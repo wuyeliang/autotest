@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsInlineMockingTestCases',
         test_name='cheets_CTS_P.arm.CtsInlineMockingTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsInlineMockingTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsInlineMockingTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsInlineMockingTestCases',
         target_plan=None,

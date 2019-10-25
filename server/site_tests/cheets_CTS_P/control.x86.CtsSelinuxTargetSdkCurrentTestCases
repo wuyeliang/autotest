@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsSelinuxTargetSdkCurrentTestCases',
         test_name='cheets_CTS_P.x86.CtsSelinuxTargetSdkCurrentTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSelinuxTargetSdkCurrentTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSelinuxTargetSdkCurrentTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsSelinuxTargetSdkCurrentTestCases',
         target_plan=None,

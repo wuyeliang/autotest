@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsIcuTestCases',
         test_name='cheets_CTS_P.arm.CtsIcuTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsIcuTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsIcuTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsIcuTestCases',
         target_plan=None,

@@ -23,7 +23,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsCameraTestCases',
         test_name='cheets_CTS_P.x86.CtsCameraTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsCameraTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsCameraTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsCameraTestCases',
         target_plan=None,

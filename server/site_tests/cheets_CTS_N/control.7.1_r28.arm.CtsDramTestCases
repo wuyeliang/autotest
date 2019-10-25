@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=3,
         tag='7.1_r28.arm.CtsDramTestCases',
         test_name='cheets_CTS_N.7.1_r28.arm.CtsDramTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDramTestCases', '--logcat-on-failure', '--disable-reboot'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDramTestCases', '--logcat-on-failure', '--disable-reboot'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot'],
         target_module='CtsDramTestCases',
         target_plan=None,

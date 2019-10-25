@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAbiOverrideHostTestCases',
         test_name='cheets_CTS_P.arm.CtsAbiOverrideHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAbiOverrideHostTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAbiOverrideHostTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAbiOverrideHostTestCases',
         target_plan=None,

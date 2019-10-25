@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsBionicTestCases',
         test_name='cheets_CTS_N.arm.CtsBionicTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsBionicTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsBionicTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsBionicTestCases',
         target_plan=None,

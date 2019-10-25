@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsJankDeviceTestCases',
         test_name='cheets_CTS_P.x86.CtsJankDeviceTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsJankDeviceTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsJankDeviceTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsJankDeviceTestCases',
         target_plan=None,

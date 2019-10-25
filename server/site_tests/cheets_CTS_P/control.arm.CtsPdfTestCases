@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsPdfTestCases',
         test_name='cheets_CTS_P.arm.CtsPdfTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsPdfTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsPdfTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsPdfTestCases',
         target_plan=None,

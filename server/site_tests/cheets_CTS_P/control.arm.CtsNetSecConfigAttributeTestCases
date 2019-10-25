@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsNetSecConfigAttributeTestCases',
         test_name='cheets_CTS_P.arm.CtsNetSecConfigAttributeTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetSecConfigAttributeTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsNetSecConfigAttributeTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsNetSecConfigAttributeTestCases',
         target_plan=None,

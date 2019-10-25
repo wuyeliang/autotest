@@ -23,7 +23,7 @@ def run_TS(machine):
         enable_default_apps=True,
         tag='x86.CtsAppSecurityHostTestCases',
         test_name='cheets_CTS_P.x86.CtsAppSecurityHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAppSecurityHostTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAppSecurityHostTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAppSecurityHostTestCases',
         target_plan=None,

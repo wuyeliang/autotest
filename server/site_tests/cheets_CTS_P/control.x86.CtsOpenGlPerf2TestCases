@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsOpenGlPerf2TestCases',
         test_name='cheets_CTS_P.x86.CtsOpenGlPerf2TestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsOpenGlPerf2TestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsOpenGlPerf2TestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsOpenGlPerf2TestCases',
         target_plan=None,

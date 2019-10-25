@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsTextureViewTestCases',
         test_name='cheets_CTS_N.x86.CtsTextureViewTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsTextureViewTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsTextureViewTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsTextureViewTestCases',
         target_plan=None,

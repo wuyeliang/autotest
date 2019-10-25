@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAccessibilityServiceTestCases',
         test_name='cheets_CTS_N.arm.CtsAccessibilityServiceTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAccessibilityServiceTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAccessibilityServiceTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsAccessibilityServiceTestCases',
         target_plan=None,

@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=2,
         tag='GtsNoPermissionTestCases25',
         test_name='cheets_GTS.GtsNoPermissionTestCases25',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsNoPermissionTestCases25', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsNoPermissionTestCases25', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsNoPermissionTestCases25',
         target_plan=None,

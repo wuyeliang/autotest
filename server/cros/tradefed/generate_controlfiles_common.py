@@ -554,25 +554,21 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
     else:
         # For runs create a logcat file for each individual failure.
         cmd = ['run', 'commandAndExit', CONFIG['TRADEFED_CTS_COMMAND']]
-        # TODO(yoshiki): remove this branching and consolidate them with the
-        # unified one rule.
-        if (CONFIG['TRADEFED_CTS_COMMAND'] == 'cts' or
-            CONFIG['TRADEFED_CTS_COMMAND'] == 'gts'):
-            special_cmd = _get_special_command_line(modules, is_public)
-            if special_cmd:
-                cmd.extend(special_cmd)
+
+        special_cmd = _get_special_command_line(modules, is_public)
+        if special_cmd:
+            cmd.extend(special_cmd)
+        elif _ALL in modules:
+            pass
+        elif len(modules) == 1:
+            cmd += ['--module', list(modules)[0]]
+        else:
+            assert (CONFIG['TRADEFED_CTS_COMMAND'] != 'cts-instant'), \
+                   'cts-instant cannot include multiple modules'
             # We run each module with its own --include-filter command/option.
             # https://source.android.com/compatibility/cts/run
-            elif modules:
-                for module in sorted(modules):
-                    cmd += ['--include-filter', module]
-        elif CONFIG['TRADEFED_CTS_COMMAND'] == 'cts-instant':
-            if _ALL in modules:
-                pass
-            elif len(modules) == 1:
-                cmd += ['--module', list(modules)[0]]
-            else:
-                raise Exception('cts-instant cannot include multiple modules')
+            for module in sorted(modules):
+                cmd += ['--include-filter', module]
 
         # For runs create a logcat file for each individual failure.
         # Not needed on moblab, nobody is going to look at them.

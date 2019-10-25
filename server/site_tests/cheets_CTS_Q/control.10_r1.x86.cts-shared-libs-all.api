@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.x86.cts-shared-libs-all.api',
         test_name='cheets_CTS_Q.10_r1.x86.cts-shared-libs-all.api',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'cts-shared-libs-all.api', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'cts-shared-libs-all.api', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='cts-shared-libs-all.api',
         target_plan=None,

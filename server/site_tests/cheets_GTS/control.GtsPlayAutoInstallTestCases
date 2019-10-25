@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=2,
         tag='GtsPlayAutoInstallTestCases',
         test_name='cheets_GTS.GtsPlayAutoInstallTestCases',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsPlayAutoInstallTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsPlayAutoInstallTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsPlayAutoInstallTestCases',
         target_plan=None,

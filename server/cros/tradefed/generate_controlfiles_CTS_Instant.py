@@ -162,7 +162,7 @@ CONFIG['EXTRA_MODULES'] = {}
 CONFIG['PUBLIC_EXTRA_MODULES'] = {}
 CONFIG['EXTRA_SUBMODULE_OVERRIDE'] = {}
 
-CONFIG['EXTRA_COMMANDLINE'] = []
+CONFIG['EXTRA_COMMANDLINE'] = {}
 
 CONFIG['EXTRA_ATTRIBUTES'] = {
     'tradefed-run-collect-tests-only-internal': ['suite:arc-cts'],

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='7.1_r28.x86.CtsDragAndDropHostTestCases',
         test_name='cheets_CTS_N.7.1_r28.x86.CtsDragAndDropHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDragAndDropHostTestCases', '--logcat-on-failure', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDragAndDropHostTestCases', '--logcat-on-failure', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsDragAndDropHostTestCases',
         target_plan=None,

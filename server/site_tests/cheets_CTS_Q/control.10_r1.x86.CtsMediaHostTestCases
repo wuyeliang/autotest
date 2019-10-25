@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.x86.CtsMediaHostTestCases',
         test_name='cheets_CTS_Q.10_r1.x86.CtsMediaHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsMediaHostTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsMediaHostTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsMediaHostTestCases',
         target_plan=None,

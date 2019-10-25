@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.x86.CtsExternalServiceTestCases',
         test_name='cheets_CTS_Q.10_r1.x86.CtsExternalServiceTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsExternalServiceTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsExternalServiceTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsExternalServiceTestCases',
         target_plan=None,

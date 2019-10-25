@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsNetSecConfigBasicDebugEnabledTestCases',
         test_name='cheets_CTS_P.arm.CtsNetSecConfigBasicDebugEnabledTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetSecConfigBasicDebugEnabledTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsNetSecConfigBasicDebugEnabledTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsNetSecConfigBasicDebugEnabledTestCases',
         target_plan=None,

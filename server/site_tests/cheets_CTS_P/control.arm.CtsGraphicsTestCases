@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=12,
         tag='arm.CtsGraphicsTestCases',
         test_name='cheets_CTS_P.arm.CtsGraphicsTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsGraphicsTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsGraphicsTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsGraphicsTestCases',
         target_plan=None,

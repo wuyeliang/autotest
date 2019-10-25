@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsHostsideNetworkTests',
         test_name='cheets_CTS_P.arm.CtsHostsideNetworkTests',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsHostsideNetworkTests'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsHostsideNetworkTests'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsHostsideNetworkTests',
         target_plan=None,

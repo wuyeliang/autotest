@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.arm.CtsFileSystemTestCases',
         test_name='cheets_CTS_Q.10_r1.arm.CtsFileSystemTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsFileSystemTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsFileSystemTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsFileSystemTestCases',
         target_plan=None,

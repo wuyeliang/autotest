@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAlarmManagerTestCases',
         test_name='cheets_CTS_P.arm.CtsAlarmManagerTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAlarmManagerTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAlarmManagerTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAlarmManagerTestCases',
         target_plan=None,

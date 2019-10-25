@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsNetSecConfigCleartextTrafficTestCases',
         test_name='cheets_CTS_P.arm.CtsNetSecConfigCleartextTrafficTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetSecConfigCleartextTrafficTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsNetSecConfigCleartextTrafficTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsNetSecConfigCleartextTrafficTestCases',
         target_plan=None,

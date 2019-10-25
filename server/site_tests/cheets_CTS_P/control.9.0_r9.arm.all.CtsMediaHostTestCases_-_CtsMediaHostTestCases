@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=9,
         tag='9.0_r9.arm.all.CtsMediaHostTestCases_-_CtsMediaHostTestCases',
         test_name='cheets_CTS_P.9.0_r9.arm.all.CtsMediaHostTestCases_-_CtsMediaHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsMediaHostTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsMediaHostTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='all.CtsMediaHostTestCases_-_CtsMediaHostTestCases',
         target_plan=None,

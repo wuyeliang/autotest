@@ -23,7 +23,7 @@ def run_TS(machine):
         tag='7.0_r2.GtsTetheringTestCases',
         test_name='cheets_GTS.7.0_r2.GtsTetheringTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsTetheringTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsTetheringTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsTetheringTestCases',
         target_plan=None,

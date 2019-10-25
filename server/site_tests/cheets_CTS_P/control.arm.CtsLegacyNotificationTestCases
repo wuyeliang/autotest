@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsLegacyNotificationTestCases',
         test_name='cheets_CTS_P.arm.CtsLegacyNotificationTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsLegacyNotificationTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsLegacyNotificationTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsLegacyNotificationTestCases',
         target_plan=None,

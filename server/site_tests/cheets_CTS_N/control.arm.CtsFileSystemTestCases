@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=10,
         tag='arm.CtsFileSystemTestCases',
         test_name='cheets_CTS_N.arm.CtsFileSystemTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsFileSystemTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsFileSystemTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsFileSystemTestCases',
         target_plan=None,

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsGpuToolsHostTestCases',
         test_name='cheets_CTS_P.arm.CtsGpuToolsHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsGpuToolsHostTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsGpuToolsHostTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsGpuToolsHostTestCases',
         target_plan=None,

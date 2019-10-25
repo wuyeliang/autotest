@@ -24,7 +24,7 @@ def run_TS(machine):
         needs_push_media=True,
         tag='arm.CtsMediaStressTestCases',
         test_name='cheets_CTS_N.arm.CtsMediaStressTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsMediaStressTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsMediaStressTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsMediaStressTestCases',
         target_plan=None,

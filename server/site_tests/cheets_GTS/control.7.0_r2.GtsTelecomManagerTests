@@ -23,7 +23,7 @@ def run_TS(machine):
         tag='7.0_r2.GtsTelecomManagerTests',
         test_name='cheets_GTS.7.0_r2.GtsTelecomManagerTests',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsTelecomManagerTests', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsTelecomManagerTests', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsTelecomManagerTests',
         target_plan=None,

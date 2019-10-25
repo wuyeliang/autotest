@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsDramTestCases',
         test_name='cheets_CTS_N.x86.CtsDramTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDramTestCases', '--disable-reboot'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsDramTestCases', '--disable-reboot'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot'],
         target_module='CtsDramTestCases',
         target_plan=None,

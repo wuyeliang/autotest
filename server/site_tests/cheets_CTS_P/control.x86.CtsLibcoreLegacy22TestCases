@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsLibcoreLegacy22TestCases',
         test_name='cheets_CTS_P.x86.CtsLibcoreLegacy22TestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsLibcoreLegacy22TestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsLibcoreLegacy22TestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsLibcoreLegacy22TestCases',
         target_plan=None,

@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsNetSecPolicyUsesCleartextTrafficFalseTestCases',
         test_name='cheets_CTS_N.arm.CtsNetSecPolicyUsesCleartextTrafficFalseTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetSecPolicyUsesCleartextTrafficFalseTestCases', '--disable-reboot', '--skip-device-info'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsNetSecPolicyUsesCleartextTrafficFalseTestCases', '--disable-reboot', '--skip-device-info'],
         retry_template=['run', 'commandAndExit', 'cts', '--retry', '{session_id}', '--disable-reboot', '--skip-device-info'],
         target_module='CtsNetSecPolicyUsesCleartextTrafficFalseTestCases',
         target_plan=None,

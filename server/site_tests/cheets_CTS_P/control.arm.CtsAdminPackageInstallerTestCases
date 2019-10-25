@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsAdminPackageInstallerTestCases',
         test_name='cheets_CTS_P.arm.CtsAdminPackageInstallerTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAdminPackageInstallerTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsAdminPackageInstallerTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsAdminPackageInstallerTestCases',
         target_plan=None,

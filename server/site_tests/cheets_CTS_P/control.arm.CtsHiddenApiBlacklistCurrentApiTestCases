@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='arm.CtsHiddenApiBlacklistCurrentApiTestCases',
         test_name='cheets_CTS_P.arm.CtsHiddenApiBlacklistCurrentApiTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsHiddenApiBlacklistCurrentApiTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsHiddenApiBlacklistCurrentApiTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsHiddenApiBlacklistCurrentApiTestCases',
         target_plan=None,

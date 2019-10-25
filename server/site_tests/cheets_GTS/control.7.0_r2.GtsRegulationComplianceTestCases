@@ -23,7 +23,7 @@ def run_TS(machine):
         tag='7.0_r2.GtsRegulationComplianceTestCases',
         test_name='cheets_GTS.7.0_r2.GtsRegulationComplianceTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsRegulationComplianceTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsRegulationComplianceTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsRegulationComplianceTestCases',
         target_plan=None,

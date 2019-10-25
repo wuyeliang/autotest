@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='x86.CtsUiRenderingTestCases',
         test_name='cheets_CTS_P.x86.CtsUiRenderingTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsUiRenderingTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsUiRenderingTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsUiRenderingTestCases',
         target_plan=None,

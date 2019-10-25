@@ -24,7 +24,7 @@ def run_TS(machine):
         max_retry=10,
         tag='arm.CtsSecurityHostTestCases',
         test_name='cheets_CTS_P.arm.CtsSecurityHostTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSecurityHostTestCases'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSecurityHostTestCases'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsSecurityHostTestCases',
         target_plan=None,

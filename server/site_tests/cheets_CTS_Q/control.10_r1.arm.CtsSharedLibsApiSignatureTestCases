@@ -22,7 +22,7 @@ def run_TS(machine):
         iterations=1,
         tag='10_r1.arm.CtsSharedLibsApiSignatureTestCases',
         test_name='cheets_CTS_Q.10_r1.arm.CtsSharedLibsApiSignatureTestCases',
-        run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSharedLibsApiSignatureTestCases', '--logcat-on-failure'],
+        run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsSharedLibsApiSignatureTestCases', '--logcat-on-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='CtsSharedLibsApiSignatureTestCases',
         target_plan=None,

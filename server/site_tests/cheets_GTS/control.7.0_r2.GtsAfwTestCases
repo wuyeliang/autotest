@@ -23,7 +23,7 @@ def run_TS(machine):
         tag='7.0_r2.GtsAfwTestCases',
         test_name='cheets_GTS.7.0_r2.GtsAfwTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
-        run_template=['run', 'commandAndExit', 'gts', '--include-filter', 'GtsAfwTestCases', '--ignore-business-logic-failure'],
+        run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsAfwTestCases', '--ignore-business-logic-failure'],
         retry_template=['run', 'commandAndExit', 'retry', '--retry', '{session_id}'],
         target_module='GtsAfwTestCases',
         target_plan=None,
