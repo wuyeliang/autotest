@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
-        needs_push_media=False,
         tag='9.0_r9.x86.all.CtsVmTestCases_-_vm-tests-tf',
         test_name='cheets_CTS_P.9.0_r9.x86.all.CtsVmTestCases_-_vm-tests-tf',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsVmTestCases', '--include-filter', 'CtsVoiceInteractionTestCases', '--include-filter', 'CtsVoiceSettingsTestCases', '--include-filter', 'CtsVrTestCases', '--include-filter', 'CtsWebkitTestCases', '--include-filter', 'CtsWidgetTestCases', '--include-filter', 'CtsWindowManagerDeviceTestCases', '--include-filter', 'CtsWrapNoWrapTestCases', '--include-filter', 'CtsWrapWrapDebugMallocDebugTestCases', '--include-filter', 'CtsWrapWrapDebugTestCases', '--include-filter', 'CtsWrapWrapNoDebugTestCases', '--include-filter', 'cts-system-all.api', '--include-filter', 'signed-CtsSecureElementAccessControlTestCases1', '--include-filter', 'signed-CtsSecureElementAccessControlTestCases2', '--include-filter', 'signed-CtsSecureElementAccessControlTestCases3', '--include-filter', 'vm-tests-tf', '--logcat-on-failure'],

@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
-        needs_push_media=False,
         tag='9.0_r9.arm.all.CtsDeviceIdleHostTestCases_-_CtsExternalSourcesTestCases',
         test_name='cheets_CTS_P.9.0_r9.arm.all.CtsDeviceIdleHostTestCases_-_CtsExternalSourcesTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeviceIdleHostTestCases', '--include-filter', 'CtsDevicePolicyManagerTestCases', '--include-filter', 'CtsDexMetadataHostTestCases', '--include-filter', 'CtsDisplayTestCases', '--include-filter', 'CtsDpiTestCases', '--include-filter', 'CtsDpiTestCases2', '--include-filter', 'CtsDreamsTestCases', '--include-filter', 'CtsDrmTestCases', '--include-filter', 'CtsDumpsysHostTestCases', '--include-filter', 'CtsDynamicLinkerTestCases', '--include-filter', 'CtsEdiHostTestCases', '--include-filter', 'CtsEffectTestCases', '--include-filter', 'CtsExternalServiceTestCases', '--include-filter', 'CtsExternalSourcesTestCases', '--logcat-on-failure'],

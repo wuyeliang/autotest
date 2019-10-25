@@ -21,7 +21,6 @@ def run_CTS(machine):
         'cheets_CTS_P',
         hosts=host_list,
         iterations=1,
-        needs_push_media=False,
         tag='x86.CtsDeqpTestCases.dEQP-VK.subgroups.s',
         test_name='cheets_CTS_P.x86.CtsDeqpTestCases.dEQP-VK.subgroups.s',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeqpTestCases', '--module', 'CtsDeqpTestCases', '--test', 'dEQP-VK.subgroups.s*'],

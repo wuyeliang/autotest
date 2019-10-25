@@ -20,7 +20,6 @@ def run_CTS(machine):
         'cheets_CTS_P',
         hosts=host_list,
         iterations=1,
-        needs_push_media=False,
         tag='arm.CtsPerfettoTestCases',
         test_name='cheets_CTS_P.arm.CtsPerfettoTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsPerfettoTestCases'],

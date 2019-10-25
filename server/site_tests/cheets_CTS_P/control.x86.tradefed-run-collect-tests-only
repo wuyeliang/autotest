@@ -22,7 +22,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=0,
-        needs_push_media=False,
         tag='x86.tradefed-run-collect-tests-only',
         test_name='cheets_CTS_P.x86.tradefed-run-collect-tests-only',
         run_template=['run', 'commandAndExit', 'collect-tests-only', '--disable-reboot', '--module-arg', 'CtsMediaTestCases:skip-media-download:true', '--module-arg', 'CtsMediaStressTestCases:skip-media-download:true', '--module-arg', 'CtsMediaBitstreamsTestCases:skip-media-download:true'],

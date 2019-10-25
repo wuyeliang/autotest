@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         enable_default_apps=True,
-        needs_push_media=False,
         tag='10_r1.arm.CtsApp',
         test_name='cheets_CTS_Q.10_r1.arm.CtsApp',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAppBindingHostTestCases', '--include-filter', 'CtsAppComponentFactoryTestCases', '--include-filter', 'CtsAppOpsTestCases', '--include-filter', 'CtsAppPredictionServiceTestCases', '--include-filter', 'CtsAppSecurityHostTestCases', '--include-filter', 'CtsAppTestCases', '--include-filter', 'CtsAppUsageHostTestCases', '--include-filter', 'CtsAppWidgetTestCases', '--logcat-on-failure'],

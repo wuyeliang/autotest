@@ -22,7 +22,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=10,
-        needs_push_media=False,
         tag='arm.CtsNetTestCases',
         test_name='cheets_CTS_P.arm.CtsNetTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsNetTestCases'],

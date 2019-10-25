@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=15,
-        needs_push_media=False,
         tag='10_r1.x86.CtsDeqpTestCases',
         test_name='cheets_CTS_Q.10_r1.x86.CtsDeqpTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeqpTestCases'],
