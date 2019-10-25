@@ -82,8 +82,14 @@ CONFIG['CTS_TIMEOUT'] = {
 
 # Any test that runs as part as blocking BVT needs to be stable and fast. For
 # this reason we enforce a tight timeout on these modules/jobs.
-# Timeout in hours. (0.1h = 6 minutes)
-CONFIG['BVT_TIMEOUT'] = 0.1
+# Timeout in hours. (0.2h = 12 minutes)
+#
+# For the test content 5 minutes are more than enough, but when some component
+# (typically camera) is stuck, the CTS precondition step hits 5 minute abort.
+# Since this abort doesn't affect too much for the main CTS runs (with longer
+# timeouts), it's ok to let them go in. Bad state of camre should be caught by
+# camera tests, not by this general CTS sanity test.
+CONFIG['BVT_TIMEOUT'] = 0.2
 # We allow a very long runtime for qualification (2 days).
 CONFIG['QUAL_TIMEOUT'] = 48
 
@@ -118,7 +124,6 @@ CONFIG['SMOKE'] = [
 
 CONFIG['BVT_ARC'] = [
     'CtsAccelerationTestCases',
-    'CtsAdminTestCases',
 ]
 
 CONFIG['BVT_PERBUILD'] = [
