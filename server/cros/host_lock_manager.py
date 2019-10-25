@@ -7,6 +7,7 @@ import signal
 import common
 
 from autotest_lib.server import site_utils
+from autotest_lib.server.cros.chaos_lib import chaos_datastore_utils as dutils
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 
 """HostLockManager class, for the dynamic_suite module.
@@ -97,6 +98,40 @@ class HostLockManager(object):
             return None
 
         return mod_host
+
+
+    def lock_pcap_in_datastore(self, pcap_name):
+        """Lock Packet Capturere to use for the test in datastore."""
+
+        updated_hosts = set()
+        # Lock PCAP for capture
+        if dutils.lock_device(pcap_name):
+            logging.info("Locked Packet Capture device: %s", pcap_name)
+            updated_hosts.add(pcap_name)
+            self._locked_hosts = self._locked_hosts.union(updated_hosts)
+            return True
+
+        logging.error("Failed to lock %s PCAP.", pcap_name)
+        return False
+
+
+    def unlock_pcap_in_datastore(self, pcap_name=None):
+        """Unlock Packet Capturere in datastore after use."""
+
+        updated_hosts = self._locked_hosts
+        if not updated_hosts:
+            return False
+        logging.info('Unlocking pcap_host: %s', updated_hosts)
+        # Un-Lock PCAP
+        for pcap_host in updated_hosts:
+            if dutils.unlock_device(pcap_host):
+                logging.info("Locked Packet Capture device: %s", pcap_host)
+                updated_hosts.add(pcap_host)
+                self._locked_hosts = self._locked_hosts.intersection(updated_hosts)
+                return True
+
+        logging.error("Failed to lock %s PCAP.", pcap_name)
+        return False
 
 
     def lock(self, hosts, lock_reason='Locked by HostLockManager'):
@@ -201,4 +236,6 @@ class HostsLockedBy(object):
 
     def __exit__(self, exntype, exnvalue, backtrace):
         signal.signal(signal.SIGTERM, self._old_handler)
+        # ToDO: dsunkara@ Cleanup methods if not using AutoTest
         self._manager.unlock()
+        self._manager.unlock_pcap_in_datastore()

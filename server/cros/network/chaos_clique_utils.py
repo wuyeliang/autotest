@@ -19,6 +19,7 @@ from autotest_lib.server import site_utils
 from autotest_lib.server.cros.ap_configurators import ap_configurator
 from autotest_lib.server.cros.ap_configurators import ap_cartridge
 from autotest_lib.server.cros.ap_configurators import ap_spec as ap_spec_module
+from autotest_lib.server.cros.chaos_lib import chaos_datastore_utils as dutils
 
 
 def allocate_packet_capturer(lock_manager, hostname, prefix):
@@ -50,6 +51,31 @@ def allocate_packet_capturer(lock_manager, hostname, prefix):
                 continue
     raise error.TestError('Unable to lock any pcaps - check in cautotest if '
                           'pcaps in %s are locked.', prefix)
+
+
+def allocate_packet_capturer_in_datastore(lock_manager):
+    """Finds a packet capturer to capture packets.
+
+    Locks the allocated pcap if it is discovered in datastore
+
+    @param lock_manager HostLockManager object.
+
+    @return: An SSHHost object representing a locked packet_capture machine.
+    """
+    # Gets available PCAPs that are NOT locked
+    available_pcaps = dutils.get_devices_by_type(ap_label='CrOS_PCAP',
+                                                 lab_label='CrOS_Chaos')
+    for pcap in available_pcaps:
+        # Ensure the pcap and dut are in the same subnet
+        if lock_manager.lock_pcap_in_datastore(pcap['hostname']):
+            return hosts.SSHHost(pcap['hostname'] + '.cros')
+            break
+        else:
+            logging.info('Unable to lock %s', pcap['hostname'])
+            continue
+    raise error.TestError('Unable to lock any pcaps - check datastore for '
+                          'pcaps locked status')
+
 
 def allocate_webdriver_instance(lock_manager):
     """Allocates a machine to capture webdriver instance.
@@ -202,7 +228,7 @@ def release_ap(ap, batch_locker, broken_pdus=[]):
     except ap_configurator.PduNotResponding as e:
         if ap.pdu not in broken_pdus:
             broken_pdus.append(ap.pdu)
-    batch_locker.unlock_one_ap(ap.host_name)
+    batch_locker.unlock_one_ap_in_datastore(ap.host_name)
 
 
 def filter_quarantined_and_config_failed_aps(aps, batch_locker, job,
@@ -240,7 +266,7 @@ def filter_quarantined_and_config_failed_aps(aps, batch_locker, job,
                 release_ap(ap, batch_locker, broken_pdus)
             else:
                 # Cannot use _release_ap, since power_down will fail
-                batch_locker.unlock_one_ap(ap.host_name)
+                batch_locker.unlock_one_ap_in_datastore(ap.host_name)
     return list(set(aps) - set(aps_to_remove))
 
 
