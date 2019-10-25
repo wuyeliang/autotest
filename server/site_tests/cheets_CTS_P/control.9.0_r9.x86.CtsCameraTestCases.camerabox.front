@@ -22,7 +22,6 @@ def run_TS(machine):
         cmdline_args=args,
         hosts=host_list,
         iterations=1,
-        needs_push_media=False,
         tag='9.0_r9.x86.CtsCameraTestCases.camerabox.front',
         test_name='cheets_CTS_P.9.0_r9.x86.CtsCameraTestCases.camerabox.front',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsCameraTestCases', '--logcat-on-failure'],

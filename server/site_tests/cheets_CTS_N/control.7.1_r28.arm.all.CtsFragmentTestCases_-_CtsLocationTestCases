@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
-        needs_push_media=False,
         tag='7.1_r28.arm.all.CtsFragmentTestCases_-_CtsLocationTestCases',
         test_name='cheets_CTS_N.7.1_r28.arm.all.CtsFragmentTestCases_-_CtsLocationTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsFragmentTestCases', '--include-filter', 'CtsGestureTestCases', '--include-filter', 'CtsGraphics2TestCases', '--include-filter', 'CtsGraphicsTestCases', '--include-filter', 'CtsHardwareTestCases', '--include-filter', 'CtsHostsideNetworkTests', '--include-filter', 'CtsHostsideNumberBlockingTestCases', '--include-filter', 'CtsHostsideTvTests', '--include-filter', 'CtsIcuTestCases', '--include-filter', 'CtsJankDeviceTestCases', '--include-filter', 'CtsJdwpSecurityHostTestCases', '--include-filter', 'CtsJdwpTestCases', '--include-filter', 'CtsJniTestCases', '--include-filter', 'CtsJobSchedulerTestCases', '--include-filter', 'CtsKeystoreTestCases', '--include-filter', 'CtsLeanbackJankTestCases', '--include-filter', 'CtsLibcoreLegacy22TestCases', '--include-filter', 'CtsLibcoreOjTestCases', '--include-filter', 'CtsLibcoreOkHttpTestCases', '--include-filter', 'CtsLibcoreTestCases', '--include-filter', 'CtsLocation2TestCases', '--include-filter', 'CtsLocationTestCases', '--logcat-on-failure', '--disable-reboot', '--skip-device-info'],

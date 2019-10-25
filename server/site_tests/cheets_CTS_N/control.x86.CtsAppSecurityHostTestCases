@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         enable_default_apps=True,
-        needs_push_media=False,
         tag='x86.CtsAppSecurityHostTestCases',
         test_name='cheets_CTS_N.x86.CtsAppSecurityHostTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAppSecurityHostTestCases', '--disable-reboot', '--skip-device-info'],

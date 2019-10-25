@@ -21,7 +21,6 @@ def run_TS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=3,
-        needs_push_media=False,
         tag='9.0_r9.arm.CtsSimpleperfTestCases',
         test_name='cheets_CTS_P.9.0_r9.arm.CtsSimpleperfTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsSimpleperfTestCases', '--logcat-on-failure'],

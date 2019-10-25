@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
-        needs_push_media=False,
         tag='7.1_r28.x86.all.CtsDeviceAdminUninstallerTestCases_-_CtsExternalServiceTestCases',
         test_name='cheets_CTS_N.7.1_r28.x86.all.CtsDeviceAdminUninstallerTestCases_-_CtsExternalServiceTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsDeviceAdminUninstallerTestCases', '--include-filter', 'CtsDevicePolicyManagerTestCases', '--include-filter', 'CtsDisplayTestCases', '--include-filter', 'CtsDpiTestCases', '--include-filter', 'CtsDpiTestCases2', '--include-filter', 'CtsDragAndDropHostTestCases', '--include-filter', 'CtsDramTestCases', '--include-filter', 'CtsDreamsTestCases', '--include-filter', 'CtsDrmTestCases', '--include-filter', 'CtsDumpsysHostTestCases', '--include-filter', 'CtsEffectTestCases', '--include-filter', 'CtsExternalServiceTestCases', '--logcat-on-failure', '--disable-reboot'],

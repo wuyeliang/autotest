@@ -21,7 +21,6 @@ def run_CTS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=10,
-        needs_push_media=False,
         tag='x86.CtsFileSystemTestCases',
         test_name='cheets_CTS_Instant.x86.CtsFileSystemTestCases',
         run_template=['run', 'commandAndExit', 'cts-instant', '--module', 'CtsFileSystemTestCases'],

@@ -20,7 +20,6 @@ def run_TS(machine):
         'cheets_CTS_P',
         hosts=host_list,
         iterations=1,
-        needs_push_media=False,
         tag='9.0_r9.arm.CtsAndroid',
         test_name='cheets_CTS_P.9.0_r9.arm.CtsAndroid',
         run_template=['run', 'commandAndExit', 'cts', '--include-filter', 'CtsAndroidAppTestCases', '--include-filter', 'CtsAndroidTestBase27ApiSignatureTestCases', '--include-filter', 'CtsAndroidTestMockCurrentApiSignatureTestCases', '--include-filter', 'CtsAndroidTestRunnerCurrentApiSignatureTestCases', '--logcat-on-failure'],
