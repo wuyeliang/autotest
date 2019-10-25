@@ -11,7 +11,6 @@ CONFIG = {}
 CONFIG['TEST_NAME'] = 'cheets_CTS_Q'
 CONFIG['DOC_TITLE'] = 'Android Compatibility Test Suite (CTS)'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_Q'
-CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = True
 CONFIG['COPYRIGHT_YEAR'] = 2019
 CONFIG['AUTHKEY'] = ''
 
@@ -91,54 +90,18 @@ CONFIG['QUAL_TIMEOUT'] = 48
 
 CONFIG['QUAL_BOOKMARKS'] = sorted([])
 
-CONFIG['SMOKE'] = [
-    'CtsUsbTests',
-]
+CONFIG['SMOKE'] = []
 
-CONFIG['BVT_ARC'] = [
-    'CtsAccelerationTestCases',
-    'CtsAdminTestCases',
-]
+CONFIG['BVT_ARC'] = []
 
-CONFIG['BVT_PERBUILD'] = [
-    'CtsAccountManagerTestCases',
-    'CtsBluetoothTestCases',
-    'CtsGraphicsTestCases',
-    'CtsJankDeviceTestCases',
-    'CtsOpenGLTestCases',
-    'CtsOpenGlPerf2TestCases',
-    'CtsPermission2TestCases',
-    'CtsSimpleperfTestCases',
-    'CtsSpeechTestCases',
-    'CtsTelecomTestCases',
-    'CtsTelephonyTestCases',
-    'CtsThemeDeviceTestCases',
-    'CtsTransitionTestCases',
-    'CtsTvTestCases',
-    'CtsUiAutomationTestCases',
-    'CtsUsbTests',
-    'CtsVoiceSettingsTestCases',
-]
+CONFIG['BVT_PERBUILD'] = []
 
 CONFIG['NEEDS_POWER_CYCLE'] = []
 
-CONFIG['HARDWARE_DEPENDENT_MODULES'] = [
-    'CtsSensorTestCases',
-    'CtsCameraTestCases',
-    'CtsBluetoothTestCases',
-]
+CONFIG['HARDWARE_DEPENDENT_MODULES'] = []
 
 # The suite is divided based on the run-time hint in the *.config file.
 CONFIG['VMTEST_INFO_SUITES'] = collections.OrderedDict()
-# This is the default suite for all the modules that are not specified below.
-CONFIG['VMTEST_INFO_SUITES']['vmtest-informational1'] = []
-CONFIG['VMTEST_INFO_SUITES']['vmtest-informational2'] = [
-    'CtsMediaTestCases', 'CtsMediaStressTestCases', 'CtsHardwareTestCases'
-]
-CONFIG['VMTEST_INFO_SUITES']['vmtest-informational3'] = [
-    'CtsThemeHostTestCases', 'CtsHardwareTestCases', 'CtsLibcoreTestCases'
-]
-CONFIG['VMTEST_INFO_SUITES']['vmtest-informational4'] = ['']
 
 # Modules that are known to download and/or push media file assets.
 CONFIG['MEDIA_MODULES'] = [
@@ -477,25 +440,7 @@ CONFIG['EXTRA_COMMANDLINE'] = {
     ]
 }
 
-CONFIG['EXTRA_ATTRIBUTES'] = {
-    'CtsDeqpTestCases': ['suite:arc-cts', 'suite:arc-cts-deqp'],
-    'CtsDeqpTestCases.dEQP-EGL': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
-    ],
-    'CtsDeqpTestCases.dEQP-GLES2': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
-    ],
-    'CtsDeqpTestCases.dEQP-GLES3': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
-    ],
-    'CtsDeqpTestCases.dEQP-GLES31': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
-    ],
-    'CtsDeqpTestCases.dEQP-VK': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
-    ],
-    _COLLECT: ['suite:arc-cts-qual', 'suite:arc-cts'],
-}
+CONFIG['EXTRA_ATTRIBUTES'] = {}
 
 CONFIG['EXTRA_ARTIFACTS'] = {}
 

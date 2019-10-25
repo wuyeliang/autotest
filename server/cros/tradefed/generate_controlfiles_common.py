@@ -284,11 +284,6 @@ def get_suites(modules, abi, is_public):
 
     suites = set(CONFIG['INTERNAL_SUITE_NAMES'])
 
-    if CONFIG['SKIP_EXTRA_MOBLAB_SUITES']:
-        # Not add extra suites since everything runs in the same suite on
-        # moblab.
-        return sorted(list(suites))
-
     for module in modules:
         if module in get_collect_modules(is_public):
             # We collect all tests both in arc-gts and arc-gts-qual as both have
@@ -312,7 +307,8 @@ def get_suites(modules, abi, is_public):
                     vm_suite = suite
                 if module in CONFIG['VMTEST_INFO_SUITES'][suite]:
                     vm_suite = suite
-            suites.add('suite:%s' % vm_suite)
+            if vm_suite is not None:
+                suites.add('suite:%s' % vm_suite)
         # One or two modules hould be in suite:bvt-arc to cover CQ/PFQ. A few
         # spare/fast modules can run in suite:bvt-perbuild in case we need a
         # replacement for the module in suite:bvt-arc (integration test for

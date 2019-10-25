@@ -16,7 +16,6 @@ CONFIG['TEST_NAME'] = 'cheets_CTS_Instant'
 CONFIG['DOC_TITLE'] = \
     'Android Compatibility Test Suite for Instant Apps (CTS Instant)'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_P'
-CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
 CONFIG['COPYRIGHT_YEAR'] = 2018
 CONFIG['AUTHKEY'] = ''
 

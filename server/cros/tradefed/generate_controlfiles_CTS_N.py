@@ -11,7 +11,6 @@ CONFIG = {}
 CONFIG['TEST_NAME'] = 'cheets_CTS_N'
 CONFIG['DOC_TITLE'] = 'Android Compatibility Test Suite (CTS)'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:cts_N'
-CONFIG['SKIP_EXTRA_MOBLAB_SUITES'] = False
 CONFIG['COPYRIGHT_YEAR'] = 2016
 CONFIG['AUTHKEY'] = ''
 
