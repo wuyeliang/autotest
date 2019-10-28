@@ -36,15 +36,6 @@ ON_DUT_BLACKLIST = [
     'system_health.memory_desktop', # crbug/874386
 ]
 
-# A list of telemetry tests that output histograms.
-HISTOGRAMS_WHITELIST = [
-    'loading.desktop',
-    'rendering.desktop',
-    'octane',
-    'kraken',
-    'speedometer2',
-]
-
 class TelemetryResult(object):
     """Class to represent the results of a telemetry run.
 
@@ -398,9 +389,7 @@ class TelemetryRunner(object):
         output_format = kwargs.get('ex_output_format', '')
 
         if not output_format:
-            output_format = 'chartjson'
-            if benchmark in HISTOGRAMS_WHITELIST:
-                output_format = 'histograms'
+            output_format = 'histograms'
 
         if self._telemetry_on_dut:
             telemetry_script = os.path.join(DUT_CHROME_ROOT,
@@ -538,14 +527,21 @@ class TelemetryRunner(object):
                 continue
             metric_name = obj['name']
             diagnostics = obj['diagnostics']
-            story_name = value_map[diagnostics['stories']][0]
+            if diagnostics.has_key('stories'):
+                story_name = value_map[diagnostics['stories']][0]
+            else:
+                story_name = 'default'
             local_benchmark_name = value_map[diagnostics['benchmarks']][0]
             if benchmark_name == '':
                 benchmark_name = local_benchmark_name
-                benchmark_desc = value_map[
-                    diagnostics['benchmarkDescriptions']][0]
-            assert benchmark_name == local_benchmark_name, ('There are more '
-                   'than 1 benchmark names in the result, could not parse.')
+                if diagnostics.has_key('benchmarkDescriptions'):
+                    benchmark_desc = value_map[
+                        diagnostics['benchmarkDescriptions']][0]
+            if benchmark_name != local_benchmark_name:
+                logging.warning('There are more than 1 benchmark names in the'
+                                'result. old: %s, new: %s' %
+                                (benchmark_name, local_benchmark_name))
+                continue
 
             unit = obj['unit']
             smaller_postfixes = ('_smallerIsBetter', '-')
