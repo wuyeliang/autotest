@@ -10,7 +10,7 @@ import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server import test
-from autotest_lib.server.cros.power import servo_v4_charge_utils
+from autotest_lib.server.cros.power import servo_charger
 
 
 TOTAL_LOOPS = 100
@@ -31,8 +31,8 @@ class power_ServoChargeStress(test.test):
         @param total_loops: total loops of Servo role change.
         @param sleep: seconds to sleep between Servo role change command.
         """
-        self._charge_manager = servo_v4_charge_utils.ServoV4ChargeManager(
-                host, host.servo)
+        self._charge_manager = servo_charger.ServoV4ChargeManager(host,
+                                                                  host.servo)
         pd_roles = ['snk', 'src']
         total_fail = collections.defaultdict(int)
         total_success_with_recovery = collections.defaultdict(int)
@@ -72,4 +72,3 @@ class power_ServoChargeStress(test.test):
                     total_success_with_recovery[role]
         keyval['Total_loops'] = total_loops
         self.write_perf_keyval(keyval)
-

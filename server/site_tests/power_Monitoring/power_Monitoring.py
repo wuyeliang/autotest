@@ -12,7 +12,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import retry
 from autotest_lib.server import test
 from autotest_lib.server.cros.dynamic_suite import suite
-from autotest_lib.server.cros.power import servo_v4_charge_utils
+from autotest_lib.server.cros.power import servo_charger
 
 # Timeout in seconds to attempt to ping the DUT.
 DUT_PINGABLE_TIMEOUT_S = 30.0
@@ -109,7 +109,7 @@ class power_Monitoring(test.test):
         self.start_charging_level = max(start, self.MIN_START_CHARGING_LEVEL)
         self._host = host
         servo = host.servo
-        self._charger = servo_v4_charge_utils.ServoV4ChargeManager(host, servo)
+        self._charger = servo_charger.ServoV4ChargeManager(host, servo)
         self._charger.stop_charging(verify=True)
 
         # If no suite is defined, run with power_monitoring suite.

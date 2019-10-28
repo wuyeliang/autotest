@@ -6,7 +6,7 @@
 
 from autotest_lib.server.cros.power import power_base_wrapper
 from autotest_lib.server.cros.power import power_telemetry_logger
-from autotest_lib.server.cros.power import servo_v4_charge_utils
+from autotest_lib.server.cros.power import servo_charger
 
 
 class power_PowerlogWrapper(power_base_wrapper.PowerBaseWrapper):
@@ -25,7 +25,7 @@ class power_PowerlogWrapper(power_base_wrapper.PowerBaseWrapper):
         """
         super(power_PowerlogWrapper, self).warmup(host)
         if charge_control:
-            self._charge_manager = servo_v4_charge_utils.ServoV4ChargeManager(
+            self._charge_manager = servo_charger.ServoV4ChargeManager(
                     host, host.servo)
             self._charge_manager.stop_charging()
 
