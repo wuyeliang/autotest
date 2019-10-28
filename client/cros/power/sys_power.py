@@ -134,7 +134,13 @@ def check_wakeup(estimated_alarm):
 
 
 def pause_check_network_hook():
-    """Stop check_ethernet.hook from running until the test exits.
+    """Stop check_ethernet.hook from running.
+
+    Lock will be held until test exits, or resume_check_network_hook() is
+    called. check_ethernet.hook may also "break" the lock if it judges you've
+    held it too long.
+
+    Can be called multiple times, to refresh the lock.
     """
     # If this function is called multiple times, we intentionally re-assign
     # this global, which closes out the old lock and grabs it anew.
@@ -144,9 +150,19 @@ def pause_check_network_hook():
     pause_ethernet_file = open(PAUSE_ETHERNET_HOOK_FILE, 'w+')
     try:
         # This is a blocking call unless an error occurs.
-        fcntl.flock(pause_ethernet_file, fcntl.LOCK_SH)
+        fcntl.flock(pause_ethernet_file, fcntl.LOCK_EX)
     except IOError:
         pass
+
+def resume_check_network_hook():
+    """Resume check_ethernet.hook.
+
+    Must call pause_check_network_hook() at least once before calling this.
+    """
+    global pause_ethernet_file
+    # Closing the file descriptor releases the lock.
+    pause_ethernet_file.close()
+    pause_ethernet_file = None
 
 
 def do_suspend(suspend_seconds, delay_seconds=0):
