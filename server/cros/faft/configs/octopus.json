@@ -21,6 +21,8 @@
     ],
     "smm_store": false,
     "models": {
-        "bobba360": {}
+        "bobba360": {
+            "usbc_input_voltage_limit": 15
+        }
     }
 }
