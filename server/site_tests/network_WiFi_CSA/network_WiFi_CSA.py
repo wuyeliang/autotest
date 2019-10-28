@@ -34,9 +34,6 @@ class network_WiFi_CSA(wifi_cell_test_base.WiFiCellTestBase):
                   [site_linux_system.LinuxSystem.
                           CAPABILITY_SEND_MANAGEMENT_FRAME])
             self.context.configure(router_conf)
-            self.context.capture_host.start_capture(
-                    router_conf.frequency,
-                    filename='chan%d.pcap' % router_conf.channel)
             assoc_params = xmlrpc_datatypes.AssociationParameters()
             assoc_params.ssid = self.context.router.get_ssid()
             self.context.assert_connect_wifi(assoc_params)
@@ -67,4 +64,3 @@ class network_WiFi_CSA(wifi_cell_test_base.WiFiCellTestBase):
                 raise error.TestFail('Client never lost connectivity')
             self.context.client.shill.disconnect(assoc_params.ssid)
             self.context.router.deconfig()
-            self.context.capture_host.stop_capture()
