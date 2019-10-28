@@ -202,6 +202,16 @@ class ServoV4ChargeManager(object):
             if self._host.is_ac_connected() != connected:
                 intent = 'connect' if connected else 'disconnect'
                 raise error.TestError('DUT failed to %s AC power.'% intent)
-        if self._servo.get('ec_system_powerstate') == 'S0':
+        # TODO(b:143467862): Replace this try/except with a servo.has_control()
+        # test once Sarien servo overlay correctly says that Sarien does not
+        # have this control.
+        try:
+            power_state = self._servo.get('ec_system_powerstate')
+        except error.TestFail:
+            logging.warn('Could not verify that the DUT observes power as the '
+                          '%r control is not available on servod.',
+                          'ec_system_powerstate')
+            power_state = None
+        if power_state == 'S0':
             # If the DUT has been charging in S3/S5/G3, cannot verify.
             check_host_ac(connected)
