@@ -1,9 +1,6 @@
 # Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-import time
-
-import logging
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
@@ -20,6 +17,8 @@ class policy_SecondaryGoogleAccountSigninAllowed(
     """
     version = 1
     ACC_REGEX = '/Google Account/'
+    ADD_ACCOUNT_REGEX = '/Add account/'
+    VIEW_ACCOUNTS = "View accounts"
 
     def _check_secondary_login(self, case):
         """
@@ -28,42 +27,36 @@ class policy_SecondaryGoogleAccountSigninAllowed(
         @param case: policy value.
 
         """
-        self.cr.browser.tabs[0].Navigate('https://www.gmail.com/')
+        self.cr.browser.tabs[0].Navigate('chrome://settings/people')
 
         utils.poll_for_condition(
             lambda: self.ui.item_present(role='button',
                                          name=self.ACC_REGEX,
                                          isRegex=True),
             exception=error.TestError('Test page is not ready.'),
-            timeout=30,
-            sleep_interval=3)
+            timeout=20,
+            sleep_interval=1)
 
-        self.ui.click_and_wait_for_item_with_retries(self.ACC_REGEX,
-                                                     '/Manage accounts/',
-                                                     isRegex_click=True,
-                                                     isRegex_wait=True,
-                                                     click_role='button',
-                                                     wait_role='link')
-
-        self.ui.doDefault_on_obj(role='link',
-                                 name='/Manage accounts/',
+        self.ui.doDefault_on_obj(name=self.ACC_REGEX,
                                  isRegex=True)
+        try:
+            self.ui.wait_for_ui_obj(self.ADD_ACCOUNT_REGEX, isRegex=True)
+        except:
+            if self.ui.item_present(name=self.VIEW_ACCOUNTS):
+                self.ui.doDefault_on_obj(name=self.VIEW_ACCOUNTS)
+                self.ui.wait_for_ui_obj(self.ADD_ACCOUNT_REGEX, isRegex=True)
 
-        # Sometimes a confirmation to leave page will appear.
-        if self.ui.item_present(role='button', name='Leave'):
-            self.ui.doDefault_on_obj(role='button', name='Leave')
+        add_accounts_blocked = self.ui.is_obj_restricted(
+            name=self.ADD_ACCOUNT_REGEX,
+            isRegex=True,
+            role="button")
 
-        if case is False:
-            if not self.ui.did_obj_not_load(
-            name='/Manage accounts on this device/',
-            isRegex=True):
-                raise error.TestFail(
-                    'Add account button is present and it should not be.')
-        else:
-            self.ui.wait_for_ui_obj(
-                name='/Manage accounts on this device/',
-                isRegex=True,
-                role='button')
+        if case is False and not add_accounts_blocked:
+            raise error.TestError(
+                "Should not be able to sign into second account but can.")
+        elif case is not False and add_accounts_blocked:
+            raise error.TestError(
+                "Should be able to sign into second account but cannot.")
 
     def run_once(self, case):
         """
