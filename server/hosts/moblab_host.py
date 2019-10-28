@@ -212,7 +212,7 @@ class MoblabHost(cros_host.CrosHost):
        count = 0
        while not is_sshable and count < 10:
            cmd = ('ssh  -o ConnectTimeout=30 -o ConnectionAttempts=30'
-                  ' moblab@%s echo Testing' % dut_ip)
+                  ' root@%s echo Testing' % dut_ip)
            result = self.run(cmd)
            is_sshable = 'Testing' in result.stdout
            logging.info(is_sshable)
