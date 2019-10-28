@@ -1111,6 +1111,34 @@ def process_is_alive(name_pattern):
     return utils.system("pgrep -f '^([^ /]*/)*(%s)([ ]|$)'" % name_pattern,
                         ignore_status=True) == 0
 
+def set_hwclock(time='system',
+                utc=True,
+                rtc=None,
+                noadjfile=False,
+                ignore_status=False):
+    """Uses the hwclock command to set time of an RTC.
+
+    @param time: Either 'system', meaning use the system time, or a string
+                 to be passed to the --date argument of hwclock.
+    @param utc: Boolean of whether to use UTC or localtime.
+    @param rtc: String to be passed to the --rtc arg of hwclock.
+    @param noadjfile: Boolean of whether to use --noadjfile flag with hwclock.
+    @param ignore_status: Boolean of whether to ignore exit code of hwclock.
+    """
+    cmd = '/sbin/hwclock'
+    if time == 'system':
+        cmd += ' --systohc'
+    else:
+        cmd += ' --set --date "{}"'.format(time)
+    if utc:
+        cmd += ' --utc'
+    else:
+        cmd += ' --localtime'
+    if rtc is not None:
+        cmd += ' --rtc={}'.format(rtc)
+    if noadjfile:
+        cmd += ' --noadjfile'
+    return utils.system(cmd, ignore_status=ignore_status)
 
 def get_hwclock_seconds(utc=True):
     """
