@@ -41,9 +41,23 @@ def _get_pol_from_api(autotest_ext):
     return policy_data
 
 
+def refresh_policies(autotest_ext):
+    """Force a policy fetch."""
+    new_promise = '''new Promise(function(resolve, reject) {
+        chrome.autotestPrivate.refreshEnterprisePolicies(function() {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve();
+          }
+        })
+    })'''
+    autotest_ext.EvaluateJavaScript(new_promise, promise=True)
+
+
 def _reformat_policies(policy_dict):
     """
-    Reformats visually formatted dicts to type dict (and not unicode).
+    Reformat visually formatted dicts to type dict (and not unicode).
 
     Given a dict, check if 'value' is a key in the value field. If so, check
     if the data of ['value'] is unicode. If it is, attempt to load it as json.

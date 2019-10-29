@@ -21,6 +21,7 @@ from autotest_lib.client.cros import cryptohome
 from autotest_lib.client.cros import httpd
 from autotest_lib.client.cros.input_playback import keyboard
 from autotest_lib.client.cros.enterprise import enterprise_fake_dmserver
+from autotest_lib.client.cros.enterprise import enterprise_policy_utils
 from autotest_lib.client.cros.enterprise.device_policy_lookup import DEVICE_POLICY_DICT
 from autotest_lib.client.common_lib import ui_utils
 from py_utils import TimeoutException
@@ -578,16 +579,9 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
 
         return table_index
 
-
     def reload_policies(self):
         """Force a policy fetch."""
-        policy_tab = self.navigate_to_url(self.CHROME_POLICY_PAGE)
-        reload_button = "document.querySelector('button#reload-policies')"
-        policy_tab.ExecuteJavaScript("%s.click()" % reload_button)
-        policy_tab.WaitForJavaScriptCondition("!%s.disabled" % reload_button,
-                                              timeout=5)
-        policy_tab.Close()
-
+        enterprise_policy_utils.refresh_policies(self.cr.autotest_ext)
 
     def verify_extension_stats(self, extension_policies, sensitive_fields=[]):
         """
