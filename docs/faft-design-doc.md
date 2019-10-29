@@ -1,10 +1,8 @@
 <a name="faft" />
 
-# [FAFT (Fully Automated Firmware Test)
+# FAFT (Fully Automated Firmware Test)
 
 _Last updated: 2011/11/08_
-
-_Last content refresh from go/faft: 2019/02/19_
 
 - [FAFT (Fully Automated Firmware Test)](#faft)
   - [FAFT Related Documents](#faft-related-documents)
