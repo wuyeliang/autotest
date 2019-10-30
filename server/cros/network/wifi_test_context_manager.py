@@ -185,13 +185,18 @@ class WiFiTestContextManager(object):
                     snaplen=self._packet_capture_snaplen)
 
 
-    def setup(self):
-        """Construct the state used in a WiFi test."""
+    def _setup_router(self):
+        """Set up the router device."""
         self._router = site_linux_router.build_router_proxy(
                 test_name=self._test_name,
                 client_hostname=self.client.host.hostname,
-                router_addr=self._cmdline_args.get(self.CMDLINE_ROUTER_ADDR,
-                                                   None))
+                router_addr=self._cmdline_args.get(
+                        self.CMDLINE_ROUTER_ADDR, None))
+        self.router.sync_host_times()
+
+
+    def _setup_pcap(self):
+        """Set up the pcap device."""
         ping_helper = ping_runner.PingRunner()
         pcap_addr = dnsname_mangler.get_pcap_addr(
                 self.client.host.hostname,
@@ -199,10 +204,18 @@ class WiFiTestContextManager(object):
         if pcap_addr and ping_helper.simple_ping(pcap_addr):
             self._pcap_host = site_linux_system.LinuxSystem(
                               hosts.create_host(pcap_addr),'pcap')
-        # The attenuator host gives us the ability to attenuate particular
-        # antennas on the router.  Most setups don't have this capability
-        # and most tests do not require it.  We use this for RvR
-        # (network_WiFi_AttenuatedPerf) and some roaming tests.
+
+
+    def _setup_attenuator(self):
+        """
+        Set up the attenuator device.
+
+        The attenuator host gives us the ability to attenuate particular
+        antennas on the router.  Most setups don't have this capability
+        and most tests do not require it.  We use this for RvR
+        (network_WiFi_AttenuatedPerf) and some roaming tests.
+        """
+        ping_helper = ping_runner.PingRunner()
         attenuator_addr = dnsname_mangler.get_attenuator_addr(
                 self.client.host.hostname,
                 cmdline_override=self._cmdline_args.get(
@@ -211,8 +224,30 @@ class WiFiTestContextManager(object):
         if attenuator_addr and ping_helper.simple_ping(attenuator_addr):
             self._attenuator = attenuator_controller.AttenuatorController(
                     attenuator_addr)
+
+    def setup(self, include_router=True, include_pcap=True,
+            include_attenuator=True):
+        """
+        Construct the state used in a WiFi test.
+
+        @param include_router optional bool which should be False if the router
+                is not used by the test
+        @param include_pcap optional bool which should be False if the pcap
+                device is not used by the test
+        @param include_attenuator optional bool which should be False if the
+                attenuator is not used by the test
+        """
+        if include_router:
+            self._setup_router()
+        if include_pcap:
+            self._setup_pcap()
+        if include_attenuator:
+            self._setup_attenuator()
+
         # Set up a clean context to conduct WiFi tests in.
         self.client.shill.init_test_network_state()
+        self.client.sync_host_times()
+
         if self.CMDLINE_CLIENT_PACKET_CAPTURES in self._cmdline_args:
             self._enable_client_packet_captures = True
         if self.CMDLINE_PACKET_CAPTURES in self._cmdline_args:
@@ -222,8 +257,6 @@ class WiFiTestContextManager(object):
                     self._cmdline_args[self.CMDLINE_PACKET_CAPTURE_SNAPLEN])
         self.client.conductive = self._get_bool_cmdline_value(
                 self.CMDLINE_CONDUCTIVE_RIG, None)
-        for system in (self.client, self.router):
-            system.sync_host_times()
 
 
     def teardown(self):
