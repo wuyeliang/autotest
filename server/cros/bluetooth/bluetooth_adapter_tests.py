@@ -893,8 +893,8 @@ class BluetoothAdapterTests(test.test):
             """Check for timeout value in loop while recording failures."""
             actual_timeout = get_timeout()
             if timeout != actual_timeout:
-                logging.error('%s timeout value read %s does not '
-                              'match value set %s', property_name,
+                logging.debug('%s timeout value read %s does not '
+                              'match value set %s, yet', property_name,
                               actual_timeout, timeout)
                 return False
             else:
