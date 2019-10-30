@@ -10,9 +10,6 @@ HID device.
 import logging
 
 from autotest_lib.client.common_lib import error
-from autotest_lib.server.cros.bluetooth import bluetooth_adapter_tests
-from autotest_lib.server.cros.multimedia import remote_facade_factory
-
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_pairing_tests
 from autotest_lib.server.cros.multimedia import remote_facade_factory
 

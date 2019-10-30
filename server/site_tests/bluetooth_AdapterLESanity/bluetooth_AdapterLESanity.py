@@ -10,11 +10,12 @@ from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
      BluetoothAdapterQuickTests
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_pairing_tests import \
      BluetoothAdapterPairingTests
-from autotest_lib.server.site_tests.bluetooth_AdapterHIDReports.bluetooth_AdapterHIDReports  import bluetooth_AdapterHIDReports
+from autotest_lib.server.cros.bluetooth.bluetooth_adapter_hidreports_tests \
+     import BluetoothAdapterHIDReportTests
 
 class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         BluetoothAdapterPairingTests,
-        bluetooth_AdapterHIDReports):
+        BluetoothAdapterHIDReportTests):
     """A Batch of Bluetooth LE sanity tests. This test is written as a batch
        of tests in order to reduce test time, since auto-test ramp up time is
        costly. The batch is using BluetoothAdapterQuickTests wrapper methods to
