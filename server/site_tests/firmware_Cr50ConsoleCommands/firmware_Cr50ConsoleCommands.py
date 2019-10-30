@@ -165,17 +165,26 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
                     self.exclude.append(exclude)
             else:
                 self.exclude.append(include)
-        # use the major version to determine prePVT or MP. prePVT have even
-        # major versions. prod have odd
-        version = self.cr50.get_version().split('.')[1]
-        if 'mp' in self.servo.get('cr50_version'):
+        version = self.cr50.get_version().split('.')
+        # Factory images end with 22. Expect guc attributes if the version
+        # ends in 22.
+        if version[2] == '22':
+            self.include.append('guc')
+        else:
+            self.exclude.append('guc')
+
+        # Use the major version to determine prePVT or MP. prePVT have even
+        # major versions. prod have odd.
+        if int(version[1]) % 2:
             self.include.append('mp')
             self.exclude.append('prepvt')
         else:
             self.exclude.append('mp')
             self.include.append('prepvt')
         brdprop = self.cr50.get_board_properties()
-        logging.info('brdprop 0x%x: %s', brdprop, ', '.join(self.include))
+        logging.info('brdprop: 0x%x', brdprop)
+        logging.info('include: %s', ', '.join(self.include))
+        logging.info('exclude: %s', ', '.join(self.exclude))
 
 
     def run_once(self, host):
