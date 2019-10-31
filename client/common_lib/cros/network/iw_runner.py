@@ -42,6 +42,8 @@ WIDTH_VHT80 = _PrintableWidth('VHT80')
 WIDTH_VHT160 = _PrintableWidth('VHT160')
 WIDTH_VHT80_80 = _PrintableWidth('VHT80+80')
 
+VHT160_CENTER_CHANNELS = ('50','114')
+
 SECURITY_OPEN = 'open'
 SECURITY_WEP = 'wep'
 SECURITY_WPA = 'wpa'
@@ -59,7 +61,7 @@ HT_TABLE = {'no secondary': WIDTH_HT20,
 IwBand = collections.namedtuple(
     'Band', ['num', 'frequencies', 'frequency_flags', 'mcs_indices'])
 IwBss = collections.namedtuple('IwBss', ['bss', 'frequency', 'ssid', 'security',
-                                         'ht', 'signal'])
+                                         'width', 'signal'])
 IwNetDev = collections.namedtuple('IwNetDev', ['phy', 'if_name', 'if_type'])
 IwTimedScan = collections.namedtuple('IwTimedScan', ['time', 'bss_list'])
 
@@ -310,19 +312,27 @@ class IwRunner(object):
         frequency = None
         ssid = None
         ht = None
+        vht = None
         signal = None
         security = None
         supported_securities = []
         bss_list = []
+        # TODO(crbug.com/1032892): The parsing logic here wasn't really designed
+        # for the presence of multiple information elements like HT, VHT, and
+        # (eventually) HE. We should eventually update it to check that we are
+        # in the right section (e.g., verify the '* channel width' match is a
+        # match in the VHT section and not a different section). Also, we should
+        # probably add in VHT20, and VHT40 whenever we finish this bug.
         for line in output.splitlines():
             line = line.strip()
             bss_match = re.match('BSS ([0-9a-f:]+)', line)
             if bss_match:
                 if bss != None:
                     security = self.determine_security(supported_securities)
-                    iwbss = IwBss(bss, frequency, ssid, security, ht, signal)
+                    iwbss = IwBss(bss, frequency, ssid, security,
+                                  vht if vht else ht, signal)
                     bss_list.append(iwbss)
-                    bss = frequency = ssid = security = ht = None
+                    bss = frequency = ssid = security = ht = vht = None
                     supported_securities = []
                 bss = bss_match.group(1)
             if line.startswith('freq:'):
@@ -333,12 +343,31 @@ class IwRunner(object):
                 _, ssid = line.split(': ', 1)
             if line.startswith('* secondary channel offset'):
                 ht = HT_TABLE[line.split(':')[1].strip()]
+            # Checking for the VHT channel width based on IEEE 802.11-2016
+            # Table 9-252.
+            if line.startswith('* channel width:'):
+                chan_width_subfield = line.split(':')[1].strip()[0]
+                if chan_width_subfield == '1':
+                    vht = WIDTH_VHT80
+                # 2 and 3 are deprecated but are included here for older APs.
+                if chan_width_subfield == '2':
+                    vht = WIDTH_VHT160
+                if chan_width_subfield == '3':
+                    vht = WIDTH_VHT80_80
+            if line.startswith('* center freq segment 2:'):
+                center_chan_two = line.split(':')[1].strip()
+                if vht == WIDTH_VHT80:
+                    if center_chan_two in VHT160_CENTER_CHANNELS:
+                        vht = WIDTH_VHT160
+                    elif center_chan_two != '0':
+                        vht = WIDTH_VHT80_80
             if line.startswith('WPA'):
                supported_securities.append(SECURITY_WPA)
             if line.startswith('RSN'):
                supported_securities.append(SECURITY_WPA2)
         security = self.determine_security(supported_securities)
-        bss_list.append(IwBss(bss, frequency, ssid, security, ht, signal))
+        bss_list.append(IwBss(bss, frequency, ssid, security,
+                              vht if vht else ht, signal))
         return bss_list
 
 

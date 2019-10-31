@@ -117,6 +117,78 @@ class IwRunnerTest(unittest.TestCase):
                                    'no_ht_support', iw_runner.SECURITY_OPEN,
                                    None, -45.00)
 
+    VHT_CAPA_20 = str('BSS ff:ff:ff:ff:ff:ff (on wlan0)\n'
+        '    freq: 2462\n'
+        '    signal: -44.00 dBm\n'
+        '    SSID: vht_capable_20\n'
+        '    HT operation:\n'
+        '        * secondary channel offset: no secondary\n'
+        '    VHT capabilities:\n'
+        '            VHT Capabilities (0x0f8369b1):\n'
+        '                Max MPDU length: 7991\n'
+        '                Supported Channel Width: neither 160 nor 80+80\n'
+        '    VHT operation:\n'
+        '        * channel width: 0 (20 or 40 MHz)\n'
+        '        * center freq segment 1: 11\n')
+
+    VHT_CAPA_20_IW_BSS = iw_runner.IwBss('ff:ff:ff:ff:ff:ff', 2462,
+                                         'vht_capable_20',
+                                         iw_runner.SECURITY_OPEN,
+                                         iw_runner.WIDTH_HT20, -44.00)
+
+    VHT80 =  str('BSS ff:ff:ff:ff:ff:ff (on wlan0)\n'
+        '    freq: 2462\n'
+        '    signal: -44.00 dBm\n'
+        '    SSID: support_vht80\n'
+        '    HT operation:\n'
+        '        * secondary channel offset: below\n'
+        '    VHT capabilities:\n'
+        '            VHT Capabilities (0x0f8369b1):\n'
+        '                Max MPDU length: 7991\n'
+        '                Supported Channel Width: neither 160 nor 80+80\n'
+        '    VHT operation:\n'
+        '        * channel width: 1 (80 MHz)\n'
+        '        * center freq segment 1: 11\n'
+        '        * center freq segment 2: 0\n')
+
+    VHT80_IW_BSS = iw_runner.IwBss('ff:ff:ff:ff:ff:ff', 2462,
+                                   'support_vht80', iw_runner.SECURITY_OPEN,
+                                   iw_runner.WIDTH_VHT80, -44.00)
+
+    VHT160 =  str('BSS 12:34:56:78:90:aa (on wlan0)\n'
+        '    freq: 5180\n'
+        '    signal: -44.00 dBm\n'
+        '    SSID: support_vht160\n'
+        '    HT operation:\n'
+        '        * secondary channel offset: below\n'
+        '    VHT capabilities:\n'
+        '            VHT Capabilities (0x0f8369b1):\n'
+        '                Max MPDU length: 7991\n'
+        '                Supported Channel Width: 160 MHz\n'
+        '    VHT operation:\n'
+        '        * channel width: 1 (80 MHz)\n'
+        '        * center freq segment 1: 42\n'
+        '        * center freq segment 2: 50\n')
+
+    VHT160_IW_BSS = iw_runner.IwBss('12:34:56:78:90:aa', 5180,
+                                    'support_vht160', iw_runner.SECURITY_OPEN,
+                                    iw_runner.WIDTH_VHT160, -44.00)
+
+    VHT80_80 =  str('BSS ab:cd:ef:fe:dc:ba (on wlan0)\n'
+        '    freq: 5180\n'
+        '    signal: -44.00 dBm\n'
+        '    SSID: support_vht80_80\n'
+        '    HT operation:\n'
+        '        * secondary channel offset: below\n'
+        '    VHT operation:\n'
+        '        * channel width: 1 (80 MHz)\n'
+        '        * center freq segment 1: 42\n'
+        '        * center freq segment 2: 106\n')
+
+    VHT80_80_IW_BSS = iw_runner.IwBss('ab:cd:ef:fe:dc:ba', 5180,
+                                    'support_vht80_80', iw_runner.SECURITY_OPEN,
+                                    iw_runner.WIDTH_VHT80_80, -44.00)
+
     HIDDEN_SSID = str('BSS ee:ee:ee:ee:ee:ee (on wlan0)\n'
         '    freq: 2462\n'
         '    signal: -70.00 dBm\n'
@@ -514,11 +586,12 @@ class IwRunnerTest(unittest.TestCase):
         @param iw_bss_2: an IWBss object
 
         """
+
         self.assertEquals(iw_bss_1.bss, iw_bss_2.bss)
         self.assertEquals(iw_bss_1.ssid, iw_bss_2.ssid)
         self.assertEquals(iw_bss_1.frequency, iw_bss_2.frequency)
         self.assertEquals(iw_bss_1.security, iw_bss_2.security)
-        self.assertEquals(iw_bss_1.ht, iw_bss_2.ht)
+        self.assertEquals(iw_bss_1.width, iw_bss_2.width)
         self.assertEquals(iw_bss_1.signal, iw_bss_2.signal)
 
 
@@ -570,6 +643,29 @@ class IwRunnerTest(unittest.TestCase):
         """Test with a network that doesn't have ht."""
         scan_output = self.HT20 + self.NO_HT + self.HT40_ABOVE
         self.search_by_bss(scan_output, self.NO_HT_IW_BSS)
+
+
+    def test_vht_20(self):
+        """Test with a network that supports vht but is 20 MHz wide."""
+        scan_output = self.HT20 + self.NO_HT + self.VHT_CAPA_20
+        self.search_by_bss(scan_output, self.VHT_CAPA_20_IW_BSS)
+
+
+    def test_vht80(self):
+        """Test with a VHT80 network."""
+        scan_output = self.HT20 + self.VHT80 + self.HT40_ABOVE
+        self.search_by_bss(scan_output, self.VHT80_IW_BSS)
+
+
+    def test_vht160(self):
+        """Test with a VHT160 network."""
+        scan_output = self.VHT160 + self.VHT80 + self.HT40_ABOVE
+        self.search_by_bss(scan_output, self.VHT160_IW_BSS)
+
+    def test_vht80_80(self):
+        """Test with a VHT80+80 network."""
+        scan_output = self.VHT160 + self.VHT80_80
+        self.search_by_bss(scan_output, self.VHT80_80_IW_BSS)
 
 
     def test_hidden_ssid(self):

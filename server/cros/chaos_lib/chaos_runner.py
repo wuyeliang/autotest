@@ -245,7 +245,7 @@ class ChaosRunner(object):
                         result = job.run_test(self._test,
                                      capturer=capturer,
                                      capturer_frequency=networks[0].frequency,
-                                     capturer_ht_type=networks[0].ht,
+                                     capturer_ht_type=networks[0].width,
                                      host=self._host,
                                      assoc_params=assoc_params,
                                      client=client,
