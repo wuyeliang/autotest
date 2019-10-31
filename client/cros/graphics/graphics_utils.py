@@ -1128,7 +1128,7 @@ class GraphicsKernelMemory(object):
             possible_field_paths = fields[field_name]
             field_value = None
             for path in possible_field_paths:
-                if utils.system('ls %s' % path):
+                if utils.system('ls %s' % path, ignore_status=True):
                     continue
                 field_value = utils.system_output('cat %s' % path)
                 break
@@ -1169,6 +1169,19 @@ class GraphicsKernelMemory(object):
         """
         results = {}
         labels = ['bytes', 'objects']
+
+        # First handle i915_gem_objects in 5.x kernels. Example:
+        #     296 shrinkable [0 free] objects, 274833408 bytes
+        #     frecon: 3 objects, 72192000 bytes (0 active, 0 inactive, 0 unbound, 0 closed)
+        #     chrome: 6 objects, 74629120 bytes (0 active, 0 inactive, 376832 unbound, 0 closed)
+        #     <snip>
+        i915_gem_objects_pattern = re.compile(
+            r'(?P<objects>\d*) shrinkable.*objects, (?P<bytes>\d*) bytes')
+        i915_gem_objects_match = i915_gem_objects_pattern.match(output)
+        if i915_gem_objects_match is not None:
+            results['bytes'] = int(i915_gem_objects_match.group('bytes'))
+            results['objects'] = int(i915_gem_objects_match.group('objects'))
+            return results
 
         for line in output.split('\n'):
             # Strip any commas to make parsing easier.
