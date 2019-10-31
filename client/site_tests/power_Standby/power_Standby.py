@@ -58,8 +58,8 @@ class power_Standby(test.test):
 
             self._force_discharge_enabled = True
 
-        charge_start = power_stats.battery[0].charge_now
-        voltage_start = power_stats.battery[0].voltage_now
+        charge_start = power_stats.battery.charge_now
+        voltage_start = power_stats.battery.voltage_now
 
         max_hours = ((charge_start * voltage_start) /
                      (max_milliwatts_standby / 1000.))
@@ -76,7 +76,7 @@ class power_Standby(test.test):
         start_ts = time.time()
 
         while elapsed_hours < test_hours:
-            charge_before = power_stats.battery[0].charge_now
+            charge_before = power_stats.battery.charge_now
             before_suspend_secs = rtc.get_seconds()
             suspender.suspend(duration=sample_hours * 3600)
             after_suspend_secs = rtc.get_seconds()
@@ -97,7 +97,7 @@ class power_Standby(test.test):
                 raise error.TestFail(err)
 
             # Check resulting charge consumption
-            charge_used = charge_before - power_stats.battery[0].charge_now
+            charge_used = charge_before - power_stats.battery.charge_now
             elapsed_hours += actual_hours
             logging.debug(
                     'loop%d done: loop hours %.3f, elapsed hours %.3f '
@@ -114,13 +114,13 @@ class power_Standby(test.test):
         power_telemetry_utils.end_measurement(end_ts)
         self._checkpoint_logger.checkpoint(self.tagged_testname,
                                            start_ts, end_ts)
-        charge_end = power_stats.battery[0].charge_now
+        charge_end = power_stats.battery.charge_now
         total_charge_used = charge_start - charge_end
         if total_charge_used <= 0 and not bypass_check:
             raise error.TestError('Charge used is suspect.')
 
-        voltage_end = power_stats.battery[0].voltage_now
-        standby_hours = power_stats.battery[0].charge_full_design / \
+        voltage_end = power_stats.battery.voltage_now
+        standby_hours = power_stats.battery.charge_full_design / \
                         total_charge_used * elapsed_hours
         energy_used = (voltage_start + voltage_end) / 2 * \
                       total_charge_used

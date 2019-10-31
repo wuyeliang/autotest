@@ -238,8 +238,8 @@ class power_LoadTest(arc.ArcTest):
             self._test_low_batt_p = min_low_batt_p
 
         if self._power_status.battery:
-            self._ah_charge_start = self._power_status.battery[0].charge_now
-            self._wh_energy_start = self._power_status.battery[0].energy
+            self._ah_charge_start = self._power_status.battery.charge_now
+            self._wh_energy_start = self._power_status.battery.energy
 
 
     def run_once(self):
@@ -445,24 +445,24 @@ class power_LoadTest(arc.ArcTest):
 
         # record battery stats
         if self._power_status.battery:
-            keyvals['a_current_now'] = self._power_status.battery[0].current_now
+            keyvals['a_current_now'] = self._power_status.battery.current_now
             keyvals['ah_charge_full'] = \
-                    self._power_status.battery[0].charge_full
+                    self._power_status.battery.charge_full
             keyvals['ah_charge_full_design'] = \
-                    self._power_status.battery[0].charge_full_design
+                    self._power_status.battery.charge_full_design
             keyvals['ah_charge_start'] = self._ah_charge_start
-            keyvals['ah_charge_now'] = self._power_status.battery[0].charge_now
+            keyvals['ah_charge_now'] = self._power_status.battery.charge_now
             keyvals['ah_charge_used'] = keyvals['ah_charge_start'] - \
                                         keyvals['ah_charge_now']
             keyvals['wh_energy_start'] = self._wh_energy_start
-            keyvals['wh_energy_now'] = self._power_status.battery[0].energy
+            keyvals['wh_energy_now'] = self._power_status.battery.energy
             keyvals['wh_energy_used'] = keyvals['wh_energy_start'] - \
                                         keyvals['wh_energy_now']
             keyvals['v_voltage_min_design'] = \
-                    self._power_status.battery[0].voltage_min_design
+                    self._power_status.battery.voltage_min_design
             keyvals['wh_energy_full_design'] = \
-                    self._power_status.battery[0].energy_full_design
-            keyvals['v_voltage_now'] = self._power_status.battery[0].voltage_now
+                    self._power_status.battery.energy_full_design
+            keyvals['v_voltage_now'] = self._power_status.battery.voltage_now
 
         keyvals.update(self._tmp_keyvals)
 
@@ -587,9 +587,9 @@ class power_LoadTest(arc.ArcTest):
                 raise error.TestError('Running on AC power now.')
 
             if self._power_status.battery:
-                charge_now = self._power_status.battery[0].charge_now
-                energy_rate = self._power_status.battery[0].energy_rate
-                voltage_now = self._power_status.battery[0].voltage_now
+                charge_now = self._power_status.battery.charge_now
+                energy_rate = self._power_status.battery.energy_rate
+                voltage_now = self._power_status.battery.voltage_now
                 self._stats['w_energy_rate'].append(energy_rate)
                 self._stats['v_voltage_now'].append(voltage_now)
                 if verbose:
