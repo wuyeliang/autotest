@@ -47,7 +47,7 @@ class FioTest(test.test):
 
         # Obtain the device name by stripping the partition number.
         # For example, sda3 => sda; mmcblk1p3 => mmcblk1, nvme0n1p3 => nvme0n1.
-        device = re.match(r'.*(sd[a-z]|mmcblk[0-9]+|nvme[0-9]+n[0-9]+)p?[0-9]+',
+        device = re.match(r'.*(sd[a-z]|mmcblk[0-9]+|nvme[0-9]+n[0-9]+)p?[0-9]*',
                           self.__filename).group(1)
         findsys = utils.run('find /sys/devices -name %s' % device)
         device_path = findsys.stdout.rstrip()
@@ -98,11 +98,12 @@ class FioTest(test.test):
             else:
                 self.__filename = utils.get_free_root_partition()
         elif filesize != 0:
-            # Use the first partition of the external drive
-            if dev[5:7] == 'sd':
-                self.__filename = dev + '1'
+            # Use the first partition of the external drive if it exists
+            partition = utils.concat_partition(dev, 1)
+            if os.path.exists(partition):
+                self.__filename = partition
             else:
-                self.__filename = dev + 'p1'
+                self.__filename = dev
         else:
             self.__filename = dev
         self.__get_disk_size()
