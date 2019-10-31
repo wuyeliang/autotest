@@ -31,7 +31,9 @@ class HostapConfig(object):
                    2472: 13,
                    # 14 is for Japan, DSSS and CCK only.
                    2484: 14,
-                   # 34 valid in Japan.
+                   # 32 valid in Europe.
+                   5160: 32,
+                   # 34 valid in Europe.
                    5170: 34,
                    # 36-116 valid in the US, except 38, 42, and 46, which have
                    # mixed international support.
@@ -59,10 +61,12 @@ class HostapConfig(object):
                    5660: 132,
                    5680: 136,
                    5700: 140,
+                   5710: 142,
                    # 144 is supported by a subset of WiFi chips
                    # (e.g. bcm4354, but not ath9k).
                    5720: 144,
                    5745: 149,
+                   5755: 151,
                    5765: 153,
                    5785: 157,
                    5805: 161,
@@ -167,18 +171,18 @@ class HostapConfig(object):
     }
 
     # This is a loose merging of the rules for US and EU regulatory
-    # domains as taken from IEEE Std 802.11-2012 Appendix E.  For instance,
+    # domains as taken from IEEE Std 802.11-2016 Appendix E.  For instance,
     # we tolerate HT40 in channels 149-161 (not allowed in EU), but also
     # tolerate HT40+ on channel 7 (not allowed in the US).  We take the loose
     # definition so that we don't prohibit testing in either domain.
-    HT40_ALLOW_MAP = {N_CAPABILITY_HT40_MINUS: range(6, 14) +
-                                               range(40, 65, 8) +
-                                               range(104, 137, 8) +
-                                               [153, 161],
-                      N_CAPABILITY_HT40_PLUS: range(1, 8) +
-                                              range(36, 61, 8) +
-                                              range(100, 133, 8) +
-                                              [149, 157]}
+    HT40_ALLOW_MAP = {N_CAPABILITY_HT40_MINUS: range(5, 14) +
+                                           range(40, 65, 8) +
+                                           range(104, 145, 8) +
+                                           [153, 161],
+                  N_CAPABILITY_HT40_PLUS: range(1, 10) +
+                                           range(36, 61, 8) +
+                                           range(100, 141, 8) +
+                                           [149, 157]}
 
     PMF_SUPPORT_DISABLED = 0
     PMF_SUPPORT_ENABLED = 1
