@@ -49,7 +49,8 @@ class FioTest(test.test):
         # For example, sda3 => sda; mmcblk1p3 => mmcblk1, nvme0n1p3 => nvme0n1.
         device = re.match(r'.*(sd[a-z]|mmcblk[0-9]+|nvme[0-9]+n[0-9]+)p?[0-9]*',
                           self.__filename).group(1)
-        findsys = utils.run('find /sys/devices -name %s' % device)
+        findsys = utils.run('find /sys/devices -name %s | grep -v virtual'
+                            % device)
         device_path = findsys.stdout.rstrip()
 
         if "nvme" in device:
