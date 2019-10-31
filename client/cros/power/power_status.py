@@ -20,6 +20,7 @@ import time
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error, enum
+from autotest_lib.client.common_lib.utils import poll_for_condition_ex
 from autotest_lib.client.cros import kernel_trace
 from autotest_lib.client.cros.power import power_utils
 
@@ -510,6 +511,16 @@ class SysStat(object):
 
         return self.battery.status.rstrip() == 'Discharging'
 
+    def battery_full(self):
+        """
+        Returns true if battery is currently full or false otherwise.
+        """
+        if not self.battery_path:
+            logging.warn('Unable to determine battery fullness status')
+            return False
+
+        return self.battery.status.rstrip() == 'Full'
+
 
     def battery_discharge_ok_on_ac(self):
         """Returns True if battery is ok to discharge on AC presently.
@@ -549,6 +560,13 @@ class SysStat(object):
             raise error.TestError('Initial charge (%f) less than min (%f)'
                       % (percent_initial_charge, percent_initial_charge_min))
 
+    def assert_battery_in_range(self, min_level, max_level):
+        """Raise a error.TestFail if the battery level is not in range."""
+        current_percent = self.percent_current_charge()
+        if not (min_level <= current_percent <= max_level):
+            raise error.TestFail('battery must be in range [{}, {}]'.format(
+                                 min_level, max_level))
+
 
 def get_status():
     """
@@ -561,6 +579,51 @@ def get_status():
     status.refresh()
     return status
 
+
+def poll_for_charging_behavior(behavior, timeout):
+    """
+    Wait up to |timeout| seconds for the charging behavior to become |behavior|.
+
+    @param behavior: One of 'ON_AC_AND_CHARGING',
+                            'ON_AC_AND_NOT_CHARGING',
+                            'NOT_ON_AC_AND_NOT_CHARGING'.
+    @param timeout: in seconds.
+
+    @raises: error.TestFail if the behavior does not match in time, or another
+             exception if something else fails along the way.
+    """
+    ps = get_status()
+
+    def _verify_on_AC_and_charging():
+        ps.refresh()
+        if not ps.on_ac():
+            raise error.TestFail('Device is not on AC, but should be')
+        if not ps.battery_charging():
+            raise error.TestFail('Device is not charging, but should be')
+        return True
+
+    def _verify_on_AC_and_not_charging():
+        ps.refresh()
+        if not ps.on_ac():
+            raise error.TestFail('Device is not on AC, but should be')
+        if ps.battery_charging():
+            raise error.TestFail('Device is charging, but should not be')
+        return True
+
+    def _verify_not_on_AC_and_not_charging():
+        ps.refresh()
+        if ps.on_ac():
+            raise error.TestFail('Device is on AC, but should not be')
+        return True
+
+    poll_functions = {
+        'ON_AC_AND_CHARGING'        : _verify_on_AC_and_charging,
+        'ON_AC_AND_NOT_CHARGING'    : _verify_on_AC_and_not_charging,
+        'NOT_ON_AC_AND_NOT_CHARGING': _verify_not_on_AC_and_not_charging,
+    }
+    poll_for_condition_ex(poll_functions[behavior],
+                          timeout=timeout,
+                          sleep_interval=1)
 
 class AbstractStats(object):
     """
