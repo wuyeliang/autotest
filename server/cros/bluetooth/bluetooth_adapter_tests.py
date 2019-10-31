@@ -984,6 +984,7 @@ class BluetoothAdapterTests(test.test):
                                       property_name, time_elapsed, timeout)
                         return True
 
+        default_value = check_property()
         default_timeout = get_timeout()
 
         result = []
@@ -996,8 +997,13 @@ class BluetoothAdapterTests(test.test):
             logging.error("exception in test_%s_timeout",property_name)
             raise
         finally:
-            # Set the timeout back to default value before existing the test
+            # Set the property back to default value permanently before
+            # exiting the test
+            set_timeout(0)
+            set_property(default_value)
+            # Set the timeout back to default value before exiting the test
             set_timeout(default_timeout)
+
 
     @_test_retry_and_log
     def test_discoverable_timeout(self, timeout_values = [0, 60, 180]):

@@ -156,7 +156,6 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         self.sa_adapter_suspend_resume_test()
         self.sa_adapter_present_test()
         self.sa_adapter_discoverable_timeout_test()
-        self.sa_adapter_pairable_timeout_test()
         self.sa_default_state_test()
         self.sa_valid_address_test()
 
