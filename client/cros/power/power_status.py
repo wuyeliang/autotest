@@ -486,14 +486,19 @@ class SysStat(object):
         return on_ac
 
 
-    def ac_charging(self):
+    def battery_charging(self):
         """
-        Returns true if device is currently charging from AC power.
+        Returns true if battery is currently charging or false otherwise.
         """
-        charging = False
         for linepower in self.linepower:
-            charging |= (linepower.status == 'Charging')
-        return charging
+            if linepower.status == 'Charging':
+                return True
+
+        if not self.battery_path:
+            logging.warn('Unable to determine battery charge status')
+            return False
+
+        return self.battery.status.rstrip() == 'Charging'
 
 
     def battery_discharging(self):
@@ -504,7 +509,7 @@ class SysStat(object):
             logging.warn('Unable to determine battery discharge status')
             return False
 
-        return(self.battery.status.rstrip() == 'Discharging')
+        return self.battery.status.rstrip() == 'Discharging'
 
 
     def battery_discharge_ok_on_ac(self):
@@ -513,7 +518,7 @@ class SysStat(object):
         some devices cycle between charge & discharge above a certain
         SoC.  If AC is charging and SoC > 95% we can safely assume that.
         """
-        return self.ac_charging() and (self.percent_current_charge() > 95)
+        return self.battery_charging() and (self.percent_current_charge() > 95)
 
 
     def percent_current_charge(self):
