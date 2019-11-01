@@ -48,7 +48,7 @@ class policy_WilcoServerOnNonWilcoDevice(test.test):
 
         self.host = host
         # Clear TPM to ensure that client test can enroll device.
-        tpm_utils.ClearTPMIfOwned(self._host)
+        tpm_utils.ClearTPMIfOwned(self.host)
 
         self.autotest_client = autotest.Autotest(self.host)
         self.autotest_client.run_test(
