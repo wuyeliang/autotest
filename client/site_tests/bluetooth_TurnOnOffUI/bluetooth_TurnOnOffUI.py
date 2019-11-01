@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import os
 import time
 
 from autotest_lib.client.common_lib import error
@@ -110,14 +109,22 @@ class bluetooth_TurnOnOffUI(graphics_utils.GraphicsTest):
         @param iteration_count: Number of iterations to toggle on/off
 
         """
-        with chrome.Chrome(autotest_ext=True) as cr:
-            ui = ui_utils.UI_Handler()
-            ui.start_ui_root(cr)
-            self.open_status_tray(ui)
-            self.open_bluetooth_page(ui)
-            logging.info("Turning off bluetooth before start test")
-            self.turn_off_bluetooth(ui)
-            for iteration in range(1, iteration_count + 1):
-                logging.info("Iteration: %d", iteration)
-                self.turn_on_bluetooth(ui)
+        try:
+            with chrome.Chrome(autotest_ext=True) as cr:
+                ui = ui_utils.UI_Handler()
+                ui.start_ui_root(cr)
+                self.open_status_tray(ui)
+                self.open_bluetooth_page(ui)
+                logging.info("Turning off bluetooth before start test")
                 self.turn_off_bluetooth(ui)
+                for iteration in range(1, iteration_count + 1):
+                    logging.info("Iteration: %d", iteration)
+                    self.turn_on_bluetooth(ui)
+                    self.turn_off_bluetooth(ui)
+        except error.TestFail:
+            raise
+        except Exception as e:
+            logging.error('Exception "%s" seen during test', e)
+            raise error.TestFail('Exception "%s" seen during test' % e)
+        finally:
+            self.xmlrpc_delegate.reset_on()
