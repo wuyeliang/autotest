@@ -757,17 +757,6 @@ class TradefedTest(test.test):
         self._safe_makedirs(dest)
         shutil.copy(os.path.join('/tmp', name), os.path.join(dest, name))
 
-    def _parse_result(self, result, waivers=None):
-        """Check the result from the tradefed output.
-
-        This extracts the test pass/fail/executed list from the output of
-        tradefed. It is up to the caller to handle inconsistencies.
-
-        @param result: The result object from utils.run.
-        @param waivers: a set[] of tests which are permitted to fail.
-        """
-        return parse_tradefed_result(result.stdout, waivers)
-
     def _get_expected_failures(self, directory, bundle_abi):
         """Return a list of expected failures or no test module.
 
@@ -961,7 +950,7 @@ class TradefedTest(test.test):
         self._collect_tradefed_global_log(output, result_destination)
         # Result parsing must come after all other essential operations as test
         # warnings, errors and failures can be raised here.
-        return self._parse_result(output, waivers=self._waivers)
+        return parse_tradefed_result(output.stdout, self._waivers)
 
     def _setup_result_directories(self):
         """Sets up the results and logs directories for tradefed.
