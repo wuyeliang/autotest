@@ -8,6 +8,7 @@ TIME = 'SHORT'
 TEST_CATEGORY = 'General'
 TEST_CLASS = 'enterprise'
 TEST_TYPE = 'server'
+ATTRIBUTES = "suite:wilco_bve"
 
 DOC = """
 Sets up and runs the client test for the DeviceWilcoDtcAllowed
