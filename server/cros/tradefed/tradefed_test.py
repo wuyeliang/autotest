@@ -1039,7 +1039,10 @@ class TradefedTest(test.test):
 
         @return: tuple of the last (session_id, pass, fail, all_done?).
         """
-        output = self._run_tradefed([['list', 'results']])
+
+        # Fix b/143580192: We set the timeout to 20s because it should never
+        # takes more than 10s.
+        output = self._run_tradefed_with_timeout([['list', 'results']], 20)
 
         # Parses the last session from the output that looks like:
         #
@@ -1060,6 +1063,13 @@ class TradefedTest(test.test):
 
     def _tradefed_run_command(self, template):
         raise NotImplementedError('Subclass should override this function')
+
+    def _run_tradefed_with_timeout(self, commands, timeout):
+        raise NotImplementedError('Subclass should override this function')
+
+    def _run_tradefed(self, commands):
+        timeout = self._timeout * self._timeout_factor
+        return self._run_tradefed_with_timeout(commands, timeout)
 
     def _run_tradefed_with_retries(self,
                                    test_name,

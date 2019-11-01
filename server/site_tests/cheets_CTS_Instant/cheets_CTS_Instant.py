@@ -60,7 +60,7 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
     def _get_tradefed_base_dir(self):
         return 'android-cts_instant'
 
-    def _run_tradefed(self, commands):
+    def _run_tradefed_with_timeout(self, commands, timeout):
         """Kick off CTS.
 
         @param commands: the command(s) to pass to CTS.
@@ -71,7 +71,6 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
         with tradefed_test.adb_keepalive(self._get_adb_targets(),
                                          self._install_paths):
             for command in commands:
-                timeout = self._timeout * self._timeout_factor
                 logging.info('RUN(timeout=%d): ./cts-instant-tradefed %s', timeout,
                              ' '.join(command))
                 output = self._run(

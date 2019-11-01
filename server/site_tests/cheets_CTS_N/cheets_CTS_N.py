@@ -81,7 +81,7 @@ class cheets_CTS_N(tradefed_test.TradefedTest):
     def _get_tradefed_base_dir(self):
         return 'android-cts'
 
-    def _run_tradefed(self, commands):
+    def _run_tradefed_with_timeout(self, commands, timeout):
         """Kick off CTS.
 
         @param commands: the command(s) to pass to CTS.
@@ -96,7 +96,7 @@ class cheets_CTS_N(tradefed_test.TradefedTest):
                 output = self._run(
                     cts_tradefed,
                     args=tuple(command),
-                    timeout=self._timeout * self._timeout_factor,
+                    timeout=timeout,
                     verbose=True,
                     ignore_status=False,
                     # Make sure to tee tradefed stdout/stderr to autotest logs
