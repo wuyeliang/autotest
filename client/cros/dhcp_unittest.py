@@ -244,7 +244,7 @@ def test_simple_server_exchange(server):
         print "Type of DHCP response is not acknowledgement."
         return False
 
-    if offer_packet.get_field(dhcp_packet.FIELD_YOUR_IP) != intended_ip:
+    if ack_packet.get_field(dhcp_packet.FIELD_YOUR_IP) != intended_ip:
         print "Server didn't give us the IP we expected."
         return False
 
