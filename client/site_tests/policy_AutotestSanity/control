@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = 'rzakarian'
-NAME = 'policy_AutotestSanity.simple_autotest_verification'
+NAME = 'policy_AutotestSanity'
 ATTRIBUTES = 'suite:ent-nightly, suite:policy'
 TIME = 'SHORT'
 TEST_CATEGORY = 'General'
