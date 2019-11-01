@@ -193,6 +193,16 @@ class LabstationHost(base_servohost.BaseServoHost):
         return provision.get_version_label_prefix(image)
 
 
+    def stage_server_side_package(self, image=None):
+        """This method is used to bypass stage ssp when run test against
+        a labstation host, which will alwasy return None.
+
+        @return: None.
+        """
+        logging.info('Stage ssp is not available on labstation.')
+        return None
+
+
     def repair(self):
         """Attempt to repair a labstation.
         """
