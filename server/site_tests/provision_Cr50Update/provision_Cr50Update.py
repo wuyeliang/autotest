@@ -36,6 +36,10 @@ class provision_Cr50Update(Cr50Test):
         """Initialize get the cr50 update version information"""
         super(provision_Cr50Update, self).initialize(host, cmdline_args,
             full_args, provision_update=True, cr50_dev_path=dev_path)
+        # TODO(mruthven): remove once the test is successfully scheduled.
+        logging.info('SUCCESSFULLY SCHEDULED PROVISION CR50 UPDATE with %r',
+                     value)
+        return
         self.host = host
         self.chip_bid_str = chip_bid_str
 
@@ -226,6 +230,9 @@ class provision_Cr50Update(Cr50Test):
 
     def run_once(self):
         """The method called by the control file to start the update."""
+        # TODO(mruthven): remove once the test is successfully scheduled.
+        logging.info('skipping update')
+        return
         chip_bid_info, set_bid = self.get_new_chip_bid()
 
         logging.info('Updating to image %s with chip board id %s',

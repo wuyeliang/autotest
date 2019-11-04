@@ -72,6 +72,9 @@ class provision_Cr50TOT(test.test):
 
     def run_once(self, host):
         """Update cr50 to the TOT image from the reef builder."""
+        # TODO(mruthven): remove once the test is successfully scheduled.
+        logging.info('SUCCESSFULLY SCHEDULED PROVISION CR50 TOT UPDATE')
+        return
         logging.info('cr50 version %s', host.servo.get('cr50_version'))
         self.host = host
         cr50_path = self.get_latest_cr50_build()
