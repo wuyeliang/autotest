@@ -30,10 +30,11 @@ necessary. value is completely ignored if a valid release_path is given.
 
 from autotest_lib.client.common_lib import error, utils
 
+if 'args_dict' not in locals():
+    args_dict = {}
 
-args_dict = utils.args_to_dict(args)
+args_dict.update(utils.args_to_dict(args))
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
-
 
 release_path = ''
 chip_bid = ''
@@ -47,7 +48,7 @@ if not locals().get('value'):
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
     job.run_test('provision_Cr50Update', host=host, cmdline_args=args,
-                 value=value, release_path=release_path,
+                 full_args=args_dict, value=value, release_path=release_path,
                  chip_bid_str=chip_bid_str)
 
 

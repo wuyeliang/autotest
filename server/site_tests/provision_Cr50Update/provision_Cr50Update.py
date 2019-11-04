@@ -31,11 +31,11 @@ class provision_Cr50Update(Cr50Test):
 
     version = 1
 
-    def initialize(self, host, cmdline_args, value='', release_path='',
-                   chip_bid_str='', dev_path=''):
+    def initialize(self, host, cmdline_args, full_args, value='',
+                   release_path='', chip_bid_str='', dev_path=''):
         """Initialize get the cr50 update version information"""
         super(provision_Cr50Update, self).initialize(host, cmdline_args,
-            provision_update=True, cr50_dev_path=dev_path)
+            full_args, provision_update=True, cr50_dev_path=dev_path)
         self.host = host
         self.chip_bid_str = chip_bid_str
 
