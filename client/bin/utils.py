@@ -1863,11 +1863,10 @@ def _get_hwmon_paths(file_pattern):
     #    /sys/class/hwmon/hwmon*/
     #    /sys/devices/virtual/hwmon/hwmon*/
     #    /sys/devices/platform/coretemp.0/
-    global _hwmon_paths
     if not _hwmon_paths:
         cmd = 'find /sys/ -name "' + file_pattern + '"'
-        _hwmon_paths = utils.run(cmd, verbose=False).stdout.splitlines()
-    return _hwmon_paths
+        _hwon_paths = utils.run(cmd, verbose=False).stdout.splitlines()
+    return _hwon_paths
 
 
 def get_temperature_critical():
