@@ -20,7 +20,10 @@ cr50 is running a dev signed RO.
 from autotest_lib.client.common_lib import error, utils
 
 
-args_dict = utils.args_to_dict(args)
+if 'args_dict' not in locals():
+    args_dict = {}
+
+args_dict.update(utils.args_to_dict(args))
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
 
