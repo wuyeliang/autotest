@@ -345,30 +345,19 @@ class tast(test.test):
         @raises error.TestFail if the tast command fails or times out (but not
             if individual tests fail).
         """
-        timeout_sec = self._get_run_tests_timeout_sec()
         args = [
             '-resultsdir=' + self.resultsdir,
             '-waituntilready=true',
-            '-timeout=' + str(timeout_sec),
+            '-timeout=' + str(self._max_run_sec),
             '-continueafterfailure=true',
         ] + self._devserver_args + self._get_servo_args()
 
         if self._run_private_tests:
             args.append('-downloadprivatebundles=true')
 
-        logging.info('Running tests with timeout of %d sec', timeout_sec)
-        self._run_tast('run', args, timeout_sec + tast._RUN_EXIT_SEC,
+        logging.info('Running tests with timeout of %d sec', self._max_run_sec)
+        self._run_tast('run', args, self._max_run_sec + tast._RUN_EXIT_SEC,
                        log_stdout=True)
-
-    def _get_run_tests_timeout_sec(self):
-        """Computes the timeout for the 'tast run' command.
-
-        @returns Integer timeout in seconds.
-        """
-        # Go time.Duration values are serialized to nanoseconds.
-        total_ns = sum([int(t['timeout']) for t in self._tests_to_run])
-        return min(total_ns / 1000000000 + tast._RUN_OVERHEAD_SEC,
-                   self._max_run_sec)
 
     def _read_run_error(self):
         """Reads a global run error message written by the tast command."""

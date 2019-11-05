@@ -442,25 +442,6 @@ class TastTest(unittest.TestCase):
         self.assertEqual(status_string(get_status_entries_from_tests(tests)),
                          status_string(self._job.status_entries))
 
-    def testSumTestTimeouts(self):
-        """Tests that test timeouts are summed for the overall timeout."""
-        ns_in_sec = 1000000000
-        tests = [TestInfo('pkg.Test1', 0, 0, timeout_ns=(23 * ns_in_sec)),
-                 TestInfo('pkg.Test2', 0, 0, timeout_ns=(41 * ns_in_sec))]
-        self._init_tast_commands(tests)
-        self._run_test()
-        self.assertEqual(64 + tast.tast._RUN_OVERHEAD_SEC,
-                         self._test._get_run_tests_timeout_sec())
-
-    def testCapTestTimeout(self):
-        """Tests that excessive test timeouts are capped."""
-        timeout_ns = 2 * self.MAX_RUN_SEC * 1000000000
-        tests = [TestInfo('pkg.Test', 0, 0, timeout_ns=timeout_ns)]
-        self._init_tast_commands(tests)
-        self._run_test()
-        self.assertEqual(self.MAX_RUN_SEC,
-                         self._test._get_run_tests_timeout_sec())
-
     def testFailureMessage(self):
         """Tests that appropriate failure messages are generated."""
         # Just do this to initialize the self._test.
