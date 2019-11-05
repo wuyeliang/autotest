@@ -100,6 +100,7 @@ class cheets_GTS(tradefed_test.TradefedTest):
                  target_class=None,
                  target_method=None,
                  needs_push_media=False,
+                 enable_default_apps=False,
                  precondition_commands=[],
                  login_precondition_commands=[],
                  authkey=None,
@@ -143,6 +144,7 @@ class cheets_GTS(tradefed_test.TradefedTest):
                 media_asset=tradefed_test.MediaAsset(
                     _GTS_MEDIA_URI if needs_push_media else None,
                     _GTS_MEDIA_LOCALPATH),
+                enable_default_apps=enable_default_apps,
                 login_precondition_commands=login_precondition_commands,
                 precondition_commands=precondition_commands)
         finally:
