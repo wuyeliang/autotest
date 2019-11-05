@@ -40,7 +40,6 @@ from autotest_lib.server.cros.tradefed import tradefed_utils
 
 # For convenience, add to our scope.
 parse_tradefed_result = tradefed_utils.parse_tradefed_result
-adb_keepalive = tradefed_utils.adb_keepalive
 
 # TODO(kinaba): Move to tradefed_utils together with the setup/cleanup methods.
 MediaAsset = namedtuple('MediaAssetInfo', ['uri', 'localpath'])
@@ -1064,8 +1063,32 @@ class TradefedTest(test.test):
     def _tradefed_run_command(self, template):
         raise NotImplementedError('Subclass should override this function')
 
-    def _run_tradefed_with_timeout(self, commands, timeout):
+    def _tradefed_cmd_path(self):
         raise NotImplementedError('Subclass should override this function')
+
+    def _tradefed_env(self):
+        return None
+
+    def _run_tradefed_with_timeout(self, commands, timeout):
+        tradefed = self._tradefed_cmd_path()
+        with tradefed_utils.adb_keepalive(self._get_adb_targets(),
+                                          self._install_paths):
+            for command in commands:
+                logging.info('RUN(timeout=%d): %s', timeout,
+                             ' '.join([tradefed] + command))
+                output = self._run(
+                    tradefed,
+                    args=tuple(command),
+                    env=self._tradefed_env(),
+                    timeout=timeout,
+                    verbose=True,
+                    ignore_status=False,
+                    # Make sure to tee tradefed stdout/stderr to autotest logs
+                    # continuously during the test run.
+                    stdout_tee=utils.TEE_TO_LOGS,
+                    stderr_tee=utils.TEE_TO_LOGS)
+                logging.info('END: %s\n', ' '.join([tradefed] + command))
+        return output
 
     def _run_tradefed(self, commands):
         timeout = self._timeout * self._timeout_factor

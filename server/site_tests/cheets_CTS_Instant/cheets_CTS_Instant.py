@@ -60,31 +60,8 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
     def _get_tradefed_base_dir(self):
         return 'android-cts_instant'
 
-    def _run_tradefed_with_timeout(self, commands, timeout):
-        """Kick off CTS.
-
-        @param commands: the command(s) to pass to CTS.
-        @param datetime_id: For 'continue' datetime of previous run is known.
-        @return: The result object from utils.run.
-        """
-        cts_tradefed = os.path.join(self._repository, 'tools', 'cts-instant-tradefed')
-        with tradefed_test.adb_keepalive(self._get_adb_targets(),
-                                         self._install_paths):
-            for command in commands:
-                logging.info('RUN(timeout=%d): ./cts-instant-tradefed %s', timeout,
-                             ' '.join(command))
-                output = self._run(
-                    cts_tradefed,
-                    args=tuple(command),
-                    timeout=timeout,
-                    verbose=True,
-                    ignore_status=False,
-                    # Make sure to tee tradefed stdout/stderr to autotest logs
-                    # continuously during the test run.
-                    stdout_tee=utils.TEE_TO_LOGS,
-                    stderr_tee=utils.TEE_TO_LOGS)
-                logging.info('END: ./cts-instant-tradefed %s\n', ' '.join(command))
-        return output
+    def _tradefed_cmd_path(self):
+        return os.path.join(self._repository, 'tools', 'cts-instant-tradefed')
 
     def _should_skip_test(self, bundle):
         """Some tests are expected to fail and are skipped."""
