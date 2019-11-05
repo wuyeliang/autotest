@@ -21,6 +21,7 @@ def run_TS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
+        enable_default_apps=True,
         needs_push_media=True,
         tag='7.0_r2.all.GtsAccountsHostTestCases_-_GtsYouTubeTestCases',
         test_name='cheets_GTS.7.0_r2.all.GtsAccountsHostTestCases_-_GtsYouTubeTestCases',

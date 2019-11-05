@@ -21,6 +21,7 @@ def run_TS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=2,
+        enable_default_apps=True,
         tag='GtsAssistantHostTestCases',
         test_name='cheets_GTS.GtsAssistantHostTestCases',
         run_template=['run', 'commandAndExit', 'gts', '--module', 'GtsAssistantHostTestCases', '--ignore-business-logic-failure'],
