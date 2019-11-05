@@ -56,7 +56,8 @@ class firmware_RollbackKernel(FirmwareTest):
     def run_once(self, dev_mode=False):
         """Main test logic"""
         recovery_reason = (vboot.RECOVERY_REASON['DEP_RW_NO_DISK'],
-                           vboot.RECOVERY_REASON['RW_NO_KERNEL'])
+                           vboot.RECOVERY_REASON['RW_NO_KERNEL'],
+                           vboot.RECOVERY_REASON['RW_INVALID_OS'])
 
         if dev_mode:
             logging.info("Rollbacks kernel A.")

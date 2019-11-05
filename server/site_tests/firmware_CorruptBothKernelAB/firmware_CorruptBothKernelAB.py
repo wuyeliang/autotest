@@ -56,7 +56,8 @@ class firmware_CorruptBothKernelAB(FirmwareTest):
     def run_once(self, dev_mode=False):
         """Main test logic"""
         recovery_reason = (vboot.RECOVERY_REASON['DEP_RW_NO_DISK'],
-                           vboot.RECOVERY_REASON['RW_NO_KERNEL'])
+                           vboot.RECOVERY_REASON['RW_NO_KERNEL'],
+                           vboot.RECOVERY_REASON['RW_INVALID_OS'])
 
         logging.info("Corrupt kernel A and B.")
         self.check_state((self.check_root_part_on_non_recovery, 'a'))
