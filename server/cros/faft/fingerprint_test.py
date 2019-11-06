@@ -93,7 +93,13 @@ class FingerprintTest(test.test):
                 _FIRMWARE_VERSION_RO_VERSION: 'nocturne_fp_v2.2.64-58cf5974e',
                 _FIRMWARE_VERSION_RW_VERSION: 'nocturne_fp_v2.2.110-b936c0a3c',
                 _FIRMWARE_VERSION_KEY_ID: '6f38c866182bd9bf7a4462c06ac04fa6a0074351',
-            }
+            },
+            'nocturne_fp_v2.2.191-1d529566e.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: 'e21223d6a3dbb7a6c6f2905f602f972b8a2b6d0fb52e262931745dae808e7c4d',
+                _FIRMWARE_VERSION_RO_VERSION: 'nocturne_fp_v2.2.64-58cf5974e',
+                _FIRMWARE_VERSION_RW_VERSION: 'nocturne_fp_v2.2.191-1d529566e',
+                _FIRMWARE_VERSION_KEY_ID: '6f38c866182bd9bf7a4462c06ac04fa6a0074351',
+            },
         },
         _FP_BOARD_NAME_NAMI: {
             'nami_fp_v2.2.144-7a08e07eb.bin': {
