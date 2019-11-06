@@ -749,6 +749,19 @@ class BluetoothDevice(object):
         self.host.collect_logs(self.XMLRPC_LOG_PATH, destination)
 
 
+    def get_connection_info(self, address):
+        """Get device connection info.
+
+        @param address: The MAC address of the device.
+
+        @returns: On success, a tuple of:
+                      ( RSSI, transmit_power, max_transmit_power )
+                  None otherwise.
+
+        """
+        return self._proxy.get_connection_info(address)
+
+
     def close(self, close_host=True):
         """Tear down state associated with the client.
 

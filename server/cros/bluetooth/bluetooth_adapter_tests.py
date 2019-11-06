@@ -1137,8 +1137,19 @@ class BluetoothAdapterTests(test.test):
                     self.ADAPTER_PAIRING_TIMEOUT_SECS)
 
 
+        def _verify_connection_info():
+            """Verify that connection info to device is retrievable.
+
+            @returns: True if the connection info is retrievable.
+                      False otherwise.
+            """
+            return (self.bluetooth_facade.get_connection_info(device_address)
+                    is not None)
+
+
         has_device = False
         paired = False
+        connection_info_retrievable = False
         if self.bluetooth_facade.has_device(device_address):
             has_device = True
             try:
@@ -1153,7 +1164,12 @@ class BluetoothAdapterTests(test.test):
             except:
                 logging.error('test_pairing: unexpected error')
 
-        self.results = {'has_device': has_device, 'paired': paired}
+            connection_info_retrievable = _verify_connection_info()
+
+        self.results = {
+                'has_device': has_device,
+                'paired': paired,
+                'connection_info_retrievable': connection_info_retrievable}
         return all(self.results.values())
 
 
@@ -2195,6 +2211,7 @@ class BluetoothAdapterTests(test.test):
                 'advertising_disabled': advertising_disabled,
         }
         return all(self.results.values())
+
 
     def add_device(self, address, address_type, action):
         """Add a device to the Kernel action list."""

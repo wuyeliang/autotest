@@ -104,6 +104,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     BLUEZ_PROFILE_MANAGER_PATH = '/org/bluez'
     BLUEZ_PROFILE_MANAGER_IFACE = 'org.bluez.ProfileManager1'
     BLUEZ_ERROR_ALREADY_EXISTS = 'org.bluez.Error.AlreadyExists'
+    BLUEZ_PLUGIN_DEVICE_IFACE = 'org.chromium.BluetoothDevice'
     DBUS_PROP_IFACE = 'org.freedesktop.DBus.Properties'
     AGENT_PATH = '/test/agent'
 
@@ -1574,6 +1575,36 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         """
         return bool(self.get_characteristic_map(address).get(uuid))
+
+
+    @xmlrpc_server.dbus_safe(False)
+    def get_connection_info(self, address):
+        """Get device connection info.
+
+        @param address: The MAC address of the device.
+
+        @returns: On success, a JSON-encoded tuple of:
+                      ( RSSI, transmit_power, max_transmit_power )
+                  None otherwise.
+
+        """
+        path = self._get_device_path(address)
+        if path is None:
+            return None
+
+        try:
+            plugin_device = dbus.Interface(
+                                self._system_bus.get_object(
+                                    self._bluetooth_service_name,
+                                    path),
+                                self.BLUEZ_PLUGIN_DEVICE_IFACE)
+            connection_info = plugin_device.GetConnInfo()
+            return json.dumps(connection_info)
+        except Exception as e:
+            logging.error('get_connection_info: %s', e)
+        except:
+            logging.error('get_connection_info: unexpected error')
+        return None
 
 
 if __name__ == '__main__':
