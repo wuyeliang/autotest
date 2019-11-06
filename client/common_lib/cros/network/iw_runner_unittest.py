@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 #
-# Copyright (c) 2013 The Chromium Authors. All rights reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -331,6 +331,181 @@ class IwRunnerTest(unittest.TestCase):
 
     PHY_FRAGMENTATION_THRESHOLD = 256
 
+    VHT_IW_INFO = str(
+        'Wiphy phy0\n'
+        '    max # scan SSIDs: 20\n'
+        '    max scan IEs length: 425 bytes\n'
+        '    max # sched scan SSIDs: 20\n'
+        '    max # match sets: 11\n'
+        '    Retry short limit: 7\n'
+        '    Retry long limit: 4\n'
+        '    Coverage class: 0 (up to 0m)\n'
+        '    Device supports RSN-IBSS.\n'
+        '    Device supports AP-side u-APSD.\n'
+        '    Device supports T-DLS.\n'
+        '    Supported Ciphers:\n'
+        '        * WEP40 (00-0f-ac:1)\n'
+        '        * WEP104 (00-0f-ac:5)\n'
+        '        * TKIP (00-0f-ac:2)\n'
+        '        * CCMP-128 (00-0f-ac:4)\n'
+        '        * CMAC (00-0f-ac:6)\n'
+        '    Available Antennas: TX 0 RX 0\n'
+        '    Supported interface modes:\n'
+        '         * IBSS\n'
+        '         * managed\n'
+        '         * AP\n'
+        '         * AP/VLAN\n'
+        '         * monitor\n'
+        '         * P2P-client\n'
+        '         * P2P-GO\n'
+        '         * P2P-device\n'
+        '    Band 1:\n'
+        '        Capabilities: 0x11ef\n'
+        '            RX LDPC\n'
+        '            HT20/HT40\n'
+        '            SM Power Save disabled\n'
+        '            RX HT20 SGI\n'
+        '            RX HT40 SGI\n'
+        '            TX STBC\n'
+        '            RX STBC 1-stream\n'
+        '            Max AMSDU length: 3839 bytes\n'
+        '            DSSS/CCK HT40\n'
+        '        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)\n'
+        '        Minimum RX AMPDU time spacing: 4 usec (0x05)\n'
+        '        HT Max RX data rate: 300 Mbps\n'
+        '        HT TX/RX MCS rate indexes supported: 0-15\n'
+        '    Band 2:\n'
+        '        Capabilities: 0x11ef\n'
+        '            RX LDPC\n'
+        '            HT20/HT40\n'
+        '            SM Power Save disabled\n'
+        '            RX HT20 SGI\n'
+        '            RX HT40 SGI\n'
+        '            TX STBC\n'
+        '            RX STBC 1-stream\n'
+        '            Max AMSDU length: 3839 bytes\n'
+        '            DSSS/CCK HT40\n'
+        '        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)\n'
+        '        Minimum RX AMPDU time spacing: 4 usec (0x05)\n'
+        '        HT Max RX data rate: 300 Mbps\n'
+        '        HT TX/RX MCS rate indexes supported: 0-15\n'
+        '        VHT Capabilities (0x038071b0):\n'
+        '            Max MPDU length: 3895\n'
+        '            Supported Channel Width: neither 160 nor 80+80\n'
+        '            RX LDPC\n'
+        '            short GI (80 MHz)\n'
+        '            TX STBC\n'
+        '            SU Beamformee\n')
+
+    HE_IW_INFO = str(
+        'Wiphy phy0\n'
+        '    max # scan SSIDs: 20\n'
+        '    max scan IEs length: 365 bytes\n'
+        '    max # sched scan SSIDs: 20\n'
+        '    max # match sets: 11\n'
+        '    max # scan plans: 2\n'
+        '    max scan plan interval: 65535\n'
+        '    max scan plan iterations: 254\n'
+        '    Retry short limit: 7\n'
+        '    Retry long limit: 4\n'
+        '    Coverage class: 0 (up to 0m)\n'
+        '    Device supports RSN-IBSS.\n'
+        '    Device supports AP-side u-APSD.\n'
+        '    Device supports T-DLS.\n'
+        '    Supported Ciphers:\n'
+        '        * WEP40 (00-0f-ac:1)\n'
+        '        * WEP104 (00-0f-ac:5)\n'
+        '        * TKIP (00-0f-ac:2)\n'
+        '        * CCMP-128 (00-0f-ac:4)\n'
+        '        * GCMP-128 (00-0f-ac:8)\n'
+        '        * GCMP-256 (00-0f-ac:9)\n'
+        '        * CMAC (00-0f-ac:6)\n'
+        '        * GMAC-128 (00-0f-ac:11)\n'
+        '        * GMAC-256 (00-0f-ac:12)\n'
+        '    Available Antennas: TX 0 RX 0\n'
+        '    Supported interface modes:\n'
+        '         * IBSS\n'
+        '         * managed\n'
+        '         * AP\n'
+        '         * AP/VLAN\n'
+        '         * monitor\n'
+        '         * P2P-client\n'
+        '         * P2P-GO\n'
+        '         * P2P-device\n'
+        '    Band 1:\n'
+        '        Capabilities: 0x19ef\n'
+        '            RX LDPC\n'
+        '            HT20/HT40\n'
+        '            SM Power Save disabled\n'
+        '            RX HT20 SGI\n'
+        '            RX HT40 SGI\n'
+        '            TX STBC\n'
+        '            RX STBC 1-stream\n'
+        '            Max AMSDU length: 7935 bytes\n'
+        '            DSSS/CCK HT40\n'
+        '        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)\n'
+        '        Minimum RX AMPDU time spacing: 4 usec (0x05)\n'
+        '        HT Max RX data rate: 300 Mbps\n'
+        '        HT TX/RX MCS rate indexes supported: 0-15\n'
+        '        HE Iftypes: Station\n'
+        '            HE MAC Capabilities (0x780112a0abc0):\n'
+        '                +HTC HE Supported\n'
+        '            HE PHY Capabilities: (0x0e3f0200fd09800ecff200):\n'
+        '                HE40/2.4GHz\n'
+        '                HE40/HE80/5GHz\n'
+        '                HE160/5GHz\n'
+        '    Band 2:\n'
+        '        Capabilities: 0x19ef\n'
+        '            RX LDPC\n'
+        '            HT20/HT40\n'
+        '            SM Power Save disabled\n'
+        '            RX HT20 SGI\n'
+        '            RX HT40 SGI\n'
+        '            TX STBC\n'
+        '            RX STBC 1-stream\n'
+        '            Max AMSDU length: 7935 bytes\n'
+        '            DSSS/CCK HT40\n'
+        '        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)\n'
+        '        Minimum RX AMPDU time spacing: 4 usec (0x05)\n'
+        '        HT Max RX data rate: 300 Mbps\n'
+        '        HT TX/RX MCS rate indexes supported: 0-15\n'
+        '        VHT Capabilities (0x039071f6):\n'
+        '            Max MPDU length: 11454\n'
+        '            Supported Channel Width: 160 MHz\n'
+        '            RX LDPC\n'
+        '            short GI (80 MHz)\n'
+        '            short GI (160/80+80 MHz)\n'
+        '            TX STBC\n'
+        '            SU Beamformee\n'
+        '            MU Beamformee\n'
+        '        VHT RX MCS set:\n'
+        '            1 streams: MCS 0-9\n'
+        '            2 streams: MCS 0-9\n'
+        '            3 streams: not supported\n'
+        '            4 streams: not supported\n'
+        '            5 streams: not supported\n'
+        '            6 streams: not supported\n'
+        '            7 streams: not supported\n'
+        '            8 streams: not supported\n'
+        '        VHT RX highest supported: 0 Mbps\n'
+        '        VHT TX MCS set:\n'
+        '            1 streams: MCS 0-9\n'
+        '            2 streams: MCS 0-9\n'
+        '            3 streams: not supported\n'
+        '            4 streams: not supported\n'
+        '            5 streams: not supported\n'
+        '            6 streams: not supported\n'
+        '            7 streams: not supported\n'
+        '            8 streams: not supported\n'
+        '        VHT TX highest supported: 0 Mbps\n'
+        '        HE Iftypes: Station\n'
+        '            HE MAC Capabilities (0x780112a0abc0):\n'
+        '                +HTC HE Supported\n'
+        '            HE PHY Capabilities: (0x0e3f0200fd09800ecff200):\n'
+        '                HE40/2.4GHz\n'
+        '                HE40/HE80/5GHz\n'
+        '                HE160/5GHz\n')
+
 
     def verify_values(self, iw_bss_1, iw_bss_2):
         """Checks all of the IWBss values
@@ -493,6 +668,20 @@ class IwRunnerTest(unittest.TestCase):
         self.assertEquals(
             runner.get_fragmentation_threshold(self.INFO_PHY),
             self.PHY_FRAGMENTATION_THRESHOLD)
+
+
+    def test_vht_supported(self):
+        """Test VHT support parsing."""
+        host = self.host(self.VHT_IW_INFO)
+        runner = iw_runner.IwRunner(remote_host=host)
+        self.assertEquals(runner.vht_supported(), True)
+
+
+    def test_he_supported(self):
+        """Test HE support parsing."""
+        host = self.host(self.HE_IW_INFO)
+        runner = iw_runner.IwRunner(remote_host=host)
+        self.assertEquals(runner.he_supported(), True)
 
 
 if __name__ == '__main__':

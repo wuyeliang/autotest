@@ -1,4 +1,4 @@
-# Copyright (c) 2013 The Chromium Authors. All rights reserved.
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -951,6 +951,14 @@ class IwRunner(object):
         """Returns True if VHT is supported; False otherwise."""
         result = self._run('%s list' % self._command_iw).stdout
         if 'VHT Capabilities' in result:
+            return True
+        return False
+
+
+    def he_supported(self):
+        """Returns True if HE (802.11ax) is supported; False otherwise."""
+        result = self._run('%s list' % self._command_iw).stdout
+        if 'HE MAC Capabilities' in result:
             return True
         return False
 
