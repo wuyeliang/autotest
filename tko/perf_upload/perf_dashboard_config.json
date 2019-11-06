@@ -143,10 +143,6 @@
     "master_name": "ChromeOS_Graphics"
   },
   {
-    "autotest_name": "graphics_Drm",
-    "master_name": "ChromeOS_Graphics"
-  },
-  {
     "autotest_name": "graphics_Gbm",
     "master_name": "ChromeOS_Graphics"
   },
