@@ -5,6 +5,7 @@
 import contextlib
 import logging
 
+from autotest_lib.client.common_lib import error
 from autotest_lib.server import autotest
 from autotest_lib.server.cros.tradefed import tradefed_constants as constants
 
@@ -103,7 +104,13 @@ class ChromeLogin(object):
             self._reboot()
             timeout *= 2
             logging.info('Retrying failed login (timeout=%d)...', timeout)
-            self._login(timeout=timeout, verbose=True, install_autotest=True)
+            try:
+                self._login(timeout=timeout,
+                            verbose=True,
+                            install_autotest=True)
+            except Exception as e2:
+                logging.error('Failed to login to Chrome', exc_info=e2)
+                raise error.TestError('Failed to login to Chrome')
 
     def exit(self):
         """On exit restart the browser or reboot the machine."""
