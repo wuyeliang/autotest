@@ -54,8 +54,9 @@ class firmware_ECCbiEeprom(FirmwareTest):
         # Ensure that the i2c mux is disabled on the servo as the CBI EEPROM
         # i2c lines are shared with the servo lines on some HW designs. We do
         # not want the servo to artificially drive the i2c lines during this
-        # test
-        self.servo.set('i2c_mux_en', 'off')
+        # test. This only applies to non CCD servo connections
+        if not self.servo.get_servo_version().endswith('ccd_cr50'):
+            self.servo.set('i2c_mux_en', 'off')
 
     def _gen_write_command(self, offset, data):
         return ('ectool i2cxfer %d %d %d %d %s' %
