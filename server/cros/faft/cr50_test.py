@@ -116,6 +116,8 @@ class Cr50Test(FirmwareTest):
 
         @param cr50_dev_path: The path to the node locked cr50 image.
         """
+        # TODO(mruthven): remove once we get the new RO DBG images.
+        raise error.TestFail('Could not find DBG image for new RO')
         if os.path.isfile(cr50_dev_path):
             self._node_locked_cr50_image = cr50_dev_path
         else:
