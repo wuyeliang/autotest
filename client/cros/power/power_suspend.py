@@ -252,7 +252,7 @@ class Suspender(object):
                 seconds = time.mktime(timeval)
                 seconds += float(match.group(2))
                 logging.debug('RTC resume timestamp read: %f', seconds)
-                if seconds >= not_before:
+                if not_before is None or seconds >= not_before:
                     return seconds
                 early_wakeup = True
         if early_wakeup:
@@ -525,6 +525,7 @@ class Suspender(object):
                     command = 'android-sh -c "logcat -c"'
                     utils.system(command, ignore_status=False)
                 try:
+                    # Return value of suspend method can be None
                     alarm = self._suspend(duration + board_delay)
                 except sys_power.SpuriousWakeupError:
                     # might be another error, we check for it ourselves below
@@ -560,9 +561,15 @@ class Suspender(object):
                            self._ts('start_suspend_time'))
             kernel_up = self._ts('end_resume_time') - start_resume
             devices_up = self._device_resume_time()
-            total_up = hwclock_ts - alarm
             firmware_up = self._firmware_resume_time()
-            board_up = total_up - kernel_up - firmware_up
+            # If we do not know the time at which the alarm went off, we cannot
+            # calculate the |total_up| and |board_up| time.
+            if alarm:
+                total_up = hwclock_ts - alarm
+                board_up = total_up - kernel_up - firmware_up
+            else:
+                total_up = -1
+                board_up = -1
             try:
                 cpu_up = self._ts('cpu_ready_time', 0) - start_resume
             except error.TestError:

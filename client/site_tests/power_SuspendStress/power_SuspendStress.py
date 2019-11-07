@@ -49,7 +49,7 @@ class power_SuspendStress(test.test):
         self._check_connection = check_connection
         self._suspend_iterations = suspend_iterations
         self._suspend_state = suspend_state
-        self._method = sys_power.idle_suspend if idle else sys_power.do_suspend
+        self._method = sys_power.idle_suspend if idle else sys_power.suspend_for
 
     def _done(self):
         if self._suspend_iterations != None:

@@ -154,6 +154,7 @@ def pause_check_network_hook():
     except IOError:
         pass
 
+
 def resume_check_network_hook():
     """Resume check_ethernet.hook.
 
@@ -165,29 +166,58 @@ def resume_check_network_hook():
     pause_ethernet_file = None
 
 
-def do_suspend(suspend_seconds, delay_seconds=0):
-    """Do a suspend using the power manager.
+def do_suspend(wakeup_timeout, delay_seconds=0):
+    """Suspend using the power manager with a wakeup timeout.
 
-    Wait for |delay_seconds|, suspend the system to RAM (S3), waking up again
-    after having been suspended for |suspend_seconds|, using the
-    powerd_dbus_suspend program. Function will block until suspend/resume
-    has completed or failed. Returns the wake alarm time from the RTC as epoch.
+    Wait for |delay_seconds|, suspend the system(S3/S0iX) using
+    powerd_dbus_suspend program. powerd_dbus_suspend first sets a wakeup alarm
+    on the dut for |current_time + wakeup_timeout|. Thus the device tries to
+    resume at |current_time + wakeup_timeout| irrespective of when it suspended.
+    This means that RTC can trigger an early resume and prevent suspend.
 
-    @param suspend_seconds: Number of seconds to suspend the DUT.
+    Function will block until suspend/resume has completed or failed.
+    Returns the wake alarm time from the RTC as epoch.
+
+    @param wakeup_timeout: time from now after which the device has to.
     @param delay_seconds: Number of seconds wait before suspending the DUT.
 
     """
     pause_check_network_hook()
-
-    estimated_alarm, wakeup_count = prepare_wakeup(suspend_seconds)
+    estimated_alarm, wakeup_count = prepare_wakeup(wakeup_timeout)
     upstart.ensure_running('powerd')
     command = ('/usr/bin/powerd_dbus_suspend --delay=%d --timeout=30 '
                '--wakeup_count=%d --wakeup_timeout=%d' %
-               (delay_seconds, wakeup_count, suspend_seconds))
+               (delay_seconds, wakeup_count, wakeup_timeout))
     logging.info("Running '%s'", command)
     os.system(command)
     check_wakeup(estimated_alarm)
     return estimated_alarm
+
+
+def suspend_for(time_in_suspend, delay_seconds=0):
+    """Suspend using the power manager and spend |time_in_suspend| in suspend.
+
+    Wait for |delay_seconds|, suspend the system(S3/S0iX) using
+    powerd_dbus_suspend program. power manager sets a wakeup alarm on the dut
+    for |time_in_suspend| just before suspending
+    (writing power state to /sys/power/state). Thus the device spends most of
+    |time_in_suspend| in S0iX/S3.
+
+    Function will block until suspend/resume has completed or failed.
+    Returns the wake alarm time from the RTC as epoch.
+
+    @param time_in_suspend: Number of seconds to suspend the DUT.
+    @param delay_seconds: Number of seconds wait before suspending the DUT.
+    """
+    pause_check_network_hook()
+
+    wakeup_count = read_wakeup_count()
+    upstart.ensure_running('powerd')
+    command = ('/usr/bin/powerd_dbus_suspend --delay=%d --timeout=30 '
+               '--wakeup_count=%d --suspend_for_sec=%d' %
+               (delay_seconds, wakeup_count, time_in_suspend))
+    logging.info("Running '%s'", command)
+    os.system(command)
 
 
 def suspend_bg_for_dark_resume(suspend_seconds, delay_seconds=0):
@@ -278,7 +308,7 @@ def memory_suspend(seconds, size=0):
 
     Suspend the system to RAM (S3), waking up again after |seconds|, using
     the memory_suspend_test tool. Function will block until suspend/resume has
-    completed or failed. Returns the wake alarm time from the RTC as epoch.
+    completed or failed.
 
     @param seconds: The number of seconds to suspend the device.
     @param size: Amount of memory to allocate, in bytes.
@@ -286,9 +316,9 @@ def memory_suspend(seconds, size=0):
     """
     # since we cannot have utils.system_output in here, we need a workaround
     output = '/tmp/memory_suspend_output'
-    estimated_alarm, wakeup_count = prepare_wakeup(seconds)
+    wakeup_count = read_wakeup_count()
     status = os.system('/usr/bin/memory_suspend_test --wakeup_count=%d '
-                       '--size=%d > %s --wakeup_timeout=%d' %
+                       '--size=%d > %s --suspend_for_sec=%d' %
                        (wakeup_count, size, output, seconds))
     status = os.WEXITSTATUS(status)
     if status == 2:
@@ -300,8 +330,6 @@ def memory_suspend(seconds, size=0):
         raise SuspendFailure('Failure in powerd_suspend during memory test')
     elif status:
         raise SuspendFailure('Unknown failure in memory_suspend_test (crash?)')
-    check_wakeup(estimated_alarm)
-    return estimated_alarm
 
 
 def read_wakeup_count():
