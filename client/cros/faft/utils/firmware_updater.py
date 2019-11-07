@@ -446,7 +446,7 @@ class FirmwareUpdater(object):
             working_shellball = working_shellball + '-%s' % append
 
         self.os_if.run_shell_command(
-                'sh %s --sb_extract %s' % (working_shellball, self._work_path))
+                'sh %s --unpack %s' % (working_shellball, self._work_path))
 
         # use the json file that was extracted, to catch extraction problems.
         self._detect_image_paths()
@@ -473,7 +473,7 @@ class FirmwareUpdater(object):
             working_shellball = new_shellball
 
         self.os_if.run_shell_command(
-                'sh %s --sb_repack %s' % (working_shellball, self._work_path))
+                'sh %s --repack %s' % (working_shellball, self._work_path))
 
         # use the shellball that was repacked, to catch repacking problems.
         self._detect_image_paths(working_shellball)
