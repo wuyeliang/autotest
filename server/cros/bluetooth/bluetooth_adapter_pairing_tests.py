@@ -31,8 +31,8 @@ class BluetoothAdapterPairingTests(
     # TODO(josephsih): Reduce the sleep intervals to speed up the tests.
     PAIR_TEST_SLEEP_SECS = 5
 
-    def pairing_test(self, device, pairing_twice=False, suspend_resume=False,
-                     reboot=False):
+    def pairing_test(self, device, check_connected_method=lambda device: True,
+                     pairing_twice=False, suspend_resume=False, reboot=False):
         """Running Bluetooth adapter tests about pairing to a device."""
 
         # Reset the adapter to forget previously paired devices if any.
@@ -85,6 +85,7 @@ class BluetoothAdapterPairingTests(
             # as it is not connected.
             time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_connection_by_device(device)
+            check_connected_method(device)
 
             time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_device_name(device.address, device.name)
@@ -114,6 +115,7 @@ class BluetoothAdapterPairingTests(
         if device.can_init_connection:
             # Verify that the device could initiate the connection.
             self.test_connection_by_device(device)
+            check_connected_method(device)
         else:
             # Reconnect so that we can test disconnection from the kit
             self.test_connection_by_adapter(device.address)
@@ -146,6 +148,7 @@ class BluetoothAdapterPairingTests(
 
 
     def connect_disconnect_loop(self, device, loops):
+        """Perform a connect disconnect loop test"""
 
         # First pair and disconnect, to emulate real life scenario
         self.test_discover_device(device.address)
@@ -188,7 +191,10 @@ class BluetoothAdapterPairingTests(
                          total_duration_by_adapter/loop_cnt)
 
 
-    def auto_reconnect_loop(self, device, loops):
+    def auto_reconnect_loop(self, device, loops,
+                            check_connected_method=lambda device: True):
+        """Running a loop to verify the paired peer can auto reconnect"""
+
         # Let the adapter pair, and connect to the target device first
         self.test_discover_device(device.address)
         # self.bluetooth_facade.is_discovering() doesn't work as expected:
@@ -209,6 +215,7 @@ class BluetoothAdapterPairingTests(
 
             # Verify that the device is reconnecting
             self.test_device_is_connected(device.address)
+            check_connected_method(device)
             end_time = time.time()
             time_diff = end_time - start_time
 

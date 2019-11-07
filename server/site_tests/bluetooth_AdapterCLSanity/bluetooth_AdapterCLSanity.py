@@ -12,6 +12,7 @@ from autotest_lib.server.cros.bluetooth.bluetooth_adapter_pairing_tests import \
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_hidreports_tests \
      import BluetoothAdapterHIDReportTests
 
+
 class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         BluetoothAdapterPairingTests,
         BluetoothAdapterHIDReportTests):
@@ -31,19 +32,26 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
     def cl_adapter_pairing_test(self):
         """Performs pairing test with mouse peripheral"""
         device = self.devices['MOUSE'][0]
-        self.pairing_test(device)
+        self.pairing_test(device,
+                          check_connected_method=\
+                          self.test_mouse_right_click)
 
     @test_wrapper('keyboard Pairing Test', devices={"KEYBOARD":1})
     def cl_adapter_keyboard_pairing_test(self):
         """Performs pairing test with keyboard peripheral"""
         device = self.devices['KEYBOARD'][0]
-        self.pairing_test(device)
+        self.pairing_test(device,
+                          check_connected_method=\
+                          self.run_keyboard_tests)
 
     @test_wrapper('Pairing Suspend Resume Test', devices={"MOUSE":1})
     def cl_adapter_pairing_suspend_resume_test(self):
         """Performs pairing test over resume with mouse peripheral"""
         device = self.devices['MOUSE'][0]
-        self.pairing_test(device, suspend_resume=True)
+        self.pairing_test(device,
+                          check_connected_method=\
+                          self.test_mouse_right_click,
+                          suspend_resume=True)
 
     @test_wrapper('HID Reports Test', devices={"MOUSE":1})
     def cl_HID_reports_test(self):

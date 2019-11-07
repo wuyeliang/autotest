@@ -92,7 +92,10 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         """LE reconnection loop by reseting HID and check reconnection"""
 
         device = self.devices['BLE_MOUSE'][0]
-        self.auto_reconnect_loop(device=device, loops=3)
+        self.auto_reconnect_loop(device=device,
+                                 loops=3,
+                                 check_connected_method=\
+                                 self.test_mouse_left_click)
 
 
     @batch_wrapper('LE Sanity')
