@@ -182,7 +182,7 @@ def do_suspend(suspend_seconds, delay_seconds=0):
     estimated_alarm, wakeup_count = prepare_wakeup(suspend_seconds)
     upstart.ensure_running('powerd')
     command = ('/usr/bin/powerd_dbus_suspend --delay=%d --timeout=30 '
-               '--wakeup_count=%d --suspend_for_sec=%d' %
+               '--wakeup_count=%d --wakeup_timeout=%d' %
                (delay_seconds, wakeup_count, suspend_seconds))
     logging.info("Running '%s'", command)
     os.system(command)
@@ -288,7 +288,7 @@ def memory_suspend(seconds, size=0):
     output = '/tmp/memory_suspend_output'
     estimated_alarm, wakeup_count = prepare_wakeup(seconds)
     status = os.system('/usr/bin/memory_suspend_test --wakeup_count=%d '
-                       '--size=%d > %s --suspend_for_sec=%d' %
+                       '--size=%d > %s --wakeup_timeout=%d' %
                        (wakeup_count, size, output, seconds))
     status = os.WEXITSTATUS(status)
     if status == 2:
