@@ -56,7 +56,7 @@ class provision_FirmwareUpdate(test.test):
             return None
 
     def run_once(self, host, value, rw_only=False, stage_image_to_usb=False,
-                flash_device=None):
+                flash_device=None, get_release_from_image_archive=False):
         """The method called by the control file to start the test.
 
         @param host:  a CrosHost object of the machine to update.
@@ -82,6 +82,13 @@ class provision_FirmwareUpdate(test.test):
             if flash_device == 'ccd_cr50':
                 orig_act_dev = host.servo.get('active_v4_device').strip()
                 host.servo.set('active_v4_device', 'ccd_cr50')
+
+            # If build info was not given and explicitly it was requested to
+            # get the release version from image archive search, then
+            # do it so.
+            if value == None and get_release_from_image_archive:
+                board = host.servo.get_board()
+                value = host.get_latest_release_version(board)
 
             host.firmware_install(build=value, rw_only=rw_only,
                                   dest=self.resultsdir)

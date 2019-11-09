@@ -6,7 +6,7 @@
 AUTHOR = "chromeos-lab-infrastructure"
 NAME = "provision_FirmwareUpdate.ccd"
 PURPOSE = "Verify flashing firmware through ccd_cr50"
-# TODO(b/123717818): Add this test to faft_cr50_(prv|prepvt|tot)
+ATTRIBUTES = "suite:faft_cr50_prepvt, suite:faft_cr50_pvt, suite:faft_cr50_tot"
 TIME = "MEDIUM"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "firmware"
@@ -27,15 +27,12 @@ servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
 
 if not locals().get('value'):
-    if not args_dict.get('value'):
-        raise error.TestError("No provision value!")
-    value = args_dict['value']
-
+    value = args_dict.get('value', None)
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
     job.run_test('provision_FirmwareUpdate', host=host, value=value,
                  rw_only=False, disable_sysinfo=True,
-                 flash_device='ccd_cr50')
+                 flash_device='ccd_cr50', get_release_from_image_archive=True)
 
 job.parallel_simple(run, machines)
