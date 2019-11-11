@@ -23,7 +23,7 @@ code path out of the test.
 import logging
 
 from autotest_lib.client.bin import utils
-from autotest_lib.client.common_lib import error
+from autotest_lib.client.cros import upstart
 
 
 class ServiceStopper(object):
@@ -66,23 +66,18 @@ class ServiceStopper(object):
         """Turn off managed services."""
 
         for service in self.services_to_stop:
-            cmd = 'status %s' % service
-            out = utils.system_output(cmd, ignore_status=True)
-            is_stopped = 'start/running' not in out
-            if is_stopped:
+            if not upstart.has_service(service):
                 continue
-            try:
-                utils.system('stop %s' % service)
-                self._services_stopped.append(service)
-            except error.CmdError as e:
-                logging.warning('Error stopping service %s. %s',
-                                service, str(e))
+            if not upstart.is_running(service):
+                continue
+            upstart.stop_job(service)
+            self._services_stopped.append(service)
 
 
     def restore_services(self):
         """Restore services that were stopped."""
         for service in reversed(self._services_stopped):
-            utils.system('start %s' % service, ignore_status=True)
+            upstart.restart_job(service)
         self._services_stopped = []
 
 
