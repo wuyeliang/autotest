@@ -77,6 +77,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 logging.info('Getting device %s', device_type)
                 self.get_device(device_type)
 
+
     def _print_delimiter(self):
         logging.info('=======================================================')
 
@@ -98,9 +99,14 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             # Query connected devices on our chameleon at init time
             self.available_devices = self.list_devices_available()
 
+            for chameleon in self.host.chameleon_list:
+                chameleon.register_raspPi_log(self.outputdir)
+
             if self.host.multi_chameleon:
                 self.chameleon_group = dict()
                 self.group_chameleons_type()
+
+        self.enable_disable_debug_log(enable=True)
 
         self.flag = flag
         self.test_iter = None
@@ -117,6 +123,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.pkg_name = None
         self.pkg_iter = None
         self.pkg_is_running = False
+
 
     @staticmethod
     def quick_test_test_decorator(test_name, devices={}, flags=['All']):
@@ -244,7 +251,6 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                                 device.address)
         # Close the connection between peers
         self.cleanup()
-
 
 
     @staticmethod

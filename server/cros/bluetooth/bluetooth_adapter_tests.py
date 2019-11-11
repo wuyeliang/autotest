@@ -550,6 +550,7 @@ class BluetoothAdapterTests(test.test):
         """
 
         def chameleon_device_type(chameleon, idx):
+            """Get ith-chameleon device type"""
             for device_type,gen_device_func in SUPPORTED_DEVICE_TYPES.items():
                 try:
                     device = gen_device_func(chameleon)()
@@ -717,6 +718,15 @@ class BluetoothAdapterTests(test.test):
     # -------------------------------------------------------------------
     # Adater standalone tests
     # -------------------------------------------------------------------
+
+
+    def enable_disable_debug_log(self, enable):
+        """Enable or disable debug log in DUT
+        @param enable: True to enable all of the debug log,
+                       False to disable all of the debug log.
+        """
+        level = int(enable)
+        self.bluetooth_facade.set_debug_log_levels(level, level, level, level)
 
 
     @_test_retry_and_log
@@ -2667,6 +2677,9 @@ class BluetoothAdapterTests(test.test):
 
     def cleanup(self, on_start=True):
         """Clean up bluetooth adapter tests."""
+        # Disable all the bluetooth debug logs
+        self.enable_disable_debug_log(enable=False)
+
         # Close the device properly if a device is instantiated.
         # Note: do not write something like the following statements
         #           if self.devices[device_type]:

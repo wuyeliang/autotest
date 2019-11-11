@@ -94,6 +94,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
     BLUETOOTH_SERVICE_NAME = 'org.chromium.Bluetooth'
     BLUEZ_MANAGER_PATH = '/'
+    BLUEZ_DEBUG_LOG_PATH = '/org/chromium/Bluetooth'
+    BLUEZ_DEBUG_LOG_IFACE = 'org.chromium.Bluetooth.Debug'
     BLUEZ_MANAGER_IFACE = 'org.freedesktop.DBus.ObjectManager'
     BLUEZ_ADAPTER_IFACE = 'org.bluez.Adapter1'
     BLUEZ_DEVICE_IFACE = 'org.bluez.Device1'
@@ -171,6 +173,27 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         self.advertisements = []
         self._adv_mainloop = gobject.MainLoop()
+
+
+    def set_debug_log_levels(self, dispatcher_vb, newblue_vb, bluez_vb,
+                             kernel_vb):
+        """Enable or disable the debug logs of bluetooth
+
+        @param dispatcher_vb: verbosity of btdispatcher debug log, either 0 or 1
+        @param newblue_vb: verbosity of newblued debug log, either 0 or 1
+        @param bluez_vb: verbosity of bluez debug log, either 0 or 1
+        @param kernel_vb: verbosity of kernel debug log, either 0 or 1
+
+        """
+        debug_object = self._system_bus.get_object(
+                                                self._bluetooth_service_name,
+                                                self.BLUEZ_DEBUG_LOG_PATH)
+        debug_object.SetLevels(dbus.Byte(dispatcher_vb),
+                               dbus.Byte(newblue_vb),
+                               dbus.Byte(bluez_vb),
+                               dbus.Byte(kernel_vb),
+                               dbus_interface=self.BLUEZ_DEBUG_LOG_IFACE)
+        return
 
 
     @xmlrpc_server.dbus_safe(False)

@@ -52,6 +52,20 @@ class BluetoothDevice(object):
         self.UUIDs = properties.get('UUIDs')
 
 
+    def set_debug_log_levels(self, dispatcher_vb, newblue_vb, bluez_vb,
+                             kernel_vb):
+        """Enable or disable the debug logs of bluetooth
+
+        @param dispatcher_vb: verbosity of btdispatcher debug log, either 0 or 1
+        @param newblue_vb: verbosity of newblued debug log, either 0 or 1
+        @param bluez_vb: verbosity of bluez debug log, either 0 or 1
+        @param kernel_vb: verbosity of kernel debug log, either 0 or 1
+
+        """
+        return self._proxy.set_debug_log_levels(dispatcher_vb, newblue_vb,
+                                                bluez_vb, kernel_vb)
+
+
     def start_bluetoothd(self):
         """start bluetoothd.
 
