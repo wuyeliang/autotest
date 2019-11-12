@@ -4,7 +4,7 @@
 
 AUTHOR = "ChromeOS Team"
 NAME = "crosvm_Sanity"
-ATTRIBUTES = "suite:smoke, suite:vmtest-informational"
+ATTRIBUTES = ""
 PURPOSE = "Verify the virtualization environment is consistent with a baseline."
 CRITERIA = """
 This test will detect changes to the virtualization environment and fail when
