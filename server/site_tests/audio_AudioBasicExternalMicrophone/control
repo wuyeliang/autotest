@@ -13,7 +13,10 @@ TEST_CATEGORY = "Functional"
 TEST_CLASS = "audio"
 TEST_TYPE = "server"
 ATTRIBUTES = "suite:chameleon_audio_perbuild"
-DEPENDENCIES = "chameleon, audio_board, test_audiojack"
+# Currently, CrOS audio team rely on the audio_box to mark tests that should
+# run on a dedicated pool of DUTs.
+# This test doesn't necessarily need to be in a audio box.
+DEPENDENCIES = "audio_box"
 JOB_RETRIES = 2
 
 DOC = """
