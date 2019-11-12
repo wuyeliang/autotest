@@ -97,6 +97,102 @@ IW_LINK_KEY_TX_PACKETS = 'tx packets'
 IW_LINK_KEY_TX_RETRIES = 'tx retries'
 IW_LOCAL_EVENT_LOG_FILE = './debug/iw_event_%d.log'
 
+# Strings from iw/util.c describing supported HE features
+HE_MAC_PLUS_HTC_HE = '+HTC HE Supported'
+HE_MAC_TWT_REQUESTER = 'TWT Requester'
+HE_MAC_TWT_RESPONDER = 'TWT Responder'
+HE_MAC_DYNAMIC_BA_FRAGMENTATION = 'Dynamic BA Fragementation Level'
+HE_MAC_MAX_MSDUS = 'Maximum number of MSDUS Fragments'
+HE_MAC_MIN_PAYLOAD_128 = 'Minimum Payload size of 128 bytes'
+HE_MAC_TRIGGER_FRAME_PADDING = 'Trigger Frame MAC Padding Duration'
+HE_MAC_MULTI_TID_AGGREGATION = 'Multi-TID Aggregation Support'
+HE_MAC_ALL_ACK = 'All Ack'
+HE_MAC_TRS = 'TRS'
+HE_MAC_BSR = 'BSR'
+HE_MAC_TWT_BROADCAST = 'Broadcast TWT'
+HE_MAC_32_BIT_BA_BITMAP = '32-bit BA Bitmap'
+HE_MAC_MU_CASCADING = 'MU Cascading'
+HE_MAC_ACK_AGGREGATION = 'Ack-Enabled Aggregation'
+HE_MAC_OM_CONTROL = 'OM Control'
+HE_MAC_OFDMA_RA = 'OFDMA RA'
+HE_MAC_MAX_AMPDU_LENGTH_EXPONENT = 'Maximum A-MPDU Length Exponent'
+HE_MAC_AMSDU_FRAGMENTATION = 'A-MSDU Fragmentation'
+HE_MAC_FLEXIBLE_TWT = 'Flexible TWT Scheduling'
+HE_MAC_RX_CONTROL_FRAME_TO_MULTIBSS = 'RX Control Frame to MultiBSS'
+HE_MAC_BSRP_BQRP_AMPDU_AGGREGATION = 'BSRP BQRP A-MPDU Aggregation'
+HE_MAC_QTP = 'QTP'
+HE_MAC_BQR = 'BQR'
+HE_MAC_SRP_RESPONDER_ROLE = 'SRP Responder Role'
+HE_MAC_NDP_FEEDBACK_REPORT = 'NDP Feedback Report'
+HE_MAC_OPS = 'OPS'
+HE_MAC_AMSDU_IN_AMPDU = 'A-MSDU in A-MPDU'
+HE_MAC_MULTI_TID_AGGREGATION_TX = 'Multi-TID Aggregation TX'
+HE_MAC_SUBCHANNEL_SELECTIVE = 'HE Subchannel Selective Transmission'
+HE_MAC_UL_2X966_TONE_RU = 'UL 2x996-Tone RU'
+HE_MAC_OM_CONTROL_DISABLE_RX = 'OM Control UL MU Data Disable RX'
+
+HE_PHY_24HE40 = 'HE40/2.4GHz'
+HE_PHY_5HE40_80 = 'HE40/HE80/5GHz'
+HE_PHY_5HE160 = 'HE160/5GHz'
+HE_PHY_5HE160_80_80 = 'HE160/HE80+80/5GHz'
+HE_PHY_242_TONE_RU_24 = '242 tone RUs/2.4GHz'
+HE_PHY_242_TONE_RU_5 = '242 tone RUs/5GHz'
+HE_PHY_PUNCTURED_PREAMBLE_RX = 'Punctured Preamble RX'
+HE_PHY_DEVICE_CLASS = 'Device Class'
+HE_PHY_LDPC_CODING_IN_PAYLOAD = 'LDPC Coding in Payload'
+HE_PHY_HE_SU_PPDU_1X_HE_LTF_08_GI = 'HE SU PPDU with 1x HE-LTF and 0.8us GI'
+HE_PHY_HE_MIDAMBLE_RX_MAX_NSTS = 'Midamble Rx Max NSTS'
+HE_PHY_NDP_4X_HE_LTF_32_GI = 'NDP with 4x HE-LTF and 3.2us GI'
+HE_PHY_STBC_TX_LEQ_80 = 'STBC Tx <= 80MHz'
+HE_PHY_STBC_RX_LEQ_80 = 'STBC Rx <= 80MHz'
+HE_PHY_DOPPLER_TX = 'Doppler Tx'
+HE_PHY_DOPPLER_RX = 'Doppler Rx'
+HE_PHY_FULL_BAND_UL_MU_MIMO = 'Full Bandwidth UL MU-MIMO'
+HE_PHY_PART_BAND_UL_MU_MIMO = 'Partial Bandwidth UL MU-MIMO'
+HE_PHY_DCM_MAX_CONSTELLATION = 'DCM Max Constellation'
+HE_PHY_DCM_MAX_NSS_TX = 'DCM Max NSS Tx'
+HE_PHY_DCM_MAX_CONSTELLATION_RX = 'DCM Max Constellation Rx'
+HE_PHY_DCM_MAX_NSS_RX = 'DCM Max NSS Rx'
+HE_PHY_RX_MU_PPDU_FROM_NON_AP = 'Rx HE MU PPDU from Non-AP STA'
+HE_PHY_SU_BEAMFORMER = 'SU Beamformer'
+HE_PHY_SU_BEAMFORMEE = 'SU Beamformee'
+HE_PHY_MU_BEAMFORMER = 'MU Beamformer'
+HE_PHY_BEAMFORMEE_STS_LEQ_80 = 'Beamformee STS <= 80Mhz'
+HE_PHY_BEAMFORMEE_STS_GT_80 = 'Beamformee STS > 80Mhz'
+HE_PHY_SOUNDING_DIMENSIONS_LEQ_80 = 'Sounding Dimensions <= 80Mhz'
+HE_PHY_SOUNDING_DIMENSIONS_GT_80 = 'Sounding Dimensions > 80Mhz'
+HE_PHY_NG_EQ_16_SU_FB = 'Ng = 16 SU Feedback'
+HE_PHY_NG_EQ_16_MU_FB = 'Ng = 16 MU Feedback'
+HE_PHY_CODEBOOK_SIZE_SU_FB = 'Codebook Size SU Feedback'
+HE_PHY_CODEBOOK_SIZE_MU_FB = 'Codebook Size MU Feedback'
+HE_PHY_TRIGGERED_SU_BEAMFORMING_FB = 'Triggered SU Beamforming Feedback'
+HE_PHY_TRIGGERED_MU_BEAMFORMING_FB = 'Triggered MU Beamforming Feedback'
+HE_PHY_TRIGGERED_CQI_FB = 'Triggered CQI Feedback'
+HE_PHY_PART_BAND_EXT_RANGE = 'Partial Bandwidth Extended Range'
+HE_PHY_PART_BAND_DL_MU_MIMO = 'Partial Bandwidth DL MU-MIMO'
+HE_PHY_PPE_THRESHOLD = 'PPE Threshold Present'
+HE_PHY_SRP_SR = 'SRP-based SR'
+HE_PHY_POWER_BOOST_FACTOR_AR = 'Power Boost Factor ar'
+HE_PHY_SU_PPDU_4X_HE_LTF_08_GI = 'HE SU PPDU & HE PPDU 4x HE-LTF 0.8us GI'
+HE_PHY_MAX_NC = 'Max NC'
+HE_PHY_STBC_TX_GT_80 = 'STBC Tx > 80MHz'
+HE_PHY_STBC_RX_GT_80 = 'STBC Rx > 80MHz'
+HE_PHY_ER_SU_PPDU_4X_HE_LTF_08_GI = 'HE ER SU PPDU 4x HE-LTF 0.8us GI'
+HE_PHY_20_IN_44_PPDU_24 = '20MHz in 40MHz HE PPDU 2.4GHz'
+HE_PHY_20_IN_160_80_80 = '20MHz in 160/80+80MHz HE PPDU'
+HE_PHY_80_IN_160_80_80 = '80MHz in 160/80+80MHz HE PPDU'
+HE_PHY_ER_SU_PPDU_1X_HE_LTF_08_GI = 'HE ER SU PPDU 1x HE-LTF 0.8us GI'
+HE_PHY_MIDAMBLE_RX_2X_AND_1X_HE_LTF = 'Midamble Rx 2x & 1x HE-LTF'
+HE_PHY_DCM_MAX_BW = 'DCM Max BW'
+HE_PHY_LONGER_THAN_16HE_OFDM_SYM = 'Longer Than 16HE SIG-B OFDM Symbols'
+HE_PHY_NON_TRIGGERED_CQI_FB = 'Non-Triggered CQI Feedback'
+HE_PHY_TX_1024_QAM = 'TX 1024-QAM'
+HE_PHY_RX_1024_QAM = 'RX 1024-QAM'
+HE_PHY_RX_FULL_BW_SU_USING_MU_COMPRESSION_SIGB = \
+        'RX Full BW SU Using HE MU PPDU with Compression SIGB'
+HE_PHY_RX_FULL_BW_SU_USING_MU_NON_COMPRESSION_SIGB = \
+        'RX Full BW SU Using HE MU PPDU with Non-Compression SIGB'
+
 
 def _get_all_link_keys(link_information):
     """Parses link or station dump output for link key value pairs.
@@ -1003,4 +1099,25 @@ class IwRunner(object):
         if match:
             return int(match.group(1))
 
+        return None
+
+
+    def get_info(self, phy=None):
+        """
+        Returns the output of 'iw phy info' for |phy|, or 'iw list' if no phy
+        specified.
+
+        @param phy: optional string giving the name of the phy
+        @return string stdout of the command run
+        """
+        if phy and phy not in [iw_phy.name for iw_phy in self.list_phys()]:
+            logging.info('iw could not find phy %s', phy)
+            return None
+
+        if phy:
+            out = self._run('%s phy %s info' % (self._command_iw, phy)).stdout
+        else:
+            out = self._run('%s list' % self._command_iw).stdout
+        if 'Wiphy' in out:
+            return out
         return None
