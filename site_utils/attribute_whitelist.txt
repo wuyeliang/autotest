@@ -42,6 +42,9 @@ suite:arc-gts-tot
 suite:arc-gts-test
 suite:arc-unit-test
 suite:audio
+suite:audio_advanced
+suite:audio_basic
+suite:audio_essential
 suite:au_fsi
 suite:au-perbuild
 suite:av_webcam
