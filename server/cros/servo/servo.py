@@ -332,6 +332,8 @@ class Servo(object):
         log_dir = '/var/log/servod_%s' % self._servo_host.servo_port
 
         if filename:
+            logging.info("Saving servod logs: %s/%s.*", directory or '.',
+                         filename)
             # TODO(crrev.com/c/1793030): remove no-level case once CL is pushed
             for level_name in ('', 'DEBUG', 'INFO', 'WARNING'):
 
@@ -380,7 +382,12 @@ class Servo(object):
         try:
             self.set_nocheck('rotate_servod_logs', 'yes')
         except ControlUnavailableError as e:
+            # Missing control (possibly old servod)
             logging.warn("Couldn't rotate servod logs: %s", str(e))
+        except error.TestFail:
+            # Control exists but gave an error; don't let it fail the test.
+            # The error is already logged in set_nocheck().
+            pass
 
     def get_power_state_controller(self):
         """Return the power state controller for this Servo.
