@@ -1062,6 +1062,10 @@ class GraphicsKernelMemory(object):
         'gem_objects': ['/sys/kernel/debug/dri/0/i915_gem_objects'],
         'memory': ['/sys/kernel/debug/dri/0/i915_gem_gtt'],
     }
+    # In Linux Kernel 5, i915_gem_gtt merged into i915_gem_objects
+    i915_fields_kernel_5 = {
+        'gem_objects': ['/sys/kernel/debug/dri/0/i915_gem_objects'],
+    }
     cirrus_fields = {}
     virtio_fields = {}
 
@@ -1071,6 +1075,7 @@ class GraphicsKernelMemory(object):
         'cirrus': cirrus_fields,
         'exynos5': exynos_fields,
         'i915': i915_fields,
+        'i915_kernel_5': i915_fields_kernel_5,
         'mediatek': mediatek_fields,
         'qualcomm': qualcomm_fields,
         'rockchip': rockchip_fields,
@@ -1103,12 +1108,15 @@ class GraphicsKernelMemory(object):
         soc = utils.get_cpu_soc_family()
 
         arch = utils.get_cpu_arch()
+        kernel_version = utils.get_kernel_version()[0:4].rstrip(".")
         if arch == 'x86_64' or arch == 'i386':
             pci_vga_device = utils.run("lspci | grep VGA").stdout.rstrip('\n')
             if "Advanced Micro Devices" in pci_vga_device:
                 soc = 'amdgpu'
             elif "Intel Corporation" in pci_vga_device:
                 soc = 'i915'
+                if utils.compare_versions(kernel_version, "4.19") > 0:
+                    soc = 'i915_kernel_5'
             elif "Cirrus Logic" in pci_vga_device:
                 # Used on qemu with kernels 3.18 and lower. Limited to 800x600
                 # resolution.
