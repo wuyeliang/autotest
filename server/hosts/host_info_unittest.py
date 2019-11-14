@@ -411,22 +411,6 @@ class HostInfoJsonSerializationTestCase(unittest.TestCase):
             host_info.json_deserialize(cStringIO.StringIO('{labels:['))
 
 
-    def test_deserialize_no_version_raises(self):
-        """Deserializing a string with no serializer version raises."""
-        info = host_info.HostInfo()
-        serialized_fp = cStringIO.StringIO()
-        host_info.json_serialize(info, serialized_fp)
-        serialized_fp.seek(0)
-
-        serialized_dict = json.load(serialized_fp)
-        del serialized_dict['serializer_version']
-        serialized_no_version_str = json.dumps(serialized_dict)
-
-        with self.assertRaises(host_info.DeserializationError):
-            host_info.json_deserialize(
-                    cStringIO.StringIO(serialized_no_version_str))
-
-
     def test_deserialize_malformed_host_info_raises(self):
         """Deserializing a malformed host_info raises."""
         info = host_info.HostInfo()
