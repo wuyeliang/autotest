@@ -406,11 +406,6 @@ def json_deserialize(file_obj):
     except ValueError as e:
         raise DeserializationError(e)
 
-    serializer_version = deserialized_json.get('serializer_version')
-    if serializer_version != 1:
-        raise DeserializationError('Unsupported serialization version %s' %
-                                   serializer_version)
-
     try:
         return HostInfo(deserialized_json['labels'],
                         deserialized_json['attributes'])
