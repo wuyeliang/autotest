@@ -795,7 +795,7 @@ class FirmwareUpdater(object):
             handler = self._create_handler('bios', 'image')
             handler.new_image(filename)
         else:
-            filename = self._bios_path
+            filename = self._get_image_path('bios')
             handler = self._get_handler('bios')
         handler.set_gbb_flags(flags)
         handler.dump_whole(filename)
