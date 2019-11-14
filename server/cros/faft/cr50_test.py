@@ -21,10 +21,14 @@ class Cr50Test(FirmwareTest):
     version = 1
 
     RESPONSE_TIMEOUT = 180
-    GS_PRIVATE = 'gs://chromeos-localmirror-private/distfiles/*/'
+    GS_PRIVATE = 'gs://chromeos-localmirror-private/distfiles/'
+    # Prod signed test images are stored in the private cr50 directory.
+    GS_PRIVATE_PROD = GS_PRIVATE + 'cr50/'
+    # Node locked test images are in this private debug directory.
+    GS_PRIVATE_DBG = GS_PRIVATE + 'chromeos-cr50-debug-0.0.11/'
     GS_PUBLIC = 'gs://chromeos-localmirror/distfiles/'
     CR50_PROD_FILE = 'cr50.r0.0.1*.w%s%s.tbz2'
-    CR50_DEBUG_FILE =  '*/cr50_dbg_%s.bin%s'
+    CR50_DEBUG_FILE =  '*/cr50.dbg.%s.bin.*%s'
     CR50_TOT_VER_FILE = 'tot/LATEST'
     CR50_TOT_FILE = 'tot/cr50.bin.%s.%s'
     NONE = 0
@@ -116,8 +120,6 @@ class Cr50Test(FirmwareTest):
 
         @param cr50_dev_path: The path to the node locked cr50 image.
         """
-        # TODO(mruthven): remove once we get the new RO DBG images.
-        raise error.TestFail('Could not find DBG image for new RO')
         if os.path.isfile(cr50_dev_path):
             self._node_locked_cr50_image = cr50_dev_path
         else:
@@ -562,7 +564,7 @@ class Cr50Test(FirmwareTest):
                                                         symbolic=True)
             bid_ext = '.' + image_bid.replace(':', '_')
 
-        gsurl = os.path.join(self.GS_PRIVATE,
+        gsurl = os.path.join(self.GS_PRIVATE_DBG,
                 (self.CR50_DEBUG_FILE % (devid.replace(' ', '_'), bid_ext)))
         return self.download_cr50_gs_image(gsurl, None, image_bid)
 
@@ -578,7 +580,7 @@ class Cr50Test(FirmwareTest):
 
     def _find_release_image_gsurl(self, fn):
         """Find the gs url for the release image"""
-        for gsbucket in [self.GS_PUBLIC, self.GS_PRIVATE]:
+        for gsbucket in [self.GS_PUBLIC, self.GS_PRIVATE_PROD]:
             gsurl = os.path.join(gsbucket, fn)
             if self.find_cr50_gs_image(gsurl):
                 return gsurl
