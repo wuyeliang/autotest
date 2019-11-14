@@ -372,9 +372,10 @@ class CommandListTests(unittest.TestCase):
 
         gs_offloader.USE_RSYNC_ENABLED = use_rsync
 
+        gs_path = os.path.join(test_bucket_uri, job.queue_args[1])
+
         command = gs_offloader._get_cmd_list(
-                multi, job.queue_args[0],
-                os.path.join(test_bucket_uri, job.queue_args[1]))
+                multi, job.queue_args[0], gs_path)
 
         self.assertEqual(command[0], 'gsutil')
         if multi:
@@ -389,6 +390,13 @@ class CommandListTests(unittest.TestCase):
             self.assertTrue('cp' in command)
             self.assertEqual(command[-1],
                              os.path.join(test_bucket_uri, job.queue_args[1]))
+
+        finish_command = gs_offloader._get_finish_cmd_list(gs_path)
+        self.assertEqual(finish_command[0], 'gsutil')
+        self.assertEqual(finish_command[1], 'cp')
+        self.assertEqual(finish_command[2], '/dev/null')
+        self.assertEqual(finish_command[3],
+                         os.path.join(gs_path, '.finished_offload'))
 
 
     def test__get_cmd_list_regular(self):
@@ -1053,6 +1061,9 @@ class OffladerConfigTests(_TempResultsDirTestBase):
         gs_offloader._emit_gs_returncode_metric(mox.IgnoreArg()).AndReturn(True)
         gs_offloader._emit_offload_metrics(mox.IgnoreArg()).AndReturn(True)
         sub_offloader = gs_offloader.GSOffloader(results_dir, True, 0, None)
+        subprocess.Popen(mox.IgnoreArg(),
+                         stdout=stdout,
+                         stderr=stderr).AndReturn(_get_fake_process())
         self.mox.ReplayAll()
         sub_offloader._try_offload(results_dir, self.dest_path, stdout, stderr)
         self.mox.VerifyAll()

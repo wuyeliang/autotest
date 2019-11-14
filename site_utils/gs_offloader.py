@@ -170,7 +170,7 @@ def _get_metrics_fields(dir_entry):
                     # gs_offloader.
                     pass
 
-    return fields;
+    return fields
 
 
 def _get_cmd_list(multiprocessing, dir_entry, gs_path):
@@ -195,6 +195,23 @@ def _get_cmd_list(multiprocessing, dir_entry, gs_path):
         target = gs_path
     cmd += ['-eR', dir_entry, target]
     return cmd
+
+
+def _get_finish_cmd_list(gs_path):
+    """Returns a command to remotely mark a given gs path as finished.
+
+    @param gs_path: Location in google storage where the offload directory
+                    should be marked as finished.
+
+    @return A command list to be executed by Popen.
+    """
+    target = os.path.join(gs_path, '.finished_offload')
+    return [
+        'gsutil',
+        'cp',
+        '/dev/null',
+        target,
+        ]
 
 
 def sanitize_dir(dirpath):
@@ -807,7 +824,9 @@ class GSOffloader(BaseGSOffloader):
                 process = subprocess.Popen(
                     cmd, stdout=stdout_file, stderr=stderr_file)
                 process.wait()
-                logging.debug('Offload command %s completed.', cmd)
+                logging.debug('Offload command %s completed; '
+                              'marking offload complete.', cmd)
+                _mark_upload_finished(gs_path, stdout_file, stderr_file)
 
             _emit_gs_returncode_metric(process.returncode)
             if process.returncode != 0:
@@ -1016,6 +1035,18 @@ def _mark_uploaded(dirpath):
     logging.debug('Creating uploaded marker for directory %s', dirpath)
     with open(_get_uploaded_marker_file(dirpath), 'a'):
         pass
+
+
+def _mark_upload_finished(gs_path, stdout_file, stderr_file):
+    """Mark a given gs_path upload as finished (remotely).
+
+    @param gs_path: gs:// url of the remote directory that is finished
+                    upload.
+    """
+    cmd = _get_finish_cmd_list(gs_path)
+    process = subprocess.Popen(cmd, stdout=stdout_file, stderr=stderr_file)
+    process.wait()
+    logging.debug('Finished marking as complete %s', cmd)
 
 
 def _get_uploaded_marker_file(dirpath):
