@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = 'dbeckett'
-NAME = 'policy_AccessibilityLargeCursor.NotSet'
+NAME = 'policy_AccessibilityTest.LargeCursorNotSet'
 ATTRIBUTES = 'suite:ent-nightly, suite:policy'
 TIME = 'SHORT'
 TEST_CATEGORY = 'General'
