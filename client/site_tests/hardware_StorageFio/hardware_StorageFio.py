@@ -165,7 +165,8 @@ class hardware_StorageFio(test.test):
 
         results = {}
 
-        if stat.S_ISBLK(os.stat(self.__filename).st_mode) and \
+        if os.path.exists(self.__filename) and \
+           stat.S_ISBLK(os.stat(self.__filename).st_mode) and \
            self.__filesize != 0:
             try:
                 fd = os.open(self.__filename, os.O_RDWR)
