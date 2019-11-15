@@ -126,7 +126,7 @@ class firmware_Cr50BID(Cr50Test):
                    basic=False, full_args={}):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
-                                                 restore_cr50_state=True)
+                                                 restore_cr50_image=True)
         if self.servo.running_through_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 

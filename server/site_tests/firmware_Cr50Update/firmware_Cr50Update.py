@@ -40,7 +40,7 @@ class firmware_Cr50Update(Cr50Test):
         """Initialize servo and process the given images"""
         super(firmware_Cr50Update, self).initialize(host, cmdline_args,
                                                     full_args,
-                                                    restore_cr50_state=True)
+                                                    restore_cr50_image=True)
         self.test_post_install = test.lower() == self.POST_INSTALL
 
         if not release_ver and not os.path.isfile(release_path):

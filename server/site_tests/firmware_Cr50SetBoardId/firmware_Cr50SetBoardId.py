@@ -52,7 +52,7 @@ class firmware_Cr50SetBoardId(Cr50Test):
     def initialize(self, host, cmdline_args, full_args, bid=''):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50SetBoardId, self).initialize(host, cmdline_args,
-             full_args, restore_cr50_state=True)
+             full_args, restore_cr50_image=True)
         if self.servo.running_through_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 

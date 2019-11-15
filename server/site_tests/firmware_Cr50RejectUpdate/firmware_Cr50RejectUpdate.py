@@ -26,7 +26,7 @@ class firmware_Cr50RejectUpdate(Cr50Test):
     def initialize(self, host, cmdline_args, full_args):
         """Initialize servo and download images"""
         super(firmware_Cr50RejectUpdate, self).initialize(host, cmdline_args,
-                full_args, restore_cr50_state=True)
+                full_args, restore_cr50_image=True)
 
         if not hasattr(self, 'cr50'):
             raise error.TestNAError('Test can only be run on devices with '

@@ -50,13 +50,13 @@ class Cr50Test(FirmwareTest):
     CR50_FLASH_OP_ERROR_MSG = 'do_flash_op'
 
     def initialize(self, host, cmdline_args, full_args,
-            restore_cr50_state=False, provision_update=False):
-        if restore_cr50_state:
+            restore_cr50_image=False, provision_update=False):
+        if restore_cr50_image:
             # TODO(mruthven): remove once cleanup can restore the baord id.
             raise error.TestNAError('Tests do not support restoring the board '
                                     'id with the new RO.')
         self._saved_state = self.NONE
-        self._raise_error_on_mismatch = not restore_cr50_state
+        self._raise_error_on_mismatch = not restore_cr50_image
         self._provision_update = provision_update
         self.tot_test_run = full_args.get('tot_test_run', '').lower() == 'true'
         super(Cr50Test, self).initialize(host, cmdline_args)
@@ -109,12 +109,12 @@ class Cr50Test(FirmwareTest):
             # We successfully saved the device images
             self._saved_state |= self.IMAGES
         except error.TestFail as e:
-            if restore_cr50_state:
+            if restore_cr50_image:
                 if 'Could not find' in str(e):
                     raise error.TestNAError('Need DBG image to run test')
                 raise
         except:
-            if restore_cr50_state:
+            if restore_cr50_image:
                 raise
 
 
