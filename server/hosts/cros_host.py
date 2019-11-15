@@ -599,6 +599,44 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         self.host_info_store.commit(info)
 
 
+    def get_latest_release_version(self, board):
+        """Search for the latest package release version from the image archive,
+            and return it.
+
+        @param board: board name
+
+        @return 'firmware-{board}-{branch}-firmwarebranch/{release-version}'
+                or None if LATEST release file does not exist.
+        """
+
+        # This might be in the format of 'baseboard_model',
+        # e.g. octopus_fleex. In that case, board should be just
+        # 'baseboard' to use in search for image package, e.g. octopus.
+        board = board.split('_')[0]
+
+        # Read 'LATEST-1.0.0' file
+        branch_dir = provision.FW_BRANCH_GLOB % board
+        latest_file = os.path.join(provision.CROS_IMAGE_ARCHIVE, branch_dir,
+                                'LATEST-1.0.0')
+        try:
+            result = utils.system_output('gsutil cat ' +  latest_file)
+
+            candidates = re.findall('RNone.+?b[0-9]+', result)
+        except error.CmdError:
+            logging.error('No LATEST release info is available.')
+            return None
+
+        release_path = os.path.join(provision.CROS_IMAGE_ARCHIVE, branch_dir,
+                                 candidates[0], board)
+        release = utils.system_output('gsutil ls -d ' + release_path)
+        # Now 'release_ver' has a full directory path: e.g.
+        #  gs://chromeos-image-archive/firmware-octopus-11297.B-firmwarebranch/
+        #       RNone-1.0.0-b4395530/octopus/
+        #
+        # Remove CROS_IMAGE_ARCHIVE and any surrounding '/'s.
+        return release.replace(provision.CROS_IMAGE_ARCHIVE,'').strip('/')
+
+
     def firmware_install(self, build=None, rw_only=False, dest=None):
         """Install firmware to the DUT.
 
@@ -645,7 +683,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 raise error.TestError(
                         'Failed to find stable firmware build for %s.',
                         self.hostname)
-            logging.info('Will install firmware from build %s.', build)
+        logging.info('Will install firmware from build %s.', build)
 
         ds = dev_server.ImageServer.resolve(build, self.hostname)
         ds.stage_artifacts(build, ['firmware'])

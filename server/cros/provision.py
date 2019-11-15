@@ -30,6 +30,11 @@ SKIP_PROVISION = 'skip_provision'
 # Postfix -cheetsth to distinguish ChromeOS build during Cheets provisioning.
 CHEETS_SUFFIX = '-cheetsth'
 
+# ChromeOS image archive server address
+CROS_IMAGE_ARCHIVE = 'gs://chromeos-image-archive'
+
+# ChromeOS firmware branch directory name. %s is for a (base)board name.
+FW_BRANCH_GLOB = 'firmware-%s-[0-9]*.B-firmwarebranch'
 
 _Action = collections.namedtuple('_Action', 'name, value')
 
