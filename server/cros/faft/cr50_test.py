@@ -456,8 +456,8 @@ class Cr50Test(FirmwareTest):
             logging.info('DUT did not respond. Resetting it.')
 
 
-    def _restore_cr50_state(self):
-        """Restore cr50 state, so the device can be used for further testing"""
+    def _restore_cr50_image(self):
+        """Restore the original image and board id."""
         state_mismatch = self._check_original_image_state()
         if state_mismatch and not self._provision_update:
             self._restore_original_image_and_board_id()
@@ -465,6 +465,9 @@ class Cr50Test(FirmwareTest):
                 raise error.TestError('Unexpected state mismatch during '
                                       'cleanup %s' % state_mismatch)
 
+
+    def _restore_ccd_settings(self):
+        """Restore the original ccd state."""
         # Reset the password as the first thing in cleanup. It is important that
         # if some other part of cleanup fails, the password has at least been
         # reset.
@@ -488,6 +491,22 @@ class Cr50Test(FirmwareTest):
 
         # Restore the ccd privilege level
         self._reset_ccd_settings()
+
+
+
+    def _restore_cr50_state(self):
+        """Restore cr50 state, so the device can be used for further testing.
+
+        Restore the cr50 image and board id first. Then CCD, because flashing
+        dev signed images completely clears the CCD state.
+        """
+        try:
+            self._restore_cr50_image()
+        except Exception as e:
+            logging.warning('Issue restoring Cr50 image: %s', str(e))
+            raise
+        finally:
+            self._restore_ccd_settings()
 
 
     def find_cr50_gs_image(self, gsurl):
