@@ -597,8 +597,11 @@ def GetChipBoardId(client):
     board_id, board_id_inv, flags = [int(val, 16) for val in board_id_info]
     logging.info('BOARD_ID: %x:%x:%x', board_id, board_id_inv, flags)
 
-    if board_id == board_id_inv == flags == ERASED_BID_INT:
-        logging.info('board id is erased')
+    if board_id == board_id_inv == ERASED_BID_INT:
+        if flags == ERASED_BID_INT:
+            logging.info('board id is erased')
+        else:
+            logging.info('board id type is erased')
     elif board_id & board_id_inv:
         raise error.TestFail('board_id_inv should be ~board_id got %x %x' %
                              (board_id, board_id_inv))
