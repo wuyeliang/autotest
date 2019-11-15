@@ -463,15 +463,6 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return 1
 
 
-    def erase_nvmem(self):
-        """Use flasherase to erase both nvmem sections"""
-        if not self.has_command('flasherase'):
-            raise error.TestError("need image with 'flasherase'")
-
-        self.send_command('flasherase 0x7d000 0x3000')
-        self.send_command('flasherase 0x3d000 0x3000')
-
-
     def reboot(self):
         """Reboot Cr50 and wait for cr50 to reset"""
         self.wait_for_reboot(cmd='reboot')
@@ -525,34 +516,22 @@ class ChromeCr50(chrome_ec.ChromeConsole):
             self._servo.get_power_state_controller().reset()
 
 
-    def rollback(self, eraseflashinfo=True, chip_bid=None, chip_flags=None):
-        """Set the reset counter high enough to force a rollback then reboot
+    def set_board_id(self, chip_bid, chip_flags):
+        """Set the chip board id type and flags."""
+        self.send_command('bid 0x%x 0x%x' % (chip_bid, chip_flags))
 
-        Set the new board id before rolling back if one is given.
 
-        @param eraseflashinfo: True if eraseflashinfo should be run before
-                               rollback
-        @param chip_bid: the integer representation of chip board id or None if
-                         the board id should be erased during rollback
-        @param chip_flags: the integer representation of chip board id flags or
-                        None if the board id should be erased during rollback
-        """
-        if (not self.has_command('rollback') or not
-            self.has_command('eraseflashinfo')):
-            raise error.TestError("need image with 'rollback' and "
-                "'eraseflashinfo'")
+    def eraseflashinfo(self):
+        """Run eraseflashinfo."""
+        self.send_command('eraseflashinfo')
+
+
+    def rollback(self):
+        """Set the reset counter high enough to force a rollback and reboot."""
+        if not self.has_command('rollback'):
+            raise error.TestError("need image with 'rollback'")
 
         inactive_partition = self.get_inactive_version_info()[0]
-        # Set the board id if both the board id and flags have been given.
-        set_bid = chip_bid and chip_flags
-
-        # Erase the infomap
-        if eraseflashinfo or set_bid:
-            self.send_command('eraseflashinfo')
-
-        # Update the board id after it has been erased
-        if set_bid:
-            self.send_command('bid 0x%x 0x%x' % (chip_bid, chip_flags))
 
         self.wait_for_reboot(cmd='rollback')
 

@@ -126,7 +126,8 @@ class firmware_Cr50BID(Cr50Test):
                    basic=False, full_args={}):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
-                                                 restore_cr50_image=True)
+                                                 restore_cr50_image=True,
+                                                 restore_cr50_board_id=True)
         if self.servo.main_device_is_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 
@@ -398,9 +399,8 @@ class firmware_Cr50BID(Cr50Test):
             return
         logging.info('Updating to %s image and erasing chip bid', image_type)
 
-        self.cr50_update(self.get_saved_dbg_image_path())
+        self.eraseflashinfo_and_restore_image(self.get_saved_dbg_image_path())
 
-        # Rolling back will take care of erasing the board id
         self.cr50_update(getattr(self, image_type + '_path'), rollback=True)
 
         # Verify the board id was erased
