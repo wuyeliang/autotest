@@ -35,13 +35,12 @@ class firmware_Cr50Update(Cr50Test):
 
 
     def initialize(self, host, cmdline_args, release_path="", release_ver="",
-                   old_release_path="", old_release_ver="", dev_path="",
-                   test="", full_args={}):
+                   old_release_path="", old_release_ver="", test="",
+                   full_args={}):
         """Initialize servo and process the given images"""
         super(firmware_Cr50Update, self).initialize(host, cmdline_args,
                                                     full_args,
-                                                    restore_cr50_state=True,
-                                                    cr50_dev_path=dev_path)
+                                                    restore_cr50_state=True)
         self.test_post_install = test.lower() == self.POST_INSTALL
 
         if not release_ver and not os.path.isfile(release_path):
@@ -68,7 +67,8 @@ class firmware_Cr50Update(Cr50Test):
                                            old_release_path, old_release_ver)
         self.add_image_to_update_order(self.RELEASE_NAME, release_path,
                                        release_ver)
-        self.add_image_to_update_order(self.DEV_NAME, dev_path)
+        self.add_image_to_update_order(self.DEV_NAME,
+                                       self.get_saved_dbg_image_path())
         self.verify_update_order()
         logging.info("Update %s", self.update_order)
 

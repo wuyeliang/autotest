@@ -49,10 +49,10 @@ class firmware_Cr50SetBoardId(Cr50Test):
     ERROR_BID_SET_DIFFERENTLY = ['Board ID has been set differently.', 3]
     ERROR_FLAG_SET_DIFFERENTLY = ['Flag has been set differently.', 3]
 
-    def initialize(self, host, cmdline_args, full_args, dev_path='', bid=''):
+    def initialize(self, host, cmdline_args, full_args, bid=''):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50SetBoardId, self).initialize(host, cmdline_args,
-             full_args, restore_cr50_state=True, cr50_dev_path=dev_path)
+             full_args, restore_cr50_state=True)
         if self.servo.running_through_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 
@@ -60,7 +60,7 @@ class firmware_Cr50SetBoardId(Cr50Test):
         # This test is verifying cr50-set-board-id and not the actual getting/
         # setting of the board id on the cr50 side, so it is ok if the cr50 is
         # running a dev image.
-        self.cr50_update(self.get_saved_cr50_dev_path())
+        self.cr50_update(self.get_saved_dbg_image_path())
 
         if not self.cr50.has_command('bid'):
             raise error.TestNAError('Cr50 image does not support board id')

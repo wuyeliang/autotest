@@ -38,7 +38,7 @@ class firmware_Cr50BID(Cr50Test):
     If you want to use something other than the test board id info, you have to
     input the release version and board id.
 
-    @param dev_path: path to the node locked dev image.
+    @param cr50_dbg_image_path: path to the node locked dev image.
     @param bid_path: local path for the board id locked image. The other bid
                      args will be ignored, and the board id info will be gotten
                      from the file.
@@ -122,20 +122,16 @@ class firmware_Cr50BID(Cr50Test):
         # DUT is in recovery without being able to ssh into the DUT.
     ]
 
-    def initialize(self, host, cmdline_args, dev_path='', bid_path='',
-                   release_ver=None, basic=False, full_args={}):
+    def initialize(self, host, cmdline_args, bid_path='', release_ver=None,
+                   basic=False, full_args={}):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
-                                                 restore_cr50_state=True,
-                                                 cr50_dev_path=dev_path)
+                                                 restore_cr50_state=True)
         if self.servo.running_through_ccd():
             raise error.TestNAError('Use a flex cable instead of CCD cable.')
 
         if not self.cr50.has_command('bid'):
             raise error.TestNAError('Cr50 image does not support board id')
-
-        # Save the necessary images.
-        self.dev_path = self.get_saved_cr50_dev_path()
 
         self.image_versions = {}
 
@@ -403,7 +399,7 @@ class firmware_Cr50BID(Cr50Test):
             return
         logging.info('Updating to %s image and erasing chip bid', image_type)
 
-        self.cr50_update(self.dev_path)
+        self.cr50_update(self.get_saved_dbg_image_path())
 
         # Rolling back will take care of erasing the board id
         self.cr50_update(getattr(self, image_type + '_path'), rollback=True)

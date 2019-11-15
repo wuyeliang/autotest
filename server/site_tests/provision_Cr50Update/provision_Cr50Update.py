@@ -32,10 +32,10 @@ class provision_Cr50Update(Cr50Test):
     version = 1
 
     def initialize(self, host, cmdline_args, full_args, value='',
-                   release_path='', chip_bid_str='', dev_path=''):
+                   release_path='', chip_bid_str=''):
         """Initialize get the cr50 update version information"""
         super(provision_Cr50Update, self).initialize(host, cmdline_args,
-            full_args, provision_update=True, cr50_dev_path=dev_path)
+            full_args, provision_update=True)
         # TODO(mruthven): remove once the test is successfully scheduled.
         logging.info('SUCCESSFULLY SCHEDULED PROVISION CR50 UPDATE with %r',
                      value)
@@ -250,7 +250,7 @@ class provision_Cr50Update(Cr50Test):
         # You can only update the board id or update to an old image by rolling
         # back from a dev image.
         need_rollback = rollback or set_bid
-        if need_rollback and not self.has_saved_cr50_dev_path():
+        if need_rollback and not self.has_saved_dbg_image_path():
             raise error.TestFail('Need a dev image to rollback to %s or update'
                                  'the board id')
         # Copy the image onto the DUT. cr50-update uses both cr50.bin.prod and
@@ -264,8 +264,7 @@ class provision_Cr50Update(Cr50Test):
 
         # Update to the dev image if there needs to be a rollback.
         if need_rollback:
-            dev_path = self.get_saved_cr50_dev_path()
-            self.cr50_update(dev_path)
+            self.cr50_update(self.get_saved_dbg_image_path())
 
         # If we aren't changing the board id, don't pass any values into the bid
         # args.

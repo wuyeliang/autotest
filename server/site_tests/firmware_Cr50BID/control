@@ -31,7 +31,7 @@ bid_flags. If these aren't given the debug image with TEST:0xffff:0xff00 will
 be used.
 
 @param iterations: Number of times to run the test
-@param dev_path: local path for the dev image
+@param cr50_dbg_image_path: local path for the dev image
 @param bid_path: local path for the board id locked image. If this is given, the
                  board id, mask and flags will be gotten from the image. Bid,
                  bid_mask, and bid_flags will be ignored.
@@ -51,13 +51,12 @@ def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
 
     iterations = int(args_dict.get("iterations", 1))
-    dev_path = args_dict.get("dev_path", "")
     bid_path = args_dict.get("bid_path", "")
     release_ver = args_dict.get("release_ver", "")
     basic = args_dict.get("basic", "").lower() == 'true'
 
     job.run_test("firmware_Cr50BID", host=host, cmdline_args=args,
-                 iterations=iterations, dev_path=dev_path, bid_path=bid_path,
+                 iterations=iterations, bid_path=bid_path,
                  release_ver=release_ver, basic=basic, full_args=args_dict)
 
 parallel_simple(run, machines)

@@ -48,7 +48,7 @@ class Cr50Test(FirmwareTest):
     CR50_FLASH_OP_ERROR_MSG = 'do_flash_op'
 
     def initialize(self, host, cmdline_args, full_args,
-            restore_cr50_state=False, cr50_dev_path='', provision_update=False):
+            restore_cr50_state=False, provision_update=False):
         self._saved_state = self.NONE
         self._raise_error_on_mismatch = not restore_cr50_state
         self._provision_update = provision_update
@@ -95,7 +95,7 @@ class Cr50Test(FirmwareTest):
         # We successfully saved the device state
         self._saved_state |= self.INITIAL_IMAGE_STATE
         try:
-            self._save_node_locked_dev_image(cr50_dev_path)
+            self._save_dbg_image(full_args.get('cr50_dbg_image_path', ''))
             self._save_original_images(full_args.get('release_path', ''))
             # We successfully saved the device images
             self._saved_state |= self.IMAGES
@@ -115,16 +115,16 @@ class Cr50Test(FirmwareTest):
         self._try_to_bring_dut_up()
 
 
-    def _save_node_locked_dev_image(self, cr50_dev_path):
+    def _save_dbg_image(self, cr50_dbg_image_path):
         """Save or download the node locked dev image.
 
-        @param cr50_dev_path: The path to the node locked cr50 image.
+        @param cr50_dbg_image_path: The path to the node locked cr50 image.
         """
-        if os.path.isfile(cr50_dev_path):
-            self._node_locked_cr50_image = cr50_dev_path
+        if os.path.isfile(cr50_dbg_image_path):
+            self._dbg_image_path = cr50_dbg_image_path
         else:
             devid = self.servo.get('cr50_devid')
-            self._node_locked_cr50_image = self.download_cr50_debug_image(
+            self._dbg_image_path = self.download_cr50_debug_image(
                 devid)[0]
 
 
@@ -213,16 +213,16 @@ class Cr50Test(FirmwareTest):
         return self._original_cr50_image
 
 
-    def has_saved_cr50_dev_path(self):
+    def has_saved_dbg_image_path(self):
         """Returns true if we saved the node locked debug image."""
-        return hasattr(self, '_node_locked_cr50_image')
+        return hasattr(self, '_dbg_image_path')
 
 
-    def get_saved_cr50_dev_path(self):
+    def get_saved_dbg_image_path(self):
         """Return the local path for the cr50 dev image."""
-        if not self.has_saved_cr50_dev_path():
+        if not self.has_saved_dbg_image_path():
             raise error.TestError('No record of debug image')
-        return self._node_locked_cr50_image
+        return self._dbg_image_path
 
 
     def _restore_original_image(self, chip_bid, chip_flags):
@@ -241,7 +241,7 @@ class Cr50Test(FirmwareTest):
             try:
                 # Update to the node-locked DBG image so we can erase all of
                 # the state we are trying to reset
-                self.cr50_update(self._node_locked_cr50_image)
+                self.cr50_update(self._dbg_image_path)
 
                 # Rollback to the original cr50 image.
                 self.cr50_update(self._original_cr50_image, rollback=True,

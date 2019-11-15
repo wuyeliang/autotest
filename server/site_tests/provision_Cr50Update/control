@@ -24,7 +24,7 @@ necessary. value is completely ignored if a valid release_path is given.
 
 @param value: the release image information. Ignored if release_path is given
 @param release_path: local path to release image
-@param dev_path: local path to dev image
+@param cr50_dbg_image_path: local path to DBG image
 @param chip_bid: the desired cr50 chip board id string
 """
 
@@ -41,7 +41,6 @@ chip_bid = ''
 if not locals().get('value'):
     value = args_dict.get('value', '')
     release_path = args_dict.get('release_path', '')
-    dev_path = args_dict.get('dev_path', '')
     chip_bid_str = args_dict.get('chip_bid', '')
 
 
