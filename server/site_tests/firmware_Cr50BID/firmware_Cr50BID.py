@@ -339,9 +339,8 @@ class firmware_Cr50BID(Cr50Test):
             self.board_id_locked_path = self.get_saved_cr50_original_path()
             ver = original_version
         else:
-            devid = self.servo.get('cr50_devid')
             self.board_id_locked_path, ver = self.download_cr50_debug_image(
-                devid, self.TEST_IMAGE_BID_INFO)
+                image_bid=self.TEST_IMAGE_BID_INFO)
             logging.info('Using %s DBG image for test', ver)
 
         image_bid_info = cr50_utils.GetBoardIdInfoTuple(ver[2])

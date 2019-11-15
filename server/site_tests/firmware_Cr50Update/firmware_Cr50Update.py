@@ -47,8 +47,6 @@ class firmware_Cr50Update(Cr50Test):
             release_path = self.get_saved_cr50_original_path()
             logging.info('Using device image as release')
 
-        self.devid = self.servo.get('cr50_devid')
-
         # Make sure ccd is disabled so it won't interfere with the update
         self.cr50.ccd_disable()
 
@@ -185,7 +183,7 @@ class firmware_Cr50Update(Cr50Test):
             if '/' in ver:
                 ver, bid = ver.split('/', 1)
             return self.download_cr50_release_image(ver, bid)
-        return self.download_cr50_debug_image(self.devid)
+        return self.download_cr50_debug_image()
 
 
     def add_image_to_update_order(self, image_name, image_path, ver=None):

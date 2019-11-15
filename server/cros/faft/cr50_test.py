@@ -29,6 +29,8 @@ class Cr50Test(FirmwareTest):
     GS_PUBLIC = 'gs://chromeos-localmirror/distfiles/'
     CR50_PROD_FILE = 'cr50.r0.0.1*.w%s%s.tbz2'
     CR50_DEBUG_FILE =  '*/cr50.dbg.%s.bin.*%s'
+    CR50_ERASEFLASHINFO_FILE = (
+            '*/cr50_Unknown_NodeLocked-%s_cr50-accessory-mp.bin')
     CR50_TOT_VER_FILE = 'tot/LATEST'
     CR50_TOT_FILE = 'tot/cr50.bin.%s.%s'
     NONE = 0
@@ -61,6 +63,7 @@ class Cr50Test(FirmwareTest):
 
         logging.info('Test Args: %r', full_args)
 
+        self._devid = self.servo.get('cr50_devid')
         self.can_set_ccd_level = (not self.servo.running_through_ccd() or
             self.cr50.testlab_is_on())
         self.original_ccd_level = self.cr50.get_ccd_level()
@@ -97,6 +100,8 @@ class Cr50Test(FirmwareTest):
         try:
             self._save_dbg_image(full_args.get('cr50_dbg_image_path', ''))
             self._save_original_images(full_args.get('release_path', ''))
+            self._save_eraseflashinfo_image(
+                    full_args.get('cr50_eraseflashinfo_image_path', ''))
             # We successfully saved the device images
             self._saved_state |= self.IMAGES
         except error.TestFail as e:
@@ -123,9 +128,20 @@ class Cr50Test(FirmwareTest):
         if os.path.isfile(cr50_dbg_image_path):
             self._dbg_image_path = cr50_dbg_image_path
         else:
-            devid = self.servo.get('cr50_devid')
-            self._dbg_image_path = self.download_cr50_debug_image(
-                devid)[0]
+            self._dbg_image_path = self.download_cr50_debug_image()[0]
+
+
+    def _save_eraseflashinfo_image(self, cr50_eraseflashinfo_image_path):
+        """Save or download the node locked eraseflashinfo image.
+
+        @param cr50_eraseflashinfo_image_path: The path to the node locked cr50
+                                               image.
+        """
+        if os.path.isfile(cr50_eraseflashinfo_image_path):
+            self._eraseflashinfo_image_path = cr50_eraseflashinfo_image_path
+        else:
+            self._eraseflashinfo_image_path = (
+                    self.download_cr50_eraseflashinfo_image()[0])
 
 
     def _save_original_images(self, release_path):
@@ -223,6 +239,13 @@ class Cr50Test(FirmwareTest):
         if not self.has_saved_dbg_image_path():
             raise error.TestError('No record of debug image')
         return self._dbg_image_path
+
+
+    def get_saved_eraseflashinfo_image_path(self):
+        """Return the local path for the cr50 eraseflashinfo image."""
+        if not hasattr(self, '_eraseflashinfo_image_path'):
+            raise error.TestError('No record of eraseflashinfo image')
+        return self._eraseflashinfo_image_path
 
 
     def _restore_original_image(self, chip_bid, chip_flags):
@@ -548,12 +571,24 @@ class Cr50Test(FirmwareTest):
         return dest, ver
 
 
-    def download_cr50_debug_image(self, devid, image_bid=''):
+    def download_cr50_eraseflashinfo_image(self):
+        """download the cr50 image that allows erasing flashinfo.
+
+        Get the file with the matching devid.
+
+        @return: A tuple with the debug image local path and version
+        """
+        devid = self._devid.replace(' ', '-').replace('0x', '')
+        gsurl = os.path.join(self.GS_PRIVATE_DBG,
+                             self.CR50_ERASEFLASHINFO_FILE % devid)
+        return self.download_cr50_gs_image(gsurl, None, None)
+
+
+    def download_cr50_debug_image(self, devid='', image_bid=''):
         """download the cr50 debug file.
 
         Get the file with the matching devid and image board id info
 
-        @param devid: the cr50_devid string '${DEVID0} ${DEVID1}'
         @param image_bid: the image board id info string or list
         @return: A tuple with the debug image local path and version
         """
@@ -564,8 +599,9 @@ class Cr50Test(FirmwareTest):
                                                         symbolic=True)
             bid_ext = '.' + image_bid.replace(':', '_')
 
-        gsurl = os.path.join(self.GS_PRIVATE_DBG,
-                (self.CR50_DEBUG_FILE % (devid.replace(' ', '_'), bid_ext)))
+        devid = devid if devid else self._devid
+        dbg_file = self.CR50_DEBUG_FILE % (devid.replace(' ', '_'), bid_ext)
+        gsurl = os.path.join(self.GS_PRIVATE_DBG, dbg_file)
         return self.download_cr50_gs_image(gsurl, None, image_bid)
 
 
