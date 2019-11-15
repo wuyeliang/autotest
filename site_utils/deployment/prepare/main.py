@@ -79,7 +79,7 @@ def main():
 
     if 'verify-recovery-mode' in opts.actions:
       try:
-        preparedut.verify_rec_mode_boot_into_usb(host)
+        preparedut.verify_boot_into_rec_mode(host)
       except Exception as err:
         logging.error("fail to boot from recovery mode: %s", err)
         return RETURN_CODES.BOOT_FROM_RECOVERY_MODE_FAILURE
