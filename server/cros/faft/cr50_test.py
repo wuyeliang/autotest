@@ -572,19 +572,8 @@ class Cr50Test(FirmwareTest):
 
         @return: the local path to the TOT image.
         """
-        # Get the TOT version information
-        ver_file = os.path.join(self.GS_PRIVATE, self.CR50_TOT_VER_FILE)
-        dut_ver_file = self.download_cr50_gs_file(ver_file, False)[1]
-        tot_ver = self.host.run('cat %s' % dut_ver_file).stdout.strip()
-
-        # Download the TOT image for the current board using the devid and TOT
-        # version information.
-        devid_ext = self.servo.get('cr50_devid').replace(' ', '_')
-        tot_file = self.CR50_TOT_FILE % (tot_ver, devid_ext)
-        gsurl = os.path.join(self.GS_PRIVATE, tot_file)
-
-        logging.info('using release image %s', tot_file)
-        return self.download_cr50_gs_image(gsurl, False, None)[0]
+        # TODO(mruthven): use logic from provision_Cr50TOT
+        raise error.TestNAError('Could not download TOT image')
 
 
     def _find_release_image_gsurl(self, fn):
