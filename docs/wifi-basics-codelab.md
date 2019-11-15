@@ -20,7 +20,8 @@ This codelab can be completed from either a personal testing setup or a
 dedicated setup in our testing lab, but there are a few special considerations
 in each case. For instance, some of the commands in this lab will use the
 variable `${DUT_HOSTNAME}`, and the value of this variable is dependent on the
-testing setup that you use.
+testing setup that you use. Further considerations are included below in the
+instructions for each option.
 
 #### Using the wifi testing labs
 
@@ -41,24 +42,31 @@ portal and filter for *label-wificell = true* (the filter should already be
 set when you click the link). You'll need to find a setup who's current task
 is *idle* with dut_state *ready*, and then lock it while in use. To lock a DUT
 in the skylab use this command to lease it for the specified number of
-minutes: (**${DUT\_NAME}** is the value of the field *dut_name* in skylab)
+minutes (60 minutes should suffice for this codelab, but if your lease
+expires you can simply lease your DUT again):
 
 ```bash
 skylab lease-dut -minutes ${NUM_MINUTES} ${DUT_NAME}
 ```
 
-One final consideration when selecting a DUT is that Autotest requires a
-working build of the board type being tested on, so it is best to pick a board
-for which you have already built an image on your machine.
+*** note
+**Note:** There are several similar fields on the bot page that can potentially
+be confused. Bots are listed by their *id* field in the skylab search portal,
+which usually takes a form similar to `crossk-chromeos15-row2-rack4-host6`.
+*dut_name* is referred to in this document by the variable `${DUT_NAME}`, and
+is typically the *id* without `crossk`, e.g. `chromeos15-row2-rack4-host6`. The
+hostname for a DUT (`${DUT_HOSTNAME}` in this doc) is not shown on the skylab
+bot page, but it is the *dut_name* with '.cros' appended e.g.
+`chromeos15-row2-rack4-host6.cros`.
+***
 
-Your DUT's hostname is the name of the testbed, with '.cros' appended. E.g. if
-`${DUT_NAME}` = `chromeos15-row2-rack4-host6` then `${DUT_HOSTNAME}` =
-`chromeos15-row2-rack4-host6.cros`. Autotest will determine the hostnames of
-the router and packet capture device automatically.
+Autotest requires a working build of the board type being tested on, so it is
+best to pick a board for which you have already built an image on your machine.
 
-If you want to directly access the router or pcap device of your testing
-setup, say through ssh, you can use the hostnames **${DUT\_NAME}-router.cros**
-and **${DUT\_NAME}-pcap.cros** respectively. You can access each with ssh
+Autotest will automatically determine the hostnames of the router and packet
+capture device but if you want to access them directly, say through ssh,
+you can use the hostnames **${DUT\_NAME}-router.cros** and
+**${DUT\_NAME}-pcap.cros** respectively. You can access each with ssh
 through the root user with password `test0000`.
 
 Lastly, Autotest may have issues with hosts that have the `chameleon` label.
@@ -134,7 +142,7 @@ Now, lets run the test and see what we can learn:
 test_that --fast -b ${BOARD} ${DUT_HOSTNAME} network_WiFi_SimpleConnect.wifi_check5HT20
 ```
 
-Thats a lot of garbage. The packets aren't going to be much use to us in their
+That's a lot of garbage. The packets aren't going to be much use to us in their
 current state. In the next section, we'll use Wireshark to translate the packets
 into a readable form that we can study.
 
@@ -218,7 +226,7 @@ frames = parse_frames(capture, frameTypesToFilter)
 
 packet_file = open('/tmp/pcap', 'w')
 packet_file.write('{:^28s}|{:^19s}|{:^19s}|{:^6s}\n'.format(
-    'Timestamp', 'Source Address', 'Reciever Address', 'Type'))
+    'Timestamp', 'Source Address', 'Receiver Address', 'Type'))
 packet_file.write('---------------------------------------------------------------------------\n')
 for packet in frames:
     packet_file.write('{:^28s}|{:^19s}|{:^19s}|{:^6s}\n'.format(
@@ -307,11 +315,11 @@ them yourself before referring to the solutions.
 Lets see if we can answer some basic questions about your configuration based
 on the context of the captured packets:
 
-1. What is the IP address of your DUT? (you probably already know this, but
+1. What is the MAC address of your router? (you may already know this, but
    try to infer from the context of the packets)
-1. What is the IP address of your router?
+1. What is the MAC address of your DUT?
 1. What is the beacon interval (time between beacons) of your router?
-1. What does a receiver address of *ff:ff:ff:ff:ff:ff* indicate?
+1. What could a receiver address of *ff:ff:ff:ff:ff:ff* indicate?
 
 Now, try to find the frames where the DUT and router negotiate their connection.
 Depending on how noisy your setup is this could be somewhat difficult, but you
@@ -416,14 +424,14 @@ gained any new insight into the 802.11 protocol.
    look for the source address of the frames of type 0x08.
 1. Your DUT can be recognized as the device which has a "conversation" with
    your router. I.e. you should be able to see one IP which is the
-   sender/reciever of several different management frames (0x00, 0x01, etc.)
+   sender/receiver of several different management frames (0x00, 0x01, etc.)
    with your router.
 1. The beacon interval is the time a device waits between sending beacon
    frames. You can determine this interval for a device by finding the time
    that passes between two beacons being transmitted by the
    device. The beacon interval for your router is most likely 100ms.
-1. A reciever address of *ff:ff:ff:ff:ff:ff* indicates that the frame is
-   being broadcasted to any reciever that can hear it. This is pattern is
+1. A receiver address of *ff:ff:ff:ff:ff:ff* indicates that the frame is
+   being broadcasted to any receiver that can hear it. This is pattern is
    used for beacon frames because these frames are intended as a sort of 'ping'
    to all nearby devices.
 
