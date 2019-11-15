@@ -30,7 +30,7 @@ class HostInfo(object):
         attributes: The list of attributes for this host.
     """
 
-    __slots__ = ['labels', 'attributes']
+    __slots__ = ['labels', 'attributes', 'stable_versions']
 
     # Constants related to exposing labels as more semantic properties.
     _BOARD_PREFIX = 'board'
@@ -42,6 +42,10 @@ class HostInfo(object):
     _BRAND_CODE_PREFIX = 'brand-code'
     _OS_PREFIX = 'os'
     _POOL_PREFIX = 'pool'
+    # stable version constants
+    _SV_CROS_KEY = "cros"
+    _SV_FAFT_KEY = "faft"
+    _SV_FIRMWARE_KEY = "firmware"
 
     _OS_VERSION_LABELS = (
             provision.CROS_VERSION_PREFIX,
@@ -53,13 +57,15 @@ class HostInfo(object):
             provision.FW_RW_VERSION_PREFIX,
     )
 
-    def __init__(self, labels=None, attributes=None):
+    def __init__(self, labels=None, attributes=None, stable_versions=None):
         """
         @param labels: (optional list) labels to set on the HostInfo.
         @param attributes: (optional dict) attributes to set on the HostInfo.
+        @param stable_versions: (optional dict) stable version information to set on the HostInfo.
         """
         self.labels = labels if labels is not None else []
         self.attributes = attributes if attributes is not None else {}
+        self.stable_versions = stable_versions if stable_versions is not None else {}
 
 
     @property
@@ -137,6 +143,24 @@ class HostInfo(object):
         return set(self._get_stripped_labels_with_prefix(self._POOL_PREFIX))
 
 
+    @property
+    def cros_stable_version(self):
+        """Retrieve the cros stable version
+        """
+        return self.stable_versions.get(self._SV_CROS_KEY)
+
+    @property
+    def faft_stable_version(self):
+        """Retrieve the faft stable version
+        """
+        return self.stable_versions.get(self._SV_FAFT_KEY)
+
+    @property
+    def firmware_stable_version(self):
+        """Retrieve the firmware stable version
+        """
+        return self.stable_versions.get(self._SV_FIRMWARE_KEY)
+
     def get_label_value(self, prefix):
         """Retrieve the value stored as a label with a well known prefix.
 
@@ -199,14 +223,17 @@ class HostInfo(object):
 
 
     def __str__(self):
-        return ('%s[Labels: %s, Attributes: %s]'
-                % (type(self).__name__, self.labels, self.attributes))
+        return ('%s[Labels: %s, Attributes: %s, StableVersions: %s]'
+                % (type(self).__name__, self.labels, self.attributes, self.stable_versions))
 
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
-            return (self.labels == other.labels
-                    and self.attributes == other.attributes)
+            return all([
+                    self.labels == other.labels,
+                    self.attributes == other.attributes,
+                    self.stable_versions == other.stable_versions,
+            ])
         else:
             return NotImplemented
 
@@ -379,7 +406,7 @@ class DeserializationError(Exception):
 # HostInfo is backwards incompatible, i.e. we can no longer correctly
 # deserialize a previously serialized HostInfo. An example of such change is if
 # a field in the HostInfo object is dropped.
-_CURRENT_SERIALIZATION_VERSION = 1
+_CURRENT_SERIALIZATION_VERSION = 2
 
 
 def json_serialize(info, file_obj, version=_CURRENT_SERIALIZATION_VERSION):
@@ -394,6 +421,7 @@ def json_serialize(info, file_obj, version=_CURRENT_SERIALIZATION_VERSION):
             'serializer_version': version,
             'labels': info.labels,
             'attributes': info.attributes,
+            'stable_versions': info.stable_versions,
     }
     return json.dump(info_json, file_obj, sort_keys=True, indent=4,
                      separators=(',', ': '))
