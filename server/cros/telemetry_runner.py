@@ -187,23 +187,23 @@ class TelemetryRunner(object):
         no_verbose = kwargs.get('no_verbose', False)
 
         if self._telemetry_on_dut:
-            telemetry_cmd.extend(
-                    [self._host.ssh_command(alive_interval=900,
-                                            connection_attempts=4),
-                     'python',
-                     script,
-                     '--output-format=%s' % output_format,
-                     '--output-dir=%s' % DUT_CHROME_ROOT,
-                     '--browser=system'])
+            telemetry_cmd.extend([
+                self._host.ssh_command(alive_interval=900,
+                                       connection_attempts=4),
+                script,
+                '--output-format=%s' % output_format,
+                '--output-dir=%s' % DUT_CHROME_ROOT,
+                '--browser=system',
+            ])
         else:
-            telemetry_cmd.extend(
-                    ['python',
-                     script,
-                     '--browser=cros-chrome',
-                     '--output-format=%s' % output_format,
-                     '--output-dir=%s' %
-                        (results_dir if results_dir else self._telemetry_path),
-                     '--remote=%s' % self._host.host_port])
+            telemetry_cmd.extend([
+                script,
+                '--browser=cros-chrome',
+                '--output-format=%s' % output_format,
+                '--output-dir=%s' %
+                (results_dir if results_dir else self._telemetry_path),
+                '--remote=%s' % self._host.host_port,
+            ])
         if not no_verbose:
             telemetry_cmd.append('--verbose')
         telemetry_cmd.extend(args)
