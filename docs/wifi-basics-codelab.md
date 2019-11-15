@@ -243,12 +243,38 @@ able to send and receive are dependent on the state of its connections.
 
 ![State Machine](assets/wifi-state-machine.gif)
 
+##### Authentication and Association
+
+In order to ensure security, users must be authenticated to a network before
+they are allowed to use the network. The authentication process itself is not
+strictly defined by the 802.11 protocol, but it usually consists of a robust
+cryptographic exchange that allows the network to trust the user. Once a user
+has been authenticated to the network, it is *trusted*, but it is still not
+actually a member of the network until it has been *associated*. Association
+can be thought of as the proccess of actually joining the network, and also
+acts as a sort of *registration* that allows the network to determine which
+access point to use for a given user.
+
 ##### Class 1 frames
 
 Class 1 frames can be sent in any state, and they are used to support the basic
 operations of 802.11 connections. Class 1 frames are called *Management Frames*
-and they allow devices to find a network and authenticate to it. Beacons,
-association requests, and probe requests are examples of Class 1 frames.
+and they allow devices to find a network and negotiate their connection status.
+
+**Some class 1 frames:**
+
+* *Beacons* are frames that access points send out on a regular interval to
+broadcast their existence to the world. Devices are only aware of access points
+because they can see the beacon frames they send.
+* Devices respond to beacons with *Probe Requests* which in turn let the
+network know of their existence. The probe request also includes a list of all
+data rates the device supports, which the network can use to check for
+compatability with those supported by the access point.
+* Access points respond with *Probe Responses* which either confirm or deny
+compatability.
+* If the two are compatable, they can engage in the authentication/association
+process as explained above with various *Association* and *Authentication*
+frames.
 
 ##### Class 2 frames
 
