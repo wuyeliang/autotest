@@ -382,18 +382,10 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
 
         @param test_conf: a dictionary of test settings.
         """
-        hostname = self._host.hostname if self._host else None
-        least_loaded_devserver = dev_server.get_least_loaded_devserver(
-            hostname=hostname)
-        if least_loaded_devserver:
-            logging.debug('Choosing the least loaded devserver: %s',
-                          least_loaded_devserver)
-            autotest_devserver = dev_server.ImageServer(least_loaded_devserver)
-        else:
-            logging.warning('No devserver meets the maximum load requirement. '
-                            'Picking a random devserver to use.')
-            autotest_devserver = dev_server.ImageServer.resolve(
-                test_conf['target_payload_uri'], self._host.hostname)
+        # TODO(dhaddock): Change back to using least loaded when
+        # crbug.com/1010226 is resolved.
+        autotest_devserver = dev_server.ImageServer.resolve(
+            test_conf['target_payload_uri'], self._host.hostname)
         devserver_hostname = urlparse.urlparse(
             autotest_devserver.url()).hostname
 
