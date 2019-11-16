@@ -23,8 +23,8 @@ class Cr50Test(FirmwareTest):
     RESPONSE_TIMEOUT = 180
     GS_PRIVATE = 'gs://chromeos-localmirror-private/distfiles/*/'
     GS_PUBLIC = 'gs://chromeos-localmirror/distfiles/'
+    CR50_PROD_FILE = 'cr50.r0.0.1*.w%s%s.tbz2'
     CR50_DEBUG_FILE =  '*/cr50_dbg_%s.bin%s'
-    CR50_PROD_FILE = 'cr50.r0.0.10.w%s%s.tbz2'
     CR50_TOT_VER_FILE = 'tot/LATEST'
     CR50_TOT_FILE = 'tot/cr50.bin.%s.%s'
     NONE = 0
