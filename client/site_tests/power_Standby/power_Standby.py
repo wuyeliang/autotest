@@ -42,7 +42,7 @@ class power_Standby(test.test):
         # standby power.
         if sample_hours < self._min_sample_hours and not bypass_check:
             raise error.TestFail('Must standby more than %.2f hours.' % \
-                                 sample_hours)
+                                 self._min_sample_hours)
 
         power_stats = power_status.get_status()
 
