@@ -18,6 +18,7 @@ from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
 from autotest_lib.server.cros.dynamic_suite import tools
 from autotest_lib.client.common_lib import lsbrelease_utils
 from autotest_lib.client.common_lib.cros import dev_server
+from autotest_lib.server import utils as server_utils
 
 
 class LabstationHost(base_servohost.BaseServoHost):
@@ -194,13 +195,51 @@ class LabstationHost(base_servohost.BaseServoHost):
 
 
     def stage_server_side_package(self, image=None):
-        """This method is used to bypass stage ssp when run test against
-        a labstation host, which will alwasy return None.
+        """Stage autotest server-side package on devserver.
 
-        @return: None.
+        @param image: Full path of an OS image to install or a build name.
+
+        @return: A url to the autotest server-side package.
+
+        @raise: error.AutoservError if fail to locate the build to test with, or
+                fail to stage server-side package.
         """
-        logging.info('Stage ssp is not available on labstation.')
-        return None
+        # If enable_drone_in_restricted_subnet is False, do not set hostname
+        # in devserver.resolve call, so a devserver in non-restricted subnet
+        # is picked to stage autotest server package for drone to download.
+        hostname = self.hostname
+        if not server_utils.ENABLE_DRONE_IN_RESTRICTED_SUBNET:
+            hostname = None
+        if image:
+            image_name = tools.get_build_from_image(image)
+            if not image_name:
+                raise error.AutoservError(
+                    'Failed to parse build name from %s' % image)
+            ds = dev_server.ImageServer.resolve(image_name, hostname)
+        else:
+            info = self.host_info_store.get()
+            job_repo_url = info.attributes.get(ds_constants.JOB_REPO_URL, '')
+            if job_repo_url:
+                devserver_url, image_name = (
+                    tools.get_devserver_build_from_package_url(job_repo_url))
+                # If enable_drone_in_restricted_subnet is True, use the
+                # existing devserver. Otherwise, resolve a new one in
+                # non-restricted subnet.
+                if server_utils.ENABLE_DRONE_IN_RESTRICTED_SUBNET:
+                    ds = dev_server.ImageServer(devserver_url)
+                else:
+                    ds = dev_server.ImageServer.resolve(image_name)
+            elif info.build is not None:
+                ds = dev_server.ImageServer.resolve(info.build, hostname)
+                image_name = info.build
+            else:
+                raise error.AutoservError(
+                    'Failed to stage server-side package. The host has '
+                    'no job_repo_url attribute or cros-version label.')
+
+        ds.stage_artifacts(image_name, ['autotest_server_package'])
+        return '%s/static/%s/%s' % (ds.url(), image_name,
+                                    'autotest_server_package.tar.bz2')
 
 
     def repair(self):
