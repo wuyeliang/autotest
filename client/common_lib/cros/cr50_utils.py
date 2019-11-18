@@ -634,7 +634,7 @@ def CheckChipBoardId(client, board_id, flags):
                              new_board_id, new_flags))
 
 
-def SetChipBoardId(client, board_id, flags=None):
+def SetChipBoardId(client, board_id, flags=None, pad=True):
     """Sets the board id and flags
 
     Args:
@@ -644,15 +644,20 @@ def SetChipBoardId(client, board_id, flags=None):
                   considered a symbolic value
         flags: a int flag value. If board_id is a symbolic value, then this will
                be ignored.
+        pad: pad any int board id, so the string is not 4 characters long.
 
     Raises:
         TestFail if we were unable to set the flags to the correct value
     """
-
-    board_id_arg = board_id
+    if isinstance(board_id, int):
+        # gsctool will interpret any 4 character string as a RLZ code. If pad is
+        # true, pad the board id with 0s to make sure the board id isn't 4
+        # characters long.
+        board_id_arg = ('0x%08x' % board_id) if pad else hex(board_id)
+    else:
+        board_id_arg = board_id
     if flags != None:
         board_id_arg += ':' + hex(flags)
-
     # Set the board id using the given board id and flags
     result = GSCTool(client, ['-a', '-i', board_id_arg]).stdout.strip()
 
