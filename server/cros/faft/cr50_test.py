@@ -62,10 +62,6 @@ class Cr50Test(FirmwareTest):
     def initialize(self, host, cmdline_args, full_args,
                    restore_cr50_image=False, restore_cr50_board_id=False,
                    provision_update=False):
-        if restore_cr50_image:
-            # TODO(mruthven): remove once cleanup can restore the baord id.
-            raise error.TestNAError('Tests do not support restoring the board '
-                                    'id with the new RO.')
         self._saved_state = self.NONE
         self._raise_error_on_mismatch = not restore_cr50_image
         self._provision_update = provision_update
