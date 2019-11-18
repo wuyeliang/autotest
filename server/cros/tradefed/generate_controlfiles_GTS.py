@@ -66,6 +66,7 @@ CONFIG['QUAL_TIMEOUT'] = 24
 
 CONFIG['QUAL_BOOKMARKS'] = sorted([
     'A',  # A bookend to simplify partition algorithm.
+    'GtsCameraTestCases',  # b/144659061 requires it separated from GtsAssistant
     'zzzzz'  # A bookend to simplify algorithm.
 ])
 
