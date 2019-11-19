@@ -2102,15 +2102,12 @@ def get_platform():
 
     @returns platform name
     """
-    platform = ''
-    command = 'mosys platform model'
+    command = 'cros_config / name'
     result = utils.run(command, ignore_status=True)
-    if result.exit_status == 0:
-        platform = result.stdout.strip()
-
-    if platform == '':
-        platform = get_board()
-    return platform
+    if result.exit_status == 0 and result.stdout:
+        return result.stdout.strip()
+    else:
+        return get_board()
 
 
 def get_sku():
