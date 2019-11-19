@@ -241,9 +241,9 @@ class _TabletDetachableBypasser(_BaseFwBypasser):
         # every 3.1 seconds until firmware_screen delay has been reached.
         while time.time() < timeout:
             self.servo.set_nocheck('volume_down_hold', duration)
-            # After pressing 'volume_down_hold' button, wait for 0.2 seconds
+            # After pressing 'volume_down_hold' button, wait for 0.1 seconds
             # before start pressing the button for next iteration.
-            time.sleep(self.HOLD_VOL_DOWN_BUTTON_BYPASS + 0.2)
+            time.sleep(0.1)
             if self.client_host.ping_wait_up(timeout=0.1):
                 break
 
