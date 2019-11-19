@@ -183,7 +183,17 @@ class FirmwareTest(FAFTBase):
             self.faft_client.System.SetFwTryNext('A')
             if self.faft_client.System.GetCrossystemValue('mainfw_act') == 'B':
                 logging.info('mainfw_act is B. rebooting to set it A')
-                self.switcher.mode_aware_reboot()
+                # TODO(crbug.com/1018322): remove try/catch once that bug is
+                # marked as fixed and verified. In that case the overlay for
+                # the board itself will map warm_reset to cold_reset.
+                try:
+                    self.switcher.mode_aware_reboot()
+                except ConnectionError as e:
+                    if 'DUT is still up unexpectedly' in str(e):
+                        # In this case, try doing a cold_reset instead
+                        self.switcher.mode_aware_reboot(reboot_type='cold')
+                    else:
+                      raise
 
         # Check flashrom before first use, to avoid xmlrpclib.Fault.
         if not self.faft_client.Bios.IsAvailable():
