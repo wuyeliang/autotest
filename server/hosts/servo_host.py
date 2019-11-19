@@ -91,6 +91,8 @@ class ServoHost(base_servohost.BaseServoHost):
         self.servo_model = servo_model
         self.servo_serial = servo_serial
         self._servo = None
+        self._servod_server_proxy = None
+
         # Path of the servo host lock file.
         self._lock_file = (self.TEMP_FILE_DIR + str(self.servo_port)
                            + self.LOCK_FILE_POSTFIX)
@@ -145,8 +147,8 @@ class ServoHost(base_servohost.BaseServoHost):
             self.rpc_server_tracker.disconnect(self.servo_port)
             self._servo = None
 
-    def get_servod_server_proxy(self):
-        """Return a proxy that can be used to communicate with servod server.
+    def _create_servod_server_proxy(self):
+        """Create a proxy that can be used to communicate with servod server.
 
         @returns: An xmlrpclib.ServerProxy that is connected to the servod
                   server on the host.
@@ -160,6 +162,18 @@ class ServoHost(base_servohost.BaseServoHost):
         else:
             remote = 'http://%s:%s' % (self.hostname, self.servo_port)
             return xmlrpclib.ServerProxy(remote)
+
+
+    def get_servod_server_proxy(self):
+        """Return a cached proxy if exists; otherwise, create a new one.
+
+        @returns: An xmlrpclib.ServerProxy that is connected to the servod
+                  server on the host.
+        """
+        # Single-threaded execution, no race
+        if self._servod_server_proxy is None:
+            self._servod_server_proxy = self._create_servod_server_proxy()
+        return self._servod_server_proxy
 
 
     def verify(self, silent=False):

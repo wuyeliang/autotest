@@ -8,6 +8,8 @@
 
 """This file provides core logic for pdtester verify/repair process."""
 
+import logging
+
 from autotest_lib.server.hosts import servo_host
 
 
@@ -75,15 +77,21 @@ def create_pdtester_host(pdtester_args, servo_host):
     # If an user doesn't pass the PDTester info, fall back to use the servo
     # info. Usually we use Servo v4 as PDTester, so make it default.
     if PDTESTER_HOST_ATTR not in pdtester_args:
+        logging.debug('%s not specified, reuse the same hostname as servo: %s',
+                      PDTESTER_HOST_ATTR, servo_host.hostname)
         pdtester_args[PDTESTER_HOST_ATTR] = servo_host.hostname
 
     if PDTESTER_PORT_ATTR not in pdtester_args:
+        logging.debug('%s not specified, reuse the same port as servo: %s',
+                      PDTESTER_PORT_ATTR, servo_host.servo_port)
         pdtester_args[PDTESTER_PORT_ATTR] = servo_host.servo_port
 
     # Just return the servo_host object, if the hostname and the port are the
     # same as servo_host.
     if (pdtester_args[PDTESTER_HOST_ATTR] == servo_host.hostname and
         pdtester_args[PDTESTER_PORT_ATTR] == servo_host.servo_port):
+        logging.debug('Return the servo_host directly as PDTester and Servo '
+                      'are the same.')
         return servo_host
 
     return PDTesterHost(**pdtester_args)
