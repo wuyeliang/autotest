@@ -101,7 +101,13 @@ class FingerprintTest(test.test):
                 _FIRMWARE_VERSION_RO_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
                 _FIRMWARE_VERSION_RW_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
                 _FIRMWARE_VERSION_KEY_ID: '35486c0090ca390408f1fbbf2a182966084fe2f8',
-            }
+            },
+            'nami_fp_v2.2.191-1d529566e.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: '684b63b1a2c929cf2be2fd564e9ae6032fdbbcfe0991d860c540420c40405776',
+                _FIRMWARE_VERSION_RO_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
+                _FIRMWARE_VERSION_RW_VERSION: 'nami_fp_v2.2.191-1d529566e',
+                _FIRMWARE_VERSION_KEY_ID: '35486c0090ca390408f1fbbf2a182966084fe2f8',
+            },
         },
     }
 
