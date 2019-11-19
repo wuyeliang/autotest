@@ -56,8 +56,13 @@ class firmware_ECBootTime(FirmwareTest):
         else:
             ec_ready = ["([0-9.]+) Inits done"]
 
-        power_cmd = "powerbtn" if self.faft_config.ec_has_powerbtn_cmd else \
-                    "power on"
+        if self.faft_config.ec_has_powerbtn_cmd:
+            # powerbtn takes ms while hold_pwr_button_powero is seconds.
+            hold_ms = int(1000 * self.faft_config.hold_pwr_button_poweron)
+            power_cmd = 'powerbtn %s' % hold_ms
+        else:
+            power_cmd = 'power on'
+
         # Try the EC reboot command several times in case the console
         # output is not clean enough for the full string to be found.
         retry = 10
