@@ -78,6 +78,7 @@ class OmahaDevserver(object):
             self._devserver_dir = global_config.global_config.get_config_value(
                 'CROS', 'devserver_dir')
             ssh_user = 'moblab'
+            os.environ['CROS_CACHEDIR'] = '/mnt/moblab/cros_cache'
         else:
             self._devserver_dir = \
                 '/home/chromeos-test/chromiumos/src/platform/dev'
