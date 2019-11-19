@@ -104,6 +104,8 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
             if self.host.multi_chameleon:
                 self.chameleon_group = dict()
+                # Create copy of chameleon_group
+                self.chameleon_group_copy = dict()
                 self.group_chameleons_type()
 
         self.enable_disable_debug_log(enable=True)
@@ -249,6 +251,18 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                     if device_is_paired:
                         self.bluetooth_facade.remove_device_object(
                                 device.address)
+
+        # Repopulate chameleon_group for next tests
+        if self.host.multi_chameleon:
+            # Clear previous tets's leftover entries. Don't delete the
+            # chameleon_group dictionary though, it'll be used as it is.
+            for device_type in self.chameleon_group:
+                if len(self.chameleon_group[device_type]) > 0:
+                    del self.chameleon_group[device_type][:]
+
+            # Repopulate
+            self.group_chameleons_type()
+
         # Close the connection between peers
         self.cleanup()
 

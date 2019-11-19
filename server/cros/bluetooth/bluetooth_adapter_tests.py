@@ -551,26 +551,35 @@ class BluetoothAdapterTests(test.test):
         """Group all chameleons by the type of their detected device
         """
 
-        def chameleon_device_type(chameleon, idx):
-            """Get ith-chameleon device type"""
+        # Use previously created chameleon_group instead of creating new
+        if len(self.chameleon_group_copy) > 0:
+            logging.info('Using previously created chameleon group')
+            for device_type in SUPPORTED_DEVICE_TYPES:
+                self.chameleon_group[device_type] = \
+                    self.chameleon_group_copy[device_type][:]
+            return
+
+        # Create new chameleon_group
+        for device_type in SUPPORTED_DEVICE_TYPES:
+            self.chameleon_group[device_type] = list()
+            # Create copy of chameleon_group
+            self.chameleon_group_copy[device_type] = list()
+
+        for idx,chameleon in enumerate(self.host.chameleon_list):
             for device_type,gen_device_func in SUPPORTED_DEVICE_TYPES.items():
                 try:
                     device = gen_device_func(chameleon)()
                     if device.CheckSerialConnection():
-                        return device_type
+                        self.chameleon_group[device_type].append(chameleon)
+                        logging.info('%d-th chameleon find device %s', \
+                                     idx, device_type)
+                        # Create copy of chameleon_group
+                        self.chameleon_group_copy[device_type].append(chameleon)
                 except:
                     logging.debug('Error with initializing %s on %d-th'
                                   'chameleon', device_type, idx)
-            logging.error('No device is detected on %d-th chameleon', idx)
-            return None
-
-        for device_type in SUPPORTED_DEVICE_TYPES:
-            self.chameleon_group[device_type] = list()
-
-        for idx,chameleon in enumerate(self.host.chameleon_list):
-            chameleon_type = chameleon_device_type(chameleon, idx)
-            self.chameleon_group[chameleon_type].append(chameleon)
-            logging.info('%d-th chameleon find device %s', idx, chameleon_type)
+            if len(self.chameleon_group[device_type]) == 0:
+                logging.error('No device is detected on %d-th chameleon', idx)
 
     def get_device_rasp(self, device_num):
         """Get all bluetooth device objects from chameleons.
@@ -585,6 +594,7 @@ class BluetoothAdapterTests(test.test):
                 logging.error('Number of chameleon with device type'
                       '%s is %d, which is less then needed %d', device_type,
                       len(self.chameleon_group[device_type]), number)
+                return False
 
             for chameleon in self.chameleon_group[device_type][:number]:
                 device = get_bluetooth_emulated_device(chameleon, device_type)
@@ -602,6 +612,12 @@ class BluetoothAdapterTests(test.test):
                         raise
 
                 self.devices[device_type].append(device)
+
+                # Remove this chameleon from chameleon_group since it is already
+                # configured as a specific device
+                for temp_device in SUPPORTED_DEVICE_TYPES:
+                    if chameleon in self.chameleon_group[temp_device]:
+                        self.chameleon_group[temp_device].remove(chameleon)
 
         return True
 
