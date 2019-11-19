@@ -29,7 +29,7 @@ _FIRMWARE_UPDATE_TIMEOUT = 600
 
 
 @contextlib.contextmanager
-def create_host(hostname, board, model, servo_hostname, servo_port,
+def create_cros_host(hostname, board, model, servo_hostname, servo_port,
                 servo_serial=None, logs_dir=None):
     """Yield a server.hosts.CrosHost object to use for DUT preparation.
 
@@ -64,11 +64,7 @@ def create_host(hostname, board, model, servo_hostname, servo_port,
             labels=labels,
             attributes=attributes,
     ))
-    machine_dict = {
-            'hostname': hostname,
-            'host_info_store': store,
-            'afe_host': server_utils.EmptyAFEHost(),
-    }
+    machine_dict = _get_machine_dict(hostname, store)
     host = hosts.create_host(machine_dict)
     servohost = servo_host.ServoHost(
             **servo_host.get_servo_args_for_host(host))
@@ -79,6 +75,53 @@ def create_host(hostname, board, model, servo_hostname, servo_port,
         yield host
     finally:
         host.close()
+
+
+@contextlib.contextmanager
+def create_labstation_host(hostname, board, model):
+    """Yield a server.hosts.LabstationHost object to use for labstation
+    preparation.
+
+    This object contains just enough inventory data to be able to prepare the
+    labstation for lab deployment. It does not contain any reference to
+    AFE / Skylab so that DUT preparation is guaranteed to be isolated from
+    the scheduling infrastructure.
+
+    @param hostname:        FQDN of the host to prepare.
+    @param board:           The autotest board label for the DUT.
+    @param model:           The autotest model label for the DUT.
+
+    @yield a server.hosts.Host object.
+    """
+    labels = [
+        'board:%s' % board,
+        'model:%s' % model,
+        'os:labstation'
+        ]
+
+    store = host_info.InMemoryHostInfoStore(info=host_info.HostInfo(
+        labels=labels,
+    ))
+    machine_dict = _get_machine_dict(hostname, store)
+    host = hosts.create_host(machine_dict)
+    try:
+        yield host
+    finally:
+        host.close()
+
+
+def _get_machine_dict(hostname, host_info_store):
+    """Helper function to generate a machine_dic to feed hosts.create_host.
+
+    @param hostname
+    @param host_info_store
+
+    @return A dict that hosts.create_host can consume.
+    """
+    return {'hostname': hostname,
+            'host_info_store': host_info_store,
+            'afe_host': server_utils.EmptyAFEHost(),
+            }
 
 
 def download_image_to_servo_usb(host, build):
@@ -325,3 +368,36 @@ def _prepare_servo(servohost):
     # since we can't pass None through the xml rpcs, use 0 to indicate None.
     if not servohost.get_servo().probe_host_usb_dev(timeout=0):
         raise Exception('No USB stick detected on Servo host')
+
+
+def setup_labstation(host):
+    """Do initial setup for labstation host.
+
+    @param host    A LabstationHost object.
+
+    """
+    try:
+        if not host.is_labstation():
+            raise Exception('Current OS on host %s is not a labstation image.'
+                            % host.hostname)
+    except AttributeError:
+        raise Exception('Unable to verify host has a labstation image, this can'
+                        ' be caused by host is unsshable.')
+
+    try:
+        # TODO: we should setup hwid and serial number for DUT in deploy script
+        #  as well, which is currently obtained from repair job.
+        info = host.host_info_store.get()
+        hwid = host.run('crossystem hwid', ignore_status=True).stdout
+        if hwid:
+            info.attributes['HWID'] = hwid
+
+        serial_number = host.run('vpd -g serial_number',
+                                 ignore_status=True).stdout
+        if serial_number:
+            info.attributes['serial_number'] = serial_number
+        if info != host.host_info_store.get():
+            host.host_info_store.commit(info)
+    except Exception as e:
+        raise Exception('Failed to get HWID & Serial Number for host %s: %s'
+                        % (host.hostname, str(e)))

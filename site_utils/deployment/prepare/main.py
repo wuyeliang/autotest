@@ -29,6 +29,7 @@ RETURN_CODES = enum.Enum(
         'INSTALL_FIRMWARE_FAILURE',
         'INSTALL_TEST_IMAGE_FAILURE',
         'BOOT_FROM_RECOVERY_MODE_FAILURE',
+        'SETUP_LABSTATION_FAILURE',
         'UPDATE_LABEL_FAILURE',
         'OTHER_FAILURES',
 )
@@ -45,12 +46,10 @@ def main():
 
   try:
     info = _read_store(opts.host_info_file)
-    repair_image = _get_cros_repair_image_name(info.board)
   except Exception as err:
     logging.error("fail to prepare: %s", err)
     return RETURN_CODES.OTHER_FAILURES
 
-  logging.info('Using repair image %s, obtained from AFE', repair_image)
   with _create_host(opts.hostname, info, opts.results_dir) as host:
     if opts.dry_run:
       logging.info('DRY RUN: Would have run actions %s', opts.actions)
@@ -58,6 +57,8 @@ def main():
 
     if 'stage-usb' in opts.actions:
       try:
+        repair_image = _get_cros_repair_image_name(info.board)
+        logging.info('Using repair image %s, obtained from AFE', repair_image)
         preparedut.download_image_to_servo_usb(host, repair_image)
       except Exception as err:
         logging.error("fail to stage image to usb: %s", err)
@@ -84,6 +85,13 @@ def main():
         logging.error("fail to boot from recovery mode: %s", err)
         return RETURN_CODES.BOOT_FROM_RECOVERY_MODE_FAILURE
 
+    if 'setup-labstation' in opts.actions:
+      try:
+        preparedut.setup_labstation(host)
+      except Exception as err:
+        logging.error("fail to setup labstation: %s", err)
+        return RETURN_CODES.SETUP_LABSTATION_FAILURE
+
     if 'update-label' in opts.actions:
       try:
         host.labels.update_labels(host)
@@ -106,7 +114,7 @@ def _parse_args():
       'actions',
       nargs='+',
       choices=['stage-usb', 'install-test-image', 'install-firmware',
-               'verify-recovery-mode', 'update-label'],
+               'verify-recovery-mode', 'update-label', 'setup-labstation'],
       help='DUT preparation actions to execute.',
   )
   parser.add_argument(
@@ -197,7 +205,10 @@ def _create_host(hostname, info, results_dir):
   if not info.model:
     raise DutPreparationError('No model in DUT labels')
 
-  servo_args = {}
+  if info.os == 'labstation':
+    return preparedut.create_labstation_host(hostname, info.board, info.model)
+
+  # We assume target host is a cros DUT by default
   if 'servo_host' not in info.attributes:
     raise DutPreparationError('No servo_host in DUT attributes')
   if 'servo_port' not in info.attributes:
@@ -210,7 +221,7 @@ def _create_host(hostname, info, results_dir):
     if e.errno != errno.EEXIST:
       raise
 
-  return preparedut.create_host(
+  return preparedut.create_cros_host(
       hostname,
       info.board,
       info.model,
