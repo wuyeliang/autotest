@@ -15,12 +15,11 @@ class firmware_Mosys(FirmwareTest):
     Mosys commands test for Firmware values.
 
     Execute
-    a. mosys -k smbios info bios
-    b. mosys -k ec info
-    c. mosys platform name
-    d. mosys eeprom map
-    e. mosys platform vendor
-    f. mosys -k pd info
+    * mosys -k ec info
+    * mosys platform name
+    * mosys eeprom map
+    * mosys platform vendor
+    * mosys -k pd info
 
     """
     version = 1
@@ -162,23 +161,7 @@ class firmware_Mosys(FirmwareTest):
 
     def run_once(self, dev_mode=False):
         """Runs a single iteration of the test."""
-        # a. mosys -k smbios info bios
-        command = 'mosys -k smbios info bios'
-        if 'smbios' in self.command_list:
-            output = self.run_cmd(command)
-            self.check_for_errors(output, command)
-            p = re.compile('vendor="coreboot" version="(.*)"'
-                           ' release_date="[/0-9]+" size="[0-9]+ KB"')
-            v = p.match(output[0])
-            if not v:
-              self._tag_failure(command)
-            version = v.group(1)
-            if not self.checkers.crossystem_checker({'fwid': version}):
-              self._tag_failure(command)
-        else:
-            logging.warning('Skip "%s", command not available.', command)
-
-        # b. mosys -k ec info
+        # mosys -k ec info
         command = 'mosys -k ec info'
         if self.faft_config.chrome_ec:
           output = self.run_cmd(command)
@@ -194,13 +177,13 @@ class firmware_Mosys(FirmwareTest):
         else:
           logging.info('Skip "%s", command not available.', command)
 
-        # c. mosys platform name
+        # mosys platform name
         command = 'mosys platform name'
         output = self.run_cmd(command)
         self.check_for_errors(output, command)
         self.check_lsb_info(command, 'CHROMEOS_RELEASE_BOARD', output[0])
 
-        # d. mosys eeprom map
+        # mosys eeprom map
         command = 'mosys eeprom map|egrep "RW_SHARED|RW_SECTION_[AB]"'
         lines = self.run_cmd(command)
         self.check_for_errors(lines, command)
@@ -228,7 +211,7 @@ class firmware_Mosys(FirmwareTest):
             logging.error('Missing RW_SECTION A or B, %s', lines)
             self._tag_failure(command)
 
-        # e. mosys platform vendor
+        # mosys platform vendor
         # Output will be GOOGLE until launch, see crosbug/p/29755
         command = 'mosys platform vendor'
         output = self.run_cmd(command)
@@ -239,7 +222,7 @@ class firmware_Mosys(FirmwareTest):
                           'or name of maker.')
             self._tag_failure(command)
 
-        # f. mosys -k pd info
+        # mosys -k pd info
         command = 'mosys -k pd info'
         if self.faft_config.chrome_usbpd and 'pd' in self.command_list:
           output = self.run_cmd(command)
@@ -254,7 +237,7 @@ class firmware_Mosys(FirmwareTest):
         else:
           logging.info('Skip "%s", command not available.', command)
 
-        # g. mosys -k memory spd print all (check no error output)
+        # mosys -k memory spd print all (check no error output)
         command = 'mosys -k memory spd print all'
         output = self.run_cmd(command)
         self.check_for_errors(output, command)
