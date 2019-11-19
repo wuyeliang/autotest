@@ -27,9 +27,12 @@ class audio_AudioBasicInternalSpeaker(audio_test.AudioTest):
     DELAY_BEFORE_RECORD_SECONDS = 0.5
     RECORD_SECONDS = 8
 
-    def run_once(self, host, cfm_speaker=False):
+    def run_once(self, host):
+        """Runs Basic Audio Speaker test.
 
-        if not cfm_speaker and not audio_test_utils.has_internal_speaker(host):
+        @param host: device under test CrosHost
+        """
+        if not audio_test_utils.has_internal_speaker(host):
             return
 
         golden_file = audio_test_data.SIMPLE_FREQUENCY_SPEAKER_TEST_FILE
@@ -55,11 +58,8 @@ class audio_AudioBasicInternalSpeaker(audio_test.AudioTest):
                 host, audio_facade, self.resultsdir, 'start')
 
         # Checks the node selected by cras is correct.
-        if not cfm_speaker:
-            audio_test_utils.check_audio_nodes(audio_facade,
-                    (['INTERNAL_SPEAKER'], None))
-        else:
-            audio_test_utils.check_audio_nodes(audio_facade, (['USB'], None))
+        audio_test_utils.check_audio_nodes(audio_facade,
+                                           (['INTERNAL_SPEAKER'], None))
 
         audio_facade.set_selected_output_volume(80)
 

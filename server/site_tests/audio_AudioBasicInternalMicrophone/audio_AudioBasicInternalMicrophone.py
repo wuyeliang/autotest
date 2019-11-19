@@ -28,16 +28,12 @@ class audio_AudioBasicInternalMicrophone(audio_test.AudioTest):
     RECORD_SECONDS = 9
     DELAY_AFTER_BINDING = 0.5
 
-    def run_once(self, host, cfm_speaker=False):
+    def run_once(self, host):
         """Runs Basic Audio Microphone test.
 
         @param host: device under test CrosHost
-        @param cfm_speaker: whether cfm_speaker's audio is tested which is an
-            external USB speaker on CFM (ChromeBox For Meetings) devices.
-
         """
-        if (not cfm_speaker and
-            not audio_test_utils.has_internal_microphone(host)):
+        if not audio_test_utils.has_internal_microphone(host):
             return
 
         golden_file = audio_test_data.SIMPLE_FREQUENCY_TEST_1330_FILE
@@ -70,12 +66,9 @@ class audio_AudioBasicInternalMicrophone(audio_test.AudioTest):
 
             expected_internal_mic_node = audio_test_utils.get_internal_mic_node(
                     host)
-            if not cfm_speaker:
-                audio_test_utils.check_audio_nodes(audio_facade,
-                        (None, [expected_internal_mic_node]))
-            else:
-                audio_test_utils.check_audio_nodes(audio_facade,
-                        (None, ['USB']))
+
+            audio_test_utils.check_audio_nodes(
+                    audio_facade, (None, [expected_internal_mic_node]))
 
             logging.info('Setting playback data on Chameleon')
             source.set_playback_data(golden_file)
