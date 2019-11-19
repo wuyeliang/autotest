@@ -406,7 +406,7 @@ class DeserializationError(Exception):
 # HostInfo is backwards incompatible, i.e. we can no longer correctly
 # deserialize a previously serialized HostInfo. An example of such change is if
 # a field in the HostInfo object is dropped.
-_CURRENT_SERIALIZATION_VERSION = 2
+_CURRENT_SERIALIZATION_VERSION = 1
 
 
 def json_serialize(info, file_obj, version=_CURRENT_SERIALIZATION_VERSION):
