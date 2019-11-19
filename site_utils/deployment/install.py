@@ -173,87 +173,7 @@ def _get_omaha_build(board):
 
 
 def _update_build(afe, report_log, arguments):
-    """Update the stable_test_versions table.
-
-    This calls the `set_stable_version` RPC call to set the stable
-    repair version selected by this run of the command.  Additionally,
-    this updates the stable firmware for the board.  The repair version
-    is selected from three possible versions:
-      * The stable test version currently in the AFE database.
-      * The version Omaha is currently serving as the Beta channel
-        build.
-      * The version supplied by the user.
-    The actual version selected will be whichever of these three is
-    the most up-to-date version.
-
-    The stable firmware version will be set to whatever firmware is
-    bundled in the selected repair image. If the selected repair image bundles
-    firmware for more than one model, then the firmware for every model in the
-    build will be updated.
-
-    This function will log information about the available versions
-    prior to selection.  After selection the repair and firmware
-    versions slected will be logged.
-
-    @param afe          AFE object for RPC calls.
-    @param report_log   File-like object for logging report output.
-    @param arguments    Command line arguments with options.
-
-    @return Returns the version selected.
-    """
-    # Gather the current AFE and Omaha version settings, and report them
-    # to the user.
-    cros_version_map = afe.get_stable_version_map(afe.CROS_IMAGE_TYPE)
-    fw_version_map = afe.get_stable_version_map(afe.FIRMWARE_IMAGE_TYPE)
-    afe_cros = cros_version_map.get_version(arguments.board)
-    afe_fw = fw_version_map.get_version(arguments.board)
-    omaha_cros = _get_omaha_build(arguments.board)
-    report_log.write('AFE    version is %s.\n' % afe_cros)
-    report_log.write('Omaha  version is %s.\n' % omaha_cros)
-    report_log.write('AFE   firmware is %s.\n' % afe_fw)
-    cros_version = afe_cros
-
-    # Check whether we should upgrade the repair build to either
-    # the Omaha or the user's requested build.  If we do, we must
-    # also update the firmware version.
-    if (omaha_cros is not None
-            and (cros_version is None or
-                 utils.compare_versions(cros_version, omaha_cros) < 0)):
-        cros_version = omaha_cros
-    if arguments.build and arguments.build != cros_version:
-        if (cros_version is None
-                or utils.compare_versions(cros_version, arguments.build) < 0):
-            cros_version = arguments.build
-        else:
-            report_log.write('Selected version %s is too old; '
-                             'using version %s'
-                             % (arguments.build, cros_version))
-
-    afe_fw_versions = {arguments.board: afe_fw}
-    fw_versions = build_data.get_firmware_versions(
-        arguments.board, cros_version)
-    # At this point `cros_version` is our new repair build, and
-    # `fw_version` is our new target firmware.  Call the AFE back with
-    # updates as necessary.
-    if not arguments.dry_run:
-        if cros_version != afe_cros:
-            cros_version_map.set_version(arguments.board, cros_version)
-
-            if fw_versions != afe_fw_versions:
-                for model, fw_version in fw_versions.iteritems():
-                    if fw_version is not None:
-                        fw_version_map.set_version(model, fw_version)
-                    else:
-                        fw_version_map.delete_version(model)
-
-    # Report the new state of the world.
-    report_log.write(_DIVIDER)
-    report_log.write('Repair CrOS version for board %s is now %s.\n' %
-                     (arguments.board, cros_version))
-    for model, fw_version in fw_versions.iteritems():
-        report_log.write('Firmware version for model %s is now %s.\n' %
-                         (model, fw_version))
-    return cros_version
+    raise RuntimeError("site_utils.deployment::_update_build is intentionally deleted")
 
 
 def _create_host(hostname, afe, afe_host):
@@ -909,7 +829,6 @@ def install_duts(arguments):
         if arguments.dry_run:
             report_log.write('Dry run - installation and most testing '
                              'will be skipped.\n')
-        current_build = _update_build(afe, report_log, arguments)
         host_attr_dict = _get_host_attributes(arguments.host_info_list, afe)
         install_pool = multiprocessing.Pool(len(arguments.hostnames))
         install_function = functools.partial(_install_dut, arguments,

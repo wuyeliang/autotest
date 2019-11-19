@@ -2296,3 +2296,9 @@ class StableVersion(dbmodels.Model, model_logic.ModelExtensions):
     class Meta:
         """Metadata for class StableVersion."""
         db_table = 'afe_stable_versions'
+
+    def save(self, *args, **kwargs):
+        raise RuntimeError("the ability to save StableVersions has been intentionally removed")
+
+    def delete(self):
+        raise RuntimeError("the ability to delete StableVersions has been intentionally removed")
