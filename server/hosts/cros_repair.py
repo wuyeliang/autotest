@@ -252,7 +252,7 @@ class PythonVerifier(hosts.Verifier):
 
     def verify(self, host):
         # pylint: disable=missing-docstring
-        result = host.run('python -c "import cPickle"',
+        result = host.run('python -c "import json"',
                           ignore_status=True)
         if result.exit_status != 0:
             message = 'The python interpreter is broken'
