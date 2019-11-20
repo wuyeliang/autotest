@@ -17,7 +17,7 @@ HWID_INFO_TYPES = [HWID_INFO_BOM, HWID_INFO_SKU, HWID_INFO_LABEL]
 # HWID url vars.
 HWID_VERSION = 'v1'
 HWID_BASE_URL = 'https://www.googleapis.com/chromeoshwid'
-CHROMEOS_HWID_SERVER_URL = "https://chromeos-hwid.appspot.com/api/chromeoshwid/v1/"
+CHROMEOS_HWID_SERVER_URL = "https://chromeos-hwid.appspot.com/api/chromeoshwid"
 URL_FORMAT_STRING='%(base_url)s/%(version)s/%(info_type)s/%(hwid)s/?key=%(key)s'
 
 # Key file name to use when we don't want hwid labels.
