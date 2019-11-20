@@ -1,3 +1,4 @@
+import logging
 import time
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
@@ -7,21 +8,20 @@ class UI_Handler(object):
 
     REGEX_ALL = '/(.*?)/'
 
-    def start_ui_root(self, cr):
-        """Starts the UI root object for testing."""
-        self.ext = cr.autotest_ext
-        self.ext.ExecuteJavaScript("""
-                var root;
-                chrome.automation.getDesktop(r => root = r);
-            """)
+    PROMISE_TEMPLATE = \
+        '''new Promise(function(resolve, reject) {
+            chrome.automation.getDesktop(function(root) {
+                    resolve(%s);
+                })
+            })'''
 
-        # Currently need to wait a second to let the root object finish setup.
-        time.sleep(1)
+    def start_ui_root(self, cr):
+        """Start the UI root object for testing."""
+        self.ext = cr.autotest_ext
 
     def is_obj_restricted(self, name, isRegex=False, role=None):
         """
-
-        Returns True if the object restriction is 'disabled'.
+        Return True if the object restriction is 'disabled'.
         This usually means the button is either greyed out, locked, etc.
 
         @param name: Parameter to provide to the 'name' attribute.
@@ -34,11 +34,11 @@ class UI_Handler(object):
                                               isRegex=isRegex)
         try:
             restriction = self.ext.EvaluateJavaScript(
-                "{}.restriction;".format(FindParams))
+                self.PROMISE_TEMPLATE % ("%s.restriction" % FindParams),
+                promise=True)
         except Exception:
             raise error.TestError(
                 'Could not find object {}.'.format(name))
-
         if restriction == 'disabled':
             return True
         return False
@@ -91,7 +91,8 @@ class UI_Handler(object):
                                                 flip=remove,
                                                 role=role),
             timeout=timeout,
-            exception=error.TestError('{} did not load'.format(name)))
+            exception=error.TestError('{} did not load in: {}'
+                                      .format(name, self.list_screen_items())))
 
     def did_obj_not_load(self, name, isRegex=False, timeout=5):
         """
@@ -123,14 +124,22 @@ class UI_Handler(object):
         FindParams = self._get_FindParams_str(name=name,
                                               role=role,
                                               isRegex=isRegex)
-        self.ext.EvaluateJavaScript("{}.doDefault();".format(FindParams))
+        try:
+            self.ext.EvaluateJavaScript(
+                self.PROMISE_TEMPLATE % ("%s.doDefault()" % FindParams),
+                promise=True)
+        except:
+            logging.info('Unable to .doDefault() on {}. All items: {}'
+                         .format(FindParams, self.list_screen_items()))
+            raise error.TestError("doDefault failed on {}".format(FindParams))
 
     def doCommand_on_obj(self, name, cmd, isRegex=False, role=None):
-        """Runs the specified command on the element."""
+        """Run the specified command on the element."""
         FindParams = self._get_FindParams_str(name=name,
                                               role=role,
                                               isRegex=isRegex)
-        return self.ext.EvaluateJavaScript("{}.{};".format(FindParams, cmd))
+        return self.ext.EvaluateJavaScript(self.PROMISE_TEMPLATE % """
+            %s.%s""" % (FindParams, cmd), promise=True)
 
     def list_screen_items(self,
                           role=None,
@@ -139,7 +148,7 @@ class UI_Handler(object):
                           attr='name'):
 
         """
-        Lists all the items currently visable on the screen.
+        List all the items currently visable on the screen.
 
         If no paramters are given, it will return the name of each item,
         including items with empty names.
@@ -159,17 +168,17 @@ class UI_Handler(object):
         elif name is not None:
             name = self._format_obj(name, isRegex)
         name = self.REGEX_ALL if name is None else name
-        role = self.REGEX_ALL if role is None else self._format_obj(role, False)
+        role = self.REGEX_ALL if role is None else self._format_obj(role,
+                                                                    False)
 
-        return self.ext.EvaluateJavaScript('''
-                root.findAll({attributes:
-                    {name: %s, role: %s}}).map(node => node.%s);'''
-                % (name, role, attr))
+        new_promise = self.PROMISE_TEMPLATE % """root.findAll({attributes:
+            {name: %s, role: %s}}).map(node => node.%s)""" % (name, role, attr)
+
+        return self.ext.EvaluateJavaScript(new_promise, promise=True)
 
     def get_name_role_list(self):
         """
-        Returns a list of dicts containing the name/role of everything
-        on the screen.
+        Return [{}, {}] containing the name/role of everything on screen.
 
         """
         combined = []
@@ -229,8 +238,11 @@ class UI_Handler(object):
         return (FINDPARAMS_BASE % (name, role))
 
     def _is_item_present(self, findParams):
-        """Returns False if tempVar is None, else True."""
-        if self.ext.EvaluateJavaScript("{};".format(findParams)) is None:
+        """Return False if tempVar is None, else True."""
+        item_present = self.ext.EvaluateJavaScript(
+            self.PROMISE_TEMPLATE % findParams,
+            promise=True)
+        if item_present is None:
             return False
         return True
 
@@ -255,19 +267,19 @@ class UI_Handler(object):
 
         """
         self.doDefault_on_obj(item_to_click,
-                                 role=click_role,
-                                 isRegex=isRegex_click)
-        for retry in xrange(2):
+                              role=click_role,
+                              isRegex=isRegex_click)
+        for retry in xrange(3):
             try:
                 self.wait_for_ui_obj(item_to_wait_for,
-                                        role=wait_role,
-                                        isRegex=isRegex_wait,
-                                        timeout=3)
+                                     role=wait_role,
+                                     isRegex=isRegex_wait,
+                                     timeout=6)
                 break
             except error.TestError:
                 self.doDefault_on_obj(item_to_click,
-                                         role=click_role,
-                                         isRegex=isRegex_click)
+                                      role=click_role,
+                                      isRegex=isRegex_click)
         else:
             raise error.TestError('Item {} did not load after 2 tries'.format(
                                   item_to_wait_for))

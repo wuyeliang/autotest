@@ -38,6 +38,9 @@ class policy_UIUtilsSmokeTest(
 
         if self.ui.is_obj_restricted(name='Launcher', role='button',):
             raise error.TestError('Launcher should not be restricted')
+        if len(self.ui.list_screen_items()) == 0:
+            raise error.TestError("list_screen_items returned no items")
+        self.ui.click_and_wait_for_item_with_retries('/tray/', 'Settings', True)
 
     def run_once(self):
         """Run the test."""
