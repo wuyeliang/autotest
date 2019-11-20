@@ -50,7 +50,7 @@ class policy_SystemTimezone(
         self.ui.doDefault_on_obj('Choose from list')
 
         # Give the dropdown a second to load (there is no object to wait on).
-        time.sleep(1)
+        time.sleep(2)
         return not self.ui.is_obj_restricted('Time zone', role='popUpButton')
 
     def _set_timezone(self):

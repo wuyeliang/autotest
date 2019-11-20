@@ -1,7 +1,6 @@
 # Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
@@ -26,7 +25,7 @@ class policy_PasswordManager(
                    False: {'restrict': True,
                            'value': 'false'},
                    None: {'restrict': False,
-                           'value': 'true'}}
+                          'value': 'true'}}
 
     def _check_pword_mgr(self, case):
         """
@@ -44,7 +43,6 @@ class policy_PasswordManager(
         expected_result = self.EXP_RESULTS[case]
         self.cr.browser.tabs[0].Navigate('chrome://settings/passwords')
         self._wait_for_page()
-
         icon_present = self.ui.item_present(name=self.TEST_OBJ,
                                             isRegex=True,
                                             role='genericContainer')
@@ -72,18 +70,8 @@ class policy_PasswordManager(
                 .format(button_setting, expected_result['value']))
 
     def _wait_for_page(self):
-        """
-        Waits for the page to fully load via waiting for all the expected
-        elements to load.
-
-        """
-        t1 = time.time()
-        while time.time() - t1 < 5:
-            screen_obj = self.ui.ext.EvaluateJavaScript(
-                'root.find({attributes: {name: %s}});' % (self.TEST_OBJ))
-            if screen_obj is not None:
-                break
-            time.sleep(1)
+        """Wait for the page to load via all the expected elements loading."""
+        self.ui.wait_for_ui_obj(name=self.TEST_OBJ, isRegex=True, timeout=18)
 
     def run_once(self, case):
         """Setup and run the test configured for the specified test case."""

@@ -20,39 +20,32 @@ class policy_PinnedLauncherApps(
 
     """
     version = 1
-    PINNED_TEXT = '/pinned/gi'
+    PINNED_TEXT = '/Remove from Chrome/'
     EXT_NAME = 'Google Photos'
 
-    def _remove_pinnedAps_policy(self):
-        self.fake_dm_server.setup_policy(self._make_json_blob(
-            user_policies={}))
-        self.reload_policies()
+    def _remove_pinned_aps_policy(self):
+        """Reset the policy, thus removing any pinned apps."""
+        self.update_policies()
 
     def _remove_pinned_app(self):
-        """Removes the pinned app after the test is done."""
-        self.ui.ext.EvaluateJavaScript('photos_app.showContextMenu()')
+        """Remove the pinned app after the test is done."""
+        self.ui.doCommand_on_obj(self.EXT_NAME, cmd="showContextMenu()")
         self.ui.wait_for_ui_obj('Unpin')
         self.ui.doDefault_on_obj('Unpin')
 
         self.ui.wait_for_ui_obj(self.EXT_NAME, remove=True)
 
     def _check_launcher(self):
-        """Runs the launcher test"""
-
-        self.ui.wait_for_ui_obj(self.EXT_NAME)
-        self.ui.ext.EvaluateJavaScript("""
-            photos_app = root.find(
-                {attributes: {name: "%s"}}
-            )""" % (self.EXT_NAME))
-
-        self.ui.ext.EvaluateJavaScript('photos_app.showContextMenu();')
+        """Run the launcher test."""
+        self.ui.wait_for_ui_obj(self.EXT_NAME, timeout=30)
+        self.ui.doCommand_on_obj(self.EXT_NAME, cmd="showContextMenu()")
         self.ui.wait_for_ui_obj(self.PINNED_TEXT, isRegex=True)
-
-        if not self.ui.is_obj_restricted(self.PINNED_TEXT, isRegex=True):
+        if not self.ui.did_obj_not_load('Unpin'):
+            self._remove_pinned_app()
             raise error.TestError(
                 'App can be removed when pinned by policy!')
 
-        self._remove_pinnedAps_policy()
+        self._remove_pinned_aps_policy()
         self._remove_pinned_app()
 
         if self.ui.item_present(self.EXT_NAME):

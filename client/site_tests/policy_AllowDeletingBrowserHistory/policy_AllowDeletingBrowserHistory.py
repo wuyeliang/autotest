@@ -27,15 +27,17 @@ class policy_AllowDeletingBrowserHistory(
         """
         self.navigate_to_url("chrome://settings/clearBrowserData")
         self.ui.start_ui_root(self.cr)
+        self.ui.wait_for_ui_obj('Advanced')
+
         self.ui.doDefault_on_obj('Advanced')
         self.ui.wait_for_ui_obj('/Browsing history/',
                                 isRegex=True,
                                 role='checkBox')
 
         button_disabled = self.ui.is_obj_restricted(
-                '/Browsing history/',
-                isRegex=True,
-                role='checkBox')
+            '/Browsing history/',
+            isRegex=True,
+            role='checkBox')
         if case is False and not button_disabled:
             raise error.TestFail('User is able to delete history.')
         elif case is not False and button_disabled:
