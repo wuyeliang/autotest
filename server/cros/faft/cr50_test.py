@@ -148,6 +148,25 @@ class Cr50Test(FirmwareTest):
                     self.download_cr50_eraseflashinfo_image()[0])
 
 
+    def _save_device_image(self, ext):
+        """Download the .prod or .prepvt device image and get the version.
+
+        @param ext: The Cr50 file extension: prod or prepvt.
+        @returns (local_path, rw_version, bid_string) or (None, None, None) if
+                 the file doesn't exist on the DUT.
+        """
+        version = self._original_image_state[ext + '_version']
+        if not version:
+            return None, None, None
+        _, rw_ver, bid = version
+        rw_filename = '.'.join('cr50.device.bin', ext, rw_ver)
+        local_path = os.path.join(self.resultsdir, rw_filename)
+        dut_path = cr50_utils.GetDevicePath(ext)
+        self.host.get_file(dut_path, local_path)
+        bid = cr50_utils.GetBoardIdInfoString(bid)
+        return local_path, rw_ver, bid
+
+
     def _save_original_images(self, release_path):
         """Use the saved state to find all of the device images.
 
@@ -155,25 +174,11 @@ class Cr50Test(FirmwareTest):
 
         @param release_path: The release path given by test args
         """
-        # Copy the prod and prepvt images from the DUT
-        _, prod_rw, prod_bid = self._original_image_state['device_prod_ver']
-        filename = 'prod_device_image_' + prod_rw
-        self._device_prod_image = os.path.join(self.resultsdir, filename)
-        self.host.get_file(cr50_utils.CR50_PROD, self._device_prod_image)
+        local_path, prod_rw, prod_bid = self._save_device_image('prod')
+        self._device_prod_image = local_path
 
-        if cr50_utils.HasPrepvtImage(self.host):
-            _, prepvt_rw, prepvt_bid = (
-                    self._original_image_state['device_prepvt_ver'])
-            filename = 'prepvt_device_image_' + prepvt_rw
-            self._device_prepvt_image = os.path.join(self.resultsdir,
-                    filename)
-            self.host.get_file(cr50_utils.CR50_PREPVT,
-                    self._device_prepvt_image)
-            prepvt_bid = cr50_utils.GetBoardIdInfoString(prepvt_bid)
-        else:
-            self._device_prepvt_image = None
-            prepvt_rw = None
-            prepvt_bid = None
+        local_path, prepvt_rw, prepvt_bid = self._save_device_image('prepvt')
+        self._device_prepvt_image = local_path
 
         if os.path.isfile(release_path):
             self._original_cr50_image = release_path
@@ -188,22 +193,22 @@ class Cr50Test(FirmwareTest):
         # download the image from google storage
         _, running_rw, running_bid = self.get_saved_cr50_original_version()
 
-        # Make sure prod_bid and running_bid are in the same format
-        prod_bid = cr50_utils.GetBoardIdInfoString(prod_bid)
+        # Convert the running board id to the same format as the prod and
+        # prepvt board ids.
         running_bid = cr50_utils.GetBoardIdInfoString(running_bid)
         if running_rw == prod_rw and running_bid == prod_bid:
             logging.info('Using device cr50 prod image %s %s', prod_rw,
-                    prod_bid)
+                         prod_bid)
             self._original_cr50_image = self._device_prod_image
         elif running_rw == prepvt_rw and running_bid == prepvt_bid:
             logging.info('Using device cr50 prepvt image %s %s', prepvt_rw,
-                    prepvt_bid)
+                         prepvt_bid)
             self._original_cr50_image = self._device_prepvt_image
         else:
             logging.info('Downloading cr50 image %s %s', running_rw,
-                    running_bid)
+                         running_bid)
             self._original_cr50_image = self.download_cr50_release_image(
-                running_rw, running_bid)[0]
+                    running_rw, running_bid)[0]
 
 
     def _save_original_state(self):
@@ -292,8 +297,10 @@ class Cr50Test(FirmwareTest):
         # If rootfs verification has been disabled, copy the cr50 device image
         # back onto the DUT.
         if filesystem_util.is_rootfs_writable(self.host):
-            cr50_utils.InstallImage(self.host, self._device_prod_image,
-                    cr50_utils.CR50_PROD)
+            # Install the prod image if there was one.
+            if self._device_prod_image:
+                cr50_utils.InstallImage(self.host, self._device_prod_image,
+                        cr50_utils.CR50_PROD)
             # Install the prepvt image if there was one.
             if self._device_prepvt_image:
                 cr50_utils.InstallImage(self.host, self._device_prepvt_image,
@@ -317,6 +324,19 @@ class Cr50Test(FirmwareTest):
         logging.info('Successfully restored the original cr50 state')
 
 
+    def _get_image_information(self, ext):
+        """Get the image information for the .prod or .prepvt image.
+
+        @param ext: The extension string prod or prepvt
+        @param returns: The image version or None if the image doesn't exist.
+        """
+        dut_path = cr50_utils.GetDevicePath(ext)
+        file_exists = self.host.path_exists(dut_path)
+        if file_exists:
+            return cr50_utils.GetBinVersion(self.host, dut_path)
+        return None
+
+
     def get_image_and_bid_state(self):
         """Get a dict with the current device cr50 information.
 
@@ -327,14 +347,8 @@ class Cr50Test(FirmwareTest):
         state = {}
         state['mosys platform brand'] = self.host.run('mosys platform brand',
             ignore_status=True).stdout.strip()
-        state['device_prod_ver'] = cr50_utils.GetBinVersion(self.host,
-                cr50_utils.CR50_PROD)
-        state['has_prepvt'] = cr50_utils.HasPrepvtImage(self.host)
-        if state['has_prepvt']:
-            state['device_prepvt_ver'] = cr50_utils.GetBinVersion(self.host,
-                    cr50_utils.CR50_PREPVT)
-        else:
-            state['device_prepvt_ver'] = None
+        state['prod_version'] = self._get_image_information('prod')
+        state['prepvt_version'] = self._get_image_information('prepvt')
         state['rlz'] = cr50_utils.GetRLZ(self.host)
         state['chip_bid'] = cr50_utils.GetChipBoardId(self.host)
         state['chip_bid_str'] = '%08x:%08x:%08x' % state['chip_bid']

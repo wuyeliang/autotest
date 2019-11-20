@@ -414,9 +414,13 @@ def VerifyUpdate(client, ver='', last_message=''):
     return new_ver, last_message
 
 
-def HasPrepvtImage(client):
-    """Returns True if cr50.bin.prepvt exists on the dut"""
-    return client.path_exists(CR50_PREPVT)
+def GetDevicePath(ext):
+    """Return the device path for the .prod or .prepvt image."""
+    if ext == 'prod':
+        return CR50_PROD
+    elif ext == 'prepvt':
+        return CR50_PREPVT
+    raise error.TestError('Unsupported cr50 image type %r' % ext)
 
 
 def ClearUpdateStateAndReboot(client):
