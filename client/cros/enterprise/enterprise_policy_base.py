@@ -23,7 +23,6 @@ from autotest_lib.client.cros.enterprise import enterprise_policy_utils
 from autotest_lib.client.cros.enterprise import policy_manager
 from autotest_lib.client.cros.enterprise import enterprise_fake_dmserver
 from autotest_lib.client.cros.enterprise import enterprise_policy_utils
-from autotest_lib.client.cros.enterprise.device_policy_lookup import DEVICE_POLICY_DICT
 from autotest_lib.client.common_lib import ui_utils
 
 from telemetry.core import exceptions

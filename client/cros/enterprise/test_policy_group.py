@@ -154,7 +154,7 @@ class TestPolicyGroup(unittest.TestCase):
             'invalidation_name': 'test_policy',
             'invalidation_source': 16,
             'google/chromeos/device':
-                {'timezone': 'v1'},
+                {'system_timezone.timezone': 'v1'},
             'current_key_index': 0,
             'google/chrome/extension':
                 {'Extension2': {'Policy2': 'Value2'},

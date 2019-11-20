@@ -257,7 +257,8 @@ class TestPolicyManager(unittest.TestCase):
         expected_DMJson = (
             {"invalidation_name": "test_policy",
              "invalidation_source": 16,
-             "google/chromeos/device": {"timezone": "Device 1"},
+             "google/chromeos/device":
+                {"system_timezone.timezone": "Device 1"},
              "current_key_index": 0,
              "google/chrome/extension":
                 {"ExtID1": {"Extension Policy 1": "EP1"}},

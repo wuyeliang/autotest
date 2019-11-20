@@ -6,24 +6,11 @@ import copy
 import json
 
 from autotest_lib.client.cros.enterprise.policy import Policy as Policy
+from autotest_lib.client.cros.enterprise.device_policy_lookup import DEVICE_POLICY_DICT
 
 CHROMEPOLICIES = 'chromePolicies'
 DEVICELOCALACCOUNT = 'deviceLocalAccountPolicies'
 EXTENSIONPOLICIES = 'extensionPolicies'
-
-DEVICE_POLICY_DICT = {
-    'DeviceAllowBluetooth': 'allow_bluetooth',
-    'DeviceAutoUpdateDisabled': 'update_disabled',
-    'DeviceEpheoldralUsersEnabled': 'epheoldral_users_enabled',
-    'DeviceEphemeralUsersEnabled': 'ephemeral_users_enabled',
-    'DeviceOpenNetworkConfiguration': 'open_network_configuration',
-    'DeviceRollbackToTargetVersion': 'rollback_to_target_version',
-    'DeviceTargetVersionPrefix': 'target_version_prefix',
-    'SystemTimezone': 'timezone',
-    'ReportUploadFrequency': 'device_status_frequency',
-    'DeviceLocalAccounts': 'account',
-    'DeviceLocalAccountAutoLoginId': 'auto_login_id',
-}
 
 
 class AllPolicies(object):
