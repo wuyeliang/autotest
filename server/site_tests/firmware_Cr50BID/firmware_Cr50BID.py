@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import os
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import cr50_utils
@@ -20,30 +19,7 @@ class firmware_Cr50BID(Cr50Test):
     Set the board id on a non board id locked image and verify cr50 will
     rollback when it is updated to a mismatched board id image.
 
-    Release images can be tested by passing in the release version and board
-    id. The images on google storage have this in the filename. Use those same
-    values for the test.
-
-    If no board id or release version is given, the test will download the
-    prebuilt debug image from google storage. It has the board id
-    TEST:0xffff:0xff00. If you need to add another device to the lab or want to
-    test locally, you can add these values to the manifest to sign the image.
-     "board_id": 0x54455354,
-     "board_id_mask": 0xffff,
-     "board_id_flags": 0xff00,
-
-    You can also use the following command to create the image.
-     CR50_BOARD_ID='TEST:ffff:ff00' util/signer/bs
-
-    If you want to use something other than the test board id info, you have to
-    input the release version and board id.
-
     @param cr50_dbg_image_path: path to the node locked dev image.
-    @param bid_path: local path for the board id locked image. The other bid
-                     args will be ignored, and the board id info will be gotten
-                     from the file.
-    @param release_ver: The rw version and image board id. Needed if you want to
-                        test a released board id locked image.
     """
     version = 1
 
@@ -60,12 +36,6 @@ class firmware_Cr50BID(Cr50Test):
     # Use 3.18, so the test can detect rollback and run on any board.
     BID_SUPPORT = '0.3.18'
 
-    # Board id locked debug files will use the board id, mask, and flags in the
-    # gs filename
-    TEST_BOARD_ID = 'TEST'
-    TEST_MASK = 0xffff
-    TEST_FLAGS = 0xff00
-    TEST_IMAGE_BID_INFO = [TEST_BOARD_ID, TEST_MASK, TEST_FLAGS]
     BID_MISMATCH = ['Board ID mismatched, but can not reboot.']
     BID_ERROR = 5
     SUCCESS = 0
@@ -122,8 +92,7 @@ class firmware_Cr50BID(Cr50Test):
         # DUT is in recovery without being able to ssh into the DUT.
     ]
 
-    def initialize(self, host, cmdline_args, bid_path='', release_ver=None,
-                   basic=False, full_args={}):
+    def initialize(self, host, cmdline_args, basic=False, full_args={}):
         # Restore the original image, rlz code, and board id during cleanup.
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
                                                  restore_cr50_image=True,
@@ -136,9 +105,8 @@ class firmware_Cr50BID(Cr50Test):
 
         self.image_versions = {}
 
-        original_version = self.get_saved_cr50_original_version()
-        self.save_universal_image(original_version)
-        self.save_board_id_locked_image(original_version, bid_path, release_ver)
+        self.save_board_id_locked_image()
+        self.save_universal_image()
 
         # Clear the RLZ so ChromeOS doesn't set the board id during the updates.
         cr50_utils.SetRLZ(self.host, '')
@@ -239,7 +207,7 @@ class firmware_Cr50BID(Cr50Test):
         logging.info('Running tests %r', self.tests)
 
 
-    def save_universal_image(self, original_version, rw_ver=BID_SUPPORT):
+    def save_universal_image(self, rw_ver=BID_SUPPORT):
         """Get the non board id locked image
 
         Save the universal image. Use the current cr50 image if it is not board
@@ -247,18 +215,10 @@ class firmware_Cr50BID(Cr50Test):
         image from google storage.
 
         Args:
-            original_version: The (ro ver, rw ver, and bid) of the running cr50
-                               image.
             rw_ver: The rw release version to use for the universal image.
         """
-        # If the original image is not board id locked, use it as universal
-        # image. If it is board id locked, use 0.3.4 as the universal image.
-        if not original_version[2]:
-           self.universal_path = self.get_saved_cr50_original_path()
-           universal_ver = original_version
-        else:
-           release_info = self.download_cr50_release_image(rw_ver)
-           self.universal_path, universal_ver = release_info
+        release_info = self.download_cr50_release_image(rw_ver)
+        self.universal_path, universal_ver = release_info
 
         logging.info('Running test with universal image %s', universal_ver)
 
@@ -299,61 +259,31 @@ class firmware_Cr50BID(Cr50Test):
             logging.info('Copied %s to %s', ver, dest)
 
 
-    def save_board_id_locked_image(self, original_version, bid_path,
-                                   release_ver):
-        """Get the board id locked image
+    def save_board_id_locked_image(self):
+        """Save the running image and get the board id information.
 
-        Save the board id locked image. Try to use the local path or test args
-        to find the release board id locked image. If those aren't valid,
-        fallback to using the running cr50 board id locked image or a debug
-        image with the TEST board id.
+        Save the board id locked image. If the running image isn't board id
+        locked, the test will be skipped.
 
-        Args:
-            original_version: The (ro ver, rw ver, and bid) of the running cr50
-                               image.
-            bid_path: the path to the board id locked image
-            release_ver: If given it will be used to download the release image
-                         with the given rw version and board id
+        Raises:
+            TestNAError if the running cr50 image is not board id locked.
         """
-        if os.path.isfile(bid_path):
-            # If the bid_path exists, use that.
-            self.board_id_locked_path = bid_path
-            # Install the image on the device to get the image version
-            dest = os.path.join('/tmp', os.path.basename(bid_path))
-            ver = cr50_utils.InstallImage(self.host, bid_path, dest)[1]
-        elif release_ver:
-            # Only use the release image if the release image is board id
-            # locked.
-            if '/' not in release_ver:
-                raise error.TestNAError('Release image is not board id locked.')
+        version = self.get_saved_cr50_original_version()
+        if not version[2]:
+            raise error.TestNAError('The cr50 image is not board id locked')
 
-            # split the release version into the rw string and board id string
-            release_rw, release_bid = release_ver.split('/', 1)
-            # Download a release image with the rw_version and board id
-            logging.info('Using %s %s release image for test', release_rw,
-                         release_bid)
-            self.board_id_locked_path, ver = self.download_cr50_release_image(
-                release_rw, release_bid)
-        elif original_version[2]:
-            # If no valid board id args are given and the running image is
-            # board id locked, use it to run the test.
-            self.board_id_locked_path = self.get_saved_cr50_original_path()
-            ver = original_version
-        else:
-            self.board_id_locked_path, ver = self.download_cr50_debug_image(
-                image_bid=self.TEST_IMAGE_BID_INFO)
-            logging.info('Using %s DBG image for test', ver)
+        self.board_id_locked_path = self.get_saved_cr50_original_path()
 
-        image_bid_info = cr50_utils.GetBoardIdInfoTuple(ver[2])
-        # Save the image board id info
+        image_bid_info = cr50_utils.GetBoardIdInfoTuple(version[2])
         self.test_bid_int, self.test_mask, self.test_flags = image_bid_info
         self.test_bid_sym = cr50_utils.GetSymbolicBoardId(self.test_bid_int)
-        self.test_bid_str = cr50_utils.GetBoardIdInfoString(ver[2])
+        self.test_bid_str = cr50_utils.GetBoardIdInfoString(version[2])
+
         if not self.test_flags:
-            raise error.TestError('Need board id locked image with flags run '
-                    'test. Got %r' % (ver[2]))
-        logging.info('Running test with bid locked image %s', ver)
-        self.image_versions[self.BID_LOCKED] = ver
+            raise error.TestNAError('Image needs to have non-zero flags to run '
+                                    'test')
+        logging.info('Running test with bid locked image %s', version)
+        self.image_versions[self.BID_LOCKED] = version
 
 
     def is_running_version(self, rw_ver, bid_str):
