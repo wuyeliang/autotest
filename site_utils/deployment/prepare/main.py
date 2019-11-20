@@ -227,7 +227,7 @@ def _create_host(hostname, info, results_dir):
       info.model,
       info.attributes['servo_host'],
       info.attributes['servo_port'],
-      info.attributes.get('servo_serial', ''),
+      info.attributes.get('servo_serial'),
       dut_logs_dir,
   )
 
