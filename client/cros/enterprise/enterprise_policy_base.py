@@ -416,13 +416,14 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                      user={},
                      suggested_user={},
                      device={},
-                     extension={}):
+                     extension={},
+                     new=False):
         """Add policies to the policy rules."""
         self.pol_manager.configure_policies(user=user,
                                             suggested_user=suggested_user,
                                             device=device,
                                             extension=extension,
-                                            new=False)
+                                            new=new)
         self.reload_policies()
 
     def update_policies(self, user_policies={}, suggested_user_policies={},
@@ -440,7 +441,6 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
         """
         self.add_policies(user_policies, suggested_user_policies,
                           device_policies, extension_policies, True)
-        self.reload_policies()
 
     def reload_policies(self):
         """Force a policy fetch."""
