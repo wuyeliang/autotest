@@ -159,7 +159,7 @@ class Cr50Test(FirmwareTest):
         if not version:
             return None, None, None
         _, rw_ver, bid = version
-        rw_filename = '.'.join('cr50.device.bin', ext, rw_ver)
+        rw_filename = 'cr50.device.bin.%s.%s' % (ext, rw_ver)
         local_path = os.path.join(self.resultsdir, rw_filename)
         dut_path = cr50_utils.GetDevicePath(ext)
         self.host.get_file(dut_path, local_path)
