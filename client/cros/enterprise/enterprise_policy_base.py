@@ -258,8 +258,9 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
             self.username = 'tester50@managedchrome.com'
             self.password = 'Test0000'
 
-        self.pol_manager = policy_manager.Policy_Manager(self.username,
-                                                         self.fake_dm_server)
+        self.pol_manager = policy_manager.Policy_Manager(
+            self.username,
+            self.fake_dm_server if hasattr(self, "fake_dm_server") else None)
 
         self._auto_logout = auto_logout
         self._kiosk_mode = kiosk_mode
