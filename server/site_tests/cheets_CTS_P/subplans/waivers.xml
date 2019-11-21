@@ -5,4 +5,5 @@
   <Entry include="CtsNetTestCases android.net.cts.MultinetworkApiTest#testNativeDatagramTransmission" />
   <Entry include="CtsAppSecurityHostTestCases android.appsecurity.cts.PermissionsHostTest#testCompatRevoked22" />
   <Entry include="CtsAppSecurityHostTestCases android.appsecurity.cts.PermissionsHostTest#testRevokePropagatedOnUpgradeOldToNewModel" />
+  <Entry include="CtsBionicTestCases pthread_leak#detach" />
 </SubPlan>
