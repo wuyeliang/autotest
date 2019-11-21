@@ -224,6 +224,7 @@ class graphics_Idle(graphics_utils.GraphicsTest):
         rk3288_419_node = '/sys/devices/platform/ffa30000.gpu/'
         rk3399_node = '/sys/devices/platform/ff9a0000.gpu/'
         mt8173_node = '/sys/devices/soc/13000000.mfgsys-gpu/'
+        mt8173_419_node = '/sys/devices/platform/soc/13000000.mfgsys-gpu/'
         mt8183_node = '/sys/devices/platform/soc/13040000.mali/'
 
         if self._cpu_type == 'exynos5':
@@ -253,6 +254,9 @@ class graphics_Idle(graphics_utils.GraphicsTest):
         elif self._cpu_type == 'mediatek':
             if os.path.isdir(mt8173_node):
                 node = mt8173_node
+                use_devfreq = True
+            elif os.path.isdir(mt8173_419_node):
+                node = mt8173_419_node
                 use_devfreq = True
             elif os.path.isdir(mt8183_node):
                 node = mt8183_node
