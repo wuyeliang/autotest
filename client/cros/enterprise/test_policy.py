@@ -1,6 +1,7 @@
 # Copyright 2019 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+import copy
 import unittest
 
 from autotest_lib.client.common_lib import error
@@ -21,113 +22,118 @@ autotest_lib.client.cros.enterprise.test_policy --debug
 """
 
 
-class TestPolicyManager(unittest.TestCase):
+class test_policyManager(unittest.TestCase):
 
-    dictValue = {'scope': 'testScope', 'source': 'testSource',
-                 'level': 'testLevel', 'value': 'testValue'}
-    dictValue2 = {'scope': 'testScope', 'source': 'testSource',
-                  'level': 'testLevel', 'value': 'testValue2'}
+    dict_value = {'scope': 'testScope', 'source': 'testSource',
+                  'level': 'testLevel', 'value': 'test_value'}
+    dict_value2 = {'scope': 'testScope', 'source': 'testSource',
+                   'level': 'testLevel', 'value': 'test_value2'}
 
     def test_setting_params(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.level = 1
-        testPolicy.value = 'TheValue'
-        testPolicy.scope = 'TestValue'
-        testPolicy.source = 'Cloud'
-        self.assertEqual(testPolicy.name, 'Test')
-        self.assertEqual(testPolicy.level, 1)
-        self.assertEqual(testPolicy.scope, 'TestValue')
-        self.assertEqual(testPolicy.source, 'Cloud')
-        self.assertEqual(testPolicy.value, 'TheValue')
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policy.level = 1
+        test_policy.value = 'TheValue'
+        test_policy.scope = 'test_value'
+        test_policy.source = 'Cloud'
+        self.assertEqual(test_policy.name, 'Test')
+        self.assertEqual(test_policy.level, 1)
+        self.assertEqual(test_policy.scope, 'test_value')
+        self.assertEqual(test_policy.source, 'Cloud')
+        self.assertEqual(test_policy.value, 'TheValue')
 
     def test_setting_group_user(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.group = 'user'
-        self.assertEqual(testPolicy.name, 'Test')
-        self.assertEqual(testPolicy.source, 'cloud')
-        self.assertEqual(testPolicy.level, 'mandatory')
-        self.assertEqual(testPolicy.scope, 'user')
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policy.group = 'user'
+        self.assertEqual(test_policy.name, 'Test')
+        self.assertEqual(test_policy.source, 'cloud')
+        self.assertEqual(test_policy.level, 'mandatory')
+        self.assertEqual(test_policy.scope, 'user')
 
     def test_setting_group_device(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.group = 'device'
-        self.assertEqual(testPolicy.name, 'Test')
-        self.assertEqual(testPolicy.source, 'cloud')
-        self.assertEqual(testPolicy.level, 'mandatory')
-        self.assertEqual(testPolicy.scope, 'machine')
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policy.group = 'device'
+        self.assertEqual(test_policy.name, 'Test')
+        self.assertEqual(test_policy.source, 'cloud')
+        self.assertEqual(test_policy.level, 'mandatory')
+        self.assertEqual(test_policy.scope, 'machine')
 
     def test_setting_group_suggested_user(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.group = 'suggested_user'
-        self.assertEqual(testPolicy.name, 'Test')
-        self.assertEqual(testPolicy.source, 'cloud')
-        self.assertEqual(testPolicy.level, 'recommended')
-        self.assertEqual(testPolicy.scope, 'user')
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policy.group = 'suggested_user'
+        self.assertEqual(test_policy.name, 'Test')
+        self.assertEqual(test_policy.source, 'cloud')
+        self.assertEqual(test_policy.level, 'recommended')
+        self.assertEqual(test_policy.scope, 'user')
 
     def test_setting_value(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.set_policy_from_dict(self.dictValue)
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policydict = copy.deepcopy(self.dict_value)
+        test_policydict['error'] = 'An error'
+        test_policy.set_policy_from_dict(test_policydict)
 
-        self.assertEqual(testPolicy.name, 'Test')
-        self.assertEqual(testPolicy.level, 'testLevel')
-        self.assertEqual(testPolicy.scope, 'testScope')
-        self.assertEqual(testPolicy.source, 'testSource')
-        self.assertEqual(testPolicy.value, 'testValue')
+        self.assertEqual(test_policy.name, 'Test')
+        self.assertEqual(test_policy.level, 'testLevel')
+        self.assertEqual(test_policy.scope, 'testScope')
+        self.assertEqual(test_policy.source, 'testSource')
+        self.assertEqual(test_policy.value, 'test_value')
 
     def test_get_policy_as_dict(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.level = 1
-        testPolicy.value = 'TheValue'
-        testPolicy.scope = 'TestValue'
-        testPolicy.source = 'Cloud'
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policy.level = 1
+        test_policy.value = 'TheValue'
+        test_policy.scope = 'test_value'
+        test_policy.source = 'Cloud'
 
-        expectedDict = {'Test':
-                            {'scope': 'TestValue',
-                             'level': 1,
-                             'value': 'TheValue',
-                             'source': 'Cloud'}}
-        self.assertEqual(expectedDict, testPolicy.get_policy_as_dict())
+        expected_dict = {
+            'Test': {
+                'scope': 'test_value',
+                'level': 1,
+                'value': 'TheValue',
+                'source': 'Cloud'}}
+        self.assertEqual(expected_dict, test_policy.get_policy_as_dict())
 
     def test_policy_eq_ne(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testPolicy.set_policy_from_dict(self.dictValue)
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_policy.set_policy_from_dict(self.dict_value)
 
-        testPolicy2 = policy.Policy()
-        testPolicy2.name = 'Test2'
-        testPolicy2.set_policy_from_dict(self.dictValue)
-        self.assertTrue(testPolicy == testPolicy2)
-        self.assertFalse(testPolicy != testPolicy2)
+        test_policy2 = policy.Policy()
+        test_policy2.name = 'Test2'
+        test_policy2.set_policy_from_dict(self.dict_value)
+        self.assertTrue(test_policy == test_policy2)
+        self.assertFalse(test_policy != test_policy2)
 
-        testPolicy3 = policy.Policy()
-        testPolicy3.name = 'Test3'
-        testPolicy3.set_policy_from_dict(self.dictValue2)
-        self.assertFalse(testPolicy == testPolicy3)
+        test_policy3 = policy.Policy()
+        test_policy3.name = 'Test3'
+        test_policy3.set_policy_from_dict(self.dict_value2)
+        self.assertFalse(test_policy == test_policy3)
 
     def test_policy_eq_obfuscated(self):
-        testPolicy = policy.Policy()
-        testPolicy.name = 'Test'
-        testValue = {'scope': 'testScope', 'source': 'testSource',
-                          'level': 'testLevel',
-                           'value': {'NetworkConfigurations':
-                                        [{'WiFi': {'Passphrase': 'Secret'}}]}}
-        testPolicy.set_policy_from_dict(testValue)
+        test_policy = policy.Policy()
+        test_policy.name = 'Test'
+        test_value = {
+            'scope': 'testScope', 'source': 'testSource',
+            'level': 'testLevel',
+            'value': {'NetworkConfigurations': [
+                {'WiFi': {'Passphrase': 'Secret'}}]}}
+        test_policy.set_policy_from_dict(test_value)
 
-        testPolicy2 = policy.Policy()
-        testPolicy2.name = 'TestOpenNetworkConfiguration'
-        obfuscatedValue = {'scope': 'testScope', 'source': 'testSource',
-                           'level': 'testLevel',
-                            'value': {'NetworkConfigurations':
-                                        [{'WiFi': {'Passphrase': '********'}}]}}
-        testPolicy2.set_policy_from_dict(obfuscatedValue)
-        self.assertTrue(testPolicy == testPolicy2)
-        self.assertFalse(testPolicy != testPolicy2)
+        test_policy2 = policy.Policy()
+        test_policy2.name = 'TestOpenNetworkConfiguration'
+        obfuscated_value = {
+            'scope': 'testScope', 'source': 'testSource',
+            'level': 'testLevel',
+            'value': {'NetworkConfigurations': [
+                {'WiFi': {'Passphrase': '********'}}]}}
+        test_policy2.set_policy_from_dict(obfuscated_value)
+        self.assertTrue(test_policy == test_policy2)
+        self.assertFalse(test_policy != test_policy2)
 
     def test_is_network_policy(self):
         self.assertTrue(
@@ -136,35 +142,41 @@ class TestPolicyManager(unittest.TestCase):
         self.assertFalse(policy.is_network_policy('Test'))
 
     def test_check_obfuscation(self):
-        testValue = {'NetworkConfigurations':
-                        [{'WiFi': {'Passphrase': '********'}}]}
-        self.assertTrue(policy.check_obfuscation(testValue))
+        test_value = {
+            'NetworkConfigurations': [
+                {'WiFi': {'Passphrase': '********'}}]}
+        self.assertTrue(policy.check_obfuscation(test_value))
 
-        testValue2 = {'NetworkConfigurations':
-                        [{'WiFi': {'Passphrase': 'Bad'}}]}
-        self.assertFalse(policy.check_obfuscation(testValue2))
+        test_value2 = {
+            'NetworkConfigurations': [
+                {'WiFi': {'Passphrase': 'Bad'}}]}
+        self.assertFalse(policy.check_obfuscation(test_value2))
 
-        testValue3 = {'NetworkConfigurations':
-                        [{'WiFi': {'EAP': {'Password': '********'}}}]}
-        self.assertTrue(policy.check_obfuscation(testValue3))
+        test_value3 = {
+            'NetworkConfigurations': [
+                {'WiFi': {'EAP': {'Password': '********'}}}]}
+        self.assertTrue(policy.check_obfuscation(test_value3))
 
-        testValue4 = {'NetworkConfigurations':
-                        [{'WiFi': {'EAP': {'Password': 'Bad'}}}]}
-        self.assertFalse(policy.check_obfuscation(testValue4))
+        test_value4 = {
+            'NetworkConfigurations': [
+                {'WiFi': {'EAP': {'Password': 'Bad'}}}]}
+        self.assertFalse(policy.check_obfuscation(test_value4))
 
-        testValue5 = {'Certificates':
-                        [{'PKCS12': '********'}]}
-        self.assertTrue(policy.check_obfuscation(testValue5))
+        test_value5 = {
+            'Certificates': [
+                {'PKCS12': '********'}]}
+        self.assertTrue(policy.check_obfuscation(test_value5))
 
-        testValue6 = {'Certificates':
-                        [{'PKCS12': 'BAD'}]}
-        self.assertFalse(policy.check_obfuscation(testValue6))
+        test_value6 = {
+            'Certificates': [
+                {'PKCS12': 'BAD'}]}
+        self.assertFalse(policy.check_obfuscation(test_value6))
 
     def test_invalid_policy_dict(self):
         with self.assertRaises(error.TestError) as context:
-            testPolicy = policy.Policy()
-            testPolicy.name = 'Bad Policy'
-            testPolicy.set_policy_from_dict({'Invalid Keys': 'Invalid Value'})
+            test_policy = policy.Policy()
+            test_policy.name = 'Bad Policy'
+            test_policy.set_policy_from_dict({'Invalid Keys': 'Invalid Value'})
         self.assertIn('Incorrect input data provided', str(context.exception))
 
 

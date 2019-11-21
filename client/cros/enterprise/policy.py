@@ -42,7 +42,7 @@ class Policy(object):
         if not isinstance(data, dict):
             return False
         received_keys = set(['scope', 'source', 'level', 'value'])
-        return received_keys == set(data.keys())
+        return received_keys.issubset(set(data.keys()))
 
     def get_policy_as_dict(self):
         """
@@ -68,12 +68,15 @@ class Policy(object):
         """
         if not self.is_formatted_value(data):
             raise error.TestError("""Incorrect input data provided. Value
-                provided must be dict with the keys: "scope", "source", "level",
-                "value". Got {}""".format(data))
+                provided must be dict with the keys: "scope", "source",
+                "level", "value". Got {}""".format(data))
         self.scope = data['scope']
         self.source = data['source']
         self.level = data['level']
         self.value = data['value']
+        if data.get('error', None):
+            logging.warning('\n[Policy Error] error reported with policy:\n{}'
+                            .format(data['error']))
 
     @property
     def value(self):
