@@ -29,6 +29,7 @@ class WiFiTestContextManager(object):
     CMDLINE_CONDUCTIVE_RIG = 'conductive_rig'
     CMDLINE_PACKET_CAPTURE_SNAPLEN = 'capture_snaplen'
     CMDLINE_ROUTER_ADDR = 'router_addr'
+    CMDLINE_PCAP_ADDR = 'pcap_addr'
     CMDLINE_PACKET_CAPTURES = 'packet_capture'
     CMDLINE_USE_WPA_CLI = 'use_wpa_cli'
 
@@ -200,7 +201,9 @@ class WiFiTestContextManager(object):
         ping_helper = ping_runner.PingRunner()
         pcap_addr = dnsname_mangler.get_pcap_addr(
                 self.client.host.hostname,
-                allow_failure=True)
+                allow_failure=True,
+                cmdline_override=self._cmdline_args.get(self.CMDLINE_PCAP_ADDR,
+                                                        None))
         if pcap_addr and ping_helper.simple_ping(pcap_addr):
             self._pcap_host = site_linux_system.LinuxSystem(
                               hosts.create_host(pcap_addr),'pcap')

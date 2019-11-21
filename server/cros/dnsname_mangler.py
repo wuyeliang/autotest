@@ -103,6 +103,7 @@ def get_pcap_addr(client_hostname,
     return get_companion_device_addr(
             client_hostname,
             '-pcap',
+            cmdline_override=cmdline_override,
             not_dnsname_msg=PCAP_FAILURE_MESSAGE,
             allow_failure=allow_failure)
 
