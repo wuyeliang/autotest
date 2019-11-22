@@ -441,9 +441,6 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             monarch_fields = {
                 'board': board,
                 'build_type': build_type,
-                # TODO(akeshet): To be consistent with most other metrics,
-                # consider changing the following field to be named
-                # 'milestone'.
                 'branch': branch,
                 'dev_server': devserver,
             }

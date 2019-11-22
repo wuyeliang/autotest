@@ -2190,8 +2190,6 @@ def add_board_to_shard(hostname, labels):
 # Remove board RPCs are rare, so we can afford to make them a bit more
 # expensive (by performing in a transaction) in order to guarantee
 # atomicity.
-# TODO(akeshet): If we ever update to newer version of django, we need to
-# migrate to transaction.atomic instead of commit_on_success
 @transaction.commit_on_success
 def remove_board_from_shard(hostname, label):
     """Remove board from the given shard.

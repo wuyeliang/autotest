@@ -584,11 +584,6 @@ class Dispatcher(object):
                 used_queue_entries.update(agent_task.queue_entries)
             except scheduler_lib.MalformedRecordError as e:
                 logging.exception('Skipping agent task for a malformed hqe.')
-                # TODO(akeshet): figure out a way to safely permanently discard
-                # this errant HQE. It appears that calling entry.abort() is not
-                # sufficient, as that already makes some assumptions about
-                # record sanity that may be violated. See crbug.com/739530 for
-                # context.
                 m = 'chromeos/autotest/scheduler/skipped_malformed_hqe'
                 metrics.Counter(m).increment()
 

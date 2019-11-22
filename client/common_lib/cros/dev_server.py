@@ -1260,9 +1260,6 @@ class ImageServerBase(DevServer):
                          'files': files_arg}
             if kwargs:
                 arguments.update(kwargs)
-            # TODO(akeshet): canonicalize artifacts_arg before using it as a
-            # metric field (as it stands it is a not-very-well-controlled
-            # string).
             f = {'artifacts': artifacts_arg,
                  'dev_server': self.resolved_hostname}
             with metrics.SecondsTimer(

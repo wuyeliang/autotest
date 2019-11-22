@@ -1717,9 +1717,6 @@ class _ResultReporter(object):
 class _EmailReporter(_ResultReporter):
     """Class that emails based on test failures."""
 
-    # TODO(akeshet): Document what |bug_template| is actually supposed to come
-    # from, and rename it to something unrelated to "bugs" which are no longer
-    # relevant now that this is purely an email sender.
     def __init__(self, suite, bug_template=None):
         self._suite = suite
         self._bug_template = bug_template or {}

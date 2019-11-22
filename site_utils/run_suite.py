@@ -345,7 +345,7 @@ def make_parser():
     parser.add_argument("-m", "--mock_job_id", dest="mock_job_id",
                         help="Attach to existing job id for already running "
                         "suite, and creates report.")
-    # NOTE(akeshet): This looks similar to --no_wait, but behaves differently.
+    # NOTE: This looks similar to --no_wait, but behaves differently.
     # --no_wait is passed in to the suite rpc itself and affects the suite,
     # while this does not.
     parser.add_argument("-c", "--create_and_return", dest="create_and_return",
