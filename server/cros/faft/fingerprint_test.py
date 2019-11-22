@@ -408,7 +408,7 @@ class FingerprintTest(test.test):
             self._get_expected_firmware_rw_version(build_fw_file)
         self.check_equal(actual_rw_version, expected_rw_version)
 
-        logging.info("Validated build firmware metadata.");
+        logging.info("Validated build firmware metadata.")
 
     def _get_key_type(self, key_id):
         """Returns the key "type" for a given "key id"."""
@@ -561,7 +561,7 @@ class FingerprintTest(test.test):
         """Returns RW firmware version from build (based on filename)."""
         fw_file = os.path.basename(self._build_fw_file)
         if not fw_file.endswith('.bin'):
-            raise error.TestFail('Unexpected filename for RW firmware: '
+            raise error.TestFail('Unexpected filename for RW firmware: %s'
                                  % fw_file)
         fw_version = fw_file[:-4]
         if use_dev_signed_fw:
