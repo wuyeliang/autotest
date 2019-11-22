@@ -10,10 +10,12 @@ NOTE: This module should only be used in the context of a running test. Any
 """
 
 import common
+import logging
 from autotest_lib.client.common_lib import global_config
 from autotest_lib.server.cros import autoupdater
 from autotest_lib.server.cros import provision
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
+from autotest_lib.site_utils import stable_version_classify as sv
 
 
 AFE = frontend_wrappers.RetryingAFE(timeout_min=5, delay_sec=10)
@@ -44,6 +46,14 @@ def _host_in_lab(host):
     return host._afe_host
 
 
+def get_stable_cros_image_name_v2(info, _config_override=None):
+    if sv.classify_board(info.board, _config_override=_config_override) == sv.FROM_HOST_CONFIG:
+        logging.debug("get_stable_cros_image_name_v2: board %s from host_info_store" % info.board)
+        return info.cros_stable_version
+    logging.debug("get_stable_cros_image_name_v2: board %s from autotest frontend" % info.board)
+    return get_stable_cros_image_name(board)
+
+
 def get_stable_cros_image_name(board):
     """Retrieve the Chrome OS stable image name for a given board.
 
@@ -55,6 +65,14 @@ def get_stable_cros_image_name(board):
     return _CROS_VERSION_MAP.get_image_name(board)
 
 
+def get_stable_firmware_version_v2(info, _config_override=None):
+    if sv.classify_model(info.model, _config_override=_config_override) == sv.FROM_HOST_CONFIG:
+        logging.debug("get_stable_firmware_version_v2: model %s from host_info_store" % info.model)
+        return info.firmware_stable_version
+    logging.debug("get_stable_cros_image_name_v2: model %s from autotest frontend" % info.model)
+    return get_stable_firmware_version(model)
+
+
 def get_stable_firmware_version(model):
     """Retrieve the stable firmware version for a given model.
 
@@ -64,6 +82,14 @@ def get_stable_firmware_version(model):
              `chromeos-firmwareupdate` from a repair build.
     """
     return _FIRMWARE_VERSION_MAP.get_version(model)
+
+
+def get_stable_faft_version_v2(info, _config_override=None):
+    if sv.classify_board(info.board, _config_override=_config_override) == sv.FROM_HOST_CONFIG:
+        logging.debug("get_stable_faft_version_v2: model %s from host_info_store" % info.model)
+        return info.faft_stable_version
+    logging.debug("get_stable_faft_version_v2: model %s from autotest frontend" % info.model)
+    return get_stable_faft_version(info.board)
 
 
 def get_stable_faft_version(board):

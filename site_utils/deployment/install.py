@@ -789,7 +789,7 @@ def _get_cros_repair_image_name(host):
     info = host.host_info_store.get()
     if not info.board:
         raise InstallFailedError('Unknown board for given host')
-    return afe_utils.get_stable_cros_image_name(info.board)
+    return afe_utils.get_stable_cros_image_name_v2(info)
 
 
 def install_duts(arguments):

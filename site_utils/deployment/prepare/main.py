@@ -57,7 +57,7 @@ def main():
 
     if 'stage-usb' in opts.actions:
       try:
-        repair_image = _get_cros_repair_image_name(info.board)
+        repair_image = afe_utils.get_stable_cros_image_name_v2(info)
         logging.info('Using repair image %s, obtained from AFE', repair_image)
         preparedut.download_image_to_servo_usb(host, repair_image)
       except Exception as err:
@@ -230,16 +230,6 @@ def _create_host(hostname, info, results_dir):
       info.attributes.get('servo_serial', ''),
       dut_logs_dir,
   )
-
-
-def _get_cros_repair_image_name(board):
-  """Get the CrOS repair image name for given host.
-
-  TODO(pprabhu): This is an evil function with dependence on the environment
-  (global_config information) and the AFE. Remove this dependence when stable
-  image mappings move off of the AFE.
-  """
-  return afe_utils.get_stable_cros_image_name(board)
 
 
 if __name__ == '__main__':

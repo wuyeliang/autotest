@@ -358,7 +358,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 logging.error('Also failed to get the board name from the DUT '
                               'itself. %s.', str(e))
                 raise error.AutoservError('Cannot obtain repair image name.')
-        return afe_utils.get_stable_cros_image_name(board)
+        return afe_utils.get_stable_cros_image_name_v2(self.host_info_store.get())
 
 
     def host_version_prefix(self, image):
@@ -639,7 +639,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
         # If build is not set, try to install firmware from stable CrOS.
         if not build:
-            build = afe_utils.get_stable_faft_version(board)
+            build = afe_utils.get_stable_faft_version_v2(info)
             if not build:
                 raise error.TestError(
                         'Failed to find stable firmware build for %s.',

@@ -255,7 +255,7 @@ class FirmwareVersionVerifier(hosts.Verifier):
 
         stable_firmware = None
         try:
-            stable_firmware = afe_utils.get_stable_firmware_version(info.model)
+            stable_firmware = afe_utils.get_stable_firmware_version_v2(info)
         except Exception as e:
             logging.exception('Failed lookup to AFE for stable fw version '
                               ' with exception: %s', e)
