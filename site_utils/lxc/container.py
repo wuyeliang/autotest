@@ -402,11 +402,7 @@ class Container(object):
         logging.debug('Destroying container %s/%s',
                       self.container_path,
                       self.name)
-        cmd = 'sudo lxc-destroy -P %s -n %s' % (self.container_path,
-                                                self.name)
-        if force:
-            cmd += ' -f'
-        utils.run(cmd)
+        lxc_utils.destroy(self.container_path, self.name, force=force)
 
 
     def mount_dir(self, source, destination, readonly=False):

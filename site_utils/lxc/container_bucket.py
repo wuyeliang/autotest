@@ -136,6 +136,34 @@ class ContainerBucket(object):
             container.destroy()
             del self.container_cache[key]
 
+    def scrub_container_location(self, name,
+                                 timeout=constants.LXC_SCRUB_TIMEOUT):
+        """Destroy a possibly-nonexistent, possibly-malformed container.
+
+        This exists to clean up an unreachable container which may or may not
+        exist and is probably but not definitely malformed if it does exist. It
+        is accordingly scorched-earth and force-destroys the container with all
+        associated snapshots. Also accordingly, this will not raise an
+        exception if the destruction fails.
+
+        @param name: ID of the container.
+        @param timeout: Seconds to wait for removal.
+
+        @returns: CmdResult object from the shell command
+        """
+        logging.debug(
+            "Force-destroying container %s if it exists, with timeout %s sec",
+            name, timeout)
+        try:
+          result = common.destroy(
+              self.container_path, name,
+              force=True, snapshots=True, ignore_status=True, timeout=timeout
+          )
+        except error.CmdTimeoutError:
+          logging.warning("Force-destruction of container %s timed out.", name)
+        logging.debug("Force-destruction exit code %s", result.exit_status)
+        return result
+
 
 
     @metrics.SecondsTimerDecorator(

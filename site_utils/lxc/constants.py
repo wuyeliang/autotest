@@ -54,6 +54,9 @@ CONTROL_TEMP_PATH = os.path.join(CONTAINER_AUTOTEST_DIR, 'drone_tmp')
 # so the command can return an error code if the directory doesn't exist.
 COUNT_FILE_CMD = '[ -d %(dir)s ] && ls %(dir)s | wc -l'
 
+# Seconds to wait for successful completion of a lxc force-destroy
+LXC_SCRUB_TIMEOUT = 300
+
 # Command line to append content to a file
 APPEND_CMD_FMT = ('echo \'%(content)s\' | sudo tee --append %(file)s'
                   '> /dev/null')
