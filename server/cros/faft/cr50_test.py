@@ -223,12 +223,12 @@ class Cr50Test(FirmwareTest):
 
     def get_saved_cr50_original_version(self):
         """Return (ro ver, rw ver, bid)."""
-        if ('running_ver' not in self._original_image_state or 'cr50_image_bid'
-            not in self._original_image_state):
+        if ('running_image_ver' not in self._original_image_state or
+            'running_image_bid' not in self._original_image_state):
             raise error.TestError('No record of original cr50 image version')
-        return (self._original_image_state['running_ver'][0],
-                self._original_image_state['running_ver'][1],
-                self._original_image_state['cr50_image_bid'])
+        return (self._original_image_state['running_image_ver'][0],
+                self._original_image_state['running_image_ver'][1],
+                self._original_image_state['running_image_bid'])
 
 
     def get_saved_cr50_original_path(self):
@@ -352,8 +352,8 @@ class Cr50Test(FirmwareTest):
         state['rlz'] = cr50_utils.GetRLZ(self.host)
         state['chip_bid'] = cr50_utils.GetChipBoardId(self.host)
         state['chip_bid_str'] = '%08x:%08x:%08x' % state['chip_bid']
-        state['running_ver'] = cr50_utils.GetRunningVersion(self.host)
-        state['cr50_image_bid'] = self.cr50.get_active_board_id_str()
+        state['running_image_ver'] = cr50_utils.GetRunningVersion(self.host)
+        state['running_image_bid'] = self.cr50.get_active_board_id_str()
 
         logging.debug('Current Cr50 state:\n%s', pprint.pformat(state))
         return state

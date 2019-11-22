@@ -216,9 +216,9 @@ class provision_Cr50Update(Cr50Test):
         failed = []
         if chip_bid_info != state['chip_bid']:
             failed.append('cr50 chip board id')
-        if image_bid != state['cr50_image_bid']:
+        if image_bid != state['running_image_bid']:
             failed.append('cr50 image board id')
-        if self.image_rw != state['running_ver'][1]:
+        if self.image_rw != state['running_image_ver'][1]:
             failed.append('cr50 image version')
         if self.image_ver != state['device_prod_ver']:
             failed.append('device prod image')
