@@ -612,7 +612,7 @@ def GetChipBoardId(client):
     return board_id, board_id_inv, flags
 
 
-def CheckChipBoardId(client, board_id, flags):
+def CheckChipBoardId(client, board_id, flags, board_id_inv=None):
     """Compare the given board_id and flags to the running board_id and flags
 
     Interpret board_id and flags how gsctool would interpret them, then compare
@@ -621,21 +621,36 @@ def CheckChipBoardId(client, board_id, flags):
     Args:
         client: the object to run commands on
         board_id: a hex str, symbolic str, or int value for board_id
+        board_id_inv: a hex str or int value of board_id_inv. Ignore
+                      board_id_inv if None. board_id_inv is ~board_id unless
+                      the board id is erased. In case both should be 0xffffffff.
         flags: the int value of flags or None
 
     Raises:
         TestFail if the new board id info does not match
     """
     # Read back the board id and flags
-    new_board_id, _, new_flags = GetChipBoardId(client)
+    new_board_id, new_board_id_inv, new_flags = GetChipBoardId(client)
 
     expected_board_id = GetIntBoardId(board_id)
     expected_flags = GetExpectedFlags(flags)
 
-    if new_board_id != expected_board_id or new_flags != expected_flags:
-        raise error.TestFail('Failed to set board id expected %x:%x, but got '
-                             '%x:%x' % (expected_board_id, expected_flags,
-                             new_board_id, new_flags))
+    if board_id_inv == None:
+        new_board_id_inv_str = ''
+        expected_board_id_inv_str = ''
+    else:
+        new_board_id_inv_str = '%08x:' % new_board_id_inv
+        expected_board_id_inv = GetIntBoardId(board_id_inv)
+        expected_board_id_inv_str = '%08x:' % expected_board_id_inv
+
+    expected_str = '%08x:%s%08x' % (expected_board_id,
+                                    expected_board_id_inv_str,
+                                    expected_flags)
+    new_str = '%08x:%s%08x' % (new_board_id, new_board_id_inv_str, new_flags)
+
+    if new_str != expected_str:
+        raise error.TestFail('Failed to set board id: expected %r got %r' %
+                             (expected_str, new_str))
 
 
 def SetChipBoardId(client, board_id, flags=None, pad=True):
