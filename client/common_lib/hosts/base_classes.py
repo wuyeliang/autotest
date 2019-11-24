@@ -568,7 +568,7 @@ class Host(object):
         @return: list of files
         """
         SCRIPT = ("python -c 'import json, glob, sys;"
-                  "json.dump(glob.glob(sys.argv[1]), sys.stdout, 0)'")
+                  "json.dump(glob.glob(sys.argv[1]), sys.stdout)'")
         output = self.run(SCRIPT, args=(glob,), stdout_tee=None,
                           timeout=60).stdout
         return json.loads(output)
