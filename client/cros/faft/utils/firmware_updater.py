@@ -404,7 +404,7 @@ class FirmwareUpdater(object):
         @type shellball: str | None
         """
         model_result = self.os_if.run_shell_command_get_output(
-                'mosys platform model')
+                'cros_config / name')
 
         if not model_result:
             return
