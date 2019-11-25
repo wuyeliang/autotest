@@ -1003,7 +1003,7 @@ class TradefedTest(test.test):
             return False
         return True
 
-    def _copy_extra_artifacts(self, extra_artifacts, host, output_dir):
+    def _copy_extra_artifacts_dut(self, extra_artifacts, host, output_dir):
         """ Upload the custom artifacts """
         self._safe_makedirs(output_dir)
 
@@ -1016,6 +1016,18 @@ class TradefedTest(test.test):
             except:
                 # Maybe ADB connection failed, or the artifacts don't exist.
                 logging.exception('Copying extra artifacts failed.')
+
+    def _copy_extra_artifacts_host(self, extra_artifacts, host, output_dir):
+        """ Upload the custom artifacts """
+        self._safe_makedirs(output_dir)
+
+        for artifact in extra_artifacts:
+            logging.info('Copying extra artifacts from "%s" to "%s".',
+                         artifact, output_dir)
+            for extracted_path in glob.glob(artifact):
+                logging.info('... %s', extracted_path)
+                # Move it not to collect it again in future retries.
+                shutil.move(extracted_path, output_dir)
 
     def _run_tradefed_list_results(self):
         """Run the `tradefed list results` command.
@@ -1089,6 +1101,7 @@ class TradefedTest(test.test):
                                    executable_test_count=None,
                                    bundle=None,
                                    extra_artifacts=[],
+                                   extra_artifacts_host=[],
                                    cts_uri=None,
                                    login_precondition_commands=[],
                                    precondition_commands=[]):
@@ -1183,13 +1196,15 @@ class TradefedTest(test.test):
                 waived = len(waived_tests)
                 last_session_id, passed, failed, all_done = result
 
-                if failed > waived:
+                if failed > waived or not utils.is_in_container():
                     for host in self._hosts:
                         dir_name = "%s-step%02d" % (host.hostname, steps)
                         output_dir = os.path.join(
                             self.resultsdir, 'extra_artifacts', dir_name)
-                        self._copy_extra_artifacts(
+                        self._copy_extra_artifacts_dut(
                             extra_artifacts, host, output_dir)
+                        self._copy_extra_artifacts_host(
+                            extra_artifacts_host, host, output_dir)
 
                 if passed + failed > 0:
                     # At least one test had run, which means the media push step

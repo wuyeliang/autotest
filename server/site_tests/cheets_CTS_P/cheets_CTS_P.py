@@ -144,6 +144,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
                  executable_test_count=None,
                  bundle=None,
                  extra_artifacts=[],
+                 extra_artifacts_host=[],
                  precondition_commands=[],
                  login_precondition_commands=[],
                  timeout=_CTS_TIMEOUT_SECONDS):
@@ -186,6 +187,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
             executable_test_count=executable_test_count,
             bundle=bundle,
             extra_artifacts=extra_artifacts,
+            extra_artifacts_host=extra_artifacts_host,
             cts_uri=_CTS_URI,
             login_precondition_commands=login_precondition_commands,
             precondition_commands=precondition_commands)

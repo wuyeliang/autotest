@@ -28,6 +28,7 @@ def run_TS(machine):
         target_module='CtsTheme',
         target_plan=None,
         bundle='arm',
+        extra_artifacts_host=['/tmp/diff_*.png'],
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r10-linux_x86-arm.zip',
         timeout=5400)
 

@@ -108,6 +108,9 @@ _CONTROLFILE_TEMPLATE = Template(
     {%- if extra_artifacts %}
             extra_artifacts={{extra_artifacts}},
     {%- endif %}
+    {%- if extra_artifacts_host %}
+            extra_artifacts_host={{extra_artifacts_host}},
+    {%- endif %}
     {%- if uri %}
             uri='{{uri}}',
     {%- endif %}
@@ -626,6 +629,17 @@ def get_extra_artifacts(modules):
     return artifacts
 
 
+def get_extra_artifacts_host(modules):
+    if not 'EXTRA_ARTIFACTS_HOST' in CONFIG:
+        return
+
+    artifacts = []
+    for module in modules:
+        if module in CONFIG['EXTRA_ARTIFACTS_HOST']:
+            artifacts += CONFIG['EXTRA_ARTIFACTS_HOST'][module]
+    return artifacts
+
+
 def calculate_timeout(modules, suites):
     """Calculation for timeout of tradefed run.
 
@@ -718,6 +732,7 @@ def get_controlfile_content(combined,
             is_public,
             is_camerabox_test=(camera_facing is not None)),
         extra_artifacts=get_extra_artifacts(modules),
+        extra_artifacts_host=get_extra_artifacts_host(modules),
         job_retries=get_job_retries(modules, is_public),
         max_result_size_kb=get_max_result_size_kb(modules, is_public),
         revision=revision,

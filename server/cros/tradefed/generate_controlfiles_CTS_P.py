@@ -604,6 +604,10 @@ CONFIG['EXTRA_ARTIFACTS'] = {
     'CtsViewTestCases': ["/storage/emulated/0/SurfaceViewSyncTest/"],
 }
 
+CONFIG['EXTRA_ARTIFACTS_HOST'] = {
+    # For fixing flakiness b/143049967.
+    'CtsThemeHostTestCases': ["/tmp/diff_*.png"],
+}
 
 from generate_controlfiles_common import main
 
