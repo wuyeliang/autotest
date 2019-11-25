@@ -20,6 +20,7 @@ def run_TS(machine):
         'cheets_CTS_P',
         hosts=host_list,
         iterations=1,
+        enable_default_apps=True,
         tag='9.0_r10.arm.CtsContentTestCases',
         test_name='cheets_CTS_P.9.0_r10.arm.CtsContentTestCases',
         run_template=['run', 'commandAndExit', 'cts', '--module', 'CtsContentTestCases', '--logcat-on-failure'],

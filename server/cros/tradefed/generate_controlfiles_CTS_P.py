@@ -184,6 +184,7 @@ CONFIG['NEEDS_PUSH_MEDIA'] = CONFIG['MEDIA_MODULES']
 # Modules that are known to need the default apps of Chrome (eg. Files.app).
 CONFIG['ENABLE_DEFAULT_APPS'] = [
     'CtsAppSecurityHostTestCases',
+    'CtsContentTestCases',
 ]
 
 # Run `eject` for (and only for) each device with RM=1 in lsblk output.

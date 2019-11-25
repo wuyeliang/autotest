@@ -177,6 +177,7 @@ CONFIG['NEEDS_PUSH_MEDIA'] = [
 # Modules that are known to need the default apps of Chrome (eg. Files.app).
 CONFIG['ENABLE_DEFAULT_APPS'] = [
     'CtsAppSecurityHostTestCases',
+    'CtsContentTestCases',
 ]
 
 # TODO(kinaba, b/110869932): remove this.
