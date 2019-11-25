@@ -22,7 +22,6 @@ from autotest_lib.client.cros.input_playback import keyboard
 from autotest_lib.client.cros.enterprise import enterprise_policy_utils
 from autotest_lib.client.cros.enterprise import policy_manager
 from autotest_lib.client.cros.enterprise import enterprise_fake_dmserver
-from autotest_lib.client.cros.enterprise import enterprise_policy_utils
 from autotest_lib.client.common_lib import ui_utils
 
 from telemetry.core import exceptions
