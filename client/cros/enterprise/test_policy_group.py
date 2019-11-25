@@ -30,21 +30,51 @@ in the ent_policy_unittest_data file (located in this directory).
 """
 
 
-class TestPolicyGroup(unittest.TestCase):
+class test_policyGroup(unittest.TestCase):
 
     def setupFullPolicy(self):
-        testPolicy = {'Extension1': {'Policy1': 'Value1'},
-                      'Extension2': {'Policy2': 'Value2'}}
-        testUserPolicy = {'Userpolicy1': 1}
-        testDevicePolicy = {'SystemTimezone': 'v1'}
-        testSuggestedUserPolicy = {'Suggested1': '1'}
+        test_policy = {'Extension1': {'Policy1': 'Value1'},
+                       'Extension2': {'Policy2': 'Value2'}}
+        test_user_policy = {'Userpolicy1': 1}
+        test_device_policy = {'SystemTimezone': 'v1'}
+        test_suggested_user_policy = {'Suggested1': '1'}
         self.policy_group_object = policy_group.AllPolicies(True)
-        self.policy_group_object.set_extension_policy(testPolicy)
-        self.policy_group_object.set_policy('chrome', testUserPolicy, 'user')
-        self.policy_group_object.set_policy('chrome', testDevicePolicy,
+        self.policy_group_object.set_extension_policy(test_policy)
+        self.policy_group_object.set_policy('chrome', test_user_policy, 'user')
+        self.policy_group_object.set_policy('chrome', test_device_policy,
                                             'device')
-        self.policy_group_object.set_policy('chrome', testSuggestedUserPolicy,
+        self.policy_group_object.set_policy('chrome',
+                                            test_suggested_user_policy,
                                             'suggested_user')
+
+    def test_kiosk_setting(self):
+        self.policy_group_object = policy_group.AllPolicies(True)
+
+        k_id = 'afhcomalholahplbjhnmahkoekoijban'
+
+        z = {
+            'DeviceLocalAccounts': [
+                {'account_id': k_id,
+                 'kiosk_app': {'app_id': k_id},
+                 'type': 1}],
+            'DeviceLocalAccountAutoLoginId': k_id
+        }
+        self.policy_group_object.set_policy('chrome', z,
+                                            'device')
+
+        self.policy_group_object.createNewFakeDMServerJson()
+        self.policy_group_object.updateDMJson()
+        self.policy_group_object._DMJSON['policy_user'] = 'TEST'
+        kiosk_setting = (self.policy_group_object._DMJSON
+                         ['google/chromeos/device']
+                         ['device_local_accounts.account'])
+
+        expected_kiosk_setting = (
+            [{'type': 1,
+              'kiosk_app': {'app_id': 'afhcomalholahplbjhnmahkoekoijban'},
+              'account_id': 'afhcomalholahplbjhnmahkoekoijban'}]
+        )
+        self.assertEqual(kiosk_setting, expected_kiosk_setting)
 
     def test_Normal(self):
         policy_group.AllPolicies()
@@ -68,22 +98,22 @@ class TestPolicyGroup(unittest.TestCase):
 
         # Verify the DM Json remains correct.
         extension_test.updateDMJson()
-        self.assertEqual((extension_test._DMJSON['google/chrome/extension']
-                              ['Extension1']['Policy1']),
-                          'Hidden1')
+        self.assertEqual(
+            (extension_test._DMJSON['google/chrome/extension']
+             ['Extension1']['Policy1']),
+            'Hidden1')
 
         # Test the == function will use the "Displayed" value for the check,
         # not the configured
 
         extension_test_received = policy_group.AllPolicies()
-        received_set = {'Extension1':
-                            {'Policy1':
-                                {'scope': 'user',
-                                 'level': 'mandatory',
-                                 'value': 'Displayed',
-                                 'source': 'cloud'}
-                             }
-                        }
+        received_set = {
+            'Extension1': {
+                'Policy1': {
+                    'scope': 'user',
+                    'level': 'mandatory',
+                    'value': 'Displayed',
+                    'source': 'cloud'}}}
 
         extension_test_received.set_extension_policy(received_set)
 
@@ -92,22 +122,22 @@ class TestPolicyGroup(unittest.TestCase):
     def test_set_policy(self):
         policy_group_object = policy_group.AllPolicies(True)
         policy_group_object.set_policy('chrome',
-                                       {'TestPolicy': 'TestValue'},
+                                       {'test_policy': 'TestValue'},
                                        'user')
-        self.assertIn('TestPolicy', policy_group_object.chrome)
+        self.assertIn('test_policy', policy_group_object.chrome)
         # Testing the other values will be covered in the policy unittest
-        self.assertEqual(policy_group_object.chrome['TestPolicy'].value,
+        self.assertEqual(policy_group_object.chrome['test_policy'].value,
                          'TestValue')
 
     def test_ExtPolicy(self):
-        testPolicy = {'Extension1': {'Policy1': 'Value1'},
-                      'Extension2': {'Policy2': 'Value2'}}
+        test_policy = {'Extension1': {'Policy1': 'Value1'},
+                       'Extension2': {'Policy2': 'Value2'}}
         policy_group_object = policy_group.AllPolicies(True)
-        policy_group_object.set_extension_policy(testPolicy)
-        for Extension in testPolicy:
+        policy_group_object.set_extension_policy(test_policy)
+        for Extension in test_policy:
             self.assertIn(Extension,
                           policy_group_object.extension_configured_data)
-            for policy in testPolicy[Extension]:
+            for policy in test_policy[Extension]:
                 self.assertIn(policy,
                               policy_group_object.extension_configured_data[Extension])
 
