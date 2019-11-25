@@ -6,10 +6,10 @@ from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
 AUTHOR = 'chromeos-bluetooth'
-NAME = 'bluetooth_AdapterPairing.mouse.pairing_twice'
+NAME = 'bluetooth_AdapterCLSanity.cl_adapter_pairing_twice_test'
 PURPOSE = 'Test bluetooth adapter pairing and connecting to a bluetooth device.'
 CRITERIA = 'Adapter should work in correct states.'
-ATTRIBUTES = 'suite:bluetooth_flaky'
+ATTRIBUTES = ''
 TIME = 'SHORT'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
