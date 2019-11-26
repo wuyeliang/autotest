@@ -65,7 +65,7 @@ def restart_adbd(timeout):
     Follows the same logic as tast.
     """
     logging.debug('restarting adbd')
-    config = 'mtp,adb'
+    config = 'adb'
     _android_shell('setprop persist.sys.usb.config ' + config)
     _android_shell('setprop sys.usb.config ' + config)
 

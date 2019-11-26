@@ -338,10 +338,10 @@ class TradefedTest(test.test):
             host, 'restorecon ' + pipes.quote(constants.ANDROID_ADB_KEYS_PATH))
 
         # This starts adbd.
-        self._android_shell(host, 'setprop sys.usb.config mtp,adb')
+        self._android_shell(host, 'setprop sys.usb.config adb')
 
         # Also let it be automatically started upon reboot.
-        self._android_shell(host, 'setprop persist.sys.usb.config mtp,adb')
+        self._android_shell(host, 'setprop persist.sys.usb.config adb')
 
         # adbd may take some time to come up. Repeatedly try to connect to adb.
         utils.poll_for_condition(
