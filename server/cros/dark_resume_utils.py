@@ -46,8 +46,8 @@ class DarkResumeUtils(object):
         host.run('echo 0 > %s/disable_dark_resume' % TMP_POWER_DIR)
         logging.debug('setting max dark suspend delay timeout to %d msecs',
                   DARK_SUSPEND_MAX_DELAY_TIMEOUT_MILLISECONDS)
-        host.run('echo %d > %s/max_dark_suspend_delay_timeout_ms',
-                 DARK_SUSPEND_MAX_DELAY_TIMEOUT_MILLISECONDS, TMP_POWER_DIR)
+        host.run('echo %d > %s/max_dark_suspend_delay_timeout_ms' %
+                 (DARK_SUSPEND_MAX_DELAY_TIMEOUT_MILLISECONDS, TMP_POWER_DIR))
 
         # bind the tmp directory to the power preference directory
         host.run('mount --bind %s %s' % (TMP_POWER_DIR, POWER_DIR))
