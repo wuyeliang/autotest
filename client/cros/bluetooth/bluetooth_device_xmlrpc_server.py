@@ -1729,9 +1729,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
               dbus_interface=self.BLUEZ_MANAGER_IFACE, byte_arrays=False)
 
           for path, ifaces in objects.iteritems():
-              if (self.BLUEZ_GATT_IFACE in ifaces and
+              if (self.BLUEZ_GATT_CHAR_IFACE in ifaces and
                   path.startswith(device_path)):
-                  uuid = ifaces[self.BLUEZ_GATT_IFACE]['UUID'].lower()
+                  uuid = ifaces[self.BLUEZ_GATT_CHAR_IFACE]['UUID'].lower()
                   char_map[uuid] = path
         else:
             logging.warning('Device %s not in object tree.', address)
