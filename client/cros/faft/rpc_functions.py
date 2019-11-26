@@ -765,12 +765,11 @@ class SystemServicer(object):
 
         @return: A string of the model name.
         """
-        cmd = 'cros_config / name || echo Failed'
-        lines = self._os_if.run_shell_command_get_output(cmd)
+        lines = self._os_if.run_shell_command_get_output(
+                '(mosys -vvv platform model 2>&1) || echo Failed')
         if lines[-1].strip() == 'Failed':
-            raise Exception('Failed getting platform name: ' +
-                            '\n'.join(lines))
-        return lines[-1]
+            raise Exception('Failed getting model name: ' + '\n'.join(lines))
+        return lines[-1].strip()
 
     def DevTpmPresent(self):
         """Check if /dev/tpm0 is present.
