@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = "gredelston, kmshelton, dgoyette, waihong"
-NAME = "faft_infra"
+NAME = "faft_framework"
 PURPOSE = "Suite to verify that the FAFT framework is intact"
 TIME = "SHORT"
 TEST_CATEGORY = "General"
@@ -38,7 +38,7 @@ _BUG_TEMPLATE = {
 }
 
 args_dict['file_bugs'] = False
-args_dict['name'] = 'faft_setup'
+args_dict['name'] = NAME
 args_dict['job'] = job
 args_dict['add_experimental'] = True
 args_dict['bug_template'] = _BUG_TEMPLATE
