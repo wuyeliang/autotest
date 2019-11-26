@@ -194,6 +194,22 @@ class _ServodJobVerifier(hosts.Verifier):
         return 'servod upstart job is running'
 
 
+class _ServodLogsVerifier(hosts.Verifier):
+    """
+    Clean up old servod logs
+    """
+    KEEP_LOGS_MAX_DAYS = 5
+
+    def verify(self, host):
+        host.run(
+                '/usr/bin/find /var/log/servod_* -mtime +%d -print -delete'
+                % self.KEEP_LOGS_MAX_DAYS, ignore_status=True)
+
+    @property
+    def description(self):
+        return 'old servod logs removed'
+
+
 class _ServodConnectionVerifier(hosts.Verifier):
     """
     Verifier to check that we can connect to `servod`.
@@ -363,6 +379,7 @@ def create_servo_repair_strategy():
     config = ['brd_config', 'ser_config']
     verify_dag = [
         (repair_utils.SshVerifier,   'servo_ssh',   []),
+        (_ServodLogsVerifier,        'servod_logs', ['servo_ssh']),
         (_UpdateVerifier,            'update',      ['servo_ssh']),
         (_BoardConfigVerifier,       'brd_config',  ['servo_ssh']),
         (_SerialConfigVerifier,      'ser_config',  ['servo_ssh']),
