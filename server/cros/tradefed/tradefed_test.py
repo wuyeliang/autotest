@@ -1034,9 +1034,9 @@ class TradefedTest(test.test):
         @return: tuple of the last (session_id, pass, fail, all_done?).
         """
 
-        # Fix b/143580192: We set the timeout to 20s because it should never
-        # takes more than 10s.
-        output = self._run_tradefed_with_timeout(['list', 'results'], 20)
+        # Fix b/143580192: We set the timeout to 3 min. It never takes more than
+        # 10s on light disk load.
+        output = self._run_tradefed_with_timeout(['list', 'results'], 180)
 
         # Parses the last session from the output that looks like:
         #
