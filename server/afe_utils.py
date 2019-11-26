@@ -51,7 +51,7 @@ def get_stable_cros_image_name_v2(info, _config_override=None):
         logging.debug("get_stable_cros_image_name_v2: board %s from host_info_store" % info.board)
         return info.cros_stable_version
     logging.debug("get_stable_cros_image_name_v2: board %s from autotest frontend" % info.board)
-    return get_stable_cros_image_name(board)
+    return get_stable_cros_image_name(info.board)
 
 
 def get_stable_cros_image_name(board):
@@ -70,7 +70,7 @@ def get_stable_firmware_version_v2(info, _config_override=None):
         logging.debug("get_stable_firmware_version_v2: model %s from host_info_store" % info.model)
         return info.firmware_stable_version
     logging.debug("get_stable_cros_image_name_v2: model %s from autotest frontend" % info.model)
-    return get_stable_firmware_version(model)
+    return get_stable_firmware_version(info.model)
 
 
 def get_stable_firmware_version(model):
