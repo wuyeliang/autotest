@@ -8,6 +8,7 @@ import time
 
 from autotest_lib.client.common_lib import error, utils
 from autotest_lib.client.common_lib.cros import cr50_utils
+from autotest_lib.server.cros import filesystem_util
 from autotest_lib.server.cros.faft.cr50_test import Cr50Test
 
 
@@ -33,12 +34,17 @@ class firmware_Cr50GetName(Cr50Test):
         if not self.host.path_exists(self.GET_NAME_SCRIPT):
             raise error.TestNAError('Device does not have "cr50-get-name"')
 
+        efi_path = self.get_saved_eraseflashinfo_image_path()
+
+        filesystem_util.make_rootfs_writable(self.host)
+        cr50_utils.InstallImage(self.host, efi_path, cr50_utils.CR50_PROD)
+        cr50_utils.InstallImage(self.host, efi_path, cr50_utils.CR50_PREPVT)
+
         # Update to the eraseflashinfo image so we can erase the board id after
         # we set it. This test is verifying cr50-get-name, so it is ok if cr50
         # is running a non-prod image.
         self.cr50_update(self.get_saved_dbg_image_path())
-        self.cr50_update(self.get_saved_eraseflashinfo_image_path(),
-                         rollback=True)
+        self.cr50_update(efi_path, rollback=True)
 
         # Stop trunksd so it wont interfere with the update
         cr50_utils.StopTrunksd(self.host)
