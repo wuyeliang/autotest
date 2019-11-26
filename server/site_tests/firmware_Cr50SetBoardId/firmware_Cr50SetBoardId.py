@@ -21,7 +21,7 @@ class firmware_Cr50SetBoardId(Cr50Test):
     BID_SCRIPT = '/usr/share/cros/cr50-set-board-id.sh'
 
     # the command to get the brand name
-    GET_BRAND = 'mosys platform brand'
+    GET_BRAND = 'cros_config / brand-code'
 
     # Used when the flags were not initialized in the factory.
     UNKNOWN_FLAGS = 0xff00
@@ -62,7 +62,7 @@ class firmware_Cr50SetBoardId(Cr50Test):
         result = self.host.run(self.GET_BRAND, ignore_status=True)
         platform_brand = result.stdout.strip()
         if result.exit_status or not platform_brand:
-            raise error.TestNAError('Could not get "mosys platform brand"')
+            raise error.TestNAError('Could not get "cros_config / brand-code"')
         self.platform_brand = platform_brand
 
         bid = self.get_saved_cr50_original_version()[2]

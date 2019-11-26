@@ -405,8 +405,8 @@ class Cr50Test(FirmwareTest):
         device cr50 image version.
         """
         state = {}
-        state['mosys platform brand'] = self.host.run('mosys platform brand',
-            ignore_status=True).stdout.strip()
+        state['cros_config / brand-code'] = self.host.run(
+                'cros_config / brand-code', ignore_status=True).stdout.strip()
         state['prod_version'] = self._get_image_information('prod')
         state['prepvt_version'] = self._get_image_information('prepvt')
         state['rlz'] = cr50_utils.GetRLZ(self.host)

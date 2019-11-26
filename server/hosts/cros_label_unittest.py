@@ -241,13 +241,13 @@ class BrandCodeLabelTests(unittest.TestCase):
     """Unit tests for DeviceSkuLabel"""
 
     def test_new_label(self):
-        mosys_cmd = 'mosys platform brand'
-        host = MockHost([], MockCmd(mosys_cmd, 0, 'XXYZ\n'))
+        cros_config_cmd = 'cros_config / brand-code'
+        host = MockHost([], MockCmd(cros_config_cmd, 0, 'XXYZ\n'))
         self.assertEqual(BrandCodeLabel().generate_labels(host), ['XXYZ'])
 
-    def test_new_label_mosys_fails(self):
-        mosys_cmd = 'mosys platform brand'
-        host = MockHost([], MockCmd(mosys_cmd, 1, 'XXYZ\n'))
+    def test_new_label_cros_config_fails(self):
+        cros_config_cmd = 'cros_config / brand-code'
+        host = MockHost([], MockCmd(cros_config_cmd, 1, 'XXYZ\n'))
         self.assertEqual(BrandCodeLabel().generate_labels(host), [])
 
     def test_existing_label(self):

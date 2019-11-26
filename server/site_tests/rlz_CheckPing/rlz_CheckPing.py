@@ -20,7 +20,7 @@ class rlz_CheckPing(test.test):
     def _check_rlz_brand_code(self):
         """Checks that we have an rlz brand code."""
         try:
-            self._host.run('mosys -k platform brand | grep brand')
+            self._host.run('cros_config / brand-code')
         except error.AutoservRunError as e:
             raise error.TestFail('DUT is missing brand_code: %s.' %
                                  e.result_obj.stderr)
@@ -66,6 +66,7 @@ class rlz_CheckPing(test.test):
     def _check_rlz_vpd_settings_post_ping(self):
         """Checks that rlz related vpd settings are correct after the test."""
         def should_send_rlz_ping():
+            """Ask vpd (on the DUT) whether we are ready to send rlz ping"""
             return int(self._host.run('vpd -i RW_VPD -g '
                                       'should_send_rlz_ping').stdout)
 
@@ -88,6 +89,7 @@ class rlz_CheckPing(test.test):
 
 
     def run_once(self, host, ping_timeout=30, logged_in=True):
+        """Main test logic"""
         self._host = host
         if 'veyron_rialto' in self._host.get_board():
             raise error.TestNAError('Skipping test on rialto device.')

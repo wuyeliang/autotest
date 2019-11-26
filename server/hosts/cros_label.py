@@ -127,8 +127,8 @@ class BrandCodeLabel(base_label.StringPrefixLabel):
         if brand_code:
             return [brand_code]
 
-        mosys_cmd = 'mosys platform brand'
-        result = host.run(command=mosys_cmd, ignore_status=True)
+        cros_config_cmd = 'cros_config / brand-code'
+        result = host.run(command=cros_config_cmd, ignore_status=True)
         if result.exit_status == 0:
             return [result.stdout.strip()]
 
