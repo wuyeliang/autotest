@@ -29,6 +29,14 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
     test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
     batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
 
+    @test_wrapper('Discovery Test', devices={"BLE_MOUSE":1})
+    def le_discovery_test(self):
+        """Performs discovery test with mouse peripheral"""
+        device = self.devices['BLE_MOUSE'][0]
+
+        self.test_discover_device(device.address)
+
+
     @test_wrapper('Connect Disconnect Loop', devices={'BLE_MOUSE':1})
     def le_connect_disconnect_loop(self):
         """Run connect/disconnect loop initiated by DUT.
