@@ -294,16 +294,14 @@ class test(object):
 
         """
         keyval_path = os.path.join('host_keyvals', hostname)
-        # The host keyval is <job_dir>/host_keyvals/<hostname> if it exists.
+        # The host keyval file only exists on moblab.
         # Otherwise we're running on Skylab which uses hostinfo.
-        if not os.path.exists(os.path.join(job_dir, keyval_path)):
-            tko_utils.dprint("trying to use hostinfo")
-            try:
-                return _parse_hostinfo_keyval(job_dir, hostname)
-            except Exception as e:
-                # If anything goes wrong, log it and just use the old flow.
-                tko_utils.dprint("tried using hostinfo: %s" % e)
-        return test._parse_keyval(job_dir, keyval_path)
+        if os.path.exists(os.path.join(job_dir, keyval_path)):
+            tko_utils.dprint('Reading keyvals from %s.' % keyval_path)
+            return test._parse_keyval(job_dir, keyval_path)
+        else:
+            tko_utils.dprint('Reading keyvals from hostinfo.')
+            return _parse_hostinfo_keyval(job_dir, hostname)
 
 
     @staticmethod
