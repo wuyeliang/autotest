@@ -1603,6 +1603,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         # Newer platforms start with 'Google_' while the older ones do not.
         return platform.replace('google_', '')
 
+
     def get_platform(self):
         """Determine the correct platform label for this host.
 
@@ -1610,14 +1611,20 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         """
         release_info = utils.parse_cmd_output('cat /etc/lsb-release',
                                               run_method=self.run)
-        unibuild = release_info.get('CHROMEOS_RELEASE_UNIBUILD') == '1'
         platform = ''
-        if unibuild:
-            cmd = 'mosys platform model'
-            result = self.run(command=cmd, ignore_status=True)
-            if result.exit_status == 0:
-                platform = result.stdout.strip()
+        if release_info.get('CHROMEOS_RELEASE_UNIBUILD') == '1':
+            platform = self.get_platform_from_mosys()
         return platform if platform else self.get_platform_from_fwid()
+
+
+    def get_platform_from_mosys(self):
+        """Get the host platform from mosys command.
+
+        @returns a string representing this host's platform.
+        """
+        cmd = 'mosys platform model'
+        result = self.run(command=cmd, ignore_status=True)
+        return result.stdout.strip() if result.exit_status == 0 else ''
 
 
     def get_architecture(self):
