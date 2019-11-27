@@ -189,7 +189,7 @@ class BaseServoHost(ssh_host.SSHHost):
                          self.hostname)
             return
 
-        target_build = afe_utils.get_stable_cros_image_name_v2(self.host_info_store.get())
+        target_build = afe_utils.get_stable_cros_image_name(self.get_board())
         target_build_number = server_utils.ParseBuildName(
             target_build)[3]
         current_build_number = self._get_release_version()
