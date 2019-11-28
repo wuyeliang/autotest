@@ -955,9 +955,9 @@ class TradefedTest(test.test):
           self._repository/logs/$datetime/
         Because other tools rely on the currently chosen Google storage paths
         we need to keep destination_results in:
-          self.resultdir/android-cts/results/$datetime/
-          self.resultdir/android-cts/results/$datetime.zip
-          self.resultdir/android-cts/results/logs/$datetime/
+          self.resultsdir/android-cts/results/$datetime/
+          self.resultsdir/android-cts/results/$datetime.zip
+          self.resultsdir/android-cts/results/logs/$datetime/
         To bridge between them, create symlinks from the former to the latter.
         """
         logging.info('Setting up tradefed results and logs directories.')
