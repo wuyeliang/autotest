@@ -262,7 +262,7 @@ def main():
     # only when needed, i.e., the script needs to check any control file.
     useflags = None
     for file_path in file_list.split('\n'):
-        control_file = re.search(r'.*/control(?:\.\w+)?$', file_path)
+        control_file = re.search(r'.*/control(?:\..+)?$', file_path)
         if control_file:
             ctrl_file_path = control_file.group(0)
             CheckSuiteLineRemoved(ctrl_file_path)
