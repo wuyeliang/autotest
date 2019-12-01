@@ -85,6 +85,11 @@ class graphics_VideoRenderingPower(graphics_utils.GraphicsTest):
 
         rapl = []
         if power_utils.has_battery():
+            # Sometimes, the DUT is supposed to have a battery but we may not
+            # detect one. This is a symptom of a bad battery (b/145144707).
+            if self._power_status.battery_path is None:
+                raise error.TestFail('No battery found in this DUT (this is a '
+                                     'symptom of a bad battery).')
             rapl.append(
                 power_status.SystemPower(self._power_status.battery_path))
         else:
