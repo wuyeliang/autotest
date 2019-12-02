@@ -143,9 +143,8 @@ class ThermalStatACPI(DevStat):
             if field.find('trip_point_') != -1 and field.find('_temp') != -1 \
                     and self.temp > self.read_val(field, int):
                 self.num_points_tripped += 1
-                logging.info('Temperature trip point #' + \
-                            field[len('trip_point_'):field.rfind('_temp')] + \
-                            ' tripped.')
+                logging.info('Temperature trip point #%s tripped.', \
+                            field[len('trip_point_'):field.rfind('_temp')])
 
 
 class ThermalStatHwmon(DevStat):
@@ -466,7 +465,7 @@ class SysStat(object):
 
         temp_str = self.thermal.get_temps()
         if temp_str:
-            logging.info('Temperature reading: ' + temp_str)
+            logging.info('Temperature reading: %s', temp_str)
         else:
             logging.error('Could not read temperature, skipping.')
 
@@ -879,8 +878,8 @@ class CPUIdleStats(CPUCStateStats):
                     # Kernel race condition that can happen while a new C-state
                     # gets added (e.g. AC->battery). Don't know the 'name' of
                     # the state yet, but its 'time' would be 0 anyway.
-                    logging.warning('Read name: <null>, time: %d from %s'
-                        % (usecs, state) + '... skipping.')
+                    logging.warning('Read name: <null>, time: %d from %s...'
+                                    'skipping.', usecs, state)
                     continue
 
                 cpuidle_stats[name] += usecs
