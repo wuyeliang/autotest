@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import logging
-
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
 
@@ -73,7 +71,6 @@ class policy_ManagedBookmarks(enterprise_policy_base.EnterprisePolicyTest):
 
         else:
             screen_items = self._get_managed_bookmarks()
-            logging.info('DEREK BMARKS {}'.format(screen_items))
             pol_set = self._get_set(policy_value)
             if pol_set:
                 if not pol_set.issubset(screen_items):
