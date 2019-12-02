@@ -757,13 +757,8 @@ class DevServer(object):
         if not restricted_subnets:
             return cls.servers()
 
-        devservers = []
-        for server in cls.servers():
-            server_name = get_hostname(server)
-            if not utils.get_restricted_subnet(server_name, restricted_subnets):
-                devservers.append(server)
-        return devservers
-
+        metrics.Counter('chromeos/autotest/devserver/unrestricted_hotfix')
+        return cls.servers()
 
     @classmethod
     def get_healthy_devserver(cls, build, devservers, ban_list=None):
