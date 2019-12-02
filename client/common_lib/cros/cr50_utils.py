@@ -75,6 +75,7 @@ UPDATE_TIMEOUT = 60
 UPDATE_OK = 1
 
 ERASED_BID_INT = 0xffffffff
+ERASED_BID_STR = hex(ERASED_BID_INT)
 # With an erased bid, the flags and board id will both be erased
 ERASED_CHIP_BID = (ERASED_BID_INT, ERASED_BID_INT, ERASED_BID_INT)
 # Any image with this board id will run on any device
