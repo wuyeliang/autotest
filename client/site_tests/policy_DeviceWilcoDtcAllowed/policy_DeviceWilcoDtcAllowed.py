@@ -30,17 +30,8 @@ class policy_DeviceWilcoDtcAllowed(
             extra_chrome_flags=['--user-always-affiliated'])
 
     def _update_policy_value(self, value):
-        self.fake_dm_server.setup_policy(self._make_json_blob(
-            device_policies={'DeviceWilcoDtcAllowed': value}))
-        policy_tab = self.navigate_to_url(self.CHROME_POLICY_PAGE)
-        reload_button = "document.querySelector('button#reload-policies')"
-        policy_tab.ExecuteJavaScript("%s.click()" % reload_button)
-        utils.poll_for_condition(
-            lambda: self._get_policy_value_from_new_tab(
-                'DeviceWilcoDtcAllowed') == value,
-            exception=error.TestFail('Policy value not updated.'),
-            timeout=10,
-            sleep_interval=1)
+        self.update_policies(device_policies={'DeviceWilcoDtcAllowed': value})
+        self.verify_policy_value('DeviceWilcoDtcAllowed', value)
 
     def _check_status(self, expected_status):
         result = utils.run('status wilco_dtc')
