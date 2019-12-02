@@ -12,6 +12,7 @@ TEST_CATEGORY = "General"
 TEST_CLASS = "enterprise"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
+ATTRIBUTES = "suite:wilco_bve"
 
 DOC = """
 This test verifies the USB power output when the device is off with the
