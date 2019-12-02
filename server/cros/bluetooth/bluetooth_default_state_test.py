@@ -184,7 +184,8 @@ class bluetooth_Sanity_DefaultStateTest(
         if not flags & bluetooth_socket.HCI_RUNNING:
             raise error.TestFail('HCI RUNNING flag does not match kernel while '
                                  'powered on')
-        if flags & bluetooth_socket.HCI_ISCAN:
+        if bool(flags & bluetooth_socket.HCI_ISCAN) != \
+            bool(bluez_properties['Discoverable']):
             raise error.TestFail('HCI ISCAN flag does not match kernel while '
                                  'powered on')
         if flags & bluetooth_socket.HCI_INQUIRY:
