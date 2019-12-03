@@ -126,7 +126,6 @@ class firmware_ECBootTime(FirmwareTest):
         self._x86 = ('x86' in self.faft_config.ec_capability)
         self._doubleboot = ('doubleboot' in self.faft_config.ec_capability)
         self._arm_legacy = self.is_arm_legacy_board()
-        dev_mode = self.checkers.crossystem_checker({'devsw_boot': '1'})
         logging.info("Reboot and check EC cold boot time and host boot time.")
         self.switcher.mode_aware_reboot('custom', self.check_boot_time)
 
