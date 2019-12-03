@@ -28,12 +28,9 @@ from autotest_lib.server.cros.bluetooth.bluetooth_gatt_client_utils import (
 
 Event = recorder.Event
 
-# Useful locations for handling HID keyboard data traces used by
-# test_keyboard_input_from_trace
-AUTO_TEST_LOCATION = 'trunk/src/third_party/autotest/files'
-TRACE_LOCATION = '/server/cros/bluetooth/input_traces/keyboard'
-INPUT_TRACE_LOCATION = AUTO_TEST_LOCATION + TRACE_LOCATION
-BASE_DIR = os.path.join(os.path.expanduser('~'))
+# Location of data traces relative to this (bluetooth_adapter_tests.py) file
+BT_ADAPTER_TEST_PATH = os.path.dirname(__file__)
+TRACE_LOCATION = os.path.join(BT_ADAPTER_TEST_PATH, 'input_traces/keyboard')
 
 # Delay binding the methods since host is only available at run time.
 SUPPORTED_DEVICE_TYPES = {
@@ -2613,11 +2610,9 @@ class BluetoothAdapterTests(test.test):
 
         # Read data from trace I/O files
         input_trace = bluetooth_test_utils.parse_trace_file(os.path.join(
-                      BASE_DIR, INPUT_TRACE_LOCATION,
-                      '{}_input.txt'.format(trace_name)))
+                      TRACE_LOCATION, '{}_input.txt'.format(trace_name)))
         output_trace = bluetooth_test_utils.parse_trace_file(os.path.join(
-                      BASE_DIR, INPUT_TRACE_LOCATION,
-                      '{}_output.txt'.format(trace_name)))
+                      TRACE_LOCATION, '{}_output.txt'.format(trace_name)))
 
         if not input_trace or not output_trace:
             logging.error('Failure in using trace')
