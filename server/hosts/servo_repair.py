@@ -23,8 +23,13 @@ class _UpdateVerifier(hosts.Verifier):
         # First, only run this verifier if the host is in the physical lab.
         # Secondly, skip if the test is being run by test_that, because subnet
         # restrictions can cause the update to fail.
-        if host.is_in_lab() and host.job and host.job.in_lab:
-            host.update_image(wait_for_update=False)
+        try:
+            if host.is_in_lab() and host.job and host.job.in_lab:
+                host.update_image(wait_for_update=False)
+        # We don't want failure from update block DUT repair action.
+        # See crbug.com/1029950.
+        except Exception as e:
+            logging.error('Failed to update servohost image: %s', e)
 
     @property
     def description(self):
@@ -316,7 +321,12 @@ class _ServoRebootRepair(repair_utils.RebootRepair):
             logging.warning('Reboot labstation requested, it will be '
                             'handled by labstation administrative task.')
         else:
-            host.update_image(wait_for_update=True)
+            try:
+                host.update_image(wait_for_update=True)
+            # We don't want failure from update block DUT repair action.
+            # See crbug.com/1029950.
+            except Exception as e:
+                logging.error('Failed to update servohost image: %s', e)
             super(_ServoRebootRepair, self).repair(host)
 
     @property
