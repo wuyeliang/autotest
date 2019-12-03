@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 
+import json
 import logging
 import os
 import re
@@ -17,6 +18,7 @@ from autotest_lib.server import test
 from autotest_lib.server import utils
 from autotest_lib.server.cros import telemetry_runner
 from autotest_lib.site_utils import test_runner_utils
+from device_setup_utils import DutWrapper
 
 
 WAIT_FOR_CMD_TIMEOUT_SECS = 60
@@ -37,6 +39,7 @@ TURBOSTAT_LOG = 'turbostat.log'
 CPUSTATS_LOG = 'cpustats.log'
 CPUINFO_LOG = 'cpuinfo.log'
 TOP_LOG = 'top.log'
+WAIT_TIME_LOG = 'wait_time.log'
 
 # Result Statuses
 SUCCESS_STATUS = 'SUCCESS'
@@ -249,6 +252,15 @@ class telemetry_Crosperf(test.test):
     test_args = args.get('test_args', '')
     profiler_args = args.get('profiler_args', '')
 
+    dut_config_str = args.get('dut_config', '')
+    dut_config = json.loads(dut_config_str)
+    # Setup device with dut_config arguments before running test
+    run_on_dut = DutWrapper(dut, dut_config)
+    wait_time = run_on_dut.SetupDevice()
+    # Wait time can be used to accumulate cooldown time in Crosperf.
+    with open(os.path.join(self.resultsdir, WAIT_TIME_LOG), 'w') as f:
+      f.write(str(wait_time))
+
     output_format = 'histograms'
 
     # If run_local=true, telemetry benchmark will run on DUT, otherwise
@@ -272,17 +284,16 @@ class telemetry_Crosperf(test.test):
       run_cpuinfo = self.run_cpustats_in_background if dut \
           else self.no_background
       run_turbostat = self.run_turbostat_in_background if (
-          dut and args.get('turbostat', 'False') == 'True') \
+          dut and dut_config['turbostat']) \
               else self.no_background
-      top_interval = float(args.get('top_interval', '0'))
       run_top = self.run_top_in_background if (
-          dut and top_interval > 0) \
+          dut and dut_config['top_interval'] > 0) \
               else self.no_background
 
       # FIXME(denik): replace with ExitStack.
       with run_cpuinfo(dut, CPUSTATS_LOG) as _cpu_cm, \
           run_turbostat(dut, TURBOSTAT_LOG) as _turbo_cm, \
-          run_top(dut, TOP_LOG, top_interval) as _top_cm:
+          run_top(dut, TOP_LOG, dut_config['top_interval']) as _top_cm:
 
         arguments = []
         if test_args:
