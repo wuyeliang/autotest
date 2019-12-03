@@ -811,7 +811,10 @@ class Cr50Test(FirmwareTest):
         tmp_dest = '/tmp/' + os.path.basename(path)
 
         dest, image_ver = cr50_utils.InstallImage(self.host, path, tmp_dest)
-        cr50_utils.GSCTool(self.host, ['-a', dest])
+        # Use the -p option to make sure the DUT does a clean reboot.
+        cr50_utils.GSCTool(self.host, ['-a', dest, '-p'])
+        # Reboot the DUT to finish the cr50 update.
+        self.host.reboot(wait=False)
         return image_ver[1]
 
 
