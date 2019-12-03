@@ -275,10 +275,6 @@ class Suspender(object):
                     return None
             raise sys_power.SpuriousWakeupError('Spurious wake in S3: %s | %s'
                     % (wake_elog, wake_syslog))
-        if self._get_board() in ['lumpy', 'stumpy', 'kiev']:
-            logging.debug('RTC read failure (crosbug/36004), dumping nvram:\n' +
-                    utils.system_output('mosys nvram dump', ignore_status=True))
-            return None
         raise error.TestError('Broken RTC timestamp: ' +
                               utils.read_file(self.HWCLOCK_FILE))
 
