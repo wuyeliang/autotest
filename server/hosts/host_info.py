@@ -46,6 +46,7 @@ class HostInfo(object):
     _SV_CROS_KEY = "cros"
     _SV_FAFT_KEY = "faft"
     _SV_FIRMWARE_KEY = "firmware"
+    _SV_SERVO_CROS_KEY = "servo-cros"
 
     _OS_VERSION_LABELS = (
             provision.CROS_VERSION_PREFIX,
@@ -160,6 +161,12 @@ class HostInfo(object):
         """Retrieve the firmware stable version
         """
         return self.stable_versions.get(self._SV_FIRMWARE_KEY)
+
+    @property
+    def servo_cros_stable_version(self):
+        """Retrieve the servo cros stable verion
+        """
+        return self.stable_versions.get(self._SV_SERVO_CROS_KEY)
 
     def get_label_value(self, prefix):
         """Retrieve the value stored as a label with a well known prefix.
