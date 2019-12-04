@@ -311,7 +311,7 @@ class Cr50Test(FirmwareTest):
         @param image: the image to end on. Use the original test image if no
                       image is given.
         """
-        image = image if image else self._original_cr50_image
+        image = image if image else self.get_saved_cr50_original_path()
         self.run_update_to_eraseflashinfo()
         self.cr50_update(image)
 
@@ -355,7 +355,7 @@ class Cr50Test(FirmwareTest):
         if set_bid:
             self.cr50.set_board_id(chip_bid, chip_flags)
 
-        self._retry_cr50_update(self._original_cr50_image, 3, True)
+        self._retry_cr50_update(self.get_saved_cr50_original_path(), 3, True)
 
 
     def _cleanup_required(self, state_mismatch, image_type):
