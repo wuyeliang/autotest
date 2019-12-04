@@ -115,6 +115,18 @@ RPC_CATEGORIES = [
                 ],
             },
             {
+                "method_name": "RunShellCommandGetStatus",
+                "passing_args": [
+                    ("ls ''",),
+                ],
+            },
+            {
+                "method_name": "RunShellCommand",
+                "failing_args": [
+                    ("ls ''",),
+                ],
+            },
+            {
                 "method_name": "RunShellCommandCheckOutput",
                 "passing_args": [
                     ("ls -l", "total"),
@@ -409,7 +421,7 @@ RPC_CATEGORIES = [
                 "method_name": "RebootToSwitchSlot",
                 "passing_args": [NO_ARGS],
                 "failing_args": [ONE_INT_ARG, ONE_STR_ARG],
-                "allow_error_msg": "ShellError",
+                "allow_error_msg": "CmdError",
             },
         ],
     },

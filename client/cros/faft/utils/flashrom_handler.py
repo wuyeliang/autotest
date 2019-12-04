@@ -15,9 +15,9 @@ import os
 import struct
 import tempfile
 
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chip_utils
-from autotest_lib.client.cros.faft.utils import (saft_flashrom_util,
-                                                 shell_wrapper)
+from autotest_lib.client.cros.faft.utils import saft_flashrom_util
 
 
 class FvSection(object):
@@ -185,9 +185,10 @@ class FlashromHandler(object):
             try:
                 self.fum.check_target()
                 self._available = True
-            except shell_wrapper.ShellError as e:
+            except error.CmdError as e:
+                # First line: "Command <flashrom -p host> failed, rc=2"
+                self._unavailable_err = str(e).split('\n', 1)[0]
                 self._available = False
-                self._unavailable_err = str(e).capitalize()
         return self._available
 
     def section_file(self, *paths):

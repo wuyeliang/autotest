@@ -5,9 +5,9 @@ import StringIO
 import unittest
 
 from autotest_lib.client.common_lib import autotemp
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.faft.utils import (os_interface,
-                                                 saft_flashrom_util,
-                                                 shell_wrapper)
+                                                 saft_flashrom_util)
 
 
 class TestFlashromUtil(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestFlashromUtil(unittest.TestCase):
 
     @mock.patch('subprocess.Popen')
     def testTargetIsBroken(self, mock_subproc_popen):
-        """check_target should raise ShellError if flashrom is broken"""
+        """check_target should raise error.CmdError if flashrom is broken"""
 
         bad_flashrom = mock.Mock()
         bad_flashrom.stdout = StringIO.StringIO('broken flashrom stdout')
@@ -31,7 +31,7 @@ class TestFlashromUtil(unittest.TestCase):
         bad_flashrom.returncode = 1
 
         mock_subproc_popen.return_value = bad_flashrom
-        with self.assertRaises(shell_wrapper.ShellError):
+        with self.assertRaises(error.CmdError):
             self.flashrom_util.check_target()
 
     @mock.patch('subprocess.Popen')

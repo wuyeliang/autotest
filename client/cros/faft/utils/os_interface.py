@@ -92,11 +92,15 @@ class OSInterface(object):
                                 the command, but don't actually run it.
                                 This should be set for RPC commands that alter
                                 the OS or firmware in some persistent way.
+
+        @return: the result of the command, or None if skipped for test mode.
+        @rtype:  autotest_lib.client.common_lib.utils.CmdResult | None
+        @raise autotest_lib.client.common_lib.error.CmdError: if command fails
         """
         if self.test_mode and modifies_device:
             self.log('[SKIPPED] %s' % cmd)
         else:
-            self.shell.run_command(cmd)
+            return self.shell.run_command(cmd)
 
     def run_shell_command_check_output(self, cmd, success_token):
         """Run shell command and check its stdout for a string."""

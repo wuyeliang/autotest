@@ -275,7 +275,7 @@ class flashrom_util(object):
         The command executed is just 'flashrom -p <target>'.
 
         @return: True if flashrom completed successfully
-        @raise ShellError: if flashrom exited with an error code
+        @raise autotest_lib.client.common_lib.error.CmdError: if flashrom failed
         """
         cmd = 'flashrom %s' % self._target_command
         self.os_if.run_shell_command(cmd)
