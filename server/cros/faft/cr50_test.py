@@ -325,21 +325,6 @@ class Cr50Test(FirmwareTest):
 
         @param state_mismatch: a dictionary of the mismatched state.
         """
-        # Use the eraseflashinfo image to clear the board id.
-        eraseflashinfo = self._cleanup_required(state_mismatch,
-                                                self.ERASEFLASHINFO_IMAGE)
-        set_bid = False
-        chip_bid = None
-        chip_flags = None
-
-        # eraseflashinfo erases the chip board id. Determine what chip board id
-        # to restore.
-        if eraseflashinfo:
-            chip_bid_info = self._original_image_state['chip_bid']
-            set_bid = chip_bid_info != cr50_utils.ERASED_CHIP_BID
-            chip_bid = chip_bid_info[0]
-            chip_flags = chip_bid_info[2]
-
         # Remove prepvt and prod iamges, so they don't interfere with the test
         # rolling back and updating to images that my be older than the images
         # on the device.
@@ -347,11 +332,24 @@ class Cr50Test(FirmwareTest):
             self.host.run('rm %s' % cr50_utils.CR50_PREPVT, ignore_status=True)
             self.host.run('rm %s' % cr50_utils.CR50_PROD, ignore_status=True)
 
+        bid_mismatch = 'chip_bid' in state_mismatch
+        original_bid = self._original_image_state['chip_bid']
+        set_bid = bid_mismatch and original_bid != cr50_utils.ERASED_CHIP_BID
+        bid_is_erased = (cr50_utils.GetChipBoardId(self.host) ==
+                         cr50_utils.ERASED_CHIP_BID)
+        eraseflashinfo = set_bid and not bid_is_erased
+
+        if (eraseflashinfo and not
+            self._saved_cr50_state(self.ERASEFLASHINFO_IMAGE)):
+            raise error.TestFail('Did not save eraseflashinfo image')
+
         if eraseflashinfo:
             self.run_update_to_eraseflashinfo()
 
         self._retry_cr50_update(self._dbg_image_path, 3, False)
 
+        chip_bid = original_bid[0]
+        chip_flags = original_bid[2]
         if set_bid:
             self.cr50.set_board_id(chip_bid, chip_flags)
 
