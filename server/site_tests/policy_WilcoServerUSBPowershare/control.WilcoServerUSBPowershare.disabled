@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 
 AUTHOR = "rzakarian"
-NAME = "policy_WilcoUSBPowershare.enabled"
+NAME = "policy_WilcoServerUSBPowershare.disabled"
 CRITERIA = "This test will fail if servo does not work as expected."
 TIME = "LONG"
 TEST_CATEGORY = "General"
@@ -23,13 +23,13 @@ should not be provided.
 """
 
 client_test = 'policy_WilcoUSBPowershare'
-case = True
+case = False
 args_dict = utils.args_to_dict(args)
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
-    job.run_test('policy_WilcoUSBPowershare', host=host,
+    job.run_test('policy_WilcoServerUSBPowershare', host=host,
                  client_test=client_test, case=case)
 
 parallel_simple(run, machines)

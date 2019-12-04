@@ -9,7 +9,7 @@ from autotest_lib.server import autotest
 from autotest_lib.server import test
 
 
-class policy_WilcoUSBPowershare(test.test):
+class policy_WilcoServerUSBPowershare(test.test):
     """Test that verifies DeviceUsbPowerShareEnabled policy.
 
     If the policy is enabled or not set, USB provides power when device is off.
