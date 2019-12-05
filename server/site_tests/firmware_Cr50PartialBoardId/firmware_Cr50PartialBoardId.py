@@ -18,7 +18,7 @@ class firmware_Cr50PartialBoardId(Cr50Test):
     version = 1
 
     # Brand used for testing. It doesn't matter what this is.
-    TEST_BRAND = 'ZZAF'
+    DEFAULT_BRAND = 'ZZAF'
 
     WHITELABEL_FLAGS = 0x3f80
     OTHER_FLAGS = 0x7f7f
@@ -40,7 +40,9 @@ class firmware_Cr50PartialBoardId(Cr50Test):
         running_ver = self.get_saved_cr50_original_version()
         logging.info('Cr50 Version: %s', running_ver)
         bid = running_ver[2]
-        logging.info('Test Brand: %r', self.TEST_BRAND)
+        brand = self.get_device_brand()
+        self.test_brand = brand if brand else self.DEFAULT_BRAND
+        logging.info('Test Brand: %r', self.test_brand)
         self.image_flags = int(bid.rsplit(':', 1)[-1], 16) if bid else 0
         # The image may have non-zero flags. Use test flags as close to the
         # whitelabel flags as possible, but make sure they can be used with
@@ -118,15 +120,15 @@ class firmware_Cr50PartialBoardId(Cr50Test):
         """Verify partial board id"""
         self.eraseflashinfo()
         # Basic check. Setting board id fails if it's already been fully set.
-        bid = (self.TEST_BRAND, None, self.test_flags)
+        bid = (self.test_brand, None, self.test_flags)
         self.set_board_id_check_response(bid, bid, self.SUCCESS)
         self.set_board_id_check_response(bid, bid, self.ERR_ALREADY_SET)
 
         self.eraseflashinfo()
         # No special behavior for flags that are 0xffffffff. The flags cannot
         # be changed if the board id is set even if the flags are 0xffffffff.
-        original_bid = (self.TEST_BRAND, None, cr50_utils.ERASED_BID_INT)
-        second_bid = (self.TEST_BRAND, None, self.test_flags)
+        original_bid = (self.test_brand, None, cr50_utils.ERASED_BID_INT)
+        second_bid = (self.test_brand, None, self.test_flags)
         self.set_board_id_check_response(original_bid, original_bid,
                                          self.SUCCESS)
         self.set_board_id_check_response(second_bid, original_bid,
@@ -139,8 +141,8 @@ class firmware_Cr50PartialBoardId(Cr50Test):
                               cr50_utils.ERASED_BID_STR, self.test_flags)
         self.set_board_id_check_response(partial_bid, stored_partial_bid,
                                          self.SUCCESS)
-        set_brand = (self.TEST_BRAND, None, self.other_flags)
-        updated_brand_bid = (self.TEST_BRAND, None, self.test_flags)
+        set_brand = (self.test_brand, None, self.other_flags)
+        updated_brand_bid = (self.test_brand, None, self.test_flags)
         self.set_board_id_check_response(set_brand, updated_brand_bid,
                                          self.SUCCESS)
 
@@ -148,7 +150,7 @@ class firmware_Cr50PartialBoardId(Cr50Test):
         # type to 0xffffffff and type_inv to 0. This isn't considered a partial
         # board id. Setting the board id a second time will fail.
         bid = (cr50_utils.ERASED_BID_STR, '00000000', self.test_flags)
-        new_bid = (self.TEST_BRAND, None, self.other_flags)
+        new_bid = (self.test_brand, None, self.other_flags)
         self.set_bid_with_dbg_image(bid)
         self.set_board_id_check_response(new_bid, bid, self.ERR_ALREADY_SET)
         if not self.image_flags:
@@ -161,5 +163,5 @@ class firmware_Cr50PartialBoardId(Cr50Test):
         self.set_board_id_check_response(bid, cr50_utils.ERASED_CHIP_BID,
                                          self.ERR_BID_MISMATCH)
         # Previous board id was rejected. The board id can still be set.
-        basic_bid = (self.TEST_BRAND, None, self.image_flags)
+        basic_bid = (self.test_brand, None, self.image_flags)
         self.set_board_id_check_response(basic_bid, basic_bid, self.SUCCESS)
