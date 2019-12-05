@@ -127,6 +127,7 @@ suite:faft_ec_au_2
 suite:faft_ec_au_3
 suite:faft_ec_tot
 suite:faft_ec_wp
+suite:faft_experimental
 suite:faft_framework
 suite:faft_lab
 suite:faft_lv1
