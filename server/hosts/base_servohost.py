@@ -12,6 +12,7 @@
 import httplib
 import logging
 import socket
+import traceback
 import xmlrpclib
 
 from autotest_lib.client.bin import utils
@@ -75,6 +76,7 @@ class BaseServoHost(ssh_host.SSHHost):
             self._sudo_required = False
 
         self._is_labstation = None
+        self._dut_host_info = None
 
 
     def get_board(self):
@@ -85,6 +87,11 @@ class BaseServoHost(ssh_host.SSHHost):
         """
         output = self.run('cat /etc/lsb-release', ignore_status=True).stdout
         return lsbrelease_utils.get_current_board(lsb_release_content=output)
+
+
+    def set_dut_host_info(self, hi):
+        logging.info('setting dut_host_info field to (%s)' % hi)
+        self._dut_host_info = hi
 
 
     def is_labstation(self):
@@ -189,7 +196,19 @@ class BaseServoHost(ssh_host.SSHHost):
                          self.hostname)
             return
 
-        target_build = afe_utils.get_stable_cros_image_name(self.get_board())
+
+        # NOTE: we can't just use getattr because servo_cros_stable_version is a property
+        servo_version_from_hi = None
+        logging.debug("BaseServoHost::update_image attempted to get servo cros stable version")
+        try:
+            servo_version_from_hi = self._dut_host_info.servo_cros_stable_version()
+        except Exception:
+            logging.error("BaseServoHost::update_image failed to get servo cros stable version (%s)", traceback.format_exc())
+
+        target_build = afe_utils.get_stable_servo_cros_image_name_v2(
+            servo_version_from_hi=servo_version_from_hi,
+            board=self.get_board(),
+        )
         target_build_number = server_utils.ParseBuildName(
             target_build)[3]
         current_build_number = self._get_release_version()

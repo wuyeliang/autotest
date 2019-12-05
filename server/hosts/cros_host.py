@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import time
+import traceback
 
 import common
 from autotest_lib.client.bin import utils
@@ -304,6 +305,13 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 dut=self, servo_args=servo_args,
                 try_lab_servo=try_lab_servo,
                 try_servo_repair=try_servo_repair))
+        # TODO(gregorynisbet): Clean all of this up.
+        logging.debug("CrosHost::_initialize: attempt to set host info store on servo host")
+        try:
+            self._servo_host.set_dut_host_info(self.host_info_store.get())
+            logging.debug("CrosHost::_initialize: successfully set host info store on servo host")
+        except Exception:
+            logging.error("CrosHost::_initialize: %s", traceback.format_exc())
         self._default_power_method = None
 
         # TODO(waihong): Do the simplication on Chameleon too.
