@@ -441,7 +441,8 @@ def json_deserialize(file_obj):
 
     try:
         return HostInfo(deserialized_json['labels'],
-                        deserialized_json['attributes'])
+                        deserialized_json['attributes'],
+                        deserialized_json.get('stable_versions', {}))
     except KeyError as e:
         raise DeserializationError('Malformed serialized host_info: %r' % e)
 
