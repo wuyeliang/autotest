@@ -903,6 +903,12 @@ class FirmwareTest(FAFTBase):
             if uart_file:
                 self.servo.set('%s_uart_capture' % uart, 'off')
 
+    def _get_power_state(self, power_state):
+        """
+        Return the current power state of the AP
+        """
+        return self.ec.send_command_get_output("powerinfo", [power_state])
+
     def wait_power_state(self, power_state, retries):
         """
         Wait for certain power state.
@@ -911,18 +917,17 @@ class FirmwareTest(FAFTBase):
         @param retries: retries.  This is necessary if AP is powering down
         and transitioning through different states.
         """
-        def _state_matches():
-            (line, state_num, state_name) = self.ec.send_command_get_output(
-                    "powerinfo", [r'power state (\w+) = (\w+)'])[0]
-            logging.debug("%s", line)
-            return state_name == power_state
-
-        timeout = retries * 3  # old get() logic waited 3 seconds per try
-        logging.info('Waiting for power state "%s" maximum %d seconds.',
-                     power_state, timeout)
-        return utils.poll_for_condition_ex(
-                condition=_state_matches, timeout=timeout, sleep_interval=1.5,
-                desc='power state "%s"' % power_state)
+        logging.info('Checking power state "%s" maximum %d times.',
+                     power_state, retries)
+        while retries > 0:
+            logging.info("try count: %d", retries)
+            try:
+                retries = retries - 1
+                ret = self._get_power_state(power_state)
+                return True
+            except error.TestFail:
+                pass
+        return False
 
     def suspend(self):
         """Suspends the DUT."""
