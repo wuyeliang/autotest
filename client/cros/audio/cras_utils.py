@@ -321,7 +321,8 @@ CRAS_OUTPUT_NODE_TYPES = ['HEADPHONE', 'INTERNAL_SPEAKER', 'HDMI', 'USB',
                           'BLUETOOTH', 'LINEOUT', 'UNKNOWN']
 CRAS_INPUT_NODE_TYPES = ['MIC', 'INTERNAL_MIC', 'USB', 'BLUETOOTH',
                          'POST_DSP_LOOPBACK', 'POST_MIX_LOOPBACK', 'UNKNOWN',
-                         'KEYBOARD_MIC', 'HOTWORD', 'FRONT_MIC', 'REAR_MIC']
+                         'KEYBOARD_MIC', 'HOTWORD', 'FRONT_MIC', 'REAR_MIC',
+                         'ECHO_REFERENCE']
 CRAS_NODE_TYPES = CRAS_OUTPUT_NODE_TYPES + CRAS_INPUT_NODE_TYPES
 
 
@@ -343,8 +344,8 @@ def get_filtered_node_types(callback):
         if callback(node):
             node_type = str(node['Type'])
             if node_type not in CRAS_NODE_TYPES:
-                raise RuntimeError(
-                        'node type %s is not valid' % node_type)
+                logging.warning('node type %s is not in known CRAS_NODE_TYPES',
+                                node_type)
             if node['IsInput']:
                 input_node_types.append(node_type)
             else:
