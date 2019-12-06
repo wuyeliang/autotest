@@ -367,7 +367,7 @@ class base_test(object):
             else:
                 self.before_run_once()
                 logging.debug('starting test(run_once()), test details follow'
-                              '\n%r', args)
+                              '\nargs: %r\nkwargs: %r', args, dargs)
                 self.run_once(*args, **dargs)
                 logging.debug('The test has completed successfully')
                 self.after_run_once()
