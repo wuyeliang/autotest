@@ -273,6 +273,10 @@ class Cr50Test(FirmwareTest):
             raise error.TestError('No record of eraseflashinfo image')
         return self._eraseflashinfo_image_path
 
+    def get_device_brand(self):
+        """Returns the 4 character device brand."""
+        return self._original_image_state['cros_config / brand-code']
+
 
     def _retry_cr50_update(self, image, retries, rollback):
         """Try to update to the given image retries amount of times.
