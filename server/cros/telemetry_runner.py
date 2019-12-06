@@ -69,7 +69,7 @@ class TelemetryRunner(object):
     output to the caller.
     """
 
-    def __init__(self, host, local=False, telemetry_on_dut=True):
+    def __init__(self, host, local=False, telemetry_on_dut=False):
         """Initializes this telemetry runner instance.
 
         If telemetry is not installed for this build, it will be.
@@ -539,8 +539,8 @@ class TelemetryRunner(object):
                         diagnostics['benchmarkDescriptions']][0]
             if benchmark_name != local_benchmark_name:
                 logging.warning('There are more than 1 benchmark names in the'
-                                'result. old: %s, new: %s' %
-                                (benchmark_name, local_benchmark_name))
+                                'result. old: %s, new: %s',
+                                benchmark_name, local_benchmark_name)
                 continue
 
             unit = obj['unit']
