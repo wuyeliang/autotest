@@ -231,7 +231,7 @@ class Cr50Test(FirmwareTest):
     def _save_original_state(self):
         """Save the cr50 related state.
 
-        Save the device's current cr50 version, cr50 board id, rlz, and image
+        Save the device's current cr50 version, cr50 board id, and image
         at /opt/google/cr50/firmware/cr50.bin.prod. These will be used to
         restore the state during cleanup.
         """
@@ -400,8 +400,8 @@ class Cr50Test(FirmwareTest):
     def get_image_and_bid_state(self):
         """Get a dict with the current device cr50 information.
 
-        The state dict will include the platform brand, rlz code, chip board id,
-        the running cr50 image version, the running cr50 image board id, and the
+        The state dict will include the platform brand, chip board id, the
+        running cr50 image version, the running cr50 image board id, and the
         device cr50 image version.
         """
         state = {}
@@ -409,7 +409,6 @@ class Cr50Test(FirmwareTest):
                 'cros_config / brand-code', ignore_status=True).stdout.strip()
         state['prod_version'] = self._get_image_information('prod')
         state['prepvt_version'] = self._get_image_information('prepvt')
-        state['rlz'] = cr50_utils.GetRLZ(self.host)
         state['chip_bid'] = cr50_utils.GetChipBoardId(self.host)
         state['chip_bid_str'] = '%08x:%08x:%08x' % state['chip_bid']
         state['running_image_ver'] = cr50_utils.GetRunningVersion(self.host)
@@ -548,9 +547,6 @@ class Cr50Test(FirmwareTest):
         # Copy the original .prod and .prepvt images back onto the DUT.
         if self._cleanup_required(new_mismatch, self.DEVICE_IMAGES):
             self._restore_device_files()
-
-        if 'rlz' in new_mismatch:
-            cr50_utils.SetRLZ(self.host, self._original_image_state['rlz'])
 
         mismatch_last = self._check_original_image_state()
         if mismatch_last:

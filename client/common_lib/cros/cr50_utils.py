@@ -202,47 +202,6 @@ def GetSavedVersion(client):
     return FindVersion(result, '--fwver')
 
 
-def GetRLZ(client):
-    """Get the RLZ brand code from vpd.
-
-    Args:
-        client: the object to run commands on
-
-    Returns:
-        The current RLZ code or '' if the space doesn't exist
-    """
-    result = client.run('vpd -g rlz_brand_code', ignore_status=True)
-    if (result.exit_status and (result.exit_status != 3 or
-        "Vpd data 'rlz_brand_code' was not found." not in result.stderr)):
-        raise error.TestFail(result)
-    return result.stdout.strip()
-
-
-def SetRLZ(client, rlz):
-    """Set the RLZ brand code in vpd
-
-    Args:
-        client: the object to run commands on
-        rlz: 4 character string.
-
-    Raises:
-        TestError if the RLZ code is too long or if setting the code failed.
-    """
-    rlz = rlz.strip()
-    if len(rlz) > SYMBOLIC_BID_LENGTH:
-        raise error.TestError('RLZ is too long. Use a max of 4 characters')
-
-    if rlz == GetRLZ(client):
-        return
-    elif rlz:
-          client.run('vpd -s rlz_brand_code=%s' % rlz)
-    else:
-          client.run('vpd -d rlz_brand_code')
-
-    if rlz != GetRLZ(client):
-        raise error.TestError('Could not set RLZ code')
-
-
 def StopTrunksd(client):
     """Stop trunksd on the client"""
     if 'running' in client.run('status trunksd').stdout:

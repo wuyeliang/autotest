@@ -93,7 +93,7 @@ class firmware_Cr50BID(Cr50Test):
     ]
 
     def initialize(self, host, cmdline_args, basic=False, full_args={}):
-        # Restore the original image, rlz code, and board id during cleanup.
+        # Restore the original image and board id during cleanup.
         super(firmware_Cr50BID, self).initialize(host, cmdline_args, full_args,
                                                  restore_cr50_image=True,
                                                  restore_cr50_board_id=True)
@@ -107,9 +107,6 @@ class firmware_Cr50BID(Cr50Test):
 
         self.save_board_id_locked_image()
         self.save_universal_image()
-
-        # Clear the RLZ so ChromeOS doesn't set the board id during the updates.
-        cr50_utils.SetRLZ(self.host, '')
 
         # Add tests to the test list based on the running board id infomation
         self.build_tests(basic)
