@@ -500,6 +500,12 @@ def run_autoserv(pid_file_manager, results, parser, ssp_url, use_ssp):
         parser.parser.error('-G %r may only be supplied with more than one '
                             'machine.' % group_name)
 
+    logging.debug("Parser.args is %r", parser.args)
+    try:
+      logging.debug("Parser.options.args is %r", parser.options.args)
+    except AttributeError:
+      logging.debug("No Parser.options.args.")
+
     job_kwargs = {
             'control': control,
             'args': parser.args[1:],
