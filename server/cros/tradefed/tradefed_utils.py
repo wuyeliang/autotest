@@ -14,7 +14,6 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.server import utils
 from autotest_lib.server.cros import lockfile
 
-
 @contextlib.contextmanager
 def lock(filename):
     """Prevents other autotest/tradefed instances from accessing cache.
