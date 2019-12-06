@@ -41,13 +41,15 @@ class policy_DownloadDirectory(
                         real_gaia=True)
 
         self.GDRIVE_DIR = self._get_Gdrive_path()
+        self._wait_for_mount_ready()
         self._clear_test_locations()
         self._the_test(case)
         self._clear_test_locations()
 
     def _get_Gdrive_path(self):
         """Returns the path for the Google Drive Mountpoint."""
-        return '{}/root/download'.format(self._get_mount(False))
+        self.GDRIVE_BASE = self._get_mount(False)
+        return '{}/root/download'.format(self.GDRIVE_BASE)
 
     def _download_test_file(self):
         """Loads to the test URL which automatically downloads the test file."""
@@ -56,6 +58,7 @@ class policy_DownloadDirectory(
         # This page empty with just a test download, so it will timeout.
         except exceptions.TimeoutException:
             pass
+
 
     def _the_test(self, case):
         """
@@ -87,6 +90,22 @@ class policy_DownloadDirectory(
             # If there is no file present this will return -1. Thats OK!
             except error.CmdError:
                 pass
+
+    def _wait_for_mount_ready(self):
+        """Wait for the mount to be ready."""
+        def _mount_ready():
+            try:
+                utils.system_output('ls {}/root/'.format(self.GDRIVE_BASE))
+                return True
+            except error.CmdError:
+                return False
+
+        utils.poll_for_condition(
+            lambda: (_mount_ready()),
+            exception=error.TestFail('derek mounts not ready ever'),
+            timeout=15,
+            sleep_interval=1,
+            desc='Polling for mounts to be ready.')
 
     def _get_mount(self, case):
         """Get the Google Drive mount path."""
