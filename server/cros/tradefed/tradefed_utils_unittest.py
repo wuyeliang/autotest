@@ -132,5 +132,13 @@ class TradefedTestTest(unittest.TestCase):
             waivers=waivers)
         self.assertFalse(accurate)
 
+        path = tradefed_utils.get_test_result_xml_path(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'tradefed_utils_unittest_data', 'results'))
+        self.assertEqual(path, os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'tradefed_utils_unittest_data', 'results', '2019.11.07_10.14.55',
+            'test_result.xml'))
+
 if __name__ == '__main__':
     unittest.main()
