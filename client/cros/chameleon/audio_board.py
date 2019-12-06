@@ -63,7 +63,6 @@ class AudioBoard(object):
                         'check the jack plugger if all labels are correctly '
                         'configured.')
                 self._jack_plugger = None
-                raise e
         return self._jack_plugger
 
     def get_bluetooth_controller(self):
