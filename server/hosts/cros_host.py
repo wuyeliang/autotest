@@ -306,10 +306,16 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 try_lab_servo=try_lab_servo,
                 try_servo_repair=try_servo_repair))
         # TODO(gregorynisbet): Clean all of this up.
-        logging.debug("CrosHost::_initialize: attempt to set host info store on servo host")
+        logging.debug('CrosHost::_initialize: attempt to set info store on '
+                      'servo host')
         try:
-            self._servo_host.set_dut_host_info(self.host_info_store.get())
-            logging.debug("CrosHost::_initialize: successfully set host info store on servo host")
+            if self._servo_host is None:
+                logging.debug('CrosHost::_initialize: self._servo_host is '
+                              'None, skipping')
+            else:
+                self._servo_host.set_dut_host_info(self.host_info_store.get())
+                logging.debug('CrosHost::_initialize: successfully set info '
+                              'store')
         except Exception:
             logging.error("CrosHost::_initialize: %s", traceback.format_exc())
         self._default_power_method = None
