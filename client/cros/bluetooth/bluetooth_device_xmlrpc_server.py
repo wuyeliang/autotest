@@ -190,6 +190,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         self._adv_mainloop = gobject.MainLoop()
 
 
+    @xmlrpc_server.dbus_safe(False)
     def set_debug_log_levels(self, dispatcher_vb, newblue_vb, bluez_vb,
                              kernel_vb):
         """Enable or disable the debug logs of bluetooth
