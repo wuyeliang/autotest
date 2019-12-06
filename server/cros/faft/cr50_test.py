@@ -337,7 +337,7 @@ class Cr50Test(FirmwareTest):
         set_bid = bid_mismatch and original_bid != cr50_utils.ERASED_CHIP_BID
         bid_is_erased = (cr50_utils.GetChipBoardId(self.host) ==
                          cr50_utils.ERASED_CHIP_BID)
-        eraseflashinfo = set_bid and not bid_is_erased
+        eraseflashinfo = bid_mismatch and not bid_is_erased
 
         if (eraseflashinfo and not
             self._saved_cr50_state(self.ERASEFLASHINFO_IMAGE)):
