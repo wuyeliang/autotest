@@ -22,6 +22,7 @@ class FioTest(test.test):
 
     # Initialize fail counter used to determine test pass/fail.
     _fail_count = 0
+    _error_code = 0
 
     # 0x1277 is ioctl BLKDISCARD command
     IOCTL_TRIM_CMD = 0x1277
@@ -208,7 +209,12 @@ class FioTest(test.test):
         self.write_perf_keyval(results)
         for k, v in results.iteritems():
             if k.endswith('_error'):
-                self._fail_count += int(v)
+                self._error_code = int(v)
+                if self._fail_count == 0:
+                    self._fail_count = 1
+            elif k.endswith('_total_err'):
+                self._fail_count = int(v)
         if self._fail_count > 0:
-            raise error.TestFail('%s failed verifications' %
-                                 str(self._fail_count))
+            raise error.TestFail('%s failed verifications, '
+                                 'first error code is %s' %
+                                 (str(self._fail_count), str(self._error_code)))
