@@ -272,6 +272,7 @@ class LabelRetriever(object):
         new_info = host_info.HostInfo(
                 labels=new_labels,
                 attributes=old_info.attributes,
+                stable_versions=old_info.stable_versions,
         )
         if old_info != new_info:
             self._commit_info(host, new_info, keep_pool)
