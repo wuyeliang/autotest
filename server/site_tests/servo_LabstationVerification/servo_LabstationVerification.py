@@ -238,7 +238,7 @@ class servo_LabstationVerification(test.test):
         # Make sure recovery is quick in case of failure.
         self.job.fast = True
         # First, stop all servod instances running on the labstation to test.
-        host.run('sudo stop servod PORT=9999')
+        host.run('sudo stop servod PORT=9999', ignore_status=True)
         # Wait for existing servod turned down.
         time.sleep(3)
         # Then, restart servod ourselves.
@@ -259,7 +259,7 @@ class servo_LabstationVerification(test.test):
         """Run through the test sequence.
 
         This test currently runs through:
-        - ServoLabControlVerification where |host| is treated as a DUT.
+        -// ServoLabControlVerification where |host| is treated as a DUT.
         Subsequently, all tests use |host| as a servo host to a generated
         DUT host that's hanging on the servo device.
         - platform_ServoPowerStateController without usb
