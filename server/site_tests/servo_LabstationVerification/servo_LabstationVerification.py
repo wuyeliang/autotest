@@ -250,6 +250,7 @@ class servo_LabstationVerification(test.test):
                           stdout_err_regexp='No servod scratch entry found.')
         except error.AutoservRunError:
             raise error.TestFail('Servod did not come up on labstation.')
+        self.dut_ip = None
         if config and 'dut_ip' in config:
             # Retrieve DUT ip from args if caller specified it.
             self.dut_ip = config['dut_ip']
