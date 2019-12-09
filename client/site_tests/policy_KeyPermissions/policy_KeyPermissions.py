@@ -89,7 +89,7 @@ class policy_KeyPermissions(
 
         utils.poll_for_condition(
             lambda: 'OK' in self.field_value(error_id),
-            timeout=10,
+            timeout=45,
             exception=error.TestFail(
                 'API error: %s' % self.field_value(error_id)))
 
