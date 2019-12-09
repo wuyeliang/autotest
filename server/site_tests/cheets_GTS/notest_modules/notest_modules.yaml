@@ -1,7 +1,7 @@
 GtsAccountsHostTestCases: [all]
 GtsAngleHostTestCases: [all]
 GtsArtManagerHostTestCases: [N]
-GtsAssistantHostTestCases: [N, fizz, veyron_fievel]
+GtsAssistantHostTestCases: [all]
 GtsContentTestCases: [N]
 GtsDeviceConfigTestCases: [all]
 GtsDexModuleRegistrationTestCases: [all]
