@@ -114,7 +114,7 @@ class tast(test.test):
 
     def initialize(self, host, test_exprs, ignore_test_failures=False,
                    max_run_sec=3600, command_args=[], install_root='/',
-                   run_private_tests=True):
+                   run_private_tests=True, varsfiles=None):
         """
         @param host: remote.RemoteHost instance representing DUT.
         @param test_exprs: Array of strings describing tests to run.
@@ -130,6 +130,8 @@ class tast(test.test):
         @param install_root: Root directory under which Tast binaries are
             installed. Alternate values may be passed by unit tests.
         @param run_private_tests: Download and run private tests.
+        @param varsfiles: list of names of yaml files containing variables set
+            in |-varsfile| arguments.
 
         @raises error.TestFail if the Tast installation couldn't be found.
         """
@@ -141,6 +143,7 @@ class tast(test.test):
         self._install_root = install_root
         self._run_private_tests = run_private_tests
         self._fake_now = None
+        self._varsfiles = varsfiles
 
         # List of JSON objects describing tests that will be run. See Test in
         # src/platform/tast/src/chromiumos/tast/testing/test.go for details.
@@ -359,6 +362,10 @@ class tast(test.test):
             '-timeout=' + str(self._max_run_sec),
             '-continueafterfailure=true',
         ] + self._devserver_args + self._get_servo_args()
+
+        if self._varsfiles:
+            for varsfile in self._varsfiles:
+                args.append('-varsfile=%s' % varsfile)
 
         if self._run_private_tests:
             args.append('-downloadprivatebundles=true')

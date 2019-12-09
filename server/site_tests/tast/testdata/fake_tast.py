@@ -111,6 +111,7 @@ def parse_args():
                             default=False, nargs='?')
     run_parser.add_argument('-var', action='append', default=[])
     run_parser.add_argument('-defaultvarsdir')
+    run_parser.add_argument('-varsfile', action='append', default=[])
 
     return parser.parse_args()
 
