@@ -455,16 +455,16 @@ class ServoTypeVerifier(hosts.Verifier):
             return
 
         info = host.host_info_store.get()
-        if 'servo_type' not in info.attributes:
-            logging.info('Host is missing servo_type attribute, updating...')
-            try:
-                servo_type = host.servo.get_servo_version()
+        try:
+            servo_type = host.servo.get_servo_version()
+            if servo_type != info.attributes.get('servo_type', ''):
+                logging.info('servo_type mismatch detected, updating...')
                 info.attributes['servo_type'] = servo_type
                 host.host_info_store.commit(info)
-            except Exception as e:
-                # We don't want fail the verifier and break DUTs here just
-                # because of servo issue.
-                logging.error("Failed to update servo_type, %s", str(e))
+        except Exception as e:
+            # We don't want fail the verifier and break DUTs here just
+            # because of servo issue.
+            logging.error("Failed to update servo_type, %s", str(e))
 
     @property
     def description(self):
