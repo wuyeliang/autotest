@@ -5,6 +5,7 @@
 # arc_util.py is supposed to be called from chrome.py for ARC specific logic.
 # It should not import arc.py since it will create a import loop.
 
+import collections
 import logging
 import os
 import select
@@ -33,19 +34,15 @@ _OPT_IN_FINISH = 'ARC opt-in flow complete.'
 _SIGN_IN_TIMEOUT = 120
 _SIGN_IN_CHECK_INTERVAL = 1
 
-class ArcSessionState:
-    """Describes ARC session state.
 
-    provisioned is set to True once ARC is provisioned.
-    tos_needed is set to True in case ARC Terms of Service need to be shown.
-              This depends on ARC Terms of Service acceptance and policy for
-              ARC preferences, such as backup and restore and use of location
-              services.
-    """
-
-    def __init__(self):
-        self.provisioned = False
-        self.tos_needed = False
+# Describes ARC session state.
+# - provisioned is set to True once ARC is provisioned.
+# - tos_needed is set to True in case ARC Terms of Service need to be shown.
+#              This depends on ARC Terms of Service acceptance and policy for
+#              ARC preferences, such as backup and restore and use of location
+#              services.
+ArcSessionState = collections.namedtuple(
+    'ArcSessionState', ['provisioned', 'tos_needed'])
 
 
 def get_arc_session_state(autotest_ext):
@@ -59,20 +56,20 @@ def get_arc_session_state(autotest_ext):
     @return ArcSessionState that describes the state of current ARC session.
 
     """
-
-    try:
-        autotest_ext.ExecuteJavaScript('''
-            chrome.autotestPrivate.getArcState(function(state) {
-              window.__arc_provisioned = state.provisioned;
-              window.__arc_tosNeeded = state.tosNeeded;
+    get_arc_state = '''
+        new Promise((resolve, reject) => {
+            chrome.autotestPrivate.getArcState((state) => {
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                    return;
+                }
+                resolve(state);
             });
-        ''')
-        state = ArcSessionState()
-        state.provisioned = \
-                autotest_ext.EvaluateJavaScript('window.__arc_provisioned')
-        state.tos_needed = \
-                autotest_ext.EvaluateJavaScript('window.__arc_tosNeeded')
-        return state
+        })
+    '''
+    try:
+        state = autotest_ext.EvaluateJavaScript(get_arc_state, promise=True)
+        return ArcSessionState(state['provisioned'], state['tosNeeded'])
     except exceptions.EvaluateException as e:
         raise error.TestFail('Could not get ARC session state "%s".' % e)
 
@@ -232,19 +229,25 @@ def enable_play_store(autotest_ext, enabled, enable_managed_policy=True):
 
     # Skip enabling for managed users, since value is policy enforced.
     # Return early if a managed user has ArcEnabled set to false.
+    get_play_store_state = '''
+            new Promise((resolve, reject) => {
+                chrome.autotestPrivate.getPlayStoreState((state) => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                        return;
+                    }
+                    resolve(state);
+                });
+            })
+    '''
     try:
-        autotest_ext.ExecuteJavaScript('''
-            chrome.autotestPrivate.getPlayStoreState(function(state) {
-              window.__play_store_state = state;
-            });
-        ''')
-        # Results must be available by the next invocation.
-        if autotest_ext.EvaluateJavaScript('window.__play_store_state.managed'):
+        state = autotest_ext.EvaluateJavaScript(get_play_store_state,
+                                                promise=True)
+        if state['managed']:
             # Handle managed case.
             logging.info('Determined that ARC is managed by user policy.')
             if enable_managed_policy:
-                if enabled == autotest_ext.EvaluateJavaScript(
-                        'window.__play_store_state.enabled'):
+                if enabled == state['enabled']:
                     return True
                 logging.info('Returning early since ARC is policy-enforced.')
                 return False
