@@ -110,6 +110,7 @@ def parse_args():
     run_parser.add_argument('-continueafterfailure', type=to_bool,
                             default=False, nargs='?')
     run_parser.add_argument('-var', action='append', default=[])
+    run_parser.add_argument('-defaultvarsdir')
 
     return parser.parse_args()
 
