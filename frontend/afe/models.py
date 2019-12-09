@@ -1,9 +1,11 @@
 # pylint: disable=missing-docstring
 
 import contextlib
-import logging
 from datetime import datetime
 from datetime import timedelta
+import logging
+import os
+
 import django.core
 try:
     from django.db import models as dbmodels, connection
@@ -2298,7 +2300,13 @@ class StableVersion(dbmodels.Model, model_logic.ModelExtensions):
         db_table = 'afe_stable_versions'
 
     def save(self, *args, **kwargs):
-        raise RuntimeError("the ability to save StableVersions has been intentionally removed")
+        if os.getenv("OVERRIDE_STABLE_VERSION_BAN"):
+            super(StableVersion, self).save(*args, **kwargs)
+        else:
+            raise RuntimeError("the ability to save StableVersions has been intentionally removed")
 
     def delete(self):
-        raise RuntimeError("the ability to delete StableVersions has been intentionally removed")
+        if os.getenv("OVERRIDE_STABLE_VERSION_BAN"):
+            super(StableVersion, self).delete(*args, **kwargs)
+        else:
+            raise RuntimeError("the ability to delete StableVersions has been intentionally removed")
