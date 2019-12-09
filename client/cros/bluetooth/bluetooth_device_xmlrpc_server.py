@@ -201,8 +201,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         @param kernel_vb: verbosity of kernel debug log, either 0 or 1
 
         """
+
+        # TODO(b/145163508, b/145749798): update when debug logs is migrated to
+        #                                 bluez.
         debug_object = self._system_bus.get_object(
-                                                self._bluetooth_service_name,
+                                                self.BLUETOOTH_SERVICE_NAME,
                                                 self.BLUEZ_DEBUG_LOG_PATH)
         debug_object.SetLevels(dbus.Byte(dispatcher_vb),
                                dbus.Byte(newblue_vb),
