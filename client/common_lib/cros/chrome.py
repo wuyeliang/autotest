@@ -329,6 +329,22 @@ class Chrome(object):
             lambda: ext.EvaluateJavaScript('window.__login_status'),
             timeout=10)
 
+    def disable_dim_display(self):
+        """Avoid dim display.
+
+        @returns True if success otherwise False.
+        """
+        ext = self.autotest_ext
+        if not ext:
+            return False
+        try:
+            ext.ExecuteJavaScript(
+                    '''chrome.power.requestKeepAwake("display")''')
+        except:
+            logging.error("failed to disable dim display")
+            return False
+        return True
+
     def get_visible_notifications(self):
         """Returns an array of visible notifications of Chrome.
 
