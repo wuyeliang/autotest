@@ -304,20 +304,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             servo_host.create_servo_host(
                 dut=self, servo_args=servo_args,
                 try_lab_servo=try_lab_servo,
-                try_servo_repair=try_servo_repair))
-        # TODO(gregorynisbet): Clean all of this up.
-        logging.debug('CrosHost::_initialize: attempt to set info store on '
-                      'servo host')
-        try:
-            if self._servo_host is None:
-                logging.debug('CrosHost::_initialize: self._servo_host is '
-                              'None, skipping')
-            else:
-                self._servo_host.set_dut_host_info(self.host_info_store.get())
-                logging.debug('CrosHost::_initialize: successfully set info '
-                              'store')
-        except Exception:
-            logging.error("CrosHost::_initialize: %s", traceback.format_exc())
+                try_servo_repair=try_servo_repair,
+                dut_host_info=self.host_info_store.get()))
         self._default_power_method = None
 
         # TODO(waihong): Do the simplication on Chameleon too.
