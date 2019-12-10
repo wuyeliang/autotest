@@ -53,6 +53,9 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
             port=parsed_url.port, progress_to_complete=progress)
 
         if interrupt is not None:
+            if self._is_update_finished_downloading():
+                raise error.TestFail('Update finished before interrupt'
+                                     'started.')
             completed = self._get_update_progress()
             if interrupt is 'reboot':
                 self._host.reboot()
