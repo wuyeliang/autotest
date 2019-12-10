@@ -326,9 +326,9 @@ class UserCrashTest(crash_test.CrashTest):
             expected_user = 'root'
             expected_group = 'crash-access'
         else:
-            permitted_modes = set([0o700])
+            permitted_modes = set([0o2770])
             expected_user = 'chronos'
-            expected_group = 'chronos'
+            expected_group = 'crash-user-access'
 
         if user != expected_user or group != expected_group:
             raise error.TestFail(
