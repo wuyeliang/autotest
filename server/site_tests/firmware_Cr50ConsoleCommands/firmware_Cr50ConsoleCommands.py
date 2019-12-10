@@ -44,7 +44,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
     # the property.
     BOARD_PROPERTIES = [
         ['BOARD_SLAVE_CONFIG_SPI', 'sps', 'i2cs'],
-        ['BOARD_SLAVE_CONFIG_I2C', 'i2cs', 'sps'],
+        ['BOARD_SLAVE_CONFIG_I2C', 'i2cs', 'sps,sps_ds_resume'],
         ['BOARD_USE_PLT_RESET', 'plt_rst', 'sys_rst'],
         ['BOARD_CLOSED_SOURCE_SET1', 'closed_source_set1', 'open_source_set'],
     ]
@@ -160,9 +160,9 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         self.exclude = []
         for prop, include, exclude in self.BOARD_PROPERTIES:
             if self.cr50.uses_board_property(prop):
-                self.include.append(include)
+                self.include.extend(include.split(','))
                 if exclude:
-                    self.exclude.append(exclude)
+                    self.exclude.extend(exclude.split(','))
             else:
                 self.exclude.append(include)
         version = self.cr50.get_version().split('.')
