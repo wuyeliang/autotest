@@ -6,4 +6,5 @@
   <Entry include="CtsAppSecurityHostTestCases android.appsecurity.cts.PermissionsHostTest#testCompatRevoked22" />
   <Entry include="CtsAppSecurityHostTestCases android.appsecurity.cts.PermissionsHostTest#testRevokePropagatedOnUpgradeOldToNewModel" />
   <Entry include="CtsBionicTestCases pthread_leak#detach" />
+  <Entry include="CtsViewTestCases android.view.cts.ViewTest#testTouchMode" />
 </SubPlan>
