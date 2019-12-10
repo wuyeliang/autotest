@@ -106,10 +106,12 @@ class UpdateEngineUtil(object):
                 err_str = self._get_last_error_string()
                 raise error.TestFail('Update status reported error: %s' %
                                      err_str)
-            if self._UPDATE_STATUS_UPDATED_NEED_REBOOT == status[
-                self._CURRENT_OP]:
-                raise error.TestFail('Update status was NEEDS_REBOOT while '
-                                     'trying to get download status.')
+            # When the update has moved to the final stages, update engine
+            # displays progress as 0.0  but for our needs we will return 1.0
+            if status[self._CURRENT_OP] in [
+                self._UPDATE_STATUS_UPDATED_NEED_REBOOT,
+                self._UPDATE_ENGINE_FINALIZING]:
+                return 1.0
             # If we call this right after reboot it may not be downloading yet.
             if self._UPDATE_ENGINE_DOWNLOADING != status[self._CURRENT_OP]:
                 time.sleep(1)
