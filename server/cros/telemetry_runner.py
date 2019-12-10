@@ -69,7 +69,7 @@ class TelemetryRunner(object):
     output to the caller.
     """
 
-    def __init__(self, host, local=False, telemetry_on_dut=False):
+    def __init__(self, host, local=False, telemetry_on_dut=True):
         """Initializes this telemetry runner instance.
 
         If telemetry is not installed for this build, it will be.
@@ -79,16 +79,17 @@ class TelemetryRunner(object):
         local x telemetry_on_dut:
 
         local=True, telemetry_on_dut=False:
-        run_benchmark --browser=cros-chrome --remote=[dut] [test]
+        python2 run_benchmark --browser=cros-chrome --remote=[dut] [test]
 
         local=True, telemetry_on_dut=True:
-        ssh [dut] run_benchmark --browser=system [test]
+        ssh [dut] python2 run_benchmark --browser=system [test]
 
         local=False, telemetry_on_dut=False:
-        ssh [devserver] run_benchmark --browser=cros-chrome --remote=[dut] [test]
+        ssh [devserver] python2 run_benchmark --browser=cros-chrome
+        --remote=[dut] [test]
 
         local=False, telemetry_on_dut=True:
-        ssh [devserver] ssh [dut] run_benchmark --browser=system [test]
+        ssh [devserver] ssh [dut] python2 run_benchmark --browser=system [test]
 
         @param host: Host where the test will be run.
         @param local: If set, no devserver will be used, test will be run
@@ -190,6 +191,7 @@ class TelemetryRunner(object):
             telemetry_cmd.extend([
                 self._host.ssh_command(alive_interval=900,
                                        connection_attempts=4),
+                'python2',
                 script,
                 '--output-format=%s' % output_format,
                 '--output-dir=%s' % DUT_CHROME_ROOT,
@@ -197,6 +199,7 @@ class TelemetryRunner(object):
             ])
         else:
             telemetry_cmd.extend([
+                'python2',
                 script,
                 '--browser=cros-chrome',
                 '--output-format=%s' % output_format,
@@ -438,7 +441,7 @@ class TelemetryRunner(object):
 
         cmd.extend(
             [self._host.ssh_command(alive_interval=900, connection_attempts=4),
-             'python', script])
+             'python2', script])
         cmd.extend(args)
         cmd.append(test)
         cmd = ' '.join(cmd)
@@ -465,7 +468,7 @@ class TelemetryRunner(object):
         perf_path = os.path.join(self._telemetry_path, 'tools', 'perf')
         deps_path = os.path.join(perf_path, 'fetch_benchmark_deps_result.json')
         fetch_path = os.path.join(perf_path, 'fetch_benchmark_deps.py')
-        format_fetch = ('python %s --output-deps=%s %s')
+        format_fetch = ('python2 %s --output-deps=%s %s')
         command_fetch = format_fetch % (fetch_path, deps_path, test_name)
         command_get = 'cat %s' % deps_path
 
