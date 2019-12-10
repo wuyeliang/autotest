@@ -7,6 +7,7 @@ import random
 import urlparse
 
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib import utils
 from autotest_lib.server.cros.update_engine import update_engine_test
 
 class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
@@ -55,6 +56,8 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
             completed = self._get_update_progress()
             if interrupt is 'reboot':
                 self._host.reboot()
+                utils.poll_for_condition(self._get_update_engine_status,
+                                         desc='update engine to start')
                 self._check_for_update(server=server, port=parsed_url.port)
             elif interrupt is 'network':
                 self._disconnect_then_reconnect_network(update_url)
@@ -74,6 +77,8 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
 
         # Update is complete. Reboot the device.
         self._host.reboot()
+        utils.poll_for_condition(self._get_update_engine_status,
+                                 desc='update engine to start')
         self._check_for_update(server=server, port=parsed_url.port)
 
         # Verify that the update completed successfully by checking hostlog.
