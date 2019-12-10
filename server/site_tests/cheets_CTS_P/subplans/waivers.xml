@@ -1,9 +1,4 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no' ?>
 <SubPlan version="2.0">
-  <Entry include="CtsSkQPTestCases" />
-  <Entry include="CtsGraphicsTestCases android.graphics.cts.ImageDecoderTest#testConserveMemoryPlusHardware" />
-  <Entry include="CtsNetTestCases android.net.cts.MultinetworkApiTest#testNativeDatagramTransmission" />
-  <Entry include="CtsAppSecurityHostTestCases android.appsecurity.cts.PermissionsHostTest#testCompatRevoked22" />
-  <Entry include="CtsAppSecurityHostTestCases android.appsecurity.cts.PermissionsHostTest#testRevokePropagatedOnUpgradeOldToNewModel" />
   <Entry include="CtsBionicTestCases pthread_leak#detach" />
 </SubPlan>
