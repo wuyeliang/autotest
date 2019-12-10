@@ -201,7 +201,7 @@ class BaseServoHost(ssh_host.SSHHost):
         servo_version_from_hi = None
         logging.debug("BaseServoHost::update_image attempted to get servo cros stable version")
         try:
-            servo_version_from_hi = self._dut_host_info.servo_cros_stable_version()
+            servo_version_from_hi = self._dut_host_info.servo_cros_stable_version
         except Exception:
             logging.error("BaseServoHost::update_image failed to get servo cros stable version (%s)", traceback.format_exc())
 
