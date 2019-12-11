@@ -6,7 +6,7 @@
 
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_P.9.0_dev.x86.waivers'
-ATTRIBUTES = 'suite:arc-cts'
+ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-qual, suite:arc-cts-unibuild'
 DEPENDENCIES = 'arc, cts_abi_x86'
 JOB_RETRIES = 1
 TEST_TYPE = 'server'
