@@ -117,7 +117,7 @@ class AudioBus(object):
 
         """
         self.bus_index = bus_index
-        self._chameleond_proxy = chameleon_connection.chameleond_proxy
+        self._chameleond_proxy = chameleon_connection
         self._connected_endpoints = set()
 
     def _get_endpoint_name(self, port_id):
@@ -228,7 +228,7 @@ class AudioJackPlugger(object):
             this audio board.
 
         """
-        self._chameleond_proxy = chameleon_connection.chameleond_proxy
+        self._chameleond_proxy = chameleon_connection
         if not self._chameleond_proxy.AudioBoardHasJackPlugger():
             raise AudioJackPluggerException(
                     'There is no jack plugger on audio board. '
@@ -259,7 +259,7 @@ class BluetoothController(object):
         @param chameleon_connection: A ChameleonConnection object.
 
         """
-        self._chameleond_proxy = chameleon_connection.chameleond_proxy
+        self._chameleond_proxy = chameleon_connection
 
     def reset(self):
         """Resets the bluetooth module."""
