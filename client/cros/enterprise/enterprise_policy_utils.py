@@ -12,8 +12,11 @@ Read instructions in the unittest file on how to run.
 
 """
 import json
+import time
+
 from autotest_lib.client.common_lib import error
 # Default settings for managed user policies
+
 
 def get_all_policies(autotest_ext):
     """Returns a dict of all the policies on the device."""
@@ -41,8 +44,25 @@ def _get_pol_from_api(autotest_ext):
     return policy_data
 
 
-def refresh_policies(autotest_ext):
-    """Force a policy fetch."""
+def _wait_for_new_pols_after_refresh(autotest_ext):
+    """
+    Wait up to 1 second for the polices to update when refreshing.
+
+    Note: This is non-breaking, thus even if the policies do not update, once
+    the timeout expires, the function will exit.
+
+    """
+    prior = _get_pol_from_api(autotest_ext)
+    _call_refresh_policies_from_api(autotest_ext)
+    t1 = time.time()
+    while time.time() - t1 < 1:
+        curr = _get_pol_from_api(autotest_ext)
+        if curr != prior:
+            break
+
+
+def _call_refresh_policies_from_api(autotest_ext):
+    """Call the refreshEnterprisePolicies from autotestPrivate."""
     new_promise = '''new Promise(function(resolve, reject) {
         chrome.autotestPrivate.refreshEnterprisePolicies(function() {
           if (chrome.runtime.lastError) {
@@ -53,6 +73,15 @@ def refresh_policies(autotest_ext):
         })
     })'''
     autotest_ext.EvaluateJavaScript(new_promise, promise=True)
+
+
+def refresh_policies(autotest_ext, wait_for_new=False):
+    """Force a policy fetch."""
+
+    if wait_for_new:
+        _wait_for_new_pols_after_refresh(autotest_ext)
+    else:
+        _call_refresh_policies_from_api(autotest_ext)
 
 
 def _reformat_policies(policy_dict):

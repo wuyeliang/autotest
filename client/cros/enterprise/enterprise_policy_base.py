@@ -320,7 +320,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
 
         """
         self.pol_manager.remove_policy(name, policy_type, extID)
-        self.reload_policies()
+        self.reload_policies(verify_policies)
         if verify_policies:
             self.pol_manager.verify_policies()
 
@@ -423,7 +423,7 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
                                             device=device,
                                             extension=extension,
                                             new=new)
-        self.reload_policies()
+        self.reload_policies(True)
 
     def update_policies(self, user_policies={}, suggested_user_policies={},
                         device_policies={}, extension_policies={}):
@@ -441,9 +441,16 @@ class EnterprisePolicyTest(arc.ArcTest, test.test):
         self.add_policies(user_policies, suggested_user_policies,
                           device_policies, extension_policies, True)
 
-    def reload_policies(self):
-        """Force a policy fetch."""
-        enterprise_policy_utils.refresh_policies(self.cr.autotest_ext)
+    def reload_policies(self, wait_for_new=False):
+        """
+        Force a policy fetch.
+
+        @param wait_for_new: bool, wait up to 1 second for the policy values
+            from the API to update
+
+        """
+        enterprise_policy_utils.refresh_policies(self.cr.autotest_ext,
+                                                 wait_for_new)
 
     def verify_extension_stats(self, extension_policies, sensitive_fields=[]):
         """
