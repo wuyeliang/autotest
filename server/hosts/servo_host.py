@@ -11,6 +11,7 @@
 
 import logging
 import os
+import traceback
 import xmlrpclib
 
 from autotest_lib.client.bin import utils

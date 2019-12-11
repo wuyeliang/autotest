@@ -17,6 +17,7 @@ from autotest_lib.server.cros import autoupdater
 from autotest_lib.server.cros import provision
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.site_utils import stable_version_classify as sv
+from autotest_lib.server import site_utils as server_utils
 
 
 AFE = frontend_wrappers.RetryingAFE(timeout_min=5, delay_sec=10)
@@ -47,10 +48,24 @@ def _host_in_lab(host):
     return host._afe_host
 
 
+def _log_image_name(image_name):
+    try:
+        logging.debug("_log_image_name: image (%s)", image_name)
+        server_utils.ParseBuildName(name=image_name)
+    except Exception:
+        logging.error(traceback.format_exc())
+
+
+def _format_image_name(board, version):
+    return "%s-release/%s" % (board, version)
+
+
 def get_stable_cros_image_name_v2(info, _config_override=None):
     if sv.classify_board(info.board, _config_override=_config_override) == sv.FROM_HOST_CONFIG:
         logging.debug("get_stable_cros_image_name_v2: board %s from host_info_store" % info.board)
-        return info.cros_stable_version
+        out = _format_image_name(board=info.board, version=info.cros_stable_version)
+        _log_image_name(out)
+        return out
     logging.debug("get_stable_cros_image_name_v2: board %s from autotest frontend" % info.board)
     return get_stable_cros_image_name(info.board)
 
@@ -68,7 +83,9 @@ def get_stable_servo_cros_image_name_v2(servo_version_from_hi, board, _config_ov
         return get_stable_cros_image_name(board)
     if servo_version_from_hi is not None:
         logging.debug("get_stable_servo_cros_image_name_v2: servo version (%s) from host_info_store" % servo_version_from_hi)
-        return servo_version_from_hi
+        out = _format_image_name(board=board, version=servo_version_from_hi)
+        _log_image_name(out)
+        return out
     logging.debug("get_stable_servo_cros_image_name_v2: no servo version provided. board is (%s)" % board)
     logging.debug("get_stable_servo_cros_image_name_v2: falling back to afe if possible")
     out = None
