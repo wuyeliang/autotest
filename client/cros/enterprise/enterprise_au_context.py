@@ -74,6 +74,7 @@ class NanoOmahaEnterpriseAUContext(object):
 
         utils.poll_for_condition(
                 update_started,
+                timeout=30,
                 exception=error.TestFail('Update did not start!'))
 
 
