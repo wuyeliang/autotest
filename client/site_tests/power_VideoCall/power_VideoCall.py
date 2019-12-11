@@ -1,0 +1,64 @@
+# Copyright 2019 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+import logging
+import time
+
+from autotest_lib.client.common_lib.cros import chrome
+from autotest_lib.client.common_lib.cros import power_load_util
+from autotest_lib.client.cros.input_playback import keyboard
+from autotest_lib.client.cros.power import power_test
+
+
+class power_VideoCall(power_test.power_Test):
+    """class for power_VideoCall test."""
+    version = 1
+
+    video_url = 'http://crospower.page.link/power_VideoCall'
+    doc_url = 'http://doc.new'
+    extra_browser_args = ['--use-fake-ui-for-media-stream']
+
+    def initialize(self, seconds_period=20., pdash_note=''):
+        """initialize method."""
+        super(power_VideoCall, self).initialize(seconds_period=seconds_period,
+                                                pdash_note=pdash_note)
+        self._username = power_load_util.get_username()
+        self._password = power_load_util.get_password()
+
+    def run_once(self, duration=7200):
+        """run_once method.
+
+        @param duration: time in seconds to display url and measure power.
+        """
+        with keyboard.Keyboard() as keys,\
+             chrome.Chrome(init_network_controller=True,
+                           gaia_login=True,
+                           username=self._username,
+                           password=self._password,
+                           extra_browser_args=self.extra_browser_args,
+                           autotest_ext=True) as cr:
+
+            # Move existing window to left half and open video page
+            tab_left = cr.browser.tabs[0]
+            tab_left.Activate()
+            keys.press_key('alt+[')
+            logging.info('Navigating left window to %s', self.video_url)
+            tab_left.Navigate(self.video_url)
+            tab_left.WaitForDocumentReadyStateToBeComplete()
+            time.sleep(5)
+
+            # Open Google Doc on right half
+            logging.info('Navigating right window to %s', self.doc_url)
+            cmd = 'chrome.windows.create({ url : "%s" });' % self.doc_url
+            cr.autotest_ext.EvaluateJavaScript(cmd)
+            tab_right = cr.browser.tabs[-1]
+            tab_right.Activate()
+            keys.press_key('alt+]')
+            tab_right.WaitForDocumentReadyStateToBeComplete()
+            time.sleep(5)
+
+            # Start typing number block
+            end_time = time.time() + duration
+            self.start_measurements()
+            while time.time() < end_time:
+                keys.press_key('number_block')
