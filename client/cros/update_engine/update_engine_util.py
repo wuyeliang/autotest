@@ -166,13 +166,23 @@ class UpdateEngineUtil(object):
             time.sleep(1)
 
 
-    def _get_update_engine_status(self, timeout=3600, ignore_status=True):
-        """Returns a dictionary version of update_engine_client --status"""
+    def _get_update_engine_status(self, timeout=3600, ignore_timeout=True):
+        """
+        Gets a dictionary version of update_engine_client --status.
+
+        @param timeout: How long to wait for the status to return.
+        @param ignore_timeout: True to throw an exception if timeout occurs.
+
+        @return Dictionary of values within update_engine_client --status.
+        @raise: error.AutoservError if command times out
+
+        """
         status = self._run('update_engine_client --status', timeout=timeout,
-                           ignore_timeout=True, ignore_status=ignore_status)
+                           ignore_status=True, ignore_timeout=ignore_timeout)
+
         if status is None:
             return None
-        logging.debug(status)
+        logging.info(status)
         if status.exit_status != 0:
             return None
         status_dict = {}
