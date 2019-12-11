@@ -40,17 +40,18 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         boot_id = self._host.get_boot_id()
 
         while True:
-            status = self._get_update_engine_status(timeout=10)
+            try:
+                self._get_update_engine_status(timeout=10,
+                                               ignore_timeout=False)
+            except error.AutoservRunError as e:
+                # Check if command timed out because update-engine was taking
+                # a while or if the command didn't even start.
+                query = 'Querying Update Engine status...'
+                if query not in e.result_obj.stderr:
+                    # Command did not start. DUT rebooted at end of update.
+                    self._host.test_wait_for_boot(boot_id)
+                    break
 
-            # During reboot, status will be None
-            if status is None:
-                # Checking only for the status to change to IDLE can hide
-                # errors that occurred between status checks. When the forced
-                # update is complete, it will automatically reboot the device.
-                # So we wait for an explict reboot. We will verify that the
-                # update completed successfully later in verify_update_events()
-                self._host.test_wait_for_boot(boot_id)
-                break
             time.sleep(1)
             if time.time() > timeout:
                 raise error.TestFail('OOBE update did not finish in %d '
