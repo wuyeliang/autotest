@@ -38,10 +38,17 @@ class audio_InternalCardNodes(audio_test.AudioTest):
                     audio_test_utils.get_plugged_internal_mics(self.host))
         if audio_test_utils.has_hotwording(self.host):
             nodes[1].append('HOTWORD')
+        if audio_test_utils.has_echo_reference(self.host):
+            nodes[1].append('ECHO_REFERENCE')
         return nodes
 
     def run_once(self):
         """Runs InternalCardNodes test."""
+        if not audio_test_utils.has_audio_jack(self.host):
+            audio_test_utils.check_plugged_nodes(
+                    self.facade, self.get_expected_nodes(False))
+            return
+
         jack_plugger = self.host.chameleon.get_audio_board().get_jack_plugger()
 
         jack_plugger.plug()

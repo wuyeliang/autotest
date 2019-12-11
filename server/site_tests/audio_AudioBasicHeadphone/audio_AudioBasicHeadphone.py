@@ -7,6 +7,7 @@ import logging
 import os
 import time
 
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.audio import audio_test_data
 from autotest_lib.client.cros.chameleon import audio_test_utils
 from autotest_lib.client.cros.chameleon import chameleon_audio_ids
@@ -32,8 +33,11 @@ class audio_AudioBasicHeadphone(audio_test.AudioTest):
 
         @param check_quality: flag to check audio quality.
         """
-        if not audio_test_utils.has_headphone(self.host):
-            return
+        if not audio_test_utils.has_audio_jack(self.host):
+            raise error.TestError(
+                    'No audio jack for the DUT.'
+                    'Please check label of the host and control file.'
+                    'Please check the host label and test dependency.')
 
         golden_file = audio_test_data.FREQUENCY_TEST_FILE
 

@@ -209,17 +209,17 @@ def has_internal_microphone(host):
     return True
 
 
-def has_headphone(host):
-    """Checks if the Cros device has headphone.
+def has_audio_jack(host):
+    """Checks if the Cros device has a 3.5mm audio jack.
 
     @param host: The CrosHost object.
 
-    @returns: True if Cros device has headphone. False otherwise.
+    @returns: True if Cros device has it. False otherwise.
 
     """
     board_name = get_board_name(host)
-    if not audio_spec.has_headphone(host.get_board_type()):
-        logging.info('Board %s does not have headphone.', board_name)
+    if not audio_spec.has_audio_jack(board_name, host.get_board_type()):
+        logging.info('Board %s does not have a audio jack.', board_name)
         return False
     return True
 
@@ -237,6 +237,16 @@ def has_hotwording(host):
 
     return audio_spec.has_hotwording(board_name, model_name)
 
+
+def has_echo_reference(host):
+    """Checks if the Cros device has echo reference.
+
+    @param host: The CrosHost object.
+
+    @returns: True if the board has echo reference. False otherwise.
+
+    """
+    return audio_spec.has_echo_reference(get_board_name(host))
 
 def suspend_resume(host, suspend_time_secs, resume_network_timeout_secs=50):
     """Performs the suspend/resume on Cros device.
