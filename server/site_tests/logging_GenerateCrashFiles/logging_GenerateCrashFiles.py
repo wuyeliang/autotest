@@ -75,7 +75,7 @@ class logging_GenerateCrashFiles(test.test):
             # In case of kernel crash the reboot will take some time.
             host.ping_wait_up(self.REBOOT_TIMEOUT)
             if(boot_id == host.get_boot_id()):
-                raise error.Testfail('Device not rebooted')
+                raise error.TestFail('Device not rebooted')
 
         # Sync the file system.
         self.host.run('sync', ignore_status=True)
