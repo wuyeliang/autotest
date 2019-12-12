@@ -71,6 +71,7 @@ class firmware_ConsecutiveBoot(FirmwareTest):
             else:
                 raise
 
+        self.faft_client.disconnect()
         logging.info('Wait for client to go offline')
         self.switcher.wait_for_client_offline(timeout=100, orig_boot_id=boot_id)
         if self.check_ec_capability(['x86'], suppress_warning=True):

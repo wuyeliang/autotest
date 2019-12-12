@@ -236,6 +236,7 @@ class FirmwareTest(FAFTBase):
         self._remove_faft_lockfile()
         self._remove_old_faft_lockfile()
         self._record_faft_client_log()
+        self.faft_client.quit()
 
         # Capture any new uart output, then discard log messages again.
         self._cleanup_uart_capture()
@@ -1184,6 +1185,8 @@ class FirmwareTest(FAFTBase):
     def full_power_off_and_on(self):
         """Shutdown the device by pressing power button and power on again."""
         boot_id = self.get_bootid()
+        self.faft_client.disconnect()
+
         # Press power button to trigger Chrome OS normal shutdown process.
         # We use a customized delay since the normal-press 1.2s is not enough.
         self.servo.power_key(self.faft_config.hold_pwr_button_poweroff)

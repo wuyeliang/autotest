@@ -145,7 +145,10 @@ class firmware_FAFTRPC(FirmwareTest):
 
         """
         rpc_function = self.get_rpc_function(category, method)
-        rpc_name = ".".join([category, method])
+        if category:
+            rpc_name = '%s.%s' % (category, method)
+        else:
+            rpc_name = method
         try:
             result = rpc_function(*params)
         except xmlrpclib.Fault as e:
@@ -199,7 +202,10 @@ class firmware_FAFTRPC(FirmwareTest):
 
         """
         rpc_function = self.get_rpc_function(category, method)
-        rpc_name = ".".join([category, method])
+        if category:
+            rpc_name = '%s.%s' % (category, method)
+        else:
+            rpc_name = method
         try:
             result = rpc_function(*params)
         except xmlrpclib.Fault as e:
@@ -254,7 +260,10 @@ class firmware_FAFTRPC(FirmwareTest):
 
         @return: A callable method of the RPC proxy
         """
-        rpc_function_handler = getattr(self.faft_client, category)
+        if category:
+            rpc_function_handler = getattr(self.faft_client, category)
+        else:
+            rpc_function_handler = self.faft_client
         rpc_function = getattr(rpc_function_handler, method)
         return rpc_function
 
@@ -285,9 +294,13 @@ class firmware_FAFTRPC(FirmwareTest):
             if category_name == "ec" and not self.check_ec_capability():
                 logging.info("No EC found on DUT. Skipping EC category.")
                 continue
+
+            # Re-enable test mode, in case another category's tests disabled it.
+            self.faft_client.rpc_settings.enable_test_mode()
+
             test_cases = rpc_category["test_cases"]
-            logging.info("Testing %d cases for RPC category '%s'",
-                         len(test_cases), category_name)
+            logging.info("Testing %d cases for RPC category %s",
+                         len(test_cases), repr(category_name))
             for test_case in test_cases:
                 method_names = get_rpc_method_names_from_test_case(test_case)
                 passing_args = test_case.get("passing_args", [])

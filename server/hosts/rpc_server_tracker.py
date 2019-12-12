@@ -247,8 +247,7 @@ class RpcServerTracker(object):
         logging.info('Established a jsonrpc connection through port %s.', port)
         return proxy
 
-
-    def disconnect(self, port):
+    def disconnect(self, port, pkill=True):
         """Disconnect from an RPC server on the host.
 
         Terminates the remote RPC server previously started for
@@ -261,13 +260,13 @@ class RpcServerTracker(object):
         This function does nothing if requested to disconnect a port
         that was not previously connected via _setup_rpc.
 
-        @param port Port number passed to a previous call to
-                    `_setup_rpc()`.
+        @param port Port number passed to a previous call to `_setup_rpc()`.
+        @param pkill: if True, ssh in to the server and pkill the process.
         """
         if port not in self._rpc_proxy_map:
             return
         remote_name, tunnel_proc, remote_pid = self._rpc_proxy_map[port]
-        if remote_name:
+        if pkill and remote_name:
             # We use 'pkill' to find our target process rather than
             # a PID, because the host may have rebooted since
             # connecting, and we don't want to kill an innocent

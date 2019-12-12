@@ -767,5 +767,23 @@ RPC_CATEGORIES = [
                 ],
             },
         ]
+    },
+    {
+        "category_name": '',
+        "test_cases": [
+            # explicit connect
+            {"method_name": "quit", "passing_args": [NO_ARGS]},
+            {"method_name": "connect", "passing_args": [NO_ARGS]},
+            {"method_name": "ready", "passing_args": [NO_ARGS]},
+            {"method_name": "disconnect", "passing_args": [NO_ARGS]},
+            {"method_name": "connect", "passing_args": [NO_ARGS]},
+            {"method_name": "ready", "passing_args": [NO_ARGS]},
+
+            # implicit connect
+            {"method_name": "quit", "passing_args": [NO_ARGS]},
+            {"method_name": "ready", "passing_args": [NO_ARGS]},
+            {"method_name": "disconnect", "passing_args": [NO_ARGS]},
+            {"method_name": "ready", "passing_args": [NO_ARGS]},
+        ]
     }
 ]

@@ -8,12 +8,15 @@ These will be exposed via an xmlrpc server running on the DUT.
 @note: When adding categories, please also update server/cros/faft/rpc_proxy.pyi
 """
 import httplib
+import logging
 import os
+import signal
 import sys
 import tempfile
 import traceback
 import xmlrpclib
 
+from autotest_lib.client.cros import xmlrpc_server
 from autotest_lib.client.common_lib.cros import cros_config
 from autotest_lib.client.cros.faft.utils import (
         cgpt_handler,
@@ -27,14 +30,14 @@ from autotest_lib.client.cros.faft.utils import (
 )
 
 
-class RPCRouter(object):
+class FaftXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     """
     A class which routes RPC methods to the proper servicers.
 
     Firmware tests are able to call an RPC method via:
-        FAFTClient.[category].[method_name](params)
+        <FAFTClient>.[category].[method_name](params)
     When XML-RPC is being used, the RPC server routes the called method to:
-        RPCHandler._dispatch('[category].[method]', params)
+        <XmlRpcDelegate>._dispatch('[category].[method_name]', params)
     The method is then dispatched to a Servicer class.
     """
 
@@ -43,6 +46,7 @@ class RPCRouter(object):
 
         @type os_if: os_interface.OSInterface
         """
+        self._ready = False
         self.bios = BiosServicer(os_if)
         self.cgpt = CgptServicer(os_if)
         self.ec = EcServicer(os_if)
@@ -67,7 +71,37 @@ class RPCRouter(object):
 
         self._os_if = os_if
 
-    def _report_error(self, fault_code, message, exc_info=None):
+    def __enter__(self):
+        """Enter the the delegate context (when XmlRpcServer.run() starts).
+
+        The server is marked ready here, rather than immediately when created.
+        """
+        logging.debug("%s: Serving FAFT functions", self.__class__.__name__)
+        self._ready = True
+
+    def __exit__(self, exception, value, traceback):
+        """Exit the delegate context (when XmlRpcServer.run() finishes).
+
+        The server is marked not ready, to prevent the client from using
+        the wrong server when quitting one instance and starting another.
+        """
+        self._ready = False
+        logging.debug("%s: Done.", self.__class__.__name__)
+
+    def quit(self):
+        """Exit the xmlrpc server."""
+        self._ready = False
+        os.kill(os.getpid(), signal.SIGINT)
+
+    def ready(self):
+        """Is the RPC server ready to serve calls in a useful manner?
+
+        The server is only marked ready during the XmlRpcServer.run() loop.
+        This method suppresses the extra logging of ready() from the superclass.
+        """
+        return self._ready
+
+    def _report_error(self, fault_code, message, exc_info=False):
         """Raise the given RPC error text, including information about last
         exception from sys.exc_info().  The log file gets the traceback in text;
         the raised exception keeps the old traceback (but not in text).
@@ -79,7 +113,7 @@ class RPCRouter(object):
 
         @param fault_code: the status code to use
         @param message: the string message to include before exception text
-        @param exc_info: the tuple from sys.exc_info()
+        @param exc_info: true to use the tuple from sys.exc_info()
         @return the exception to raise
 
         @type fault_code: int
@@ -96,10 +130,11 @@ class RPCRouter(object):
                         traceback.format_exception(exc_class, exc, tb))
                 self._os_if.log('Error: %s.\n%s' % (message, tb_str.rstrip()))
 
-                exc_str = ''.join(
-                        traceback.format_exception_only(exc_class, exc))
-                exc = xmlrpclib.Fault(
-                        fault_code, '%s. %s' % (message, exc_str.rstrip()))
+                if not isinstance(exc, xmlrpclib.Fault):
+                    exc_str = ''.join(
+                            traceback.format_exception_only(exc_class, exc))
+                    exc = xmlrpclib.Fault(
+                            fault_code, '%s. %s' % (message, exc_str.rstrip()))
                 raise exc, None, tb
             finally:
                 del exc_info
@@ -124,20 +159,12 @@ class RPCRouter(object):
         self._os_if.log('Called: %s%s' % (called_method, params))
 
         name_pieces = called_method.split('.')
-        num_pieces = len(name_pieces)
 
-        if num_pieces < 1:
+        if not name_pieces:
             raise self._report_error(
                     httplib.BAD_REQUEST,
                     'RPC request is invalid (completely empty): "%s"' %
                     called_method)
-
-        if num_pieces < 2:
-            # must be category.func (maybe with .__str__)
-            raise self._report_error(
-                    httplib.BAD_REQUEST,
-                    'RPC request is invalid (must have category.method format):'
-                    ' "%s"' % called_method)
 
         method_name = name_pieces.pop()
         category = '.'.join(name_pieces)
@@ -148,15 +175,15 @@ class RPCRouter(object):
             # Forbid early, to prevent seeing which methods exist.
             raise self._report_error(
                     httplib.FORBIDDEN,
-                    'RPC method name is private: %s.[%s]' %
-                    (category, method_name))
+                    'RPC method name is private: %s%s[%s]' %
+                    (category, '.' if category else '', method_name))
 
-        if not method_name:
+        elif not method_name:
             # anything.()
             raise self._report_error(
                     httplib.BAD_REQUEST,
-                    'RPC method name is empty: %s.[%s]' %
-                    (category, method_name))
+                    'RPC method name is empty: %s%s[%s]' %
+                    (category, '.' if category else '', method_name))
 
         if category in self._rpc_servicers:
             # system.func()
@@ -175,11 +202,12 @@ class RPCRouter(object):
                     (category, method_name))
 
         else:
-            # .invalid()
-            raise self._report_error(
-                    httplib.BAD_REQUEST,
-                    'RPC request is invalid (empty category name): [%s].%s' %
-                    (category, method_name))
+            # .func() or .invalid()
+            holder = self
+            if not hasattr(holder, method_name):
+                raise self._report_error(
+                        httplib.NOT_FOUND,
+                        'RPC method not found: [%s]' % method_name)
 
         try:
             method = getattr(holder, method_name)
