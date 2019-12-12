@@ -95,8 +95,7 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
 
         @param suspend_count: the number of times to reboot the device.
         """
-        original_mainfw_type = 'developer' if self.checkers.crossystem_checker(
-                {'mainfw_type': 'developer'}) else 'normal'
+        cr50_dev_mode = self.cr50.in_dev_mode()
         # Disable CCD so Cr50 can enter deep sleep
         self.cr50.ccd_disable()
         self.cr50.clear_deep_sleep_count()
@@ -117,13 +116,12 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
             rv = self.check_cr50_deep_sleep(i + 1)
             if rv:
                 errors.append(rv)
-
-            # Make sure it didn't boot into a different mode
-            if not self.checkers.crossystem_checker({'mainfw_type':
-                                                     original_mainfw_type}):
-                errors.append('Switched out of %s mode' % original_mainfw_type)
+            # Make sure the device didn't boot into a different mode.
+            if self.cr50.in_dev_mode() != cr50_dev_mode:
+                errors.append('Switched out of %s mode' %
+                              ('dev' if cr50_dev_mode else 'normal'))
             if errors:
-                msg = 'Reboots failed (%s)' % ' and '.join(errors)
+                msg = 'Reboot %d failed (%s)' % (i, ' and '.join(errors))
                 raise error.TestFail(msg)
 
 
