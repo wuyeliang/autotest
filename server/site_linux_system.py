@@ -49,6 +49,7 @@ class LinuxSystem(object):
     MAC_RETRY_LIMIT = 1000
 
     _UMA_EVENTS = '/var/lib/metrics/uma-events'
+    _LOG_PATH_PREFIX = '/tmp/autotest-'
 
 
     @property
@@ -84,6 +85,12 @@ class LinuxSystem(object):
         or to re-establish a good state after a reboot.
 
         """
+        # hostapd, tcpdump, netperf, etc., may leave behind logs, pcap files,
+        # etc., which can fill up tmpfs. Clear them out now.
+        self.host.run('rm -rf %s*' % self._LOG_PATH_PREFIX)
+        self._logdir = self.host.run('mktemp -d %sXXXXXX' %
+                self._LOG_PATH_PREFIX).stdout.strip()
+
         # Command locations.
         cmd_iw = path_utils.must_be_installed('/usr/sbin/iw', host=self.host)
         self.cmd_ip = path_utils.must_be_installed('/usr/sbin/ip',
@@ -93,7 +100,7 @@ class LinuxSystem(object):
 
         self._packet_capturer = packet_capturer.get_packet_capturer(
                 self.host, host_description=self.role, cmd_ip=self.cmd_ip,
-                cmd_iw=cmd_iw, ignore_failures=True)
+                cmd_iw=cmd_iw, ignore_failures=True, logdir=self.logdir)
         self.iw_runner = iw_runner.IwRunner(remote_host=self.host,
                                             command_iw=cmd_iw)
 
@@ -749,3 +756,11 @@ class LinuxSystem(object):
         """
         logging.info('Pinging from the %s.', self.role)
         return self._ping_runner.ping(ping_config)
+
+
+    @property
+    def logdir(self):
+        """Return a directory for storing temporary logs.
+        @return string path to temporary log directory.
+        """
+        return self._logdir

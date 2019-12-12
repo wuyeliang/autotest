@@ -5,6 +5,7 @@
 import collections
 import copy
 import logging
+import os
 import random
 import string
 import tempfile
@@ -102,17 +103,17 @@ class LinuxRouter(site_linux_system.LinuxSystem):
     SUFFIX_LETTERS = string.ascii_lowercase + string.digits
     SUBNET_PREFIX_OCTETS = (192, 168)
 
-    HOSTAPD_CONF_FILE_PATTERN = '/tmp/hostapd-test-%s.conf'
-    HOSTAPD_LOG_FILE_PATTERN = '/tmp/hostapd-test-%s.log'
-    HOSTAPD_STDERR_LOG_FILE_PATTERN = '/tmp/hostapd-stderr-test-%s.log'
-    HOSTAPD_CONTROL_INTERFACE_PATTERN = '/tmp/hostapd-test-%s.ctrl'
+    HOSTAPD_CONF_FILE_PATTERN = 'hostapd-test-%s.conf'
+    HOSTAPD_LOG_FILE_PATTERN = 'hostapd-test-%s.log'
+    HOSTAPD_STDERR_LOG_FILE_PATTERN = 'hostapd-stderr-test-%s.log'
+    HOSTAPD_CONTROL_INTERFACE_PATTERN = 'hostapd-test-%s.ctrl'
     HOSTAPD_DRIVER_NAME = 'nl80211'
 
     STATION_CONF_FILE_PATTERN = '/tmp/wpa-supplicant-test-%s.conf'
     STATION_LOG_FILE_PATTERN = '/tmp/wpa-supplicant-test-%s.log'
     STATION_PID_FILE_PATTERN = '/tmp/wpa-supplicant-test-%s.pid'
 
-    MGMT_FRAME_SENDER_LOG_FILE = '/tmp/send_management_frame-test.log'
+    MGMT_FRAME_SENDER_LOG_FILE = 'send_management_frame-test.log'
 
     PROBE_RESPONSE_FOOTER_FILE = '/tmp/autotest-probe_response_footer'
 
@@ -183,8 +184,8 @@ class LinuxRouter(site_linux_system.LinuxSystem):
                 '/usr/sbin/hostapd_cli', host=self.host)
         self.cmd_wpa_supplicant = path_utils.must_be_installed(
                 '/usr/sbin/wpa_supplicant', host=self.host)
-        self.dhcpd_conf = '/tmp/dhcpd.%s.conf'
-        self.dhcpd_leases = '/tmp/dhcpd.leases'
+        self.dhcpd_conf = os.path.join(self.logdir, 'dhcpd.%s.conf')
+        self.dhcpd_leases = os.path.join(self.logdir, 'dhcpd.leases')
 
         # Log the most recent message on the router so that we can rebuild the
         # suffix relevant to us when debugging failures.
@@ -249,13 +250,15 @@ class LinuxRouter(site_linux_system.LinuxSystem):
 
     def close(self):
         """Close global resources held by this system."""
+        router_log = os.path.join(self.logdir, 'router_log')
         self.deconfig()
         # dnsmasq and hostapd cause interesting events to go to system logs.
         # Retrieve only the suffix of the logs after the timestamp we stored on
         # router creation.
-        self.host.run("sed -n -e '/%s/,$p' /var/log/messages >/tmp/router_log" %
-                      self._log_start_timestamp, ignore_status=True)
-        self.host.get_file('/tmp/router_log', 'debug/router_host_messages')
+        self.host.run("sed -n -e '/%s/,$p' /var/log/messages >%s" %
+                      (self._log_start_timestamp, router_log),
+                      ignore_status=True)
+        self.host.get_file(router_log, 'debug/router_host_messages')
         super(LinuxRouter, self).close()
 
 
@@ -285,10 +288,14 @@ class LinuxRouter(site_linux_system.LinuxSystem):
                                     configuration.min_streams)
         phy_name = self.iw_runner.get_interface(interface).phy
 
-        conf_file = self.HOSTAPD_CONF_FILE_PATTERN % interface
-        log_file = self.HOSTAPD_LOG_FILE_PATTERN % interface
-        stderr_log_file = self.HOSTAPD_STDERR_LOG_FILE_PATTERN % interface
-        control_interface = self.HOSTAPD_CONTROL_INTERFACE_PATTERN % interface
+        conf_file = os.path.join(self.logdir,
+                self.HOSTAPD_CONF_FILE_PATTERN % interface)
+        log_file = os.path.join(self.logdir,
+                self.HOSTAPD_LOG_FILE_PATTERN % interface)
+        stderr_log_file = os.path.join(self.logdir,
+                self.HOSTAPD_STDERR_LOG_FILE_PATTERN % interface)
+        control_interface = os.path.join(self.logdir,
+                self.HOSTAPD_CONTROL_INTERFACE_PATTERN % interface)
         hostapd_conf_dict = configuration.generate_dict(
                 interface, control_interface,
                 self.build_unique_ssid(suffix=configuration.ssid_suffix))
@@ -1053,7 +1060,8 @@ class LinuxRouter(site_linux_system.LinuxSystem):
         if probe_resp_footer is not None:
             self._prep_probe_response_footer(footer=probe_resp_footer)
             command += ' -f %s' % (self.PROBE_RESPONSE_FOOTER_FILE)
-        command += ' > %s 2>&1 & echo $!' % (self.MGMT_FRAME_SENDER_LOG_FILE)
+        command += ' > %s 2>&1 & echo $!' % (os.path.join(self.logdir,
+            self.MGMT_FRAME_SENDER_LOG_FILE))
         pid = int(self.router.run(command).stdout)
         return pid
 

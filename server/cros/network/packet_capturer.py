@@ -96,13 +96,13 @@ def _get_center_freq_160(frequency):
 
 
 def get_packet_capturer(host, host_description=None, cmd_ip=None, cmd_iw=None,
-                        cmd_netdump=None, ignore_failures=False):
+                        cmd_netdump=None, ignore_failures=False, logdir=None):
     cmd_iw = cmd_iw or path_utils.get_install_path('iw', host=host)
     cmd_ip = cmd_ip or path_utils.get_install_path('ip', host=host)
     cmd_netdump = (cmd_netdump or
                    path_utils.get_install_path('tcpdump', host=host))
     host_description = host_description or 'cap_%s' % uuid.uuid4().hex
-    if None in [cmd_iw, cmd_ip, cmd_netdump, host_description]:
+    if None in [cmd_iw, cmd_ip, cmd_netdump, host_description, logdir]:
         if ignore_failures:
             logging.warning('Creating a disabled packet capturer for %s.',
                             host_description)
@@ -111,7 +111,8 @@ def get_packet_capturer(host, host_description=None, cmd_ip=None, cmd_iw=None,
             raise error.TestFail('Missing commands needed for '
                                  'capturing packets')
 
-    return PacketCapturer(host, host_description, cmd_ip, cmd_iw, cmd_netdump)
+    return PacketCapturer(host, host_description, cmd_ip, cmd_iw, cmd_netdump,
+                          logdir=logdir)
 
 
 class DisabledPacketCapturer(object):
@@ -212,7 +213,7 @@ class PacketCapturer(object):
 
 
     def __init__(self, host, host_description, cmd_ip, cmd_iw, cmd_netdump,
-                 disable_captures=False):
+                 logdir, disable_captures=False):
         self._cmd_netdump = cmd_netdump
         self._cmd_iw = cmd_iw
         self._cmd_ip = cmd_ip
@@ -223,6 +224,7 @@ class PacketCapturer(object):
         self._created_managed_devices = []
         self._created_raw_devices = []
         self._host_description = host_description
+        self._logdir = logdir
 
 
     def __enter__(self):
@@ -363,7 +365,7 @@ class PacketCapturer(object):
 
         """
         remote_file = (remote_file or
-                       '/tmp/%s.%d.pcap' % (self._host_description,
+                       '%s/%s.%d.pcap' % (self._logdir, self._host_description,
                                             self._cap_num))
         self._cap_num += 1
         remote_log_file = '%s.log' % remote_file
