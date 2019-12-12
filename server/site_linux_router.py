@@ -20,7 +20,6 @@ from autotest_lib.client.common_lib.cros.network import ping_runner
 from autotest_lib.server import hosts
 from autotest_lib.server import site_linux_system
 from autotest_lib.server.cros import dnsname_mangler
-from autotest_lib.server.cros.network import hostap_config
 
 
 StationInstance = collections.namedtuple('StationInstance',
@@ -108,10 +107,6 @@ class LinuxRouter(site_linux_system.LinuxSystem):
     HOSTAPD_STDERR_LOG_FILE_PATTERN = 'hostapd-stderr-test-%s.log'
     HOSTAPD_CONTROL_INTERFACE_PATTERN = 'hostapd-test-%s.ctrl'
     HOSTAPD_DRIVER_NAME = 'nl80211'
-
-    STATION_CONF_FILE_PATTERN = '/tmp/wpa-supplicant-test-%s.conf'
-    STATION_LOG_FILE_PATTERN = '/tmp/wpa-supplicant-test-%s.log'
-    STATION_PID_FILE_PATTERN = '/tmp/wpa-supplicant-test-%s.pid'
 
     MGMT_FRAME_SENDER_LOG_FILE = 'send_management_frame-test.log'
 
@@ -1098,92 +1093,6 @@ class LinuxRouter(site_linux_system.LinuxSystem):
         result = self.router.run("grep -qi '%s' %s" % (coex_msg, log_file),
                                  ignore_status=True)
         return result.exit_status == 0
-
-
-    def add_connected_peer(self, instance=0):
-        """Configure a station connected to a running AP instance.
-
-        Extract relevant configuration objects from the hostap
-        configuration for |instance| and generate a wpa_supplicant
-        instance that connects to it.  This allows the DUT to interact
-        with a client entity that is also connected to the same AP.  A
-        full wpa_supplicant instance is necessary here (instead of just
-        using the "iw" command to connect) since we want to enable
-        advanced features such as TDLS.
-
-        @param instance int indicating which hostapd instance to connect to.
-
-        """
-        if not self.hostapd_instances:
-            raise error.TestFail('Hostapd is not configured.')
-
-        if self.station_instances:
-            raise error.TestFail('Station is already configured.')
-
-        ssid = self.get_ssid(instance)
-        hostap_conf = self.hostapd_instances[instance].config_dict
-        frequency = hostap_config.HostapConfig.get_frequency_for_channel(
-                hostap_conf['channel'])
-        self.configure_managed_station(
-                ssid, frequency, self.local_peer_ip_address(instance))
-        interface = self.station_instances[0].interface
-        # Since we now have two network interfaces connected to the same
-        # network, we need to disable the kernel's protection against
-        # incoming packets to an "unexpected" interface.
-        self.router.run('echo 2 > /proc/sys/net/ipv4/conf/%s/rp_filter' %
-                        interface)
-
-        # Similarly, we'd like to prevent the hostap interface from
-        # replying to ARP requests for the peer IP address and vice
-        # versa.
-        self.router.run('echo 1 > /proc/sys/net/ipv4/conf/%s/arp_ignore' %
-                        interface)
-        self.router.run('echo 1 > /proc/sys/net/ipv4/conf/%s/arp_ignore' %
-                        hostap_conf['interface'])
-
-
-    def configure_managed_station(self, ssid, frequency, ip_addr):
-        """Configure a router interface to connect as a client to a network.
-
-        @param ssid: string SSID of network to join.
-        @param frequency: int frequency required to join the network.
-        @param ip_addr: IP address to assign to this interface
-                        (e.g. '192.168.1.200').
-
-        """
-        interface = self.get_wlanif(frequency, 'managed')
-
-        # TODO(pstew): Configure other bits like PSK, 802.11n if tests
-        # require them...
-        supplicant_config = (
-                'network={\n'
-                '  ssid="%(ssid)s"\n'
-                '  key_mgmt=NONE\n'
-                '}\n' % {'ssid': ssid}
-        )
-
-        conf_file = self.STATION_CONF_FILE_PATTERN % interface
-        log_file = self.STATION_LOG_FILE_PATTERN % interface
-        pid_file = self.STATION_PID_FILE_PATTERN % interface
-
-        self.router.run('cat <<EOF >%s\n%s\nEOF\n' %
-            (conf_file, supplicant_config))
-
-        # Connect the station.
-        self.router.run('%s link set %s up' % (self.cmd_ip, interface))
-        start_command = ('%s -dd -t -i%s -P%s -c%s -D%s >%s 2>&1 &' %
-                         (self.cmd_wpa_supplicant,
-                         interface, pid_file, conf_file,
-                         self.HOSTAPD_DRIVER_NAME, log_file))
-        self.router.run(start_command)
-        self.iw_runner.wait_for_link(interface)
-
-        # Assign an IP address to this interface.
-        self.router.run('%s addr add %s/24 dev %s' %
-                        (self.cmd_ip, ip_addr, interface))
-        self.station_instances.append(
-                StationInstance(ssid=ssid, interface=interface,
-                                dev_type='managed'))
 
 
     def send_magic_packet(self, dest_ip, dest_mac):

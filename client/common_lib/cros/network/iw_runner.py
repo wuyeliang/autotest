@@ -1038,25 +1038,6 @@ class IwRunner(object):
         return list(matching_iwbsses)
 
 
-    def wait_for_link(self, interface, timeout_seconds=10):
-        """Waits until a link completes on |interface|.
-
-        @param interface: which interface to run iw against.
-        @param timeout_seconds: the amount of time to wait in seconds.
-
-        @returns True if link was established before the timeout.
-
-        """
-        return utils.poll_for_condition(
-                # gets link results from running dev command, then assumes the
-                # link is completed if 'Not connected' is absent from stdout
-                condition=lambda: 'Not connected' not in self._run(
-                    '%s dev %s link' % (self._command_iw, interface)).stdout,
-                timeout=timeout_seconds,
-                sleep_interval=1,
-                desc='Wait until a link completes on |interface|')
-
-
     def set_antenna_bitmap(self, phy, tx_bitmap, rx_bitmap):
         """Set antenna chain mask on given phy (radio).
 
