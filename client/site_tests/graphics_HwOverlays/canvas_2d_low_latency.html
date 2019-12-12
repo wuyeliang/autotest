@@ -1,12 +1,12 @@
 <html>
 <head>
-  <title>Canvas 2D</title>
+  <title>Canvas 2D Low Latency</title>
 </head>
 <body>
   <canvas id='canvas1' style="border: 1px solid black;"></canvas>
 </body>
 <script type="text/javascript">
-  var canvas = document.getElementById('canvas1');
+  let canvas = document.getElementById('canvas1');
   // Make the canvas very large but still falling inside the viewport; |height|
   // also has to account for the Shelf (taskbar) at the bottom.
   const dpr = window.devicePixelRatio || 1;
@@ -15,8 +15,11 @@
   canvas.width = width;
   canvas.height = height;
 
-  var ctx = canvas.getContext('2d');
-  var draw_passes_count = 0;
+  let ctx = canvas.getContext('2d', {
+    desynchronized: true,
+    alpha: false
+  });
+  let draw_passes_count = 0;
 
   function draw_pass() {
     ctx.beginPath();
