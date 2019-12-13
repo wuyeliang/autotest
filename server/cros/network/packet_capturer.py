@@ -46,7 +46,7 @@ _WIDTH_STRINGS = {
     WIDTH_HT20: 'HT20',
     WIDTH_HT40_PLUS: 'HT40+',
     WIDTH_HT40_MINUS: 'HT40-',
-    WIDTH_VHT80: '80MHz',
+    WIDTH_VHT80: '80',
     WIDTH_VHT160: '160',
     WIDTH_VHT80_80: '80+80',
 }
@@ -59,6 +59,23 @@ def _get_width_string(width):
 
     """
     return _WIDTH_STRINGS.get(width, '')
+
+
+def _get_center_freq_80(frequency):
+    """Find the center frequency of a 80MHz channel.
+
+    Raises an error upon an invalid frequency.
+
+    @param frequency int Control frequency of the channel.
+    @return center_freq int Center frequency of the channel.
+
+    """
+    vht80 = [ 5180, 5260, 5500, 5580, 5660, 5745 ]
+    for f in vht80:
+        if frequency >= f and frequency < f + 80:
+            return f + 30
+    raise error.TestError(
+            'Frequency %s is not part of a 80MHz channel', frequency)
 
 
 def _get_center_freq_160(frequency):
@@ -280,7 +297,10 @@ class PacketCapturer(object):
                 raise error.TestError('Invalid width type: %r' % width_type)
             if width_type == WIDTH_VHT80_80:
                 raise error.TestError('VHT80+80 packet capture not supported')
-            if width_type == WIDTH_VHT160:
+            if width_type == WIDTH_VHT80:
+                width_string = '%s %d' % (width_string,
+                                          _get_center_freq_80(frequency))
+            elif width_type == WIDTH_VHT160:
                 width_string = '%s %d' % (width_string,
                                           _get_center_freq_160(frequency))
             channel_args = '%s %s' % (channel_args, width_string)
