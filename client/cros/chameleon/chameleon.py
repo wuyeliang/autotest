@@ -469,6 +469,13 @@ class ChameleonBoard(object):
         """
         return self._chameleond_proxy.ble_keyboard
 
+    def get_platform(self):
+        """ Get the Hardware Platform of the chameleon host
+
+        @return: CHROMEOS/RASPI
+        """
+        return self._chameleond_proxy.get_platform()
+
 
 class ChameleonPort(object):
     """ChameleonPort is an abstraction of a general port of a Chameleon board.

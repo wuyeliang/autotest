@@ -39,6 +39,12 @@ class bluetooth_AdapterHIDReports(
         self.input_facade = factory.create_input_facade()
         self.check_chameleon()
 
+        if (device_type == 'KEYBOARD' and
+            self.host.chameleon.get_platform() != 'RASPI'):
+                logging.info("KEYBOARD device is not supported on Fizz peer")
+                raise error.TestNAError("b/146231141 KEYBOARD test is not"
+                               " supported on  Fizz peer devices")
+
         pass_count = 0
         self.total_fails = {}
         for iteration in xrange(1, num_iterations + 1):
