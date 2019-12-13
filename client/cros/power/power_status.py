@@ -538,6 +538,13 @@ class SysStat(object):
                self.battery.charge_full_design
 
 
+    def percent_display_charge(self):
+        """Returns current display charge in percent.
+        """
+        keyvals = parse_power_supply_info()
+        return float(keyvals['Battery']['display percentage'])
+
+
     def assert_battery_state(self, percent_initial_charge_min):
         """Check initial power configuration state is battery.
 
@@ -562,7 +569,7 @@ class SysStat(object):
 
     def assert_battery_in_range(self, min_level, max_level):
         """Raise a error.TestFail if the battery level is not in range."""
-        current_percent = self.percent_current_charge()
+        current_percent = self.percent_display_charge()
         if not (min_level <= current_percent <= max_level):
             raise error.TestFail('battery must be in range [{}, {}]'.format(
                                  min_level, max_level))

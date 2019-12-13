@@ -852,6 +852,20 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             return None
 
 
+    def get_battery_display_percentage(self):
+        """Get the battery display percentage.
+
+        @return: The display percentage of battery level, value range from
+                 0-100. Return None if the battery info cannot be retrieved.
+        """
+        try:
+            info = self.get_power_supply_info()
+            logging.info(info)
+            return float(info['Battery']['display percentage'])
+        except (KeyError, ValueError, error.AutoservRunError):
+            return None
+
+
     def is_ac_connected(self):
         """Check if the dut has power adapter connected and charging.
 

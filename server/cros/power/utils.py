@@ -21,7 +21,7 @@ def put_host_battery_in_range(host, min_level, max_level, timeout):
     @throws: A TestFail error if getting the current battery level, setting the
              servo's charge state, or running either of the client tests fails.
     """
-    current_level = host.get_battery_percentage()
+    current_level = host.get_battery_display_percentage()
     if current_level >= min_level and current_level <= max_level:
         return
 

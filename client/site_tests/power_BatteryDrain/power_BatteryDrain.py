@@ -85,7 +85,7 @@ class power_BatteryDrain(test.test):
                 status = power_status.get_status()
                 if status.on_ac():
                     raise ac_error
-                return status.percent_current_charge() <= drain_to_percent
+                return status.percent_display_charge() <= drain_to_percent
 
             err = error.TestFail(
                 "Battery did not drain to {} percent in {} seconds".format(
