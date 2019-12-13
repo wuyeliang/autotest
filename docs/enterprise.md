@@ -3,6 +3,8 @@ To provide all the information needed about the current state of Enterprise
 autotest automation. Current coverage, location of tests, how to execute
 the tests, what machine to run the tests on, test breakdown, etc.
 
+[TOC]
+
 ## Current coverage
 
 Calculating coverage could be tricky as there are many different ways
@@ -19,12 +21,10 @@ it could be done. We were using two ways to do it:
 
 ## Test Location
 
-Tests that automate user policies are located [here](http://go/usr-pol-loc).
-
-Tests that automate device policies are located [here](http://go/dev-pol-loc).
-
-Most of Enterprise tests start with *policy_* but there are some
-that begin with *enterprise_*.
+*	Tests that automate user policies are located [here](http://go/usr-pol-loc).
+*	Tests that automate device policies are located [here](http://go/dev-pol-loc).
+*	Most of Enterprise tests start with *policy_* but there are some
+	that begin with *enterprise_*.
 
 ## Test Results
 
@@ -38,10 +38,14 @@ that begin with *enterprise_*.
 ## Running a test
 
 A test can be executed using this command from chroot:
-*test_that --board=BOARD_NAME IP_ADDRESS FULL_TEST_NAME*
+```sh
+test_that --board=$BOARD_NAME $IP_ADDRESS FULL_TEST_NAME*
+```
 Example:
-*/trunk/src/scripts $ test_that --board=hana 100.107.106.138
-policy_DeviceServer.AllowBluetooth_true*
+```sh
+/trunk/src/scripts $ test_that --board=hana 100.107.106.138
+policy_DeviceServer.AllowBluetooth_true
+```
 
 **--board** - should be the board that you have setup locally. You only need to
 setup the board ones and you shouldn’t have to touch it again for a long time.
@@ -54,12 +58,12 @@ need to run the build_packages command.
 plugged into the test network and not corp network. You can also use a device
 in the lab. To reserve a device from the lab please follow these steps:
 
-*   Go here: http://cautotest.corp.google.com/afe/#tab_id=hosts
-*   Pick a host from the list and click on it
-*   Lock the host you want to run the test on(don’t forget to unlock
-    when you’re done)
-*   Grab the host name, for example: chromeos15-row3-rack13-host2.
-    Use this as the IP: chromeos15-row3-rack13-host2**.cros**.
+*	Setup skylab using go/skylab-tools-guide (Advanced users: Manual
+	installation)
+*	"Lease" a dut go/skylab-dut-locking   
+*   Grab the host name, for example: chromeos15-row3-rack13-host2. Do not
+	include the prefix (e.g. "crossk")
+*	Use this as the IP: chromeos15-row3-rack13-host2**.cros**.
 
 Full test name - test name can be grabbed from the control file.
 [Example](http://go/control-file-name).
@@ -70,38 +74,70 @@ You can check other options for test_that by running: *test_that --help*.
 
 To run a test on a local DUT you need to make sure the DUT has been
 properly setup with a test build. You can use this helpful
-[tool](http://go/crosdl-usage). Execute from this dir:
-*/chromiumos/src/platform/crostestutils/provingground$*
+[tool](http://go/crosdl-usage). Execute from [here](https://cs.corp.google.com/chromeos_public/src/platform/crostestutils/provingground/crosdl.py)
 Run this command to put the build on a USB stick:
+```sh
 *./crosdl.py -c dev -t -b 12503.0.0 -p sarien --to_stick /dev/sda*
+```
 Or this command to update the DUT directly(flaky):
-*./crosdl.py -c dev -t -b 12105.54.0 -p sarien --to_ip 100.107.106.132*
+```sh
+*./crosdl.py -c dev -t -b 12105.54.0 -p sarien --to_ip $IP_ADDRESS*
+```
+	Note: The DUT must be reachable via SSH for this to work.
+
 
 To find out the right build number, please use [goldeneye](http://go/goldeneye)
 and search for the right build for your board.
 
 ## Test Breakdown
 
-A typical dir for a user policy(client) test will consist of control files
-and a .py test file. A control file will contain basic description of the
+See the [Autotest Best Practices](https://chromium.googlesource.com/chromiumos/third_party/autotest/+/refs/heads/master/docs/best-practices.md#control-files) for general autotest information.
+This section will provide details on how Enterprise autotests are written.
+Each test will require the following:
+*	A control file
+*	Control files for each test configuration
+*	A .py defining the test, which inherits test.test
+
+### Control files
+
+[Control files](https://chromium.googlesource.com/chromiumos/third_party/autotest/+/refs/heads/master/docs/best-practices.md#control-files) are used as the entry point to a test.
+A typical dir for a user policy (client) test will consist of control file(s)
+and, along with .py test file(s). A control file will contain basic description of the
 test as well as options such as these:
-'''python
-AUTHOR = 'name’
-NAME = 'full_test_name'
-ATTRIBUTES = 'suite:ent-nightly, suite:policy'
-TIME = 'SHORT'
-TEST_CATEGORY = 'General'
-TEST_CLASS = 'enterprise'
-TEST_TYPE = 'client'
-'''
+``` python
+	AUTHOR = 'name'
+	NAME = 'full_test_name'
+	ATTRIBUTES = 'suite:ent-nightly, suite:policy'
+	TIME = 'SHORT'
+	TEST_CATEGORY = 'General'
+	TEST_CLASS = 'enterprise'
+	TEST_TYPE = 'client'
+```
+
+On a user policy (client) test, there will be a base control file, plus an
+additional file for each test configuration. [Example](https://cs.corp.google.com/aosp-android10/external/autotest/client/site_tests/policy_AllowDinosaurEasterEgg/)
+In this example there is the "base" control file, with no args specified, which
+is simply named "control". Additionally there is a control file for each
+configuration of the test (.allow, .disallow, .not_set). The args to be
+passed to the test (.py) are specified in the final line of each of those
+control files. Example:
+``` python
+job.run_test('policy_AllowDinosaurEasterEgg',
+             case=True)
+````
+
+### Test file
 
 Example of a basic [test](http://go/basic-ent-test).
-Class name of the test, *policy_ShowHomeButton* has to match the name of
-the .py file.
+The class name of the test, ```policy_ShowHomeButton``` has to match the name
+of the .py file, and should ideally match the directory name as well.
 
-**run_once** - function that gets called first.
+**run_once** - The function that gets called first. Parameters from the
+	control passed into this function.
+
 **setup_case** - sets up DMS, logs in, verifies policies values and various
 other login arguments. Defined:[enterprise_policy_base](http://go/ent-pol-base)
+
 **start_ui_root** - needed if you’re planning on interacting with UI objects
 during your test. Defined:[ui_utils](http://go/ent-ui-utils).
 This [CL](http://crrev.com/c/1531141) describes what ui_utils is based off
@@ -121,17 +157,33 @@ This [utils.py](http://go/ent_util) file which contains many useful functions
 that you’ll come across in tests.
 
 **Some examples:**
-**poll_for_condition** - keeps checking for condition to be true until a time
-limit is reached at which point it fails.
-**run** - allows to run a VT2 command on the DUT.
+
+*	**poll_for_condition** - keeps checking for condition to be true until a
+	timeout is reached at which point an error is raised.
+*	**run** - runs a shell command on the DUT.
 
 ### Difference between device policy test and user policy test
 
-On top of having a control file and a .py test file like you do for a user
-policy test you will also need another control file and another .py server
-file to kick off the client test.
-[Example](http://go/ent-cont-example) of the control file.
-[Example](http://go/ent-test-example) of the .py server file.
+To run test device policies the DUT will need to be fully enrolled, starting
+with a cleared TPM (thus a reboot). Client tests do not support rebooting the
+device before/during/after a test.
+
+In order to support clearing the TPM & rebooting, all device policies must be
+written as a ["server"](https://chromium.googlesource.com/chromiumos/third_party/autotest/+/refs/heads/master/docs/best-practices.md#when_why-to-write-a-server_side-test) test.
+Server tests (for Enterprise) will need a "server" control & test, in addition
+to having a client control file and a .py test file. The server test will do
+any server operations (reboot, servo control, wifi cell control, etc)
+
+Below is an example of testing a device
+[Example](http://go/ent-cont-example) of the server control file. This will
+run the server test [policy_DeviceServer](http://go/ent-test-example) and pass the parameters specified.
+The server test will clear the tpm, create an autotest client of the DUT, then
+run the autotest specified in the control file policy_DeviceAllowBluetooth.
+
+**Note** The parameterization control files are all of the server control
+files. The Client side [control file](http://go/ent-device-client-example) is only a
+pass through for the parameters from the control file, and does not set any new
+behavior.
 
 ### Debugging an autotest
 
@@ -143,8 +195,8 @@ running you can check the results here:
 /tmp/test_that_latest/results-1-TESTNAME/TESTNAME/debug/TESTNAME.INFO
 
 If a test is failing remotely, on stainless, you can view the logs there by
-clicking on the Logs link. You can also see the screenshot of the last screen
-before the test finished although they are rarely useful.
+clicking on the Logs link. You can also see the screenshot of the screen
+when a test errored/failed.
 
 ### Using Servo board with Autotests
 
