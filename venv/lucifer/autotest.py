@@ -108,10 +108,6 @@ Could not find chromite; adding system packages and retrying \
             'django.contrib.sites',
     )
 
-    # drone_utility uses this.
-    common = importlib.import_module('autotest_lib.scheduler.common')
-    common.autotest_dir = AUTOTEST_DIR
-
 
 def _system_site_packages():
     """Get list of system site-package directories.

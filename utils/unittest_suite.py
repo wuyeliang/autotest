@@ -35,7 +35,6 @@ REQUIRES_DJANGO = set((
         'site_rpc_utils_unittest.py',
         'execution_engine_unittest.py',
         'service_proxy_lib_test.py',
-        'scheduler_lib_unittest.py',
         'site_parse_unittest.py',
         'server_manager_unittest.py',
         ))
