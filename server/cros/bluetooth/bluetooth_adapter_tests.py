@@ -578,11 +578,45 @@ class BluetoothAdapterTests(test.test):
             if len(self.chameleon_group[device_type]) == 0:
                 logging.error('No device is detected on %d-th chameleon', idx)
 
-    def get_device_rasp(self, device_num):
+
+    def clear_raspi_device(self, device):
+        """Clears a device on a raspi chameleon by resetting bluetooth stack
+
+        @param device: proxy object of peripheral device
+        """
+
+        try:
+            device.ResetStack()
+
+        except SocketError as e:
+            # Ignore conn reset, expected during stack reset
+            if e.errno != errno.ECONNRESET:
+                raise
+
+        except httplib.BadStatusLine as e:
+            # BadStatusLine occurs occasionally when chameleon
+            # is restarted. We ignore it here
+            logging.error('Ignoring badstatusline exception')
+            pass
+
+        # Catch generic Fault exception by rpc server, ignore
+        # method not available as it indicates platform didn't
+        # support method and that's ok
+        except Exception, e:
+            if not (e.__class__.__name__ == 'Fault' and
+                'is not supported' in str(e)):
+                raise
+
+
+    def get_device_rasp(self, device_num, on_start=True):
         """Get all bluetooth device objects from chameleons.
         This method should be called only after group_chameleons_type
         @param device_num : dict of {device_type:number}, to specify the number
                             of device needed for each device_type.
+
+        @param on_start: boolean describing whether the requested clear is for a
+                            new test, or in the middle of a current one
+
         @returns: True if Success.
         """
 
@@ -595,6 +629,10 @@ class BluetoothAdapterTests(test.test):
 
             for chameleon in self.chameleon_group[device_type][:number]:
                 device = get_bluetooth_emulated_device(chameleon, device_type)
+
+                # Re-fresh device to clean state if test is starting
+                if on_start:
+                    self.clear_raspi_device(device)
 
                 try:
                     # Tell generic chameleon to bind to this device type
@@ -619,16 +657,23 @@ class BluetoothAdapterTests(test.test):
         return True
 
 
-    def get_device(self, device_type):
+    def get_device(self, device_type, on_start=True):
         """Get the bluetooth device object.
 
         @param device_type : the bluetooth device type, e.g., 'MOUSE'
+
+        @param on_start: boolean describing whether the requested clear is for a
+                            new test, or in the middle of a current one
 
         @returns: the bluetooth device object
 
         """
         self.devices[device_type].append(get_bluetooth_emulated_device(\
                                     self.host.chameleon, device_type))
+
+        # Re-fresh device to clean state if test is starting
+        if on_start:
+            self.clear_raspi_device(self.devices[device_type][-1])
 
         try:
             # Tell generic chameleon to bind to this device type
@@ -2757,32 +2802,8 @@ class BluetoothAdapterTests(test.test):
                 if device is not None:
                     device.Close()
 
-                    # If module has a reset feature, use it
-                    if on_start:
-                        try:
-                            device.ResetStack()
-
-                        except SocketError as e:
-                            # Ignore conn reset, expected during stack reset
-                            if e.errno != errno.ECONNRESET:
-                                raise
-
-                        except httplib.BadStatusLine as e:
-                            # BadStatusLine occurs occasionally when chameleon
-                            # is restarted. We ignore it here
-                            logging.error('Ignoring badstatusline exception')
-                            pass
-
-                        # Catch generic Fault exception by rpc server, ignore
-                        # method not available as it indicates platform didn't
-                        # support method and that's ok
-                        except Exception, e:
-                            if not (e.__class__.__name__ == 'Fault' and
-                                'is not supported' in str(e)):
-                                raise
-
-                    else:
-                        # If we are doing a reset action, powercycle device
+                    # Power cycle BT device if we're in the middle of a test
+                    if not on_start:
                         device.PowerCycle()
 
         self.devices = dict()
