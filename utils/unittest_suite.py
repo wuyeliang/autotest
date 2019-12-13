@@ -27,26 +27,16 @@ parser.set_defaults(module_list=None)
 # using 'mirror/trigger_unittest.py', instead of 'trigger_unittest.py' only.
 
 REQUIRES_DJANGO = set((
-        'monitor_db_unittest.py',
-        'monitor_db_functional_test.py',
-        'monitor_db_cleanup_test.py',
         'frontend_unittest.py',
         'csv_encoder_unittest.py',
         'rpc_interface_unittest.py',
         'models_test.py',
-        'scheduler_models_unittest.py',
         'rpc_utils_unittest.py',
         'site_rpc_utils_unittest.py',
         'execution_engine_unittest.py',
         'service_proxy_lib_test.py',
-        'rdb_integration_tests.py',
-        'rdb_unittest.py',
-        'rdb_hosts_unittest.py',
-        'rdb_cache_unittests.py',
         'scheduler_lib_unittest.py',
-        'host_scheduler_unittests.py',
         'site_parse_unittest.py',
-        'shard_client_integration_tests.py',
         'server_manager_unittest.py',
         ))
 
@@ -98,7 +88,6 @@ SKIP = set((
     'ap_configurator_test.py',
     'chaos_base_test.py',
     'chaos_interop_test.py',
-    'only_if_needed_unittests.py',
     # crbug.com/251395
     'dev_server_test.py',
     'full_release_test.py',
