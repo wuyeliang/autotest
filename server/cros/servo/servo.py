@@ -1188,8 +1188,20 @@ class Servo(object):
         """
         ap_image_candidates = ('image.bin', 'image-%s.bin' % model,
                                'image-%s.bin' % board)
-        ec_image_candidates = ('ec.bin', '%s/ec.bin' % model,
-                               '%s/ec.bin' % board)
+
+        # Best effort; try to retrieve the EC board from the version as
+        # reported by the EC.
+        ec_board = None
+        try:
+          ec_board = self.get('ec_board')
+        except Exception as err:
+          logging.info('Failed to get ec_board value; ignoring')
+          pass
+
+        ec_image_candidates = ['ec.bin', '%s/ec.bin' % model,
+                               '%s/ec.bin' % board]
+        if ec_board:
+          ec_image_candidates.append('%s/ec.bin' % ec_board)
 
         self._reprogram(tarball_path, 'EC', ec_image_candidates, rw_only)
         self._reprogram(tarball_path, 'BIOS', ap_image_candidates, rw_only)
