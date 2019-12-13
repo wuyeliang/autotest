@@ -13,7 +13,7 @@ import os
 from autotest_lib.client.common_lib import utils
 from autotest_lib.frontend.afe import models, model_attributes
 from autotest_lib.scheduler import agent_task, drones, drone_manager
-from autotest_lib.scheduler import email_manager, pidfile_monitor
+from autotest_lib.scheduler import pidfile_monitor
 from autotest_lib.scheduler import scheduler_config
 from autotest_lib.server import autoserv_utils
 
@@ -69,10 +69,6 @@ class PostJobTask(agent_task.AgentTask):
             elif was_aborted != bool(queue_entry.aborted): # subsequent entries
                 entries = ['%s (aborted: %s)' % (entry, entry.aborted)
                            for entry in self.queue_entries]
-                email_manager.manager.enqueue_notify_email(
-                        'Inconsistent abort state',
-                        'Queue entries have inconsistent abort state:\n' +
-                        '\n'.join(entries))
                 # don't crash here, just assume true
                 return True
         return was_aborted
@@ -174,10 +170,6 @@ class SelfThrottledPostJobTask(PostJobTask):
     def _notify_process_limit_hit(cls):
         """Send an email to notify that process limit is hit."""
         if cls._notification_on:
-            subject = '%s: hitting max process limit.' % cls.__name__
-            message = ('Running processes/Max processes: %d/%d'
-                       % (cls._num_running_processes, cls._max_processes()))
-            email_manager.manager.enqueue_notify_email(subject, message)
             cls._notification_on = False
 
 

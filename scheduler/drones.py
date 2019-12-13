@@ -6,7 +6,7 @@ import os
 import time
 
 import common
-from autotest_lib.scheduler import drone_utility, email_manager
+from autotest_lib.scheduler import drone_utility
 from autotest_lib.client.bin import local_host
 from autotest_lib.client.common_lib import error, global_config
 
@@ -104,7 +104,6 @@ class SiteDrone(object):
         for warning in return_message['warnings']:
             subject = 'Warning from drone %s' % self.hostname
             logging.warning(subject + '\n' + warning)
-            email_manager.manager.enqueue_notify_email(subject, warning)
         return return_message['results']
 
 

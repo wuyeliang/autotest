@@ -117,7 +117,6 @@ from autotest_lib.client.common_lib import global_config
 from autotest_lib.client.common_lib import utils
 from autotest_lib.frontend.afe import models
 from autotest_lib.scheduler import drone_manager
-from autotest_lib.scheduler import email_manager
 from autotest_lib.scheduler import pidfile_monitor
 from autotest_lib.scheduler import rdb_lib
 from autotest_lib.scheduler import scheduler_lib
@@ -516,9 +515,6 @@ class AgentTask(object):
                                  % (class_name, entry.status, entry,
                                     entry.job))
                 logging.error(error_message)
-                email_manager.manager.enqueue_notify_email(
-                    'Job Aborted - Invalid Host Queue Entry Status',
-                    error_message)
                 entry.job.request_abort()
             invalid_host_status = (
                     allowed_host_statuses is not None
@@ -532,8 +528,6 @@ class AgentTask(object):
                                  % (class_name, entry.host.status, entry,
                                     entry.job))
                 logging.error(error_message)
-                email_manager.manager.enqueue_notify_email(
-                    'Job Aborted - Invalid Host Status', error_message)
                 entry.job.request_abort()
 
 
