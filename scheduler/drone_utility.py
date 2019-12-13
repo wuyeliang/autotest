@@ -31,10 +31,8 @@ import common
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import global_config
-from autotest_lib.client.common_lib import logging_manager
 from autotest_lib.client.common_lib import utils
 from autotest_lib.client.common_lib.cros import retry
-from autotest_lib.scheduler import drone_logging_config
 from autotest_lib.scheduler import scheduler_config
 from autotest_lib.server import subcommand
 
@@ -656,8 +654,6 @@ def _read_pidfile(pidfile_path):
 
 
 def main():
-    logging_manager.configure_logging(
-            drone_logging_config.DroneLoggingConfig())
     calls = parse_input()
     args = _parse_args(sys.argv[1:])
 
