@@ -46,7 +46,7 @@ class power_Standby(test.test):
 
         power_stats = power_status.get_status()
 
-        if not ac_ok and power_stats.on_ac():
+        if not force_discharge and not ac_ok and power_stats.on_ac():
             raise error.TestError('On AC, please unplug power supply.')
 
         if force_discharge:
