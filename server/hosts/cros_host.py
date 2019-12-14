@@ -2043,3 +2043,61 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                               'setup does not support pd controls. Falling '
                               'back to default RPM method.')
         return self._default_power_method
+
+
+    def find_usb_devices(self, idVendor, idProduct):
+        """
+        Get usb device sysfs name for specific device.
+
+        @param idVendor  Vendor ID to search in sysfs directory.
+        @param idProduct Product ID to search in sysfs directory.
+
+        @return Usb node names in /sys/bus/usb/drivers/usb/ that match.
+        """
+        # Look for matching file and cut at position 7 to get dir name.
+        grep_cmd = 'grep {} /sys/bus/usb/drivers/usb/*/{} | cut -f 7 -d /'
+
+        vendor_cmd = grep_cmd.format(idVendor, 'idVendor')
+        product_cmd = grep_cmd.format(idProduct, 'idProduct')
+
+        # Use uniq -d to print duplicate line from both command
+        cmd = 'sort <({}) <({}) | uniq -d'.format(vendor_cmd, product_cmd)
+
+        return self.run(cmd, ignore_status=True).stdout.strip().split('\n')
+
+
+    def bind_usb_device(self, usb_node):
+        """
+        Bind usb device
+
+        @param usb_node Node name in /sys/bus/usb/drivers/usb/
+        """
+        cmd = 'echo {} > /sys/bus/usb/drivers/usb/bind'.format(usb_node)
+        self.run(cmd, ignore_status=True)
+
+
+    def unbind_usb_device(self, usb_node):
+        """
+        Unbind usb device
+
+        @param usb_node Node name in /sys/bus/usb/drivers/usb/
+        """
+        cmd = 'echo {} > /sys/bus/usb/drivers/usb/unbind'.format(usb_node)
+        self.run(cmd, ignore_status=True)
+
+
+    def get_wlan_ip(self):
+        """
+        Get ip address of wlan interface.
+
+        @return ip address of wlan or empty string if wlan is not connected.
+        """
+        cmds = [
+            'iw dev',                   # List wlan physical device
+            'grep Interface',           # Grep only interface name
+            'cut -f 2 -d" "',           # Cut the name part
+            'xargs ifconfig',           # Feed it to ifconfig to get ip
+            'grep -oE "inet [0-9.]+"',  # Grep only ipv4
+            'cut -f 2 -d " "'           # Cut the ip part
+        ]
+        return self.run(' | '.join(cmds), ignore_status=True).stdout.strip()
