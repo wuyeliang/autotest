@@ -7,7 +7,6 @@ import os
 import re
 import sys
 import time
-import traceback
 
 import common
 from autotest_lib.client.bin import utils
