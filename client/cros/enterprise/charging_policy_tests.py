@@ -6,20 +6,18 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.enterprise import enterprise_policy_base
 from autotest_lib.client.cros.power import power_status
 
+
 class ChargingPolicyTest(enterprise_policy_base.EnterprisePolicyTest):
     """
     A Client test that verifies that AC usage and battery charging is consistent
     with policy settings. As of this writing, these features are only present on
     the Wilco platform.
     """
-    # The Wilco EC updates it's charging behavior every 10 seconds,
-    # so give ourselves 15 seconds to notice a change in behavior.
-    POLICY_CHANGE_TIMEOUT = 15
+    # The Wilco EC updates it's charging behavior every 60 seconds,
+    # so give ourselves 120 seconds to notice a change in behavior.
+    POLICY_CHANGE_TIMEOUT = 120
 
-    def run_once(self,
-                 test_cases,
-                 min_battery_level,
-                 prep_policies):
+    def run_once(self, test_cases, min_battery_level, prep_policies):
         """
         Test a collection of cases.
 
@@ -53,7 +51,7 @@ class ChargingPolicyTest(enterprise_policy_base.EnterprisePolicyTest):
                 failures.append(err)
         if failures:
             raise error.TestFail('Failed the following cases: {}'.format(
-                str(failures)))
+                    str(failures)))
 
     def _test_policies(self, policies, expected_behavior, min_battery_level):
         self.update_policies(device_policies=policies)
@@ -63,7 +61,7 @@ class ChargingPolicyTest(enterprise_policy_base.EnterprisePolicyTest):
                                                     self.POLICY_CHANGE_TIMEOUT)
         except BaseException as e:
             msg = ('Expected to be {} using policies {}. Got this instead: {}'.
-                format(expected_behavior, policies, str(e)))
+                   format(expected_behavior, policies, str(e)))
             return msg
         return None
 
