@@ -55,22 +55,28 @@ class FingerprintTest(test.test):
     _KEY_TYPE_MP = 'mp'
 
     # EC board names for FPMCUs
+    _FP_BOARD_NAME_DARTMONKEY = 'dartmonkey'
     _FP_BOARD_NAME_NOCTURNE = 'nocturne_fp'
     _FP_BOARD_NAME_NAMI = 'nami_fp'
 
     # Map from signing key ID to type of signing key
     _KEY_ID_MAP_ = {
+        # dartmonkey
+        '257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799': _KEY_TYPE_MP,
+
         # nocturne
         '6f38c866182bd9bf7a4462c06ac04fa6a0074351': _KEY_TYPE_MP,
 
         # nami
         '754aea623d69975a22998f7b97315dd53115d723': _KEY_TYPE_PRE_MP,
         '35486c0090ca390408f1fbbf2a182966084fe2f8': _KEY_TYPE_MP
+
     }
 
     # RO versions that are flashed in the factory
     # (for eternity for a given board)
     _GOLDEN_RO_FIRMWARE_VERSION_MAP = {
+        _FP_BOARD_NAME_DARTMONKEY: 'dartmonkey_v2.0.2887-311310808',
         _FP_BOARD_NAME_NOCTURNE: 'nocturne_fp_v2.2.64-58cf5974e',
         _FP_BOARD_NAME_NAMI: 'nami_fp_v2.2.144-7a08e07eb',
     }
@@ -115,6 +121,14 @@ class FingerprintTest(test.test):
                 _FIRMWARE_VERSION_KEY_ID: '35486c0090ca390408f1fbbf2a182966084fe2f8',
             },
         },
+        _FP_BOARD_NAME_DARTMONKEY: {
+            'dartmonkey_v2.0.2887-311310808.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: '90716b73d1db5a1b6108530be1d11addf3b13e643bc6f96d417cbce383f3cb18',
+                _FIRMWARE_VERSION_RO_VERSION: 'dartmonkey_v2.0.2887-311310808',
+                _FIRMWARE_VERSION_RW_VERSION: 'dartmonkey_v2.0.2887-311310808',
+                _FIRMWARE_VERSION_KEY_ID: '257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799',
+            }
+        }
     }
 
     _BIOD_UPSTART_JOB_NAME = 'biod'
