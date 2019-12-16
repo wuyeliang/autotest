@@ -6,7 +6,7 @@ from autotest_lib.server import autotest
 from autotest_lib.server import test
 
 
-class policy_DeviceDockMacAddressSource(test.test):
+class policy_WilcoServerDeviceDockMacAddressSource(test.test):
     """Test that verifies DeviceDockMacAddressSource policy.
 
     If the policy is set to 1, dock will grab the designated mac address from
