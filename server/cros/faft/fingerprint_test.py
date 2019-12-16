@@ -125,6 +125,7 @@ class FingerprintTest(test.test):
     _INIT_ENTROPY_CMD = 'bio_wash --factory_init'
 
     _CROS_FP_ARG = '--name=cros_fp'
+    _CROS_CONFIG_FINGERPRINT_PATH = '/fingerprint'
     _ECTOOL_RO_VERSION = 'RO version'
     _ECTOOL_RW_VERSION = 'RW version'
     _ECTOOL_FIRMWARE_COPY = 'Firmware copy'
@@ -353,9 +354,29 @@ class FingerprintTest(test.test):
         self.set_hardware_write_protect(enable_hardware_write_protect)
 
     def get_fp_board(self):
-        """Returns name of fingerprint EC."""
+        """Returns name of fingerprint EC.
+
+        nocturne and nami are special cases and have "_fp" appended. Newer
+        FPMCUs have unique names.
+        See go/cros-fingerprint-firmware-branching-and-signing.
+        """
+
+        # For devices that don't have unibuild support (which is required to
+        # use cros_config).
+        # TODO(https://crrev.com/i/2313151): nami has unibuild support, but
+        # needs its model.yaml updated.
+        # TODO(https://crbug.com/1030862): remove when nocturne has cros_config
+        #  support.
         board = self.host.get_board().replace(ds_constants.BOARD_PREFIX, '')
-        return board + self._FINGERPRINT_BOARD_NAME_SUFFIX
+        if board == 'nami' or board == 'nocturne':
+            return board + self._FINGERPRINT_BOARD_NAME_SUFFIX
+
+        # Use cros_config to get fingerprint board.
+        result = self._run_cros_config_cmd('board')
+        if result.exit_status != 0:
+            raise error.TestFail(
+                'Unable to get fingerprint board with cros_config')
+        return result.stdout.rstrip()
 
     def get_build_fw_file(self):
         """Returns full path to build FW file on DUT."""
@@ -719,6 +740,13 @@ class FingerprintTest(test.test):
     def _run_ectool_cmd(self, command):
         """Runs ectool on DUT; return result with output and exit code."""
         cmd = 'ectool ' + self._CROS_FP_ARG + ' ' + command
+        result = self.run_cmd(cmd)
+        return result
+
+    def _run_cros_config_cmd(self, command):
+        """Runs cros_config on DUT; return result with output and exit code."""
+        cmd = 'cros_config ' + self._CROS_CONFIG_FINGERPRINT_PATH + ' ' \
+              + command
         result = self.run_cmd(cmd)
         return result
 
