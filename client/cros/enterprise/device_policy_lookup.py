@@ -121,7 +121,7 @@ DEVICE_POLICY_DICT = {
     'DeviceDockMacAddressSource': 'device_dock_mac_address_source.source',
     'DeviceUsbPowerShareEnabled': 'device_usb_power_share.enabled',
     'DeviceAdvancedBatteryChargeModeEnabled': 'device_advanced_battery_charge_mode.enabled',
-    'DeviceAdvancedBatteryChargeModeDayConfig': 'device_advanced_battery_charge_mode.day_config',
+    'DeviceAdvancedBatteryChargeModeDayConfig': 'device_advanced_battery_charge_mode.day_configs',
     'DeviceBatteryChargeMode': 'device_battery_charge_mode.battery_charge_mode',
     'DeviceBatteryChargeCustomStartCharging': 'device_battery_charge_mode.custom_charge_start',
     'DeviceBatteryChargeCustomStopCharging': 'device_battery_charge_mode.custom_charge_stop',
