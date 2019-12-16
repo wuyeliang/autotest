@@ -533,8 +533,7 @@ class power_LoadTest(arc.ArcTest):
                             core_keyvals.iteritems()}
         else:
             for key, value in core_keyvals.iteritems():
-                if key.startswith('percent_cpuidle') and \
-                   key.endswith('C0_time'):
+                if re.match(r'percent_[cg]pu(idle|pkg).*_R?C0(_C1)?_time', key):
                     self.output_perf_value(description=key,
                                            value=value,
                                            units='percent',
