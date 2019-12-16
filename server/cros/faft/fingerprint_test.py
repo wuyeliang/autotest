@@ -19,7 +19,7 @@ class FingerprintTest(test.test):
     _FINGERPRINT_BOARD_NAME_SUFFIX = '_fp'
 
     # Location of firmware from the build on the DUT
-    _FINGERPRINT_BUILD_FW_GLOB = '/opt/google/biod/fw/*_fp*.bin'
+    _FINGERPRINT_BUILD_FW_DIR = '/opt/google/biod/fw'
 
     _GENIMAGES_SCRIPT_NAME = 'gen_test_images.sh'
     _GENIMAGES_OUTPUT_DIR_NAME = 'images'
@@ -380,7 +380,10 @@ class FingerprintTest(test.test):
 
     def get_build_fw_file(self):
         """Returns full path to build FW file on DUT."""
-        ls_cmd = 'ls ' + self._FINGERPRINT_BUILD_FW_GLOB
+
+        fp_board = self.get_fp_board()
+        ls_cmd = 'ls ' + self._FINGERPRINT_BUILD_FW_DIR + '/' + fp_board \
+                 + '*.bin'
         result = self.run_cmd(ls_cmd)
         if result.exit_status != 0:
             raise error.TestFail('Unable to find firmware from build on device')
