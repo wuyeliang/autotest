@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-import time
 
 import common
 from autotest_lib.client.common_lib import hosts
@@ -281,35 +280,7 @@ class _RestartServod(hosts.RepairAction):
                     'Can\'t restart servod: not running '
                     'embedded Chrome OS.',
                     'servo_not_applicable_to_non_cros_host')
-        host.run('stop servod PORT=%d || true' % host.servo_port)
-        # Wait for existing servod process turned down.
-        time.sleep(3)
-
-        serial = 'SERIAL=%s' % host.servo_serial if host.servo_serial else ''
-        model = 'MODEL=%s' % host.servo_model if host.servo_model else ''
-        if host.servo_board:
-            host.run('start servod BOARD=%s %s PORT=%d %s' %
-                     (host.servo_board, model, host.servo_port, serial))
-        else:
-            # TODO(jrbarnette):  It remains to be seen whether
-            # this action is the right thing to do...
-            logging.warning('Board for DUT is unknown; starting '
-                            'servod assuming a pre-configured '
-                            'board.')
-            host.run('start servod PORT=%d %s' % (host.servo_port, serial))
-        # There's a lag between when `start servod` completes and when
-        # the _ServodConnectionVerifier trigger can actually succeed.
-        # The call to time.sleep() below gives time to make sure that
-        # the trigger won't fail after we return.
-        #
-        # The delay selection was based on empirical testing against
-        # servo V3 on a desktop:
-        #   + 10 seconds was usually too slow; 11 seconds was
-        #     usually fast enough.
-        #   + So, the 20 second delay is about double what we
-        #     expect to need.
-        time.sleep(20)
-
+        host.restart_servod()
 
     @property
     def description(self):

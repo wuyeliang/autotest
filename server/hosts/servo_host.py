@@ -11,6 +11,7 @@
 
 import logging
 import os
+import time
 import traceback
 import xmlrpclib
 
@@ -39,6 +40,11 @@ SERVO_ATTR_KEYS = (
         SERVO_PORT_ATTR,
         SERVO_SERIAL_ATTR,
 )
+
+# Timeout value for stop/start servod process.
+SERVOD_TEARDOWN_TIMEOUT = 3
+SERVOD_QUICK_STARTUP_TIMEOUT = 20
+SERVOD_STARTUP_TIMEOUT = 60
 
 _CONFIG = global_config.global_config
 ENABLE_SSH_TUNNEL_FOR_SERVO = _CONFIG.get_config_value(
@@ -148,6 +154,7 @@ class ServoHost(base_servohost.BaseServoHost):
             self.rpc_server_tracker.disconnect(self.servo_port)
             self._servo = None
 
+
     def _create_servod_server_proxy(self):
         """Create a proxy that can be used to communicate with servod server.
 
@@ -189,6 +196,7 @@ class ServoHost(base_servohost.BaseServoHost):
             self._repair_strategy.verify(self, silent)
         except:
             self.disconnect_servo()
+            self.stop_servod()
             raise
 
 
@@ -208,6 +216,7 @@ class ServoHost(base_servohost.BaseServoHost):
                 self.withdraw_reboot_request()
         except:
             self.disconnect_servo()
+            self.stop_servod()
             raise
 
 
@@ -236,6 +245,55 @@ class ServoHost(base_servohost.BaseServoHost):
                       ' by servo with port # %s if exists.',
                       self.hostname, self.servo_port)
         self.run('rm -f %s' % self._reboot_file, ignore_status=True)
+
+
+    def start_servod(self, quick_startup=False):
+        """Start the servod process on servohost.
+        """
+        if self.servo_board:
+            cmd = 'start servod BOARD=%s' % self.servo_board
+            if self.servo_model:
+                cmd += ' MODEL=%s' % self.servo_model
+            cmd += ' PORT=%d' % self.servo_port
+            if self.servo_serial:
+                cmd += ' SERIAL=%s' % self.servo_serial
+            self.run(cmd)
+        else:
+            raise hosts.AutoservVerifyError('Servo board is not configured!')
+
+        # There's a lag between when `start servod` completes and when
+        # the _ServodConnectionVerifier trigger can actually succeed.
+        # The call to time.sleep() below gives time to make sure that
+        # the trigger won't fail after we return.
+
+        # Normally servod on servo_v3 and labstation take ~10 seconds to ready,
+        # But in the rare case all servo on a labstation are in heavy use they
+        # may take ~30 seconds. So the timeout value will double these value,
+        # and we'll try quick start up when first time initialize servohost,
+        # and use standard start up timeout in repair.
+        if quick_startup:
+            timeout = SERVOD_QUICK_STARTUP_TIMEOUT
+        else:
+            timeout = SERVOD_STARTUP_TIMEOUT
+        logging.debug('Wait %s seconds for servod process fully up.', timeout)
+        time.sleep(timeout)
+
+
+    def stop_servod(self):
+        """Stop the servod process on servohost.
+        """
+        logging.debug('Stopping servod on port %s', self.servo_port)
+        self.run('stop servod PORT=%d' % self.servo_port, ignore_status=True)
+        logging.debug('Wait %s seconds for servod process fully teardown.',
+                      SERVOD_TEARDOWN_TIMEOUT)
+        time.sleep(SERVOD_TEARDOWN_TIMEOUT)
+
+
+    def restart_servod(self, quick_startup=False):
+        """Restart the servod process on servohost.
+        """
+        self.stop_servod()
+        self.start_servod(quick_startup)
 
 
     def _lock(self):
@@ -272,6 +330,10 @@ class ServoHost(base_servohost.BaseServoHost):
                 logging.error('Unlock servohost failed due to ssh timeout.'
                               ' It may caused by servohost went down during'
                               ' the task.')
+
+        # We want always stop servod after task to minimum the impact of bad
+        # servod process interfere other servods.(see crbug.com/1028665)
+        self.stop_servod()
 
         super(ServoHost, self).close()
 
@@ -448,6 +510,7 @@ def create_servo_host(dut, servo_args, try_lab_servo=False,
         return None
 
     newhost = ServoHost(**servo_args)
+    newhost.restart_servod(quick_startup=True)
 
     # TODO(gregorynisbet): Clean all of this up.
     logging.debug('create_servo_host: attempt to set info store on '
