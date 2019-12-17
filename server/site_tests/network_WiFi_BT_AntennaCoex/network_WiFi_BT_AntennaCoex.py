@@ -145,6 +145,6 @@ class network_WiFi_BT_AntennaCoex(
             self.wifi_context.router.deconfig()
 
     def cleanup(self):
+        super(network_WiFi_BT_AntennaCoex, self).cleanup()
         if hasattr(self, 'wifi_context'):
             self.wifi_context.teardown()
-        super(network_WiFi_BT_AntennaCoex, self).cleanup()
