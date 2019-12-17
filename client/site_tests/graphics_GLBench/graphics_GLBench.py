@@ -199,15 +199,6 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
             units=unit,
             higher_is_better=higher,
             graph=perf_value_name)
-        # Add extra value to the graph distinguishing different boards.
-        variant = utils.get_board_with_frequency_and_memory()
-        desc = '%s-%s' % (perf_value_name, variant)
-        self.output_perf_value(
-            description=desc,
-            value=testrating,
-            units=unit,
-            higher_is_better=higher,
-            graph=perf_value_name)
 
       # Classify result image.
       if testrating == -1.0:
