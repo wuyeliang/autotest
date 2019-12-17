@@ -226,6 +226,7 @@ suite:vmtest-informational4
 suite:wifi_atten_perf
 suite:wifi_endtoend
 suite:wifi_flaky
+suite:wifi_func_tast
 suite:wifi_interop
 suite:wifi_interop_static
 suite:wifi_interop_wpa2
