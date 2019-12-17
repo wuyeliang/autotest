@@ -503,7 +503,11 @@ def create_servo_host(dut, servo_args, try_lab_servo=False,
     # by verify().  It's sufficient to call one or the other;
     # we don't need both.
     if servo_dependency:
-        newhost.repair(silent=True)
+        try:
+            newhost.repair(silent=True)
+        except Exception:
+            logging.exception('[servo_dependency] servo repair failed for '
+                              '(%s)', newhost.hostname)
         return newhost
 
     if try_servo_repair:
