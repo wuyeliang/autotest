@@ -325,6 +325,11 @@ class ChameleonBoard(object):
         self._chameleond_proxy.Reboot()
 
 
+    def get_bt_pkg_version(self):
+        """ Read the current version of chameleond."""
+        return self._chameleond_proxy.get_bt_pkg_version()
+
+
     def _get_log(self):
         """Get log from chameleon. It will be registered by atexit.
 
