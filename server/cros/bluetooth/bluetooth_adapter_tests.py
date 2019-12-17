@@ -1149,7 +1149,7 @@ class BluetoothAdapterTests(test.test):
     # -------------------------------------------------------------------
 
 
-    @_test_retry_and_log
+    @_test_retry_and_log(False)
     def test_discover_device(self, device_address):
         """Test that the adapter could discover the specified device address.
 
