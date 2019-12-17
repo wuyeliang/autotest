@@ -31,6 +31,7 @@ import uuid
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import magic
 from autotest_lib.client.common_lib import utils
+from autotest_lib.client.common_lib.cros import cros_config
 
 from autotest_lib.client.common_lib.utils import *
 
@@ -2102,12 +2103,7 @@ def get_platform():
 
     @returns platform name
     """
-    platform = ''
-    command = 'mosys platform model'
-    result = utils.run(command, ignore_status=True)
-    if result.exit_status == 0:
-        platform = result.stdout.strip()
-
+    platform = cros_config.call_cros_config_get_output('/ name', utils.run)
     if platform == '':
         platform = get_board()
     return platform
@@ -2119,11 +2115,8 @@ def get_sku():
 
     @returns SKU number
     """
-    command = 'mosys platform sku'
-    result = utils.run(command, ignore_status=True)
-    if result.exit_status != 0:
-        return ''
-    return result.stdout.strip()
+    return cros_config.call_cros_config_get_output('/identity sku-id',
+                                                   utils.run)
 
 
 def get_ec_version():
