@@ -248,7 +248,13 @@ def create_powercap():
             with open(root + '/name', 'r') as fn:
                 name = fn.read().rstrip()
                 rapl_map[name] = root
-    return [Powercap(name, root) for name, root in rapl_map.iteritems()]
+    powercaps = [Powercap(name, root) for name, root in rapl_map.iteritems()]
+
+    pl1_path = os.path.join(powercap, 'intel-rapl:0',
+                            'constraint_0_power_limit_uw')
+    if os.path.isfile(pl1_path):
+        powercaps.append(PowercapPL1(pl1_path))
+    return powercaps
 
 
 class Powercap(power_status.PowerMeasurement):
@@ -310,3 +316,36 @@ class Powercap(power_status.PowerMeasurement):
         self._energy_start = energy_now
         self._time_start = time_now
         return average_power
+
+
+class PowercapPL1(power_status.PowerMeasurement):
+    """Classes to support RAPL power limit via powercap sysfs
+
+    This class utilizes the subset of Linux powercap driver to report
+    energy consumption, in this manner, we do not need microarchitecture
+    knowledge in userspace program.
+    """
+
+    def __init__(self, file):
+        """Constructor.
+
+        Args:
+            file: path to file containing PL1.
+        """
+        super(PowercapPL1, self).__init__('PL1')
+        self._file = open(file, 'r')
+
+
+    def __del__(self):
+        """Deconstructor for PowercapPL1 class.
+        """
+        self._file.close()
+
+
+    def refresh(self):
+        """refresh method.
+
+        Get PL1 in Watt.
+        """
+        self._file.seek(0)
+        return int(self._file.read().rstrip()) / 1000000.
