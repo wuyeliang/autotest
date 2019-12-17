@@ -33,7 +33,7 @@ so that you don't have to wait for your new fallbacks to get promoted.
 import logging
 
 import common
-from client.common_lib import error
+from autotest_lib.client.common_lib import error
 
 FALLBACKS = {
         '/firmware image-name': 'mosys platform model',

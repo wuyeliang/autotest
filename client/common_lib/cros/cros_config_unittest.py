@@ -7,9 +7,9 @@
 import unittest
 
 import common
-from client.common_lib import error
-from client.common_lib import utils
-from client.common_lib.cros import cros_config
+from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib import utils
+from autotest_lib.client.common_lib.cros import cros_config
 
 # Lots of command-line mocking in this file.
 # Mock cros_config results are based on the path and property provided.
