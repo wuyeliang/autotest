@@ -87,6 +87,23 @@ class power_VideoPlayback(power_videotest.power_VideoTest):
         ),
     ]
 
+
+    _FAST_BASE_URL = 'http://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/power/10s/'
+    _FAST_VIDEOS = [
+        ('h264_720_30fps',
+            _FAST_BASE_URL + '720p30fpsH264_foodmarket_sync_10s.mp4'
+        ),
+        ('vp8_720_30fps',
+            _FAST_BASE_URL + '720p30fpsVP8_foodmarket_sync_10s.webm'
+        ),
+        ('vp9_720_30fps',
+            _FAST_BASE_URL + '720p30fpsVP9_foodmarket_sync_10s.webm'
+        ),
+        ('av1_720_30fps',
+            _FAST_BASE_URL + '720p30fpsAV1_foodmarket_sync_10s.mp4'
+        ),
+    ]
+
     def _prepare_video(self, cr, url):
         """Prepare browser session before playing video.
 
@@ -121,15 +138,16 @@ class power_VideoPlayback(power_videotest.power_VideoTest):
         os.remove(local_path)
 
     def run_once(self, videos=None, secs_per_video=_MEASUREMENT_DURATION,
-                 use_hw_decode=True):
+                 use_hw_decode=True, fast=False):
         """run_once method.
 
         @param videos: list of tuple of tagname and video url to test.
         @param secs_per_video: time in seconds to play video and measure power.
         @param use_hw_decode: if False, disable hw video decoding.
+        @param fast: Use smaller set of videos when videos is None.
         """
         if not videos:
-            videos = self._VIDEOS
+            videos = self._FAST_VIDEOS if fast else self._VIDEOS
 
         super(power_VideoPlayback, self).run_once(
             videos, secs_per_video, use_hw_decode)
