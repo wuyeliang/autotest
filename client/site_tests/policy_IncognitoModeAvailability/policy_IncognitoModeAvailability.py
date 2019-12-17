@@ -36,8 +36,8 @@ class policy_IncognitoModeAvailability(
 
         """
         button_name = '/New incognito window/'
-        self.ui.wait_for_ui_obj('Chrome', role='button')
-        self.ui.doDefault_on_obj('Chrome', role='button')
+        self.ui.wait_for_ui_obj('Chrome')
+        self.ui.doDefault_on_obj('Chrome')
         if case == 'Available' and not self.ui.item_present(button_name,
                                                             isRegex=True):
             raise error.TestFail('Incognito not available')

@@ -20,7 +20,7 @@ class policy_PrintingEnabled(
         @param case: bool or None, the setting of the PrintingEnabled Policy
 
         """
-        self.ui.doDefault_on_obj('Chrome', role='button')
+        self.ui.doDefault_on_obj('Chrome')
         self.ui.wait_for_ui_obj('/Print/', role='menuItem', isRegex=True)
         print_disabled = self.ui.is_obj_restricted('/Print/',
                                                    role='menuItem',
