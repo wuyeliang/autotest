@@ -60,7 +60,7 @@ in the lab. To reserve a device from the lab please follow these steps:
 
 *	Setup skylab using go/skylab-tools-guide (Advanced users: Manual
 	installation)
-*	"Lease" a dut go/skylab-dut-locking   
+*	"Lease" a dut go/skylab-dut-locking
 *   Grab the host name, for example: chromeos15-row3-rack13-host2. Do not
 	include the prefix (e.g. "crossk")
 *	Use this as the IP: chromeos15-row3-rack13-host2**.cros**.
@@ -83,7 +83,7 @@ Or this command to update the DUT directly(flaky):
 ```sh
 *./crosdl.py -c dev -t -b 12105.54.0 -p sarien --to_ip $IP_ADDRESS*
 ```
-	Note: The DUT must be reachable via SSH for this to work.
+Note: The DUT must be reachable via SSH for this to work.
 
 
 To find out the right build number, please use [goldeneye](http://go/goldeneye)
@@ -136,7 +136,7 @@ of the .py file, and should ideally match the directory name as well.
 	control passed into this function.
 
 **setup_case** - sets up DMS, logs in, verifies policies values and various
-other login arguments. Defined:[enterprise_policy_base](http://go/ent-pol-base)
+other login arguments. Defined: [enterprise_policy_base](http://go/ent-pol-base). Explained in detail below.
 
 **start_ui_root** - needed if you’re planning on interacting with UI objects
 during your test. Defined:[ui_utils](http://go/ent-ui-utils).
@@ -222,3 +222,99 @@ you can now execute dut-control commands such as
 
 With the servod running you can now execute local tests using the servo board.
 [Example test using servo](http://go/servo-ent-example-test).
+
+## Enterprise Autotest Infra
+
+This section will focus on a basic explination of the [Enterprise base class](http://go/ent-pol-base)
+used for autotest, along with commonly used calls, APIs, etc.
+
+### Base class overview:
+
+The enterprise base class currently supports the following:
+*	Enrolling with a fake account & DMS through the full OOBE flow. Commonly
+		used for device policy testing)
+*	Kiosk enrollment with fake account
+*	Enrolling for user policies (not requiring OOBE flow).
+*	Enterprise ARC tests
+*	Logging in with a real account/DMS
+*	Enrolling with a real account- currently broken see http://crbug.com/1019320
+*	Configuring User/Device/Extension policies with a fake DMS
+*	Obtaining policies through an API
+*	Verifying policies
+*	UI interaction
+
+In addition to the features above, the base class will setup chrome for
+testing. This includes passing in username/password, browser flags, ARC
+settings, etc.
+
+
+### Policy Management
+
+Policy Managing with a fake DMS is mostly handled via the [policy_manager](http://go/ent-pol-manager).
+
+The Enterprise base class uses the policy manager to configure policies,
+set the policies with the fake DMS server, obtain policies from a DUT, and
+verify they are properly set (ie match the configured). In addition the policy
+manager handles features such as adding/updating/removing policies once after
+the initial setup, and make complex testing, such as extension of obfuscated
+policies easier to test.
+
+If a test is to fail with "Policy <POLICY_NAME> value was not set correctly.",
+the verification within the policy_manager is failing. This means the policy
+that was configured via the policy_manager does not match the value obtained
+from the DUT.
+
+When using the fake DMS (see [enterprise_fake_dmserver](http://go/fake-ent-dms)and [policy_testserver](http://go/fake-policy-server),
+policies are provided to the fDMS via a json blob which is created by the
+policy_manager.
+
+Policies from the DUT are obtained via an autotestprivate API, called via
+the [enterprise_policy_utils](http://go/ent-pol-utils) ```get_all_policies```
+and policies are refreshed (ie force a refetch from the DMS) via
+```refresh_policies```.
+
+### Enrollment and Kiosk Mode
+
+Enterprise autotest uses the autotest [enrollment](http://go/ent-at-enrollment) to support
+device enrollment.
+
+This class has the ability to enroll both real and fake accounts, including
+walking through the enrollment OOBE flow. The actual interaction with the
+UI/APIs for login is acomplished by calling telemetry.
+
+Additionally Kiosk mode is also supported.
+
+
+### Chrome
+
+Tests interact with chrome (ie launch, define plugins, ARC settings, etc) via
+[chrome.py](http://go/autotest-chrome). chrome.py is built upon telemetry
+for browser interactions. The base class will handle chrome
+interaction for you, however there are specific examples such as the
+enrollment retainment test, that will interact with chrome.py directly.
+
+
+### Common Issues and possible solutions
+
+*	Historically there have been issues with DUT enrollment via APIs. As of
+	R80-x, this should be resolved. Typically enrollment issues have an error
+	message along the lines of:
+	```test did not pass (reason: Unhandled TimeoutException: Timed out while waiting 60s for _EnterpriseWebviewVisible.).```
+	If this error is seen, it is typically related to something during the OOBE
+	flow, when waiting for the enterprise enrollment screen.
+*	Some of the Enterprise Autotests use UI interaction/reading for the tests.
+	These UI elements change somewhat often, and will occasionally cause these
+	tests to break. UI based errors usually have a traceback leading to
+	ui.utils, and can often be fixed by simply update the UI element the test
+	is looking for.
+*	Errors from chrome.py can also lead to Enterprise tests failing. This
+	package is not directly owned by Enterprise, or anyone other group, but
+	is a shared resource. If a test fails due to this package, it is likely
+	up to the test owner to fix, but they should be cognisant of other teams
+	using the package.
+*	inspector_backend timeouts occasionally occur (<0.5% of all tests.)
+	The problem is traces backto a inspector backend crash/disconnect between
+	telemetry and the DUT.This error is well outside the scope of Enterprise
+	autotest. Rerunning the	test is likely the easiest solution
+
+
