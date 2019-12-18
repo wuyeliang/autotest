@@ -1,5 +1,4 @@
 import operator
-import xmlrpclib
 
 from autotest_lib.client.common_lib.cros import chip_utils
 
@@ -747,7 +746,3 @@ RPC_CATEGORIES = [
         ]
     }
 ]
-RPC_ERRORS = (
-    xmlrpclib.Fault,
-    # grpc.RpcError, # TODO (gredelston): Un-comment when grpc is available
-)

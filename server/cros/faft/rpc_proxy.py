@@ -3,13 +3,11 @@
 # found in the LICENSE file.
 
 import httplib
-import logging
 import socket
 import time
 import xmlrpclib
 
 from autotest_lib.client.cros.faft.config import Config as ClientConfig
-from autotest_lib.client.common_lib import global_config
 from autotest_lib.server import autotest
 
 
@@ -65,10 +63,6 @@ class RPCProxy(object):
         """
         self._client = host
         self._faft_client = None
-        # TODO (gredelston): Clean this up when deprecating XML-RPC
-        self.use_grpc = global_config.global_config.get_config_value(
-                'CROS', 'faft_grpc', type=bool, default=False)
-        logging.debug('Using global config CROS:faft_grpc=%r', self.use_grpc)
 
     def __del__(self):
         self.disconnect()
