@@ -110,7 +110,6 @@ class WiFiClient(site_linux_system.LinuxSystem):
     UNKNOWN_BOARD_TYPE = 'unknown'
 
     # DBus device properties. Wireless interfaces should support these.
-    ROAM_THRESHOLD = 'RoamThreshold'
     WAKE_ON_WIFI_FEATURES = 'WakeOnWiFiFeaturesEnabled'
     NET_DETECT_SCAN_PERIOD = 'NetDetectScanPeriodSeconds'
     WAKE_TO_SCAN_PERIOD = 'WakeToScanPeriodSeconds'
@@ -709,26 +708,6 @@ class WiFiClient(site_linux_system.LinuxSystem):
         return self._shill_proxy.get_active_wifi_SSIDs()
 
 
-    def roam_threshold(self, value):
-        """Get a context manager to temporarily change wpa_supplicant's
-        roaming threshold for the specified interface.
-
-        The correct way to use this method is:
-
-        with client.roam_threshold(40):
-            ...
-
-        @param value: the desired roam threshold for the test.
-
-        @return a context manager for the threshold.
-
-        """
-        return TemporaryDeviceDBusProperty(self._shill_proxy,
-                                           self.wifi_if,
-                                           self.ROAM_THRESHOLD,
-                                           value)
-
-
     def set_device_enabled(self, wifi_interface, value,
                            fail_on_unsupported=False):
         """Enable or disable the WiFi device.
@@ -820,7 +799,12 @@ class WiFiClient(site_linux_system.LinuxSystem):
     def net_detect_scan_period_seconds(self, period):
         """Sets the period between net detect scans performed by the NIC to look
         for whitelisted SSIDs to |period|. This setting only takes effect if the
-        NIC is programmed to wake on SSID. Use as with roam_threshold.
+        NIC is programmed to wake on SSID.
+
+        The correct way to use this method is:
+
+        with client.net_detect_scan_period_seconds(60):
+            ...
 
         @param period: integer number of seconds between NIC net detect scans
 
@@ -836,7 +820,8 @@ class WiFiClient(site_linux_system.LinuxSystem):
     def wake_to_scan_period_seconds(self, period):
         """Sets the period between RTC timer wakeups where the system is woken
         from suspend to perform scans. This setting only takes effect if the
-        NIC is programmed to wake on SSID. Use as with roam_threshold.
+        NIC is programmed to wake on SSID. Use as with
+        net_detect_scan_period_seconds.
 
         @param period: integer number of seconds between wake to scan RTC timer
                 wakes.
