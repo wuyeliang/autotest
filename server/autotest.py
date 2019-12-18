@@ -852,13 +852,14 @@ class _Run(object):
         """
         reasons = []
         for (message, bucket) in self._failure_reasons:
+            # Use -a option for grep to avoid "binary file" warning to stdout.
             # The grep -v is added to not match itself in the log (across jobs).
             # Using grep is slightly problematic as it finds any reason, not
             # just the most recent reason (since 2 boots ago), so it may guess
             # wrong. Multiple reboots are unusual in the lab setting though and
             # it is better to have a reasonable guess than no reason at all.
             found = self.host.run(
-                "grep -E '" + message + "' /var/log/messages | grep -v grep",
+                "grep -aE '" + message + "' /var/log/messages | grep -av grep",
                 ignore_status=True
             ).stdout
             if found and found.strip():
