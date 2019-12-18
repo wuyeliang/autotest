@@ -477,12 +477,6 @@ class HostapConfig(object):
 
 
     @property
-    def beacon_footer(self):
-        """@return bool _beacon_footer value."""
-        return self._beacon_footer
-
-
-    @property
     def scenario_name(self):
         """@return string _scenario_name value, or None."""
         return self._scenario_name
@@ -530,7 +524,6 @@ class HostapConfig(object):
                  vht_channel_width=None,
                  vht_center_channel=None,
                  ac_capabilities=None,
-                 beacon_footer='',
                  spectrum_mgmt_required=None,
                  scenario_name=None,
                  supported_rates=None,
@@ -569,8 +562,6 @@ class HostapConfig(object):
         @param vht_channel_width object channel width
         @param vht_center_channel int center channel of segment 0.
         @param ac_capabilities list of AC_CAPABILITY_x defined above.
-        @param beacon_footer string containing (unvalidated) IE data to be
-            placed at the end of the beacon.
         @param spectrum_mgmt_required True if we require the DUT to support
             spectrum management.
         @param scenario_name string to be included in file names, instead
@@ -657,7 +648,6 @@ class HostapConfig(object):
         # and operating channel.
         self._vht_oper_centr_freq_seg0_idx = vht_center_channel
         self._ac_capabilities = set(ac_capabilities)
-        self._beacon_footer = beacon_footer
         self._spectrum_mgmt_required = spectrum_mgmt_required
         self._scenario_name = scenario_name
         self._supported_rates = supported_rates
