@@ -116,8 +116,12 @@ class power_Standby(test.test):
                                            start_ts, end_ts)
         charge_end = power_stats.battery.charge_now
         total_charge_used = charge_start - charge_end
-        if total_charge_used <= 0 and not bypass_check:
-            raise error.TestError('Charge used is suspect.')
+        if total_charge_used <= 0:
+            if not bypass_check:
+                raise error.TestError('Charge used is suspect.')
+            # The standby time is too short, make it 0.001 to avoid divide by 0.
+            logging.warn('Total Charge used was 0')
+            total_charge_used = 0.001
 
         voltage_end = power_stats.battery.voltage_now
         standby_hours = power_stats.battery.charge_full_design / \
