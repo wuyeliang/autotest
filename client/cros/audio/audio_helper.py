@@ -198,6 +198,34 @@ def get_mic_jack_status():
     else:
         return None
 
+def log_loopback_dongle_status():
+    """Log the status of the loopback dongle to make sure it is equipped."""
+    dongle_status_ok = True
+
+    # Check Mic Jack
+    mic_jack_status = get_mic_jack_status()
+    logging.info('Mic jack status: %s', mic_jack_status)
+    dongle_status_ok &= bool(mic_jack_status)
+
+    # Check Headphone Jack
+    hp_jack_status = get_hp_jack_status()
+    logging.info('Headphone jack status: %s', hp_jack_status)
+    dongle_status_ok &= bool(hp_jack_status)
+
+    # Use latency check to test if audio can be captured through dongle.
+    # We only want to know the basic function of dongle, so no need to
+    # assert the latency accuracy here.
+    latency = loopback_latency_check(n=4000)
+    if latency:
+        logging.info('Got latency measured %d, reported %d',
+                latency[0], latency[1])
+    else:
+        logging.info('Latency check fail.')
+        dongle_status_ok = False
+
+    logging.info('audio loopback dongle test: %s',
+            'PASS' if dongle_status_ok else 'FAIL')
+
 # Functions to test audio palyback.
 def play_sound(duration_seconds=None, audio_file_path=None):
     """Plays a sound file found at |audio_file_path| for |duration_seconds|.
@@ -437,28 +465,22 @@ def cras_rms_test_setup():
     cras_utils.set_capture_mute(False)
 
 
-def dump_rms_postmortem(result_dir):
-    """Dumps postmortem for rms tests."""
+def generate_rms_postmortem():
+    """Generates postmortem for rms tests."""
     try:
-        dump_audio_diagnostics(
-                os.path.join(result_dir, "audio_diagnostics.txt"))
+        logging.info('audio postmortem report')
+        log_loopback_dongle_status()
+        logging.info(get_audio_diagnostics())
     except Exception:
         logging.exception('Error while generating postmortem report')
 
 
-def dump_audio_diagnostics(file_path=None):
-    """Dumps audio diagnostics results to a file
+def get_audio_diagnostics():
+    """Gets audio diagnostic results.
 
-    Dumps the result of audio_diagnostics to a file. Returns a string
-    containing the result if the file_path is not specified.
+    @returns: a string containing diagnostic results.
 
-    @returns: None if 'file_path' is specified, otherwise, a string containing
-    the audio diagnostic results.
     """
-    if file_path:
-        with open(file_path, 'w') as f:
-            return cmd_utils.execute([_AUDIO_DIAGNOSTICS_PATH], stdout=f)
-
     return cmd_utils.execute([_AUDIO_DIAGNOSTICS_PATH], stdout=subprocess.PIPE)
 
 
@@ -569,14 +591,14 @@ def get_one_channel_correlation(test_data, golden_data):
     trimmed_test_data, end_trimmed_length = trim_data(test_data)
 
     def to_float(samples):
-        """Casts elements in the list to float.
+      """Casts elements in the list to float.
 
       @param samples: A list of numbers.
 
       @returns: A list of original numbers casted to float.
       """
-        samples_float = [float(x) for x in samples]
-        return samples_float
+      samples_float = [float(x) for x in samples]
+      return samples_float
 
     max_cross_correlation, best_delay =  get_max_cross_correlation(
             to_float(golden_data),
@@ -767,7 +789,7 @@ class _base_rms_test(test.test):
 
         # Sum up the number of failed constraints in each iteration
         if sum(len(x) for x in self.failed_constraints):
-            dump_audio_diagnostics(test.resultsdir)
+            generate_rms_postmortem()
 
 
 class chrome_rms_test(_base_rms_test):
