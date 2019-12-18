@@ -27,6 +27,12 @@ Writable flags:      0x00000000
 SETVAR
 )"
 
+readonly _FP_FRAME_RAW_ACCESS_DENIED_ERROR="$(cat <<SETVAR
+EC result 4 (ACCESS_DENIED)
+Failed to get FP sensor frame
+SETVAR
+)"
+
 readonly _FW_NAMES="rb0 rb1 rb9 dev"
 readonly _FW_TYPES="ro rw"
 
@@ -72,6 +78,26 @@ reboot_ec_to_ro() {
   sleep 0.5
   run_ectool_cmd "rwsigaction" "abort"
   sleep 2
+}
+
+get_raw_fpframe() {
+  run_ectool_cmd "fpframe" "raw"
+}
+
+check_raw_fpframe_fails() {
+  local stderr_output_file="$(mktemp)"
+  # Using sub-shell since we have "set -e" enabled
+  if (get_raw_fpframe 2> "${stderr_output_file}"); then
+    echo "Firmware should not allow getting raw fpframe"
+    exit 1
+  fi
+
+  local stderr_output="$(cat "${stderr_output_file}")"
+  if [[ "${stderr_output}" != "${_FP_FRAME_RAW_ACCESS_DENIED_ERROR}" ]]; then
+    echo "raw fpframe command returned unexpected value"
+    echo "stderr_output: ${stderr_output}"
+    exit 1
+  fi
 }
 
 read_from_flash() {
