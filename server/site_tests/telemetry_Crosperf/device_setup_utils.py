@@ -93,8 +93,7 @@ class DutWrapper(object):
     utilization.
     """
 
-    if (self.dut_config['cpu_usage'] == 'big_only' or
-        self.dut_config['cpu_usage'] == 'little_only'):
+    if self.dut_config.get('cpu_usage') in ('big_only', 'little_only'):
       _, arch, _ = self.RunCommandOnDut('uname -m')
 
       if arch.lower().startswith('arm') or arch.lower().startswith('aarch64'):
@@ -467,7 +466,7 @@ class DutWrapper(object):
     @Returns Wait time of cool down for this benchmark run.
     """
     logging.info('Update kernel cmdline if necessary and reboot')
-    intel_pstate = self.dut_config['intel_pstate']
+    intel_pstate = self.dut_config.get('intel_pstate')
     if intel_pstate and self.KerncmdUpdateNeeded(intel_pstate):
       self.UpdateKerncmdIntelPstate(intel_pstate)
 
@@ -478,7 +477,7 @@ class DutWrapper(object):
     with self.PauseUI():
       # Unless the user turns on ASLR in the flag, we first disable ASLR
       # before running the benchmarks
-      if not self.dut_config['enable_aslr']:
+      if not self.dut_config.get('enable_aslr'):
         self.DisableASLR()
 
       # CPU usage setup comes first where we enable/disable cores.
@@ -488,7 +487,7 @@ class DutWrapper(object):
       online_cores = [
           core for core, status in cpu_online_status.items() if status
       ]
-      if self.dut_config['cooldown_time']:
+      if self.dut_config.get('cooldown_time'):
         # Setup power conservative mode for effective cool down.
         # Set ignore status since powersave may no be available
         # on all platforms and we are going to handle it.
@@ -505,16 +504,18 @@ class DutWrapper(object):
 
       # Setup CPU governor for the benchmark run.
       # It overwrites the previous governor settings.
-      governor = self.dut_config['governor']
+      governor = self.dut_config.get('governor')
       # FIXME(denik): Pass online cores to governor setup.
-      self.SetCpuGovernor(governor)
+      if governor:
+        self.SetCpuGovernor(governor)
 
       # Disable Turbo and Setup CPU freq should ALWAYS proceed governor setup
       # since governor may change:
       # - frequency;
       # - turbo/boost.
       self.DisableTurbo()
-      self.SetupCpuFreq(online_cores)
+      if self.dut_config.get('cpu_freq_pct'):
+        self.SetupCpuFreq(online_cores)
 
       self.DecreaseWaitTime()
       # FIXME(denik): Currently we are not recovering the previous cpufreq

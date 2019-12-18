@@ -252,14 +252,15 @@ class telemetry_Crosperf(test.test):
     test_args = args.get('test_args', '')
     profiler_args = args.get('profiler_args', '')
 
-    dut_config_str = args.get('dut_config', '')
+    dut_config_str = args.get('dut_config', '{}')
     dut_config = json.loads(dut_config_str)
     # Setup device with dut_config arguments before running test
-    run_on_dut = DutWrapper(dut, dut_config)
-    wait_time = run_on_dut.SetupDevice()
-    # Wait time can be used to accumulate cooldown time in Crosperf.
-    with open(os.path.join(self.resultsdir, WAIT_TIME_LOG), 'w') as f:
-      f.write(str(wait_time))
+    if dut_config:
+      run_on_dut = DutWrapper(dut, dut_config)
+      wait_time = run_on_dut.SetupDevice()
+      # Wait time can be used to accumulate cooldown time in Crosperf.
+      with open(os.path.join(self.resultsdir, WAIT_TIME_LOG), 'w') as f:
+        f.write(str(wait_time))
 
     output_format = 'histograms'
 
@@ -281,19 +282,20 @@ class telemetry_Crosperf(test.test):
                          '--interval-profiling-target=system_wide',
                          '--interval-profiler-options="%s"' % profiler_args]
 
+      top_interval = dut_config.get('top_interval', 0)
+      turbostat = dut_config.get('turbostat')
+
       run_cpuinfo = self.run_cpustats_in_background if dut \
           else self.no_background
       run_turbostat = self.run_turbostat_in_background if (
-          dut and dut_config['turbostat']) \
-              else self.no_background
+          dut and turbostat) else self.no_background
       run_top = self.run_top_in_background if (
-          dut and dut_config['top_interval'] > 0) \
-              else self.no_background
+          dut and top_interval > 0) else self.no_background
 
       # FIXME(denik): replace with ExitStack.
       with run_cpuinfo(dut, CPUSTATS_LOG) as _cpu_cm, \
           run_turbostat(dut, TURBOSTAT_LOG) as _turbo_cm, \
-          run_top(dut, TOP_LOG, dut_config['top_interval']) as _top_cm:
+          run_top(dut, TOP_LOG, top_interval) as _top_cm:
 
         arguments = []
         if test_args:
