@@ -62,6 +62,13 @@ class LabstationHost(base_servohost.BaseServoHost):
         self._repair_strategy = (
             labstation_repair.create_labstation_repair_strategy())
         self.labels = base_label.LabelRetriever(cros_label.LABSTATION_LABELS)
+        logging.info('adding fake host_info_store to LabstationHost')
+        try:
+            host_info = self.host_info_store.get()
+            host_info.stable_versions['servo-cros'] = host_info.stable_versions['cros']
+            self.set_dut_host_info(host_info)
+        except Exception as e:
+            logging.exception(e)
 
 
     def is_reboot_requested(self):
