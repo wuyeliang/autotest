@@ -55,7 +55,8 @@ class audio_AudioBasicHeadphone(audio_test.AudioTest):
 
             # Selects and checks the node selected by cras is correct.
             audio_test_utils.check_and_set_chrome_active_node_types(
-                    self.facade, 'HEADPHONE', None)
+                    self.facade, audio_test_utils.get_headphone_node(self.host),
+                    None)
 
             logging.info('Setting playback data on Cros device')
             source.set_playback_data(golden_file)
