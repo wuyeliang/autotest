@@ -17,7 +17,7 @@ class logging_FeedbackReport(test.test):
     version = 1
     _FEEDBACK_ID = 'gfdkimpbcpahaombhbimeihdjnejgicl'
     _FEEDBACK_STATE_TIMEOUT = 40
-    _WAIT = 10
+    _WAIT = 2
     _FEEDBACK_SENT_URL = 'support.google.com/chromebook/answer/3142217'
 
     def warmup(self):
@@ -70,6 +70,7 @@ class logging_FeedbackReport(test.test):
 
     def _enter_feedback_text(self):
         """Enter Feedback message in the Text field"""
+        time.sleep(self._WAIT)
         self._player.blocking_playback_of_default_file(
                input_type='keyboard', filename='keyboard_T+e+s+t')
 
@@ -88,7 +89,6 @@ class logging_FeedbackReport(test.test):
         self._enter_feedback_text()
         self._press_shift_tab()
         self._press_enter()
-        time.sleep(self._WAIT)
 
     def _is_feedback_sent(self, start_time, timeout):
         """Checks feedback is sent within timeout
@@ -99,7 +99,7 @@ class logging_FeedbackReport(test.test):
         @returns: True if feedback sent page is present
         """
         while True:
-            time.sleep(5)
+            time.sleep(self._WAIT)
             for tab in self.cr.browser.tabs:
                 if self._FEEDBACK_SENT_URL in tab.url:
                     return True
@@ -126,7 +126,7 @@ class logging_FeedbackReport(test.test):
             self._submit_feedback()
 
             start_time = time.time()
-            if not self._is_feedback_sent(start_time, self._WAIT * 6):
+            if not self._is_feedback_sent(start_time, self._WAIT * 30):
                 raise error.TestFail("Feedback NOT sent!")
 
     def cleanup(self):
