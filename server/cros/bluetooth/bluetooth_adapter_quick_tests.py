@@ -108,6 +108,9 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 self.chameleon_group_copy = dict()
                 self.group_chameleons_type()
 
+        # Clear the active devices for this test
+        self.active_test_devices = {}
+
         self.enable_disable_debug_log(enable=True)
 
         self.flag = flag
