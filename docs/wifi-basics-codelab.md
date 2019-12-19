@@ -19,7 +19,7 @@ of 802.11 connection protocols.
 This codelab can be completed from either a personal testing setup or a
 dedicated setup in our testing lab, but there are a few special considerations
 in each case. For instance, some of the commands in this lab will use the
-variable `${DUT-HOSTNAME}`, and the value of this variable is dependent on the
+variable `${DUT_HOSTNAME}`, and the value of this variable is dependent on the
 testing setup that you use.
 
 #### Using the wifi testing labs
@@ -41,10 +41,10 @@ portal and filter for *label-wificell = true* (the filter should already be
 set when you click the link). You'll need to find a setup who's current task
 is *idle* with dut_state *ready*, and then lock it while in use. To lock a DUT
 in the skylab use this command to lease it for the specified number of
-minutes: (**${DUT-NAME}** is the value of the field *dut_name* in skylab)
+minutes: (**${DUT\_NAME}** is the value of the field *dut_name* in skylab)
 
 ```bash
-skylab lease-dut -minutes ${NUM-MINUTES} ${DUT-NAME}
+skylab lease-dut -minutes ${NUM_MINUTES} ${DUT_NAME}
 ```
 
 One final consideration when selecting a DUT is that Autotest requires a
@@ -52,13 +52,13 @@ working build of the board type being tested on, so it is best to pick a board
 for which you have already built an image on your machine.
 
 Your DUT's hostname is the name of the testbed, with '.cros' appended. E.g. if
-`${DUT-NAME}` = `chromeos15-row2-rack4-host6` then `${DUT-HOSTNAME}` =
+`${DUT_NAME}` = `chromeos15-row2-rack4-host6` then `${DUT_HOSTNAME}` =
 `chromeos15-row2-rack4-host6.cros`. Autotest will determine the hostnames of
 the router and packet capture device automatically.
 
 If you want to directly access the router or pcap device of your testing
-setup, say through ssh, you can use the hostnames **${DUT-NAME}-router.cros**
-and **${DUT-NAME}-pcap.cros** respectively. You can access each with ssh
+setup, say through ssh, you can use the hostnames **${DUT\_NAME}-router.cros**
+and **${DUT\_NAME}-pcap.cros** respectively. You can access each with ssh
 through the root user with password `test0000`.
 
 Lastly, Autotest may have issues with hosts that have the `chameleon` label.
@@ -83,7 +83,7 @@ xxx.xxx.xxx.xxx dut-pcap
 xxx.xxx.xxx.xxx dut
 ```
 
-Now, you can use **${DUT-HOSTNAME}** = '*dut*' and Autotest will use your
+Now, you can use **${DUT\_HOSTNAME}** = '*dut*' and Autotest will use your
 hosts file to find the other devices. The final consideration when using a
 local testing setup is that the designated testbeds are contained in shielding
 boxes which isolate them from other signals, while your local setup is
@@ -131,7 +131,7 @@ packets.close()
 Now, lets run the test and see what we can learn:
 
 ```bash
-test_that --fast -b ${BOARD} ${DUT-HOSTNAME} network_WiFi_SimpleConnect.wifi_check5HT20
+test_that --fast -b ${BOARD} ${DUT_HOSTNAME} network_WiFi_SimpleConnect.wifi_check5HT20
 ```
 
 Thats a lot of garbage. The packets aren't going to be much use to us in their
