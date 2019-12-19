@@ -457,7 +457,7 @@ class PowerLoggerDashboard(MeasurementLoggerDashboard):
 
 
 class TempLoggerDashboard(MeasurementLoggerDashboard):
-    """Dashboard class for power_status.PowerLogger.
+    """Dashboard class for power_status.TempLogger.
     """
 
     def __init__(self, logger, testname, resultsdir=None, uploadurl=None,
@@ -601,3 +601,16 @@ class CPUStatsLoggerDashboard(MeasurementLoggerDashboard):
 
             # Run "cpuidle_C{:_>2s}E-SKL".format("1") to get "cpuidle_C.1E-SKL"
             self._padded_domains.append(formatter_str.format(number_strs[i]))
+
+
+class VideoFpsLoggerDashboard(MeasurementLoggerDashboard):
+    """Dashboard class for power_status.VideoFpsLogger."""
+
+    def __init__(self, logger, testname, resultsdir=None, uploadurl=None,
+                 note=''):
+        if uploadurl is None:
+            uploadurl = 'http://chrome-power.appspot.com/rapl'
+        super(VideoFpsLoggerDashboard, self).__init__(
+            logger, testname, resultsdir, uploadurl, note)
+        self._unit = 'fps'
+        self._type = 'fps'

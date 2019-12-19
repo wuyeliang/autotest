@@ -2143,6 +2143,42 @@ class TempLogger(MeasurementLogger):
         return super(TempLogger, self).calc(mtype)
 
 
+class VideoFpsLogger(MeasurementLogger):
+    """Class to measure Video FPS."""
+
+    def __init__(self, tab, seconds_period=1.0, checkpoint_logger=None):
+        """Initialize a VideoFpsLogger.
+
+        Args:
+            tab: Chrome tab object
+        """
+        super(VideoFpsLogger, self).__init__([], seconds_period,
+                                             checkpoint_logger)
+        self._tab = tab
+        names = self._tab.EvaluateJavaScript(
+            'Array.from(document.getElementsByTagName("video")).map(v => v.id)')
+        self.domains =  [n or 'video_' + str(i) for i, n in enumerate(names)]
+        self._last = [0] * len(names)
+        self.refresh()
+
+    def refresh(self):
+        current = self._tab.EvaluateJavaScript(
+            'Array.from(document.getElementsByTagName("video")).map('
+            'v => v.webkitDecodedFrameCount)')
+        fps = [(b - a) / self.seconds_period
+               for a, b in zip(self._last , current)]
+        self._last = current
+        return fps
+
+    def save_results(self, resultsdir, fname_prefix=None):
+        if not fname_prefix:
+            fname_prefix = 'video_fps_results_%.0f' % time.time()
+        super(VideoFpsLogger, self).save_results(resultsdir, fname_prefix)
+
+    def calc(self, mtype='fps'):
+        return super(VideoFpsLogger, self).calc(mtype)
+
+
 class DiskStateLogger(threading.Thread):
     """Records the time percentages the disk stays in its different power modes.
 
