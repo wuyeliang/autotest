@@ -580,6 +580,42 @@ class BluetoothAdapterTests(test.test):
                 logging.error('No device is detected on %d-th chameleon', idx)
 
 
+    def wait_for_device(self, device):
+        """Waits for device to become available again
+
+        We reset raspberry pi peer between tests. This method helps us wait to
+        prevent us from trying to use the device before it comes back up again.
+
+        @param device: proxy object of peripheral device
+        """
+
+        def is_device_ready():
+            """Tries to use a service of the device
+
+            @returns: True if device is available to provide service
+                      False otherwise
+            """
+
+            try:
+                # Call a simple (fast) function to determine if device is online
+                # and reachable. If we can query this property, we know the
+                # device is available for us to use
+                getattr(device, 'GetCapabilities')()
+
+            except Exception as e:
+                return False
+
+            return True
+
+
+        try:
+            utils.poll_for_condition(condition=is_device_ready,
+                                     desc='wait_for_device')
+
+        except utils.TimeoutError as e:
+            raise error.TestError('Peer is not available after waiting')
+
+
     def clear_raspi_device(self, device):
         """Clears a device on a raspi chameleon by resetting bluetooth stack
 
@@ -612,6 +648,9 @@ class BluetoothAdapterTests(test.test):
             if not (e.__class__.__name__ == 'Fault' and
                 'is not supported' in str(e)):
                 raise
+
+        # Ensure device is back online before continuing
+        self.wait_for_device(device)
 
 
     def get_device_rasp(self, device_num, on_start=True):
