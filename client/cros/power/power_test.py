@@ -49,6 +49,7 @@ class power_Test(test.test):
         self.status = power_status.get_status()
 
         self._checkpoint_logger = power_status.CheckpointLogger()
+        self._seconds_period = seconds_period
 
         measurements = []
         if not self.status.on_ac():
@@ -153,7 +154,7 @@ class power_Test(test.test):
         core_keyvals = power_utils.get_core_keyvals(self.keyvals)
         self.write_perf_keyval(core_keyvals)
 
-    def _publish_dashboard(self):
+    def publish_dashboard(self):
         """Report results to chromeperf & power dashboard."""
 
         self.publish_keyvals()
@@ -196,7 +197,7 @@ class power_Test(test.test):
         for log in self._meas_logs:
             log.done = True
         super(power_Test, self).postprocess_iteration()
-        self._publish_dashboard()
+        self.publish_dashboard()
         self._save_results()
 
     def cleanup(self):
