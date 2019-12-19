@@ -177,6 +177,12 @@ class BaseServoHost(ssh_host.SSHHost):
             the host, and the host is a cros_host.
 
         """
+
+        # NOTE: because of crbug.com/1033998, we have to skip updating the
+        # servo host as part of release testing
+        logging.info('always skip updating servo host')
+        return
+
         # servod could be running in a Ubuntu workstation.
         if not self.is_cros_host():
             logging.info('Not attempting an update, either %s is not running '
