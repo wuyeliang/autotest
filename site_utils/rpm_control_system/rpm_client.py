@@ -48,8 +48,13 @@ def set_power(host, new_state, timeout_mins=RPM_CALL_TIMEOUT_MINS):
                           info.attributes.get(HYDRA_HOSTNAME_KEY),
                           new_state)
         except KeyError as e:
-            raise RemotePowerException('Powerunit information not found. '
-                                       'Missing: %s in data_info_store.' % e)
+            logging.warning('Powerunit information not found. Missing:'
+                            ' %s in host_info_store.', e)
+            raise RemotePowerException('Remote power control is not applicable'
+                                       ' for %s, it could be either RPM is not'
+                                       ' supported on the rack or powerunit'
+                                       ' attributes is not configured in'
+                                       ' inventory.' % host.hostname)
     _set_power(args_tuple, timeout_mins)
 
 
