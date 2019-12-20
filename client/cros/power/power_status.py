@@ -2455,7 +2455,8 @@ class RC6ResidencyStats(object):
     """
     def __init__(self):
         self._rc6_enable_checked = False
-        self._initial_stat = self._parse_rc6_residency_info()
+        self._previous_stat = self._parse_rc6_residency_info()
+        self._accumulated_stat = 0
 
     def get_accumulated_residency_msecs(self):
         """Check number of RC6 state entry since the class has been initialized.
@@ -2463,7 +2464,27 @@ class RC6ResidencyStats(object):
         @returns int of RC6 residency in milliseconds since instantiation.
         """
         current_stat = self._parse_rc6_residency_info()
-        return (current_stat - self._initial_stat)
+
+        # The problem here is that we cannot assume the rc6_residency_ms is
+        # monotonically increasing by current kernel i915 implementation.
+        #
+        # Considering different hardware has different wraparound period,
+        # this is a mitigation plan to deal with different wraparound period
+        # on various platforms, in order to make the test platform agnostic.
+        #
+        # This scarifes the accuracy of RC6 residency a bit, up on the calling
+        # period.
+        #
+        # Reference: Bug 94852 - [SKL] rc6_residency_ms unreliable
+        # (https://bugs.freedesktop.org/show_bug.cgi?id=94852)
+        if current_stat < self._previous_stat:
+          logging.warning('GPU: Detect rc6_residency_ms wraparound')
+          self._accumulated_stat += current_stat
+        else:
+          self._accumulated_stat += current_stat - self._previous_stat
+
+        self._previous_stat = current_stat
+        return self._accumulated_stat
 
     def _is_rc6_enable(self):
         """
@@ -2689,7 +2710,6 @@ class GPURC6Stats(AbstractStats):
 
     def _read_stats(self):
         total = int(time.time() * 1000)
-        # TODO (harry.pan): Fix wraparound case.
         msecs = self._rc6.get_accumulated_residency_msecs()
         stats = collections.defaultdict(int)
         stats['RC6'] += msecs
