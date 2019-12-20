@@ -57,7 +57,7 @@ class audio_AudioWebRTCLoopback(audio_test.AudioTest):
 
         """
         if not audio_test_utils.has_audio_jack(host):
-            raise error.TestError(
+            raise error.TestNAError(
                     'No audio jack for the DUT.'
                     'Please check label of the host and control file.'
                     'Please check the host label and test dependency.')

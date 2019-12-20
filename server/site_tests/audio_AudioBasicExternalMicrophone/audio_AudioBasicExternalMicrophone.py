@@ -34,7 +34,7 @@ class audio_AudioBasicExternalMicrophone(audio_test.AudioTest):
 
         """
         if not audio_test_utils.has_audio_jack(self.host):
-            raise error.TestError(
+            raise error.TestNAError(
                     'No audio jack for the DUT.'
                     'Please check label of the host and control file.'
                     'Please check the host label and test dependency.')
