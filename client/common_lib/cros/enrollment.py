@@ -21,10 +21,16 @@ def SwitchToRemora(browser):
 
     @param browser: telemetry browser object.
     """
-    chrome.Chrome.wait_for_browser_restart(
-            lambda: _ExecuteOobeCmd(browser,
-                                    'Oobe.remoraRequisitionForTesting();'),
-            browser)
+    logging.info('Attempting to switch to Meet enrollment')
+    try:
+        chrome.Chrome.wait_for_browser_restart(
+                lambda: _ExecuteOobeCmd(browser,
+                                        'Oobe.remoraRequisitionForTesting();'),
+                browser)
+    except utils.TimeoutError:
+        logging.warning('Timeout waiting for browser to restart after switching enrollment modes')
+        logging.warning('DUT may have started in Meet enrollment -- attempting to continue')
+
     utils.poll_for_condition(lambda: browser.oobe_exists, timeout=30)
 
 
@@ -35,7 +41,6 @@ def RemoraEnrollment(browser, user_id, password):
     @param user_id: login credentials user_id.
     @param password: login credentials password.
     """
-    SwitchToRemora(browser)
     browser.oobe.NavigateGaiaLogin(
             user_id, password, enterprise_enroll=True,
             for_user_triggered_enrollment=False)
