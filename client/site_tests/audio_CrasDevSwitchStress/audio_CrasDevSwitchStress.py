@@ -72,11 +72,16 @@ class audio_CrasDevSwitchStress(test.test):
             dev_id = node_pinned['Id'] >> 32
             if stream_type == _STREAM_TYPE_INPUT_APM:
                 if node_pinned['IsInput']:
-                    cmd += ['--pin_device', str(dev_id)]
+                   cmd += ['--pin_device', str(dev_id)]
             elif not node_pinned['IsInput']:
-                cmd += ['--pin_device', str(dev_id)]
+                    cmd += ['--pin_device', str(dev_id)]
 
         return subprocess.Popen(cmd)
+
+    def _dump_audio(self):
+        log_file = os.path.join(self.resultsdir, "audio_diagnostics.txt")
+        with open(log_file, 'w') as f:
+            f.write(audio_helper.get_audio_diagnostics())
 
     def _get_buffer_level(self, match_str, dev_id):
         """
@@ -117,8 +122,7 @@ class audio_CrasDevSwitchStress(test.test):
 
         logging.debug("Max buffer level: %d on dev %d", buffer_level, dev_id)
         if buffer_level > criteria:
-            audio_helper.dump_audio_diagnostics(
-                    os.path.join(self.resultsdir, "audio_diagnostics.txt"))
+            self._dump_audio()
             raise error.TestFail('Buffer level %d drift too high on %s node'
                                  ' with dev id %d' %
                                  (buffer_level, node['Type'], dev_id))
