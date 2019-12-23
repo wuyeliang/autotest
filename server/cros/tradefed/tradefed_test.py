@@ -155,6 +155,16 @@ class TradefedTest(test.test):
                 bundle)
         self._hard_reboot_on_failure = hard_reboot_on_failure
 
+    def postprocess(self):
+        """Postprocess: output performance values."""
+        path = tradefed_utils.get_test_result_xml_path(
+            os.path.join(self.resultsdir,
+                         self._get_tradefed_base_dir()))
+        if path:
+            for metric in tradefed_utils.get_perf_metrics_from_test_result_xml(
+                path):
+                self.output_perf_value(**metric)
+
     def cleanup(self):
         """Cleans up any dirtied state."""
         # Kill any lingering adb servers.
