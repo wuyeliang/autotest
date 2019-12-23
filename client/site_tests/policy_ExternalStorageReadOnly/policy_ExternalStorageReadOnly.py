@@ -33,7 +33,6 @@ class policy_ExternalStorageReadOnly(
 
         super(policy_ExternalStorageReadOnly, self).cleanup()
 
-
     def _test_external_storage(self, policy_value):
         """
         Verify the behavior of the ExternalStorageReadOnly policy.
@@ -48,17 +47,15 @@ class policy_ExternalStorageReadOnly(
 
         """
         # Attempt to modify the external storage by creating a file.
-        try:
-            return_code = utils.run('touch %s' % self.TEST_FILE)
-        except error.CmdError:
-            if not policy_value:
-                raise error.TestFail('External storage not readonly but '
-                                     'unable to write to storage')
-        else:
-            if policy_value:
-                raise error.TestFail('External storage was readonly but '
-                                     'external storage was modified')
-
+        if os.path.isfile(self.TEST_FILE):
+            raise error.TestWarn('Test file existed prior to test.')
+        utils.run('touch %s' % self.TEST_FILE, ignore_status=True)
+        if policy_value and os.path.isfile(self.TEST_FILE):
+            raise error.TestFail('External storage set to read-only but '
+                                 'was able to write to storage.')
+        elif not policy_value and not os.path.isfile(self.TEST_FILE):
+            raise error.TestFail('External storage not read-only but '
+                                 'unable to write to storage.')
 
     def run_once(self, case):
         """
