@@ -11,6 +11,7 @@ Convenience functions for use by tests or whomever.
 import base64
 import collections
 import commands
+import errno
 import fnmatch
 import glob
 import json
@@ -1886,22 +1887,23 @@ def _get_hex_from_file(path, line, prefix, postfix):
     return int(match, 16)
 
 
-# The paths don't change. Avoid running find all the time.
-_hwmon_paths = None
-
-def _get_hwmon_paths(file_pattern):
-    """
-    Returns a list of paths to the temperature sensors.
-    """
+def _get_hwmon_datas(file_pattern):
+    """Returns a list of reading from hwmon."""
     # Some systems like daisy_spring only have the virtual hwmon.
     # And other systems like rambi only have coretemp.0. See crbug.com/360249.
     #    /sys/class/hwmon/hwmon*/
     #    /sys/devices/virtual/hwmon/hwmon*/
     #    /sys/devices/platform/coretemp.0/
-    if not _hwmon_paths:
-        cmd = 'find /sys/class /sys/devices -name "' + file_pattern + '"'
-        _hwon_paths = utils.run(cmd, verbose=False).stdout.splitlines()
-    return _hwon_paths
+    cmd = 'find /sys/class /sys/devices -name "' + file_pattern + '"'
+    _hwmon_paths = utils.run(cmd, verbose=False).stdout.splitlines()
+    for _hwmon_path in _hwmon_paths:
+        try:
+            yield _get_float_from_file(_hwmon_path, 0, None, None) * 0.001
+        except IOError as err:
+            # Files under /sys may get truncated and result in ENODATA.
+            # Ignore those.
+            if err.errno is not errno.ENODATA:
+                raise
 
 
 def get_temperature_critical():
@@ -1909,9 +1911,7 @@ def get_temperature_critical():
     Returns temperature at which we will see some throttling in the system.
     """
     min_temperature = 1000.0
-    paths = _get_hwmon_paths('temp*_crit')
-    for path in paths:
-        temperature = _get_float_from_file(path, 0, None, None) * 0.001
+    for temperature in _get_hwmon_datas('temp*_crit'):
         # Today typical for Intel is 98'C to 105'C while ARM is 85'C. Clamp to 98
         # if Intel device or the lowest known value otherwise.
         result = utils.system_output('crossystem arch', retain_output=True,
@@ -1933,9 +1933,7 @@ def get_temperature_input_max():
     Returns the maximum currently observed temperature.
     """
     max_temperature = -1000.0
-    paths = _get_hwmon_paths('temp*_input')
-    for path in paths:
-        temperature = _get_float_from_file(path, 0, None, None) * 0.001
+    for temperature in _get_hwmon_datas('temp*_input'):
         max_temperature = max(temperature, max_temperature)
     return max_temperature
 
