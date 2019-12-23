@@ -81,10 +81,15 @@ class BluetoothAdapterPairingTests(
             time.sleep(self.PAIR_TEST_SLEEP_SECS)
             self.test_device_is_paired(device.address)
 
-            # After a suspend/resume, we need to wake the peripheral
-            # as it is not connected.
+
+            # check if peripheral is connected after suspend resume
+            if not self.ignore_failure(check_connected_method, device):
+                logging.info("device not connected after suspend_resume")
+                self.test_connection_by_device(device)
+            else:
+                logging.info("device remains connected after suspend_resume")
+
             time.sleep(self.PAIR_TEST_SLEEP_SECS)
-            self.test_connection_by_device(device)
             check_connected_method(device)
 
             time.sleep(self.PAIR_TEST_SLEEP_SECS)

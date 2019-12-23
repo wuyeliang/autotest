@@ -823,6 +823,23 @@ class BluetoothAdapterTests(test.test):
             logging.error('%s: unexpected error', method_name)
         return False
 
+    def ignore_failure(instance, test_method, *args, **kwargs):
+        """ Wrapper to prevent a test_method failure from failing the test batch
+
+        Sometimes a test method needs to be used as a normal function, for its
+        result. This wrapper prevent test_method failure being recorded in
+        instance.fails and causing a failure of the quick test batch.
+
+        @param test_method: test_method
+        @returns: result of the test_method
+        """
+
+        original_fails = instance.fails[:]
+        test_result = test_method(*args, **kwargs)
+        if not test_result:
+            logging.info("%s failure is ignored",test_method.__name__)
+            instance.fails = original_fails
+        return test_result
 
     # -------------------------------------------------------------------
     # Adater standalone tests
