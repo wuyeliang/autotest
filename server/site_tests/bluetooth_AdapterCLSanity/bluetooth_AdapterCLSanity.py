@@ -65,6 +65,16 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
                           suspend_resume=True)
 
 
+    @test_wrapper('Pairing Twice Test', devices={"MOUSE":1})
+    def cl_adapter_pairing_twice_test(self):
+        """Performs pairing twice test with  mouse peripheral"""
+        device = self.devices['MOUSE'][0]
+        self.pairing_test(device,
+                          check_connected_method=\
+                          self.test_mouse_right_click,
+                          pairing_twice=True)
+
+
     @test_wrapper('HID Reports Test', devices={"MOUSE":1})
     def cl_HID_reports_test(self):
         """Performs HID report test with mouse peripheral"""
@@ -116,6 +126,7 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         self.cl_adapter_pairing_test()
         self.cl_adapter_keyboard_pairing_test()
         self.cl_adapter_pairing_suspend_resume_test()
+        self.cl_adapter_pairing_twice_test()
         self.cl_HID_reports_test()
         self.cl_HID_keyboard_reports_test()
         self.cl_HID_reports_suspend_resume_test()
