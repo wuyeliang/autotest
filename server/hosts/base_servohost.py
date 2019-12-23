@@ -44,8 +44,11 @@ class BaseServoHost(ssh_host.SSHHost):
     LOCK_FILE_POSTFIX = '_in_use'
     REBOOT_FILE_POSTFIX = '_reboot'
 
-    # Time to wait a rebooting servohost. In seconds
+    # Time to wait a rebooting servohost, in seconds.
     REBOOT_TIMEOUT = 240
+
+    # Timeout value to power cycle a servohost, in seconds.
+    BOOT_TIMEOUT = 240
 
 
     def _initialize(self, hostname, is_in_lab=None, *args, **dargs):
@@ -90,7 +93,7 @@ class BaseServoHost(ssh_host.SSHHost):
 
 
     def set_dut_host_info(self, hi):
-        logging.info('setting dut_host_info field to (%s)' % hi)
+        logging.info('setting dut_host_info field to (%s)', hi)
         self._dut_host_info = hi
 
 
