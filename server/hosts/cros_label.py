@@ -366,6 +366,14 @@ class ChameleonPeripheralsLabel(base_label.StringPrefixLabel):
                 logging.error('Error with initializing bt_a2dp_sink on '
                               'chameleon %s', chameleon_host.hostname)
 
+            try:
+                bt_base_device = chameleon.get_bluetooth_base()
+                if bt_base_device.IsDetected():
+                    labels.append('bt_base')
+            except:
+                logging.error('Error in detecting bt_base on '
+                              'chameleon %s', chameleon_host.hostname)
+
             if labels != []:
                 labels.append('bt_peer')
 

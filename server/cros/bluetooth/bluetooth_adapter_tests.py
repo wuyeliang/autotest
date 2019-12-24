@@ -40,6 +40,11 @@ SUPPORTED_DEVICE_TYPES = {
     'BLE_MOUSE': lambda chameleon: chameleon.get_ble_mouse,
     'BLE_KEYBOARD': lambda chameleon: chameleon.get_ble_keyboard,
     'A2DP_SINK': lambda chameleon: chameleon.get_bluetooth_a2dp_sink,
+
+    # This is a base object that does not emulate any Bluetooth device.
+    # This object is preferred when only a pure XMLRPC server is needed
+    # on the chameleon host, e.g., to perform servod methods.
+    'BLUETOOTH_BASE': lambda chameleon: chameleon.get_bluetooth_base,
 }
 
 
@@ -546,8 +551,7 @@ class BluetoothAdapterTests(test.test):
 
 
     def group_chameleons_type(self):
-        """Group all chameleons by the type of their detected device
-        """
+        """Group all chameleons by the type of their detected device."""
 
         # Use previously created chameleon_group instead of creating new
         if len(self.chameleon_group_copy) > 0:
@@ -2776,6 +2780,27 @@ class BluetoothAdapterTests(test.test):
             raise error.TestNAError(msg)
 
         logging.debug('Kernel version check passed')
+
+
+    # -------------------------------------------------------------------
+    # Servod related tests
+    # -------------------------------------------------------------------
+
+    @_test_retry_and_log
+    def test_power_consumption(self, max_power_mw):
+        """Test the average power consumption."""
+        power_mw = self.device.servod.MeasurePowerConsumption()
+        self.results = {'power_mw': power_mw}
+
+        if (power_mw is None):
+            logging.error('Failed to measure power consumption')
+            return False
+
+        power_mw = float(power_mw)
+        logging.info('power consumption (mw): %f (max allowed: %f)',
+                     power_mw, max_power_mw)
+
+        return power_mw <= max_power_mw
 
 
     # -------------------------------------------------------------------

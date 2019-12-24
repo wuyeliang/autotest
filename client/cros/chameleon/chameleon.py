@@ -400,6 +400,16 @@ class ChameleonBoard(object):
         return self._usb_ctrl
 
 
+    def get_bluetooth_base(self):
+        """Gets the Bluetooth base object on Chameleon.
+
+        This is a base object that does not emulate any Bluetooth device.
+
+        @return: A BluetoothBaseFlow object.
+        """
+        return self._chameleond_proxy.bluetooth_base
+
+
     def get_bluetooth_hid_mouse(self):
         """Gets the emulated Bluetooth (BR/EDR) HID mouse on Chameleon.
 
