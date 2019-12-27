@@ -338,6 +338,9 @@ class ChameleonBoard(object):
         """
         self.host.get_file(CHAMELEOND_LOG_REMOTE_PATH, self._output_log_file)
 
+    def log_message(self, msg):
+        """Log a message in chameleond log and system log."""
+        self._chameleond_proxy.log_message(msg)
 
     def get_all_ports(self):
         """Gets all the ports on Chameleon board which are connected.

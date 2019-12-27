@@ -5,6 +5,7 @@
 import base64
 import json
 import logging
+from datetime import datetime
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.cros import constants
@@ -64,6 +65,30 @@ class BluetoothDevice(object):
         """
         return self._proxy.set_debug_log_levels(dispatcher_vb, newblue_vb,
                                                 bluez_vb, kernel_vb)
+
+    def log_message(self, msg, dut=True, peer=True):
+        """ Log a message in DUT log and peer logs with timestamp.
+
+        @param msg: message to be logged.
+        @param dut: log message on DUT
+        @param peer: log message on peer devices
+        """
+        try:
+            # TODO(b/146671469) Implement logging to tester
+
+            date =  datetime.strftime(datetime.now(),"%Y:%m:%d %H:%M:%S:%f")
+            msg = "bluetooth autotest --- %s : %s ---" % (date, msg)
+            logging.debug("Broadcasting '%s'")
+
+            if dut:
+                self._proxy.log_message(msg)
+
+            if peer:
+                for chameleon in self.host.chameleon_list:
+                    chameleon.log_message(msg)
+        except Exception as e:
+            logging.error("Exception '%s' in log_message '%s'", str(e), msg)
+
 
 
     def start_bluetoothd(self):

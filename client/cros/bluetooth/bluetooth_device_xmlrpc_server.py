@@ -13,6 +13,7 @@ import json
 import logging
 import logging.handlers
 import os
+import subprocess
 
 import common
 from autotest_lib.client.bin import utils
@@ -213,6 +214,14 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                                dbus.Byte(kernel_vb),
                                dbus_interface=self.BLUEZ_DEBUG_LOG_IFACE)
         return
+
+    def log_message(self, msg):
+        """ log a message to /var/log/messages."""
+        try:
+            cmd = ['logger', msg]
+            subprocess.call(cmd)
+        except Exception as e:
+            logging.error("log_message %s failed with %s", cmd, str(e))
 
 
     @xmlrpc_server.dbus_safe(False)

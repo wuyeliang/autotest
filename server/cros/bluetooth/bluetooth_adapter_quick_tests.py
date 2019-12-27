@@ -203,6 +203,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             time.sleep(self.TEST_SLEEP_SECS)
             self._print_delimiter()
             logging.info('Starting test: %s', test_name)
+            self.log_message('Starting test: %s'% test_name)
 
     def quick_test_test_end(self):
         """Log and track the test results"""
@@ -235,6 +236,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             self.pkg_fail_count += 1
 
         logging.info(result_msg)
+        self.log_message(result_msg)
         self._print_delimiter()
         self.bat_tests_results.append(result_msg)
         self.pkg_tests_results.append(result_msg)

@@ -834,6 +834,11 @@ class BluetoothAdapterTests(test.test):
         self.bluetooth_facade.set_debug_log_levels(level, level, level, level)
 
 
+    def log_message(self, msg):
+        """ Write a string to log."""
+        self.bluetooth_facade.log_message(msg)
+
+
     @_test_retry_and_log
     def test_bluetoothd_running(self):
         """Test that bluetoothd is running."""
