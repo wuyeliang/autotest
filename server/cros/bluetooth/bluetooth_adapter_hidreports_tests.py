@@ -8,7 +8,6 @@ import logging
 import time
 
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_tests
-from autotest_lib.server.cros.multimedia import remote_facade_factory
 
 
 class BluetoothAdapterHIDReportTests(
@@ -82,13 +81,7 @@ class BluetoothAdapterHIDReportTests(
             self.test_device_name(device.address, device.name)
 
         if reboot:
-            self.host.reboot()
-
-            # NOTE: We need to recreate the bluetooth_facade after a reboot.
-            factory = remote_facade_factory.RemoteFacadeFactory(
-                self.host, disable_arc=True)
-            self.bluetooth_facade = factory.create_bluetooth_hid_facade()
-            self.input_facade = factory.create_input_facade()
+            self.reboot()
 
             time.sleep(self.HID_TEST_SLEEP_SECS)
             self.test_device_is_paired(device.address)

@@ -54,9 +54,9 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         # Restart the link to device
         logging.info('Restarting peer devices...')
 
-        # Grab currect device list for initialization
+        # Grab current device list for initialization
         connected_devices = self.devices
-        self.cleanup(on_start=False)
+        self.cleanup(test_state='MID')
 
         for device_type, device_list in connected_devices.items():
             for device in device_list:
@@ -101,8 +101,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 """object has no attribute 'object_path'""" in str(e)):
 
                 logging.error('Caught b/142276989, rebooting DUT')
-                self.host.reboot()
-
+                self.reboot()
             # Raise the original exception
             raise
 
@@ -127,6 +126,11 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.active_test_devices = {}
 
         self.enable_disable_debug_log(enable=True)
+
+        # Delete files created in previous run
+        self.host.run('[ ! -d {0} ] || rm -rf {0} || true'.format(
+                                                    self.BTMON_DIR_LOG_PATH))
+        self.start_new_btmon()
 
         self.flag = flag
         self.test_iter = None
@@ -288,7 +292,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             self.group_chameleons_type()
 
         # Close the connection between peers
-        self.cleanup()
+        self.cleanup(test_state='NEW')
 
 
     @staticmethod

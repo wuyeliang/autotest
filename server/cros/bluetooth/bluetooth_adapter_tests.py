@@ -27,6 +27,7 @@ from autotest_lib.client.bin.input.linux_input import (
         BTN_LEFT, BTN_RIGHT, EV_KEY, EV_REL, REL_X, REL_Y, REL_WHEEL)
 from autotest_lib.server.cros.bluetooth.bluetooth_gatt_client_utils import (
         GATT_ClientFacade, GATT_Application, GATT_HIDApplication)
+from autotest_lib.server.cros.multimedia import remote_facade_factory
 
 
 Event = recorder.Event
@@ -560,6 +561,9 @@ class BluetoothAdapterTests(test.test):
     # Board list for name/ID test check. These devices don't need to be tested
     REFERENCE_BOARDS = ['rambi', 'nyan', 'oak', 'reef', 'yorp', 'bip']
 
+    # Path for btmon logs
+    BTMON_DIR_LOG_PATH = '/var/log/btmon'
+
     def group_chameleons_type(self):
         """Group all chameleons by the type of their detected device."""
 
@@ -801,6 +805,28 @@ class BluetoothAdapterTests(test.test):
         logging.info('The DUT is waken up.')
 
 
+    def reboot(self):
+        """Reboot the DUT and recreate necessary processes and variables"""
+        self.host.reboot()
+
+        # We need to recreate the bluetooth_facade after a reboot.
+        # Delete the proxy first so it won't delete the old one, which
+        # invokes disconnection, after creating the new one.
+        del self.factory
+        del self.bluetooth_facade
+        del self.input_facade
+        self.factory = remote_facade_factory.RemoteFacadeFactory(self.host,
+                       disable_arc=True)
+        self.bluetooth_facade = self.factory.create_bluetooth_hid_facade()
+        self.input_facade = self.factory.create_input_facade()
+
+        # Re-enable debugging verbose since Chrome will set it to
+        # default(disable).
+        self.enable_disable_debug_log(enable=True)
+
+        self.start_new_btmon()
+
+
     def _wait_till_condition_holds(self, func, method_name,
                                    timeout=DEFAULT_HOLD_TIMEOUT_SECS,
                                    sleep_interval=DEFAULT_HOLD_SLEEP_SECS,
@@ -914,6 +940,22 @@ class BluetoothAdapterTests(test.test):
         """
         level = int(enable)
         self.bluetooth_facade.set_debug_log_levels(level, level, level, level)
+
+
+    def start_new_btmon(self):
+        """ Start a new btmon process and save the log """
+
+        # Kill all btmon process before creating a new one
+        self.host.run('pkill btmon || true')
+
+        # Make sure the directory exists
+        self.host.run('mkdir -p %s' % self.BTMON_DIR_LOG_PATH)
+
+        # Time format. Ex, 2020_02_20_17_52_45
+        now = time.strftime("%Y_%m_%d_%H_%M_%S")
+        file_name = 'btsnoop_%s' % now
+        self.host.run_background('btmon -SAw %s/%s' % (self.BTMON_DIR_LOG_PATH,
+                                                       file_name))
 
 
     def log_message(self, msg):
@@ -3184,10 +3226,21 @@ class BluetoothAdapterTests(test.test):
         raise NotImplementedError
 
 
-    def cleanup(self, on_start=True):
-        """Clean up bluetooth adapter tests."""
-        # Disable all the bluetooth debug logs
-        self.enable_disable_debug_log(enable=False)
+    def cleanup(self, test_state='END'):
+        """Clean up bluetooth adapter tests.
+
+        @param test_state: string describing the requested clear is for
+                           a new test(NEW), the middle of the test(MID),
+                           or the end of the test(END).
+        """
+
+        if test_state is 'END':
+            # Disable all the bluetooth debug logs
+            self.enable_disable_debug_log(enable=False)
+
+            if hasattr(self, 'host'):
+                # Stop btmon process
+                self.host.run('pkill btmon || true')
 
         # Close the device properly if a device is instantiated.
         # Note: do not write something like the following statements
@@ -3202,7 +3255,7 @@ class BluetoothAdapterTests(test.test):
                     device.Close()
 
                     # Power cycle BT device if we're in the middle of a test
-                    if not on_start:
+                    if test_state is 'MID':
                         device.PowerCycle()
 
         self.devices = dict()
