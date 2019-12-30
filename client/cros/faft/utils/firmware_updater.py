@@ -11,6 +11,7 @@ import os
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chip_utils
+from autotest_lib.client.common_lib.cros import cros_config
 from autotest_lib.client.cros.faft.utils import flashrom_handler
 
 
@@ -403,8 +404,8 @@ class FirmwareUpdater(object):
                           If None (default), read from extracted manifest.json.
         @type shellball: str | None
         """
-        model_result = self.os_if.run_shell_command_get_output(
-                'mosys platform model')
+        model_result = cros_config.call_cros_config_get_output(
+                '/ name', self.os_if.run_shell_command)
 
         if not model_result:
             return
