@@ -27,6 +27,7 @@ from autotest_lib.client.cros.chameleon import usb_controller
 CHAMELEON_PORT = 9992
 CHAMELEOND_LOG_REMOTE_PATH = '/var/log/chameleond'
 DAEMON_LOG_REMOTE_PATH = '/var/log/daemon.log'
+BTMON_LOG_REMOTE_PATH = '/var/log/btsnoop.log'
 CHAMELEON_READY_TEST = 'GetSupportedPorts'
 
 
@@ -318,6 +319,42 @@ class ChameleonBoard(object):
             log_new_func = log_new_gen(source_path)
             if log_new_func:
                 atexit.register(log_new_func)
+
+
+        def btmon_atexit_gen(btmon_pid):
+            """Generate a function to kill the btmon process and save the log
+
+            @param btmon_pid: PID of the btmon process
+            """
+
+            def btmon_atexit():
+                """Kill the btmon with specified PID and save the log"""
+
+                file_name = os.path.basename(BTMON_LOG_REMOTE_PATH)
+                target_path = os.path.join(log_dir, file_name)
+
+                self.host.run('kill %d' % btmon_pid)
+                self.host.get_file(BTMON_LOG_REMOTE_PATH, target_path)
+            return btmon_atexit
+
+
+        # Kill all btmon process before creating a new one
+        self.host.run('pkill btmon || true')
+
+        # Get available btmon options in the chameleon host
+        btmon_options = ''
+        btmon_help = self.host.run('btmon --help').stdout
+
+        for option in 'SA':
+            if '-%s' % option in btmon_help:
+                btmon_options += option
+
+        # Store btmon log
+        btmon_pid = int(self.host.run_background('btmon -%sw %s'
+                                                % (btmon_options,
+                                                BTMON_LOG_REMOTE_PATH)))
+        if btmon_pid > 0:
+            atexit.register(btmon_atexit_gen(btmon_pid))
 
 
     def reboot(self):

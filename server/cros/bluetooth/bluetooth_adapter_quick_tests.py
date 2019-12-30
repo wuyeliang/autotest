@@ -56,7 +56,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
         # Grab currect device list for initialization
         connected_devices = self.devices
-        self.cleanup(on_start=False)
+        self.cleanup(test_state='MID')
 
         for device_type, device_list in connected_devices.items():
             for device in device_list:
@@ -112,6 +112,10 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.active_test_devices = {}
 
         self.enable_disable_debug_log(enable=True)
+
+        # Kill all btmon process before creating a new one
+        self.bluetooth_facade.host.run('pkill btmon || true')
+        self.bluetooth_facade.btmon_start()
 
         self.flag = flag
         self.test_iter = None
@@ -273,7 +277,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             self.group_chameleons_type()
 
         # Close the connection between peers
-        self.cleanup()
+        self.cleanup(test_state='NEW')
 
 
     @staticmethod

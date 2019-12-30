@@ -105,7 +105,8 @@ class OutputRecorder(object):
                     # special unicode such that we would like to escape.
                     # In this way, regular expression search could be conducted
                     # properly.
-                    self.contents.append(line.encode('unicode-escape'))
+                    line = line.decode(errors='ignore').encode('unicode-escape')
+                    self.contents.append(line)
                 elif self._stop_recording_thread_event.is_set():
                     self._stop_recording_thread_event.clear()
                     break

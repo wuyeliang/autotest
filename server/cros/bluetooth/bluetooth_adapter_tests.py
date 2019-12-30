@@ -2877,10 +2877,19 @@ class BluetoothAdapterTests(test.test):
         raise NotImplementedError
 
 
-    def cleanup(self, on_start=True):
-        """Clean up bluetooth adapter tests."""
-        # Disable all the bluetooth debug logs
-        self.enable_disable_debug_log(enable=False)
+    def cleanup(self, test_state='END'):
+        """Clean up bluetooth adapter tests.
+
+        @param test_state: string describing the requested clear is for
+                           a new test(NEW), the middle of the test(MID),
+                           or the end of the test(END).
+        """
+
+        if test_state is 'END':
+            # Disable all the bluetooth debug logs
+            self.enable_disable_debug_log(enable=False)
+            # Stop btmon process
+            self.bluetooth_facade.btmon_stop()
 
         # Close the device properly if a device is instantiated.
         # Note: do not write something like the following statements
@@ -2895,7 +2904,7 @@ class BluetoothAdapterTests(test.test):
                     device.Close()
 
                     # Power cycle BT device if we're in the middle of a test
-                    if not on_start:
+                    if test_state is 'MID':
                         device.PowerCycle()
 
         self.devices = dict()

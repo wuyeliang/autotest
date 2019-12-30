@@ -116,6 +116,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
     BLUETOOTH_LIBDIR = '/var/lib/bluetooth'
     BTMON_STOP_DELAY_SECS = 3
+    BTMON_LOG_PATH = '/var/log/btsnoop.log'
 
     # Timeout for how long we'll wait for BlueZ and the Adapter to show up
     # after reset.
@@ -168,7 +169,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         # Initailize a btmon object to record bluetoothd's activity.
         self.btmon = output_recorder.OutputRecorder(
-                'btmon', stop_delay_secs=self.BTMON_STOP_DELAY_SECS)
+                ('btmon -SAw %s' % self.BTMON_LOG_PATH).split(' '),
+                stop_delay_secs=self.BTMON_STOP_DELAY_SECS)
 
         self.advertisements = []
         self._adv_mainloop = gobject.MainLoop()
