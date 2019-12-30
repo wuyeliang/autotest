@@ -113,9 +113,42 @@ def is_update_needed(peer):
         raise error.TestFail("Peer has a higher version")
 
 
+def is_tmp_noexec(peer):
+    """Check if /tmp partition is not excutable."""
+    try:
+        cmd = 'cat /proc/mounts |grep "/tmp"'
+        status, output = run_cmd(peer, cmd)
+        return status and 'noexec' in output
+    except Exception as e:
+        logging.error('Exception %s while checking status of /tmp', str(e))
+        return True
 
-def perform_update(peer):
+def remount_tmp_exec(peer):
+    """Remount /tmp partition with exec flag."""
+    try:
+        cmd = 'mount -o remount,exec "/tmp"'
+        status, output = run_cmd(peer, cmd)
+        return status
+    except Exception as e:
+        logging.error('Exception %s while remounting /tmp', str(e))
+        return False
+
+
+
+def perform_update(peer, arch):
     """ Update the chameleond on the peer"""
+
+    if arch == 'CHROMEOS':
+        logging.info("Check if /tmp partition is executable")
+        if is_tmp_noexec(peer):
+            if not remount_tmp_exec(peer):
+                logging.error("unable to remount /tmp as exec")
+                return False
+            if is_tmp_noexec(peer):
+                logging.error("/tmp partition is still noexec")
+                return False
+        logging.info("/tmp partition is executable")
+
 
     logging.info("copy the file over to the peer")
     try:
@@ -194,7 +227,7 @@ def update_peer(host):
     if not is_update_needed(peer):
         raise error.TestNAError("Update not needed")
 
-    if not perform_update(peer):
+    if not perform_update(peer, arch):
         raise error.TestFail("Update failed")
 
     if not restart_check_chameleond(peer, arch):
