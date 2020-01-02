@@ -40,8 +40,8 @@ class firmware_CorruptBothFwBodyAB(FirmwareTest):
         self.check_state((self.checkers.crossystem_checker, {
                     'mainfw_type': 'developer' if dev_mode else 'normal',
                     }))
-        self.faft_client.Bios.CorruptBody('a')
-        self.faft_client.Bios.CorruptBody('b')
+        self.faft_client.bios.corrupt_body('a')
+        self.faft_client.bios.corrupt_body('b')
 
         # Older devices (without BROKEN screen) didn't wait for removal in
         # dev mode. Make sure the USB key is not plugged in so they won't
@@ -58,8 +58,8 @@ class firmware_CorruptBothFwBodyAB(FirmwareTest):
                               (vboot.RECOVERY_REASON['RO_INVALID_RW'],
                               vboot.RECOVERY_REASON['RW_VERIFY_BODY']),
                               }))
-        self.faft_client.Bios.RestoreBody('a')
-        self.faft_client.Bios.RestoreBody('b')
+        self.faft_client.bios.restore_body('a')
+        self.faft_client.bios.restore_body('b')
         self.switcher.mode_aware_reboot()
 
         logging.info("Expected normal boot, done.")

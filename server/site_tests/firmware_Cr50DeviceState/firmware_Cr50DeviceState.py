@@ -363,7 +363,7 @@ class firmware_Cr50DeviceState(Cr50Test):
                 full_command = 'echo mem > /sys/power/state &'
             elif state == 'G3':
                 full_command = 'poweroff'
-            self.faft_client.System.RunShellCommand(full_command)
+            self.faft_client.system.run_shell_command(full_command)
             self.stage_irq_add(self.get_irq_counts(), 'cmd done')
 
         time.sleep(self.SHORT_WAIT);

@@ -24,9 +24,9 @@ class firmware_UpdateFirmwareVersion(FirmwareTest):
 
     def check_firmware_version(self, expected_ver):
         """Checks the firmware version."""
-        actual_ver = self.faft_client.Bios.GetVersion(
+        actual_ver = self.faft_client.bios.get_version(
                 'b' if self.fw_vboot2 else 'a')
-        actual_tpm_fwver = self.faft_client.Tpm.GetFirmwareVersion()
+        actual_tpm_fwver = self.faft_client.tpm.get_firmware_version()
         if actual_ver != expected_ver or actual_tpm_fwver != expected_ver:
             raise error.TestFail(
                 'Firmware version should be %s,'
@@ -50,27 +50,27 @@ class firmware_UpdateFirmwareVersion(FirmwareTest):
         # Update firmware if needed
         if shellball_path:
             self.set_hardware_write_protect(enable=False)
-            self.faft_client.Updater.RunFactoryInstall()
+            self.faft_client.updater.run_factory_install()
             self.switcher.mode_aware_reboot()
 
         self.setup_usbkey(usbkey=True)
 
-        self._fwid = self.faft_client.Updater.GetSectionFwid()
+        self._fwid = self.faft_client.updater.get_section_fwid()
 
-        self.fw_ver_tpm = self.faft_client.Tpm.GetFirmwareVersion()
-        actual_ver = self.faft_client.Bios.GetVersion('a')
+        self.fw_ver_tpm = self.faft_client.tpm.get_firmware_version()
+        actual_ver = self.faft_client.bios.get_version('a')
         logging.info('Origin version is %s', actual_ver)
         self._update_version = actual_ver + 1
         logging.info('Firmware version will update to version %s',
                      self._update_version)
 
-        self.faft_client.Updater.ResignFirmware(self._update_version)
-        self.faft_client.Updater.RepackShellball('test')
+        self.faft_client.updater.resign_firmware(self._update_version)
+        self.faft_client.updater.repack_shellball('test')
 
     def cleanup(self):
         """Cleanup after the test"""
         try:
-            if self.faft_client.Tpm.GetFirmwareVersion() != self.fw_ver_tpm:
+            if self.faft_client.tpm.get_firmware_version() != self.fw_ver_tpm:
                 self.reboot_and_reset_tpm()
             self.restore_firmware()
             self.invalidate_firmware_setup()
@@ -85,11 +85,11 @@ class firmware_UpdateFirmwareVersion(FirmwareTest):
                           'fwid': self._fwid
                           }))
         self.check_state((self.checkers.fw_tries_checker, 'A'))
-        self.faft_client.Updater.RunAutoupdate('test')
+        self.faft_client.updater.run_autoupdate('test')
         self.switcher.mode_aware_reboot()
 
         logging.info("Copy firmware form B to A.")
-        self.faft_client.Updater.RunBootok('test')
+        self.faft_client.updater.run_bootok('test')
         self.check_state((self.checkers.fw_tries_checker, 'B'))
         self.switcher.mode_aware_reboot()
 
@@ -97,7 +97,7 @@ class firmware_UpdateFirmwareVersion(FirmwareTest):
         self.check_state((self.checkers.fw_tries_checker,
                           'B' if self.fw_vboot2 else 'A'))
         self.check_firmware_version(self._update_version)
-        self.faft_client.Updater.RunRecovery()
+        self.faft_client.updater.run_recovery()
         self.reboot_and_reset_tpm()
 
         logging.info("Check Rollback version.")

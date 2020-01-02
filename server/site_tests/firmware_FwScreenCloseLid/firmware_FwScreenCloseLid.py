@@ -127,7 +127,7 @@ class firmware_FwScreenCloseLid(FirmwareTest):
                 'devsw_boot': '1',
                 'mainfw_type': 'developer',
         }))
-        self.faft_client.System.RequestRecoveryBoot()
+        self.faft_client.system.request_recovery_boot()
         self.switcher.simple_reboot()
         self.run_shutdown_process(
                 self.wait_longer_fw_screen_and_close_lid,
@@ -144,7 +144,7 @@ class firmware_FwScreenCloseLid(FirmwareTest):
                 'devsw_boot': '1',
                 'mainfw_type': 'developer',
         }))
-        self.faft_client.System.RequestRecoveryBoot()
+        self.faft_client.system.request_recovery_boot()
         self.switcher.simple_reboot()
         self.run_shutdown_process(
                 self.wait_yuck_screen_and_close_lid,
@@ -168,7 +168,7 @@ class firmware_FwScreenCloseLid(FirmwareTest):
                 'devsw_boot': '0',
                 'mainfw_type': 'normal',
         }))
-        self.faft_client.System.RequestRecoveryBoot()
+        self.faft_client.system.request_recovery_boot()
         self.switcher.simple_reboot()
         self.run_shutdown_process(
                 self.wait_longer_fw_screen_and_close_lid,

@@ -65,18 +65,18 @@ class firmware_FWupdate(FirmwareTest):
                                       % self.new_pd)
             logging.info('new_pd=%s', self.new_pd)
 
-        self._old_bios_wp = self.faft_client.Bios.GetWriteProtectStatus()
+        self._old_bios_wp = self.faft_client.bios.get_write_protect_status()
 
         if not self.images_specified:
             # TODO(dgoyette): move this into the general FirmwareTest init?
-            stripped_bios = self.faft_client.Bios.StripModifiedFwids()
+            stripped_bios = self.faft_client.bios.strip_modified_fwids()
             if stripped_bios:
                 logging.warn(
                         "Fixed the previously modified BIOS FWID(s): %s",
                         stripped_bios)
 
             if self.faft_config.chrome_ec:
-                stripped_ec = self.faft_client.Ec.StripModifiedFwids()
+                stripped_ec = self.faft_client.ec.strip_modified_fwids()
                 if stripped_ec:
                     logging.warn(
                             "Fixed the previously modified EC FWID(s): %s",
@@ -90,7 +90,7 @@ class firmware_FWupdate(FirmwareTest):
             self.wp = None
 
         self.set_hardware_write_protect(False)
-        self.faft_client.Bios.SetWriteProtectRegion(self.WP_REGION, True)
+        self.faft_client.bios.set_write_protect_region(self.WP_REGION, True)
         self.set_hardware_write_protect(True)
 
         self.mode = dict_args.get('mode', 'recovery')
@@ -110,9 +110,11 @@ class firmware_FWupdate(FirmwareTest):
         @rtype: dict
         """
         versions = dict()
-        versions['bios'] = self.faft_client.Updater.GetAllInstalledFwids('bios')
+        versions['bios'] = self.faft_client.updater.get_all_installed_fwids(
+                'bios')
         if self.faft_config.chrome_ec:
-            versions['ec'] = self.faft_client.Updater.GetAllInstalledFwids('ec')
+            versions['ec'] = self.faft_client.updater.get_all_installed_fwids(
+                    'ec')
         return versions
 
     def copy_cmdline_images(self, hostname):
@@ -122,18 +124,18 @@ class firmware_FWupdate(FirmwareTest):
         """
         if self.new_bios or self.new_ec or self.new_pd:
 
-            extract_dir = self.faft_client.Updater.GetWorkPath()
+            extract_dir = self.faft_client.updater.get_work_path()
 
             dut_access = remote_access.RemoteDevice(hostname, username='root')
 
             # Replace bin files.
             if self.new_bios:
-                bios_rel = self.faft_client.Updater.GetBiosRelativePath()
+                bios_rel = self.faft_client.updater.get_bios_relative_path()
                 bios_path = os.path.join(extract_dir, bios_rel)
                 dut_access.CopyToDevice(self.new_bios, bios_path, mode='scp')
 
             if self.new_ec:
-                ec_rel = self.faft_client.Updater.GetEcRelativePath()
+                ec_rel = self.faft_client.updater.get_ec_relative_path()
                 ec_path = os.path.join(extract_dir, ec_rel)
                 dut_access.CopyToDevice(self.new_ec, ec_path, mode='scp')
 
@@ -159,10 +161,11 @@ class firmware_FWupdate(FirmwareTest):
         self.set_hardware_write_protect(False)
 
         if write_protected:
-            self.faft_client.Bios.SetWriteProtectRegion(self.WP_REGION, True)
+            self.faft_client.bios.set_write_protect_region(self.WP_REGION, True)
             self.set_hardware_write_protect(True)
         else:
-            self.faft_client.Bios.SetWriteProtectRegion(self.WP_REGION, False)
+            self.faft_client.bios.set_write_protect_region(
+                    self.WP_REGION, False)
 
         expected_written = {}
         written_desc = []
@@ -187,7 +190,7 @@ class firmware_FWupdate(FirmwareTest):
 
         # make sure we restore firmware after the test, if it tried to flash.
         self.flashed = True
-        self.faft_client.Updater.RunFirmwareupdate(self.mode, append)
+        self.faft_client.updater.run_firmwareupdate(self.mode, append)
 
         after_fwids = self.get_installed_versions()
 
@@ -208,7 +211,7 @@ class firmware_FWupdate(FirmwareTest):
         append = 'new'
         have_ec = bool(self.faft_config.chrome_ec)
 
-        self.faft_client.Updater.ExtractShellball()
+        self.faft_client.updater.extract_shellball()
 
         before_fwids = self.get_installed_versions()
 
@@ -220,15 +223,15 @@ class firmware_FWupdate(FirmwareTest):
                     "new_bios=%s, new_ec=%s, new_pd=%s",
                     self.new_bios, self.new_ec, self.new_pd)
             self.copy_cmdline_images(host.hostname)
-            self.faft_client.Updater.ReloadImages()
-            self.faft_client.Updater.RepackShellball(append)
+            self.faft_client.updater.reload_images()
+            self.faft_client.updater.repack_shellball(append)
             modded_fwids = self.identify_shellball(include_ec=have_ec)
         else:
             # Modify the stock image
             logging.info(
                     "Using the currently running firmware, with modified fwids")
             self.setup_firmwareupdate_shellball()
-            self.faft_client.Updater.ReloadImages()
+            self.faft_client.updater.reload_images()
             self.modify_shellball(append, modify_ro=True, modify_ec=have_ec)
             modded_fwids = self.identify_shellball(include_ec=have_ec)
 
@@ -260,7 +263,7 @@ class firmware_FWupdate(FirmwareTest):
         reboot the EC with the new firmware.
         """
         self.set_hardware_write_protect(False)
-        self.faft_client.Bios.SetWriteProtectRange(0, 0, False)
+        self.faft_client.bios.set_write_protect_range(0, 0, False)
 
         if self.flashed:
             if self.images_specified:
@@ -270,7 +273,7 @@ class firmware_FWupdate(FirmwareTest):
                 self.restore_firmware()
 
         # Restore the old write-protection value at the end of the test.
-        self.faft_client.Bios.SetWriteProtectRange(
+        self.faft_client.bios.set_write_protect_range(
                 self._old_bios_wp['start'],
                 self._old_bios_wp['length'],
                 self._old_bios_wp['enabled'])

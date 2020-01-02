@@ -50,7 +50,7 @@ class firmware_Cr50WPG3(Cr50Test):
         if servo_wp_s0 != 'off':
             raise error.TestError("WP isn't disabled in S0")
 
-        self.faft_client.System.RunShellCommand('poweroff')
+        self.faft_client.system.run_shell_command('poweroff')
         time.sleep(self.WAIT_FOR_STATE)
         if hasattr(self, 'ec'):
             self.ec.send_command('hibernate')

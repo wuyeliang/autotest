@@ -36,7 +36,7 @@ class firmware_Cr50RddG3(Cr50Test):
         if self.rdd_is_connected():
             raise error.TestFail('Cr50 detects Rdd with dts mode off')
 
-        self.faft_client.System.RunShellCommand('poweroff')
+        self.faft_client.system.run_shell_command('poweroff')
         time.sleep(self.WAIT_FOR_STATE)
         self.ec.send_command('hibernate')
 

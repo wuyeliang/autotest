@@ -30,7 +30,7 @@ def run_faftrpc(machine):
                  host=host,
                  cmdline_args=args,
                  disable_sysinfo=True,
-                 category_under_test="Bios"
+                 category_under_test="bios"
                  )
 
 parallel_simple(run_faftrpc, machines)

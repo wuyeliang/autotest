@@ -654,9 +654,9 @@ class _BaseModeSwitcher(object):
             logging.warning("-[FAFT]-[ system did not respond to ping ]")
         if self.client_host.wait_up(timeout):
             # Check the FAFT client is avaiable.
-            self.faft_client.System.IsAvailable()
+            self.faft_client.system.is_available()
             # Stop update-engine as it may change firmware/kernel.
-            self.faft_framework.faft_client.Updater.StopDaemon()
+            self.faft_framework.faft_client.updater.stop_daemon()
         else:
             logging.error('wait_for_client() timed out.')
             raise ConnectionError('DUT is still down unexpectedly')

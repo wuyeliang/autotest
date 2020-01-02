@@ -68,7 +68,8 @@ class firmware_Mosys(FirmwareTest):
 
         """
         logging.info('Execute %s', command)
-        output = self.faft_client.System.RunShellCommandGetOutput(command, True)
+        output = self.faft_client.system.run_shell_command_get_output(
+                command, True)
         logging.info('Output %s', output)
         return output
 

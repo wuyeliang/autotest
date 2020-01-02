@@ -40,7 +40,7 @@ class firmware_DevScreenTimeout(FirmwareTest):
         @raise TestError: If the firmware-boot-time file does not exist.
         """
         time.sleep(self.RUN_SHELL_READY_TIME_MARGIN)
-        [fw_time] = self.faft_client.System.RunShellCommandGetOutput(
+        [fw_time] = self.faft_client.system.run_shell_command_get_output(
                 'cat /tmp/firmware-boot-time')
         logging.info('Got firmware boot time [%s]: %s', tag, fw_time)
         if fw_time:

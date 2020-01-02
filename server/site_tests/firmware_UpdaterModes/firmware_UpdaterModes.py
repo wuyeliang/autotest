@@ -38,7 +38,7 @@ class firmware_UpdaterModes(FirmwareTest):
 
     def get_bios_fwids(self, path=None):
         """Return the BIOS fwids for the given file"""
-        return self.faft_client.Updater.GetAllInstalledFwids('bios', path)
+        return self.faft_client.updater.get_all_installed_fwids('bios', path)
 
     def run_case(self, mode, write_protected, written, modify_ro=True,
                  should_abort=False, writes_gbb=False):
@@ -52,13 +52,14 @@ class firmware_UpdaterModes(FirmwareTest):
         @param writes_gbb: if True, the updater should rewrite gbb flags.
         @return: a list of failure messages for the case
         """
-        self.faft_client.Updater.ResetShellball()
+        self.faft_client.updater.reset_shellball()
 
-        fake_bios_path = self.faft_client.Updater.CopyBios('fake-bios.bin')
-        self.faft_client.Updater.SetImageGbbFlags(0, fake_bios_path)
+        fake_bios_path = self.faft_client.updater.copy_bios('fake-bios.bin')
+        self.faft_client.updater.set_image_gbb_flags(0, fake_bios_path)
 
         before_fwids = {'bios': self.get_bios_fwids(fake_bios_path)}
-        before_gbb = self.faft_client.Updater.GetImageGbbFlags(fake_bios_path)
+        before_gbb = self.faft_client.updater.get_image_gbb_flags(
+                fake_bios_path)
 
         case_desc = ('chromeos-firmwareupdate --mode=%s --wp=%s'
                      % (mode, write_protected))
@@ -72,19 +73,19 @@ class firmware_UpdaterModes(FirmwareTest):
         # Repack the shellball with modded fwids
         self.modify_shellball(append, modify_ro)
         modded_fwids = self.identify_shellball()
-        image_gbb = self.faft_client.Updater.GetImageGbbFlags()
+        image_gbb = self.faft_client.updater.get_image_gbb_flags()
 
         options = ['--emulate', fake_bios_path, '--wp=%s' % write_protected]
 
         logging.info("%s (should write %s)", case_desc,
                      ', '.join(written).upper() or 'nothing')
-        rc = self.faft_client.Updater.RunFirmwareupdate(mode, append, options)
+        rc = self.faft_client.updater.run_firmwareupdate(mode, append, options)
 
         if should_abort and rc != 0:
             logging.debug('updater aborted as expected')
 
         after_fwids = {'bios': self.get_bios_fwids(fake_bios_path)}
-        after_gbb = self.faft_client.Updater.GetImageGbbFlags(fake_bios_path)
+        after_gbb = self.faft_client.updater.get_image_gbb_flags(fake_bios_path)
         expected_written = {'bios': written or []}
 
         errors = self.check_fwids_written(

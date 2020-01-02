@@ -54,24 +54,24 @@ class firmware_WilcoDiagnosticsMode(FirmwareTest):
         # image, and write a new firmware image with that corrupt diagnostics
         # image.
         local_filename = 'diag.bin'
-        cbfs_work_dir = self.faft_client.Updater.CbfsSetupWorkDir()
+        cbfs_work_dir = self.faft_client.updater.cbfs_setup_work_dir()
         bios_cbfs_path = os.path.join(cbfs_work_dir,
-                self.faft_client.Updater.GetBiosRelativePath())
+                self.faft_client.updater.get_bios_relative_path())
         diag_cbfs_path = os.path.join(cbfs_work_dir, local_filename)
 
         logging.info('Extracting diagnostics')
-        self.faft_client.Updater.CbfsExtractDiagnostics(self.DIAG_CBFS_NAME,
+        self.faft_client.updater.cbfs_extract_diagnostics(self.DIAG_CBFS_NAME,
                 local_filename)
 
         logging.info('Corrupting diagnostics')
-        self.faft_client.Updater.CorruptDiagnosticsImage(local_filename)
+        self.faft_client.updater.corrupt_diagnostics_image(local_filename)
 
         logging.info('Replacing diagnostics')
-        self.faft_client.Updater.CbfsReplaceDiagnostics(self.DIAG_CBFS_NAME,
+        self.faft_client.updater.cbfs_replace_diagnostics(self.DIAG_CBFS_NAME,
                 local_filename)
 
         logging.info('Writing back BIOS')
-        self.faft_client.Bios.WriteWhole(bios_cbfs_path)
+        self.faft_client.bios.write_whole(bios_cbfs_path)
         self.switcher.mode_aware_reboot()
 
     def _press_f12(self):
@@ -117,7 +117,7 @@ class firmware_WilcoDiagnosticsMode(FirmwareTest):
         # diagnostics mode, and verify that the DUT goes down (indicating
         # success).
         logging.info('Updating firmware')
-        self.faft_client.Updater.RunAutoupdate(None)
+        self.faft_client.updater.run_autoupdate(None)
         logging.info('Rebooting to apply firmware update')
         self.switcher.mode_aware_reboot()
 

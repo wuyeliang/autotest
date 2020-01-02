@@ -8,12 +8,12 @@ class RPCProxy(object):
     that are available on RPCProxy via __getattr__.
     """
 
-    Bios: rpc_functions.BiosServicer
-    Cgpt: rpc_functions.CgptServicer
-    Ec: rpc_functions.EcServicer
-    Kernel: rpc_functions.KernelServicer
-    Rootfs: rpc_functions.RootfsServicer
-    RpcSettings: rpc_functions.RpcSettingsServicer
-    System: rpc_functions.SystemServicer
-    Tpm: rpc_functions.TpmServicer
-    Updater: rpc_functions.UpdaterServicer
+    bios: rpc_functions.BiosServicer
+    cgpt: rpc_functions.CgptServicer
+    ec: rpc_functions.EcServicer
+    kernel: rpc_functions.KernelServicer
+    rootfs: rpc_functions.RootfsServicer
+    rpc_settings: rpc_functions.RpcSettingsServicer
+    system: rpc_functions.SystemServicer
+    tpm: rpc_functions.TpmServicer
+    updater: rpc_functions.UpdaterServicer

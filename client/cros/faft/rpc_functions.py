@@ -54,15 +54,15 @@ class RPCRouter(object):
         self.updater = UpdaterServicer(os_if)
 
         self._rpc_servicers = {
-                'Bios': self.bios,
-                'Cgpt': self.cgpt,
-                'Ec': self.ec,
-                'Kernel': self.kernel,
-                'RpcSettings': self.rpc_settings,
-                'Rootfs': self.rootfs,
-                'System': self.system,
-                'Tpm': self.tpm,
-                'Updater': self.updater
+                'bios': self.bios,
+                'cgpt': self.cgpt,
+                'ec': self.ec,
+                'kernel': self.kernel,
+                'rpc_settings': self.rpc_settings,
+                'rootfs': self.rootfs,
+                'system': self.system,
+                'tpm': self.tpm,
+                'updater': self.updater
         }
 
         self._os_if = os_if
@@ -222,25 +222,25 @@ class BiosServicer(object):
             self._real_bios_handler.init()
         return self._real_bios_handler
 
-    def Reload(self):
+    def reload(self):
         """Reload the firmware image that may be changed."""
         self._bios_handler.new_image()
 
-    def GetGbbFlags(self):
+    def get_gbb_flags(self):
         """Get the GBB flags.
 
         @return: An integer of the GBB flags.
         """
         return self._bios_handler.get_gbb_flags()
 
-    def SetGbbFlags(self, flags):
+    def set_gbb_flags(self, flags):
         """Set the GBB flags.
 
         @param flags: An integer of the GBB flags.
         """
         self._bios_handler.set_gbb_flags(flags, write_through=True)
 
-    def GetPreambleFlags(self, section):
+    def get_preamble_flags(self, section):
         """Get the preamble flags of a firmware section.
 
         @param section: A firmware section, either 'a' or 'b'.
@@ -248,17 +248,17 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_section_flags(section)
 
-    def SetPreambleFlags(self, section, flags):
+    def set_preamble_flags(self, section, flags):
         """Set the preamble flags of a firmware section.
 
         @param section: A firmware section, either 'a' or 'b'.
         @param flags: An integer of preamble flags.
         """
-        version = self.GetVersion(section)
+        version = self.get_version(section)
         self._bios_handler.set_section_version(
                 section, version, flags, write_through=True)
 
-    def GetBodySha(self, section):
+    def get_body_sha(self, section):
         """Get SHA1 hash of BIOS RW firmware section.
 
         @param section: A firmware section, either 'a' or 'b'.
@@ -266,7 +266,7 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_section_sha(section)
 
-    def GetSigSha(self, section):
+    def get_sig_sha(self, section):
         """Get SHA1 hash of firmware vblock in section.
 
         @param section: A firmware section, either 'a' or 'b'.
@@ -274,7 +274,7 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_section_sig_sha(section)
 
-    def GetSectionFwid(self, section=None):
+    def get_section_fwid(self, section=None):
         """Retrieve the RO or RW fwid.
 
         @param section: A firmware section, either 'a' or 'b'.
@@ -282,21 +282,21 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_section_fwid(section)
 
-    def CorruptSig(self, section):
+    def corrupt_sig(self, section):
         """Corrupt the requested firmware section signature.
 
         @param section: A firmware section, either 'a' or 'b'.
         """
         self._bios_handler.corrupt_firmware(section)
 
-    def RestoreSig(self, section):
+    def restore_sig(self, section):
         """Restore the previously corrupted firmware section signature.
 
         @param section: A firmware section, either 'a' or 'b'.
         """
         self._bios_handler.restore_firmware(section)
 
-    def CorruptBody(self, section, corrupt_all=False):
+    def corrupt_body(self, section, corrupt_all=False):
         """Corrupt the requested firmware section body.
 
         @param section: A firmware section, either 'a' or 'b'.
@@ -305,7 +305,7 @@ class BiosServicer(object):
         """
         self._bios_handler.corrupt_firmware_body(section, corrupt_all)
 
-    def RestoreBody(self, section):
+    def restore_body(self, section):
         """Restore the previously corrupted firmware section body.
 
         @param section: A firmware section, either 'a' or 'b'.
@@ -318,7 +318,7 @@ class BiosServicer(object):
         The passed in delta, a positive or a negative number, is added to the
         original firmware version.
         """
-        original_version = self.GetVersion(section)
+        original_version = self.get_version(section)
         new_version = original_version + delta
         flags = self._bios_handler.get_section_flags(section)
         self._os_if.log('Setting firmware section %s version from %d to %d' %
@@ -326,34 +326,34 @@ class BiosServicer(object):
         self._bios_handler.set_section_version(
                 section, new_version, flags, write_through=True)
 
-    def MoveVersionBackward(self, section):
+    def move_version_backward(self, section):
         """Decrement firmware version for the requested section."""
         self._modify_version(section, -1)
 
-    def MoveVersionForward(self, section):
+    def move_version_forward(self, section):
         """Increase firmware version for the requested section."""
         self._modify_version(section, 1)
 
-    def GetVersion(self, section):
+    def get_version(self, section):
         """Retrieve firmware version of a section."""
         return self._bios_handler.get_section_version(section)
 
-    def GetDatakeyVersion(self, section):
+    def get_datakey_version(self, section):
         """Return firmware data key version."""
         return self._bios_handler.get_section_datakey_version(section)
 
-    def GetKernelSubkeyVersion(self, section):
+    def get_kernel_subkey_version(self, section):
         """Return kernel subkey version."""
         return self._bios_handler.get_section_kernel_subkey_version(section)
 
-    def DumpWhole(self, bios_path):
+    def dump_whole(self, bios_path):
         """Dump the current BIOS firmware to a file, specified by bios_path.
 
         @param bios_path: The path of the BIOS image to be written.
         """
         self._bios_handler.dump_whole(bios_path)
 
-    def WriteWhole(self, bios_path):
+    def write_whole(self, bios_path):
         """Write the firmware from bios_path to the current system.
 
         @param bios_path: The path of the source BIOS image
@@ -361,7 +361,7 @@ class BiosServicer(object):
         self._bios_handler.new_image(bios_path)
         self._bios_handler.write_whole()
 
-    def StripModifiedFwids(self):
+    def strip_modified_fwids(self):
         """Strip any trailing suffixes (from modify_fwids) out of the FWIDs.
 
         @return: a dict of any fwids that were adjusted, by section (ro, a, b)
@@ -369,7 +369,7 @@ class BiosServicer(object):
         """
         return self._bios_handler.strip_modified_fwids()
 
-    def SetWriteProtectRegion(self, region, enabled=None):
+    def set_write_protect_region(self, region, enabled=None):
         """Modify software write protect region and flag in one operation.
 
         @param region: Region to set (usually WP_RO)
@@ -378,7 +378,7 @@ class BiosServicer(object):
         """
         self._bios_handler.set_write_protect_region(region, enabled)
 
-    def SetWriteProtectRange(self, start, length, enabled=None):
+    def set_write_protect_range(self, start, length, enabled=None):
         """Modify software write protect range and flag in one operation.
 
         @param start: offset (bytes) from start of flash to start of range
@@ -388,7 +388,7 @@ class BiosServicer(object):
         """
         self._bios_handler.set_write_protect_range(start, length, enabled)
 
-    def GetWriteProtectStatus(self):
+    def get_write_protect_status(self):
         """Get a dict describing the status of the write protection
 
         @return: {'enabled': True/False, 'start': '0x0', 'length': '0x0', ...}
@@ -396,7 +396,7 @@ class BiosServicer(object):
         """
         return self._bios_handler.get_write_protect_status()
 
-    def IsAvailable(self):
+    def is_available(self):
         """Return True if available, False if not."""
         # Use the real handler, to avoid .init() raising an exception
         return self._real_bios_handler.is_available()
@@ -412,7 +412,7 @@ class CgptServicer(object):
         self._os_if = os_if
         self._cgpt_handler = cgpt_handler.CgptHandler(self._os_if)
 
-    def GetAttributes(self):
+    def get_attributes(self):
         """Get kernel attributes."""
         rootdev = self._os_if.get_root_dev()
         self._cgpt_handler.read_device_info(rootdev)
@@ -421,7 +421,7 @@ class CgptServicer(object):
                 'B': self._cgpt_handler.get_partition(rootdev, 'KERN-B')
         }
 
-    def SetAttributes(self, a=None, b=None):
+    def set_attributes(self, a=None, b=None):
         """Set kernel attributes for either partition (or both)."""
         partitions = {'A': a, 'B': b}
         rootdev = self._os_if.get_root_dev()
@@ -474,11 +474,11 @@ class EcServicer(object):
             self._real_ec_handler.init()
         return self._real_ec_handler
 
-    def Reload(self):
+    def reload(self):
         """Reload the firmware image that may be changed."""
         self._ec_handler.new_image()
 
-    def GetVersion(self):
+    def get_version(self):
         """Get EC version via mosys.
 
         @return: A string of the EC version.
@@ -486,19 +486,19 @@ class EcServicer(object):
         return self._os_if.run_shell_command_get_output(
                 'mosys ec info | sed "s/.*| //"')[0]
 
-    def GetActiveHash(self):
+    def get_active_hash(self):
         """Get hash of active EC RW firmware."""
         return self._os_if.run_shell_command_get_output(
                 'ectool echash | grep hash: | sed "s/hash:\s\+//"')[0]
 
-    def DumpWhole(self, ec_path):
+    def dump_whole(self, ec_path):
         """Dump the current EC firmware to a file, specified by ec_path.
 
         @param ec_path: The path of the EC image to be written.
         """
         self._ec_handler.dump_whole(ec_path)
 
-    def WriteWhole(self, ec_path):
+    def write_whole(self, ec_path):
         """Write the firmware from ec_path to the current system.
 
         @param ec_path: The path of the source EC image.
@@ -506,21 +506,21 @@ class EcServicer(object):
         self._ec_handler.new_image(ec_path)
         self._ec_handler.write_whole()
 
-    def CorruptBody(self, section):
+    def corrupt_body(self, section):
         """Corrupt the requested EC section body.
 
         @param section: An EC section, either 'a' or 'b'.
         """
         self._ec_handler.corrupt_firmware_body(section, corrupt_all=True)
 
-    def DumpFirmware(self, ec_path):
+    def dump_firmware(self, ec_path):
         """Dump the current EC firmware to a file, specified by ec_path.
 
         @param ec_path: The path of the EC image to be written.
         """
         self._ec_handler.dump_whole(ec_path)
 
-    def SetWriteProtect(self, enable):
+    def set_write_protect(self, enable):
         """Enable write protect of the EC flash chip.
 
         @param enable: True if activating EC write protect. Otherwise, False.
@@ -530,20 +530,20 @@ class EcServicer(object):
         else:
             self._ec_handler.disable_write_protect()
 
-    def IsEfs(self):
+    def is_efs(self):
         """Return True if the EC supports EFS."""
         return self._ec_handler.has_section_body('rw_b')
 
-    def CopyRw(self, from_section, to_section):
+    def copy_rw(self, from_section, to_section):
         """Copy EC RW from from_section to to_section."""
         self._ec_handler.copy_from_to(from_section, to_section)
 
-    def RebootToSwitchSlot(self):
+    def reboot_to_switch_slot(self):
         """Reboot EC to switch the active RW slot."""
         self._os_if.run_shell_command(
                 'ectool reboot_ec cold switch-slot', modifies_device=True)
 
-    def StripModifiedFwids(self):
+    def strip_modified_fwids(self):
         """Strip any trailing suffixes (from modify_fwids) out of the FWIDs."""
         return self._ec_handler.strip_modified_fwids()
 
@@ -562,14 +562,14 @@ class KernelServicer(object):
                 dev_key_path='/usr/share/vboot/devkeys',
                 internal_disk=True)
 
-    def CorruptSig(self, section):
+    def corrupt_sig(self, section):
         """Corrupt the requested kernel section.
 
         @param section: A kernel section, either 'a' or 'b'.
         """
         self._kernel_handler.corrupt_kernel(section)
 
-    def RestoreSig(self, section):
+    def restore_sig(self, section):
         """Restore the requested kernel section (previously corrupted).
 
         @param section: A kernel section, either 'a' or 'b'.
@@ -588,23 +588,23 @@ class KernelServicer(object):
                         (section, original_version, new_version))
         self._kernel_handler.set_version(section, new_version)
 
-    def MoveVersionBackward(self, section):
+    def move_version_backward(self, section):
         """Decrement kernel version for the requested section."""
         self._modify_version(section, -1)
 
-    def MoveVersionForward(self, section):
+    def move_version_forward(self, section):
         """Increase kernel version for the requested section."""
         self._modify_version(section, 1)
 
-    def GetVersion(self, section):
+    def get_version(self, section):
         """Return kernel version."""
         return self._kernel_handler.get_version(section)
 
-    def GetDatakeyVersion(self, section):
+    def get_datakey_version(self, section):
         """Return kernel datakey version."""
         return self._kernel_handler.get_datakey_version(section)
 
-    def DiffAB(self):
+    def diff_a_b(self):
         """Compare kernel A with B.
 
         @return: True: if kernel A is different with B.
@@ -622,11 +622,11 @@ class KernelServicer(object):
 
         return header_a != header_b
 
-    def ResignWithKeys(self, section, key_path=None):
+    def resign_with_keys(self, section, key_path=None):
         """Resign kernel with temporary key."""
         self._kernel_handler.resign_kernel(section, key_path)
 
-    def Dump(self, section, kernel_path):
+    def dump(self, section, kernel_path):
         """Dump the specified kernel to a file.
 
         @param section: The kernel to dump. May be A or B.
@@ -634,7 +634,7 @@ class KernelServicer(object):
         """
         self._kernel_handler.dump_kernel(section, kernel_path)
 
-    def Write(self, section, kernel_path):
+    def write(self, section, kernel_path):
         """Write a kernel image to the specified section.
 
         @param section: The kernel to dump. May be A or B.
@@ -642,7 +642,7 @@ class KernelServicer(object):
         """
         self._kernel_handler.write_kernel(section, kernel_path)
 
-    def GetSha(self, section):
+    def get_sha(self, section):
         """Return the SHA1 hash of the specified kernel section."""
         return self._kernel_handler.get_sha(section)
 
@@ -658,7 +658,7 @@ class RootfsServicer(object):
         self._rootfs_handler = rootfs_handler.RootfsHandler()
         self._rootfs_handler.init(self._os_if)
 
-    def VerifyRootfs(self, section):
+    def verify_rootfs(self, section):
         """Verifies the integrity of the root FS.
 
         @param section: The rootfs to verify. May be A or B.
@@ -675,11 +675,11 @@ class RpcSettingsServicer(object):
         """
         self._os_if = os_if
 
-    def EnableTestMode(self):
+    def enable_test_mode(self):
         """Enable test mode (avoids writing to flash or gpt)"""
         self._os_if.test_mode = True
 
-    def DisableTestMode(self):
+    def disable_test_mode(self):
         """Disable test mode and return to normal operation"""
         self._os_if.test_mode = False
 
@@ -694,14 +694,14 @@ class SystemServicer(object):
         self._os_if = os_if
         self._key_checker = firmware_check_keys.firmwareCheckKeys()
 
-    def IsAvailable(self):
+    def is_available(self):
         """Function for polling the RPC server availability.
 
         @return: Always True.
         """
         return True
 
-    def DumpLog(self, remove_log=False):
+    def dump_log(self, remove_log=False):
         """Dump the log file.
 
         @param remove_log: Remove the log file after dump.
@@ -713,14 +713,14 @@ class SystemServicer(object):
             os.remove(self._os_if.log_file)
         return log
 
-    def RunShellCommand(self, command):
+    def run_shell_command(self, command):
         """Run shell command.
 
         @param command: A shell command to be run.
         """
         self._os_if.run_shell_command(command)
 
-    def RunShellCommandCheckOutput(self, command, success_token):
+    def run_shell_command_check_output(self, command, success_token):
         """Run shell command and check its stdout for a string.
 
         @param command: A shell command to be run.
@@ -731,7 +731,7 @@ class SystemServicer(object):
         return self._os_if.run_shell_command_check_output(
                 command, success_token)
 
-    def RunShellCommandGetOutput(self, command, include_stderr=False):
+    def run_shell_command_get_output(self, command, include_stderr=False):
         """Run shell command and get its console output.
 
         @param command: A shell command to be run.
@@ -739,7 +739,7 @@ class SystemServicer(object):
         """
         return self._os_if.run_shell_command_get_output(command, include_stderr)
 
-    def RunShellCommandGetStatus(self, command):
+    def run_shell_command_get_status(self, command):
         """Run shell command and get its console status.
 
         @param command: A shell command to be run.
@@ -748,7 +748,7 @@ class SystemServicer(object):
         """
         return self._os_if.run_shell_command_get_status(command)
 
-    def GetPlatformName(self):
+    def get_platform_name(self):
         """Get the platform name of the current system.
 
         @return: A string of the platform name.
@@ -761,7 +761,7 @@ class SystemServicer(object):
                             '\n'.join(lines))
         return lines[-1]
 
-    def GetModelName(self):
+    def get_model_name(self):
         """Get the model name of the current system.
 
         @return: A string of the model name.
@@ -772,14 +772,14 @@ class SystemServicer(object):
             raise Exception('Failed getting model name from cros_config')
         return model
 
-    def DevTpmPresent(self):
+    def dev_tpm_present(self):
         """Check if /dev/tpm0 is present.
 
         @return: Boolean true or false.
         """
         return os.path.exists('/dev/tpm0')
 
-    def GetCrossystemValue(self, key):
+    def get_crossystem_value(self, key):
         """Get crossystem value of the requested key.
 
         @param key: A crossystem key.
@@ -788,28 +788,28 @@ class SystemServicer(object):
         return self._os_if.run_shell_command_get_output(
                 'crossystem %s' % key)[0]
 
-    def GetRootDev(self):
+    def get_root_dev(self):
         """Get the name of root device without partition number.
 
         @return: A string of the root device without partition number.
         """
         return self._os_if.get_root_dev()
 
-    def GetRootPart(self):
+    def get_root_part(self):
         """Get the name of root device with partition number.
 
         @return: A string of the root device with partition number.
         """
         return self._os_if.get_root_part()
 
-    def SetTryFwB(self, count=1):
+    def set_try_fw_b(self, count=1):
         """Set 'Try Firmware B' flag in crossystem.
 
         @param count: # times to try booting into FW B
         """
         self._os_if.cs.fwb_tries = count
 
-    def SetFwTryNext(self, next, count=0):
+    def set_fw_try_next(self, next, count=0):
         """Set fw_try_next to A or B.
 
         @param next: Next FW to reboot to (A or B)
@@ -819,32 +819,32 @@ class SystemServicer(object):
         if count:
             self._os_if.cs.fw_try_count = count
 
-    def GetFwVboot2(self):
+    def get_fw_vboot2(self):
         """Get fw_vboot2."""
         try:
             return self._os_if.cs.fw_vboot2 == '1'
         except os_interface.OSInterfaceError:
             return False
 
-    def RequestRecoveryBoot(self):
+    def request_recovery_boot(self):
         """Request running in recovery mode on the restart."""
         self._os_if.cs.request_recovery()
 
-    def GetDevBootUsb(self):
+    def get_dev_boot_usb(self):
         """Get dev_boot_usb value which controls developer mode boot from USB.
 
         @return: True if enable, False if disable.
         """
         return self._os_if.cs.dev_boot_usb == '1'
 
-    def SetDevBootUsb(self, value):
+    def set_dev_boot_usb(self, value):
         """Set dev_boot_usb value which controls developer mode boot from USB.
 
         @param value: True to enable, False to disable.
         """
         self._os_if.cs.dev_boot_usb = 1 if value else 0
 
-    def IsRemovableDeviceBoot(self):
+    def is_removable_device_boot(self):
         """Check the current boot device is removable.
 
         @return: True: if a removable device boots.
@@ -853,24 +853,24 @@ class SystemServicer(object):
         root_part = self._os_if.get_root_part()
         return self._os_if.is_removable_device(root_part)
 
-    def GetInternalDevice(self):
+    def get_internal_device(self):
         """Get the internal disk by given the current disk."""
         root_part = self._os_if.get_root_part()
         return self._os_if.get_internal_disk(root_part)
 
-    def CreateTempDir(self, prefix='backup_'):
+    def create_temp_dir(self, prefix='backup_'):
         """Create a temporary directory and return the path."""
         return tempfile.mkdtemp(prefix=prefix)
 
-    def RemoveFile(self, file_path):
+    def remove_file(self, file_path):
         """Remove the file."""
         return self._os_if.remove_file(file_path)
 
-    def RemoveDir(self, dir_path):
+    def remove_dir(self, dir_path):
         """Remove the directory."""
         return self._os_if.remove_dir(dir_path)
 
-    def CheckKeys(self, expected_sequence):
+    def check_keys(self, expected_sequence):
         """Check the keys sequence was as expected.
 
         @param expected_sequence: A list of expected key sequences.
@@ -901,32 +901,32 @@ class TpmServicer(object):
             self._real_tpm_handler.init()
         return self._real_tpm_handler
 
-    def GetFirmwareVersion(self):
+    def get_firmware_version(self):
         """Retrieve tpm firmware body version."""
         return self._tpm_handler.get_fw_version()
 
-    def GetFirmwareDatakeyVersion(self):
+    def get_firmware_datakey_version(self):
         """Retrieve tpm firmware data key version."""
         return self._tpm_handler.get_fw_key_version()
 
-    def GetKernelVersion(self):
+    def get_kernel_version(self):
         """Retrieve tpm kernel body version."""
         return self._tpm_handler.get_kernel_version()
 
-    def GetKernelDatakeyVersion(self):
+    def get_kernel_datakey_version(self):
         """Retrieve tpm kernel data key version."""
         return self._tpm_handler.get_kernel_key_version()
 
-    def GetTpmVersion(self):
+    def get_tpm_version(self):
         """Returns '1.2' or '2.0' as a string."""
         # tpmc can return this without stopping daemons, so access real handler.
         return self._real_tpm_handler.get_tpm_version()
 
-    def StopDaemon(self):
+    def stop_daemon(self):
         """Stop tpm related daemon."""
         return self._tpm_handler.stop_daemon()
 
-    def RestartDaemon(self):
+    def restart_daemon(self):
         """Restart tpm related daemon which was stopped by stop_daemon()."""
         return self._tpm_handler.restart_daemon()
 
@@ -951,40 +951,40 @@ class UpdaterServicer(object):
             self._real_updater.init()
         return self._real_updater
 
-    def Cleanup(self):
+    def cleanup(self):
         """Clean up the temporary directory"""
         # Use the updater directly, to avoid initializing it just to clean it up
         self._real_updater.cleanup_temp_dir()
 
-    def StopDaemon(self):
+    def stop_daemon(self):
         """Stop update-engine daemon."""
         return self._real_updater.stop_daemon()
 
-    def StartDaemon(self):
+    def start_daemon(self):
         """Start update-engine daemon."""
         return self._real_updater.start_daemon()
 
-    def GetSectionFwid(self, target='bios', section=None):
+    def get_section_fwid(self, target='bios', section=None):
         """Retrieve shellball's RW or RO fwid."""
         return self._updater.get_section_fwid(target, section)
 
-    def GetAllFwids(self, target='bios'):
+    def get_all_fwids(self, target='bios'):
         """Retrieve shellball's RW and/or RO fwids for all sections."""
         return self._updater.get_all_fwids(target)
 
-    def GetAllInstalledFwids(self, target='bios', filename=None):
+    def get_all_installed_fwids(self, target='bios', filename=None):
         """Retrieve installed (possibly emulated) fwids for the target."""
         return self._updater.get_all_installed_fwids(target, filename)
 
-    def ModifyFwids(self, target='bios', sections=None):
+    def modify_fwids(self, target='bios', sections=None):
         """Modify the fwid in the image, but don't flash it."""
         return self._updater.modify_fwids(target, sections)
 
-    def ModifyEcidAndFlashToBios(self):
+    def modify_ecid_and_flash_to_bios(self):
         """Modify ecid, put it to AP firmware, and flash it to the system."""
         self._updater.modify_ecid_and_flash_to_bios()
 
-    def CorruptDiagnosticsImage(self, local_filename):
+    def corrupt_diagnostics_image(self, local_filename):
         """Corrupts a diagnostics image in the CBFS working directory.
 
         @param local_filename: Filename for storing the diagnostics image in the
@@ -992,42 +992,42 @@ class UpdaterServicer(object):
         """
         self._updater.corrupt_diagnostics_image(local_filename)
 
-    def GetEcHash(self):
+    def get_ec_hash(self):
         """Return the hex string of the EC hash."""
         blob = self._updater.get_ec_hash()
         # Format it to a hex string
         return ''.join('%02x' % ord(c) for c in blob)
 
-    def ResignFirmware(self, version):
+    def resign_firmware(self, version):
         """Resign firmware with version.
 
         @param version: new version number.
         """
         self._updater.resign_firmware(version)
 
-    def ExtractShellball(self, append=None):
+    def extract_shellball(self, append=None):
         """Extract shellball with the given append suffix.
 
         @param append: use for the shellball name.
         """
         return self._updater.extract_shellball(append)
 
-    def RepackShellball(self, append=None):
+    def repack_shellball(self, append=None):
         """Repack shellball with new fwid.
 
         @param append: use for the shellball name.
         """
         return self._updater.repack_shellball(append)
 
-    def ResetShellball(self):
+    def reset_shellball(self):
         """Revert to the stock shellball"""
         self._updater.reset_shellball()
 
-    def ReloadImages(self):
+    def reload_images(self):
         """Reload handlers from the on-disk images, in case they've changed."""
         self._updater.reload_images()
 
-    def RunFirmwareupdate(self, mode, append=None, options=()):
+    def run_firmwareupdate(self, mode, append=None, options=()):
         """Run updater with the given options
 
         @param mode: mode for the updater
@@ -1038,32 +1038,32 @@ class UpdaterServicer(object):
         """
         return self._updater.run_firmwareupdate(mode, append, options)
 
-    def RunAutoupdate(self, append):
+    def run_autoupdate(self, append):
         """Run chromeos-firmwareupdate with autoupdate mode."""
         options = ['--noupdate_ec', '--wp=1']
         self._updater.run_firmwareupdate(
                 mode='autoupdate', append=append, options=options)
 
-    def RunFactoryInstall(self):
+    def run_factory_install(self):
         """Run chromeos-firmwareupdate with factory_install mode."""
         options = ['--noupdate_ec', '--wp=0']
         self._updater.run_firmwareupdate(
                 mode='factory_install', options=options)
 
-    def RunBootok(self, append):
+    def run_bootok(self, append):
         """Run chromeos-firmwareupdate with bootok mode."""
         self._updater.run_firmwareupdate(mode='bootok', append=append)
 
-    def RunRecovery(self):
+    def run_recovery(self):
         """Run chromeos-firmwareupdate with recovery mode."""
         options = ['--noupdate_ec', '--nocheck_keys', '--force', '--wp=1']
         self._updater.run_firmwareupdate(mode='recovery', options=options)
 
-    def CbfsSetupWorkDir(self):
+    def cbfs_setup_work_dir(self):
         """Sets up cbfstool work directory."""
         return self._updater.cbfs_setup_work_dir()
 
-    def CbfsExtractChip(self, fw_name):
+    def cbfs_extract_chip(self, fw_name):
         """Runs cbfstool to extract chip firmware.
 
         @param fw_name: Name of chip firmware to extract.
@@ -1071,7 +1071,7 @@ class UpdaterServicer(object):
         """
         return self._updater.cbfs_extract_chip(fw_name)
 
-    def CbfsExtractDiagnostics(self, diag_name, local_filename):
+    def cbfs_extract_diagnostics(self, diag_name, local_filename):
         """Runs cbfstool to extract a diagnostics image.
 
         @param diag_name: Name of the diagnostics image in CBFS
@@ -1080,7 +1080,7 @@ class UpdaterServicer(object):
         """
         self._updater.cbfs_extract_diagnostics(diag_name, local_filename)
 
-    def CbfsReplaceDiagnostics(self, diag_name, local_filename):
+    def cbfs_replace_diagnostics(self, diag_name, local_filename):
         """Runs cbfstool to replace a diagnostics image in the firmware image.
 
         @param diag_name: Name of the diagnostics image in CBFS
@@ -1089,7 +1089,7 @@ class UpdaterServicer(object):
         """
         self._updater.cbfs_replace_diagnostics(diag_name, local_filename)
 
-    def CbfsGetChipHash(self, fw_name):
+    def cbfs_get_chip_hash(self, fw_name):
         """Gets the chip firmware hash blob.
 
         @param fw_name: Name of chip firmware whose hash blob to return.
@@ -1097,7 +1097,7 @@ class UpdaterServicer(object):
         """
         return self._updater.cbfs_get_chip_hash(fw_name)
 
-    def CbfsReplaceChip(self, fw_name):
+    def cbfs_replace_chip(self, fw_name):
         """Runs cbfstool to replace chip firmware.
 
         @param fw_name: Name of chip firmware to extract.
@@ -1105,7 +1105,7 @@ class UpdaterServicer(object):
         """
         return self._updater.cbfs_replace_chip(fw_name)
 
-    def CbfsSignAndFlash(self):
+    def cbfs_sign_and_flash(self):
         """Runs cbfs signer and flash it.
 
         @param fw_name: Name of chip firmware to extract.
@@ -1113,31 +1113,31 @@ class UpdaterServicer(object):
         """
         return self._updater.cbfs_sign_and_flash()
 
-    def GetTempPath(self):
+    def get_temp_path(self):
         """Get updater's temp directory path."""
         return self._updater.get_temp_path()
 
-    def GetKeysPath(self):
+    def get_keys_path(self):
         """Get updater's keys directory path."""
         return self._updater.get_keys_path()
 
-    def GetWorkPath(self):
+    def get_work_path(self):
         """Get updater's work directory path."""
         return self._updater.get_work_path()
 
-    def GetBiosRelativePath(self):
+    def get_bios_relative_path(self):
         """Gets the relative path of the bios image in the shellball."""
         return self._updater.get_bios_relative_path()
 
-    def GetEcRelativePath(self):
+    def get_ec_relative_path(self):
         """Gets the relative path of the ec image in the shellball."""
         return self._updater.get_ec_relative_path()
 
-    def CopyBios(self, filename):
+    def copy_bios(self, filename):
         """Make a copy of the shellball bios.bin"""
         return self._updater.copy_bios(filename)
 
-    def GetImageGbbFlags(self, filename=None):
+    def get_image_gbb_flags(self, filename=None):
         """Get the GBB flags in the given image (shellball image if unspecified)
 
         @param filename: the image path to act on (None to use shellball image)
@@ -1145,7 +1145,7 @@ class UpdaterServicer(object):
         """
         return self._updater.get_image_gbb_flags(filename)
 
-    def SetImageGbbFlags(self, flags, filename=None):
+    def set_image_gbb_flags(self, flags, filename=None):
         """Set the GBB flags in the given image (shellball image if unspecified)
 
         @param flags: the flags to set

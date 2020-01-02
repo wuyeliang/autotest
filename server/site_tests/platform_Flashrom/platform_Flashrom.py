@@ -37,7 +37,7 @@ class platform_Flashrom(FirmwareTest):
         """
         command = command + ' 2>&1'
         logging.info('Execute %s', command)
-        output = self.faft_client.System.RunShellCommandGetOutput(command)
+        output = self.faft_client.system.run_shell_command_get_output(command)
         logging.info('Output >>> %s <<<', output)
         if checkfor and checkfor not in '\n'.join(output):
             raise error.TestFail('Expect %s in output of %s' %
@@ -88,13 +88,13 @@ class platform_Flashrom(FirmwareTest):
         # 5) Compare flash section B vs shellball section B
         # 5.1) Extract shellball RW section B form the appropriate bios.bin
         # found the firmware tarball on the DUT.
-        self.faft_client.Updater.ExtractShellball()
+        self.faft_client.updater.extract_shellball()
         shball_bios = os.path.join(
-            self.faft_client.Updater.GetWorkPath(),
-            self.faft_client.Updater.GetBiosRelativePath())
+            self.faft_client.updater.get_work_path(),
+            self.faft_client.updater.get_bios_relative_path())
         # Temp file to store a section read from the chip.
         shball_rw_b = os.path.join(
-            self.faft_client.Updater.GetWorkPath(),
+            self.faft_client.updater.get_work_path(),
             'shball_rw_b.bin')
         logging.info('Using fw image %s, temp file %s',
                      shball_bios, shball_rw_b)

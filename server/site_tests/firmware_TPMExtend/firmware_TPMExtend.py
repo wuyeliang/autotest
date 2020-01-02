@@ -19,7 +19,7 @@ class firmware_TPMExtend(FirmwareTest):
 
     def _tpm1_check_pcr(self, num, hash_obj):
         pcrs_file = '/sys/class/*/tpm0/device/pcrs'
-        pcrs = '\n'.join(self.faft_client.System.RunShellCommandGetOutput(
+        pcrs = '\n'.join(self.faft_client.system.run_shell_command_get_output(
                         'cat %s' % pcrs_file))
         logging.debug('Dumping PCRs read from device: \n%s', pcrs)
         extended = hashlib.sha1(b'\0' * 20 + hash_obj.digest()[:20]).hexdigest()
@@ -28,7 +28,7 @@ class firmware_TPMExtend(FirmwareTest):
         return ('PCR-%.2d: %s' % (num, spaced.upper())) in pcrs
 
     def _tpm2_check_pcr(self, num, hash_obj):
-        out = self.faft_client.System.RunShellCommandGetOutput(
+        out = self.faft_client.system.run_shell_command_get_output(
                 'trunks_client --read_pcr --index=%d' % num)[0]
         logging.debug('PCR %d read from device: %s', num, out)
         padded = (hash_obj.digest() + b'\0' * 12)[:32]
@@ -38,7 +38,7 @@ class firmware_TPMExtend(FirmwareTest):
 
     def _check_pcr(self, num, hash_obj):
         """Returns true iff PCR |num| was extended with hashlib |hash_obj|."""
-        if '1.' in self.faft_client.Tpm.GetTpmVersion():
+        if '1.' in self.faft_client.tpm.get_tpm_version():
             return self._tpm1_check_pcr(num, hash_obj)
         else:
             return self._tpm2_check_pcr(num, hash_obj)
@@ -46,7 +46,7 @@ class firmware_TPMExtend(FirmwareTest):
     def run_once(self):
         """Runs a single iteration of the test."""
         logging.info('Verifying HWID digest in PCR1')
-        hwid = self.faft_client.System.RunShellCommandGetOutput(
+        hwid = self.faft_client.system.run_shell_command_get_output(
                 'crossystem hwid')[0]
         logging.debug('HWID reported by device is: %s', hwid)
         if not self._check_pcr(1, hashlib.sha256(hwid)):
