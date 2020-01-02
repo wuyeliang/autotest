@@ -431,6 +431,7 @@ class firmware_Cr50U2fCommands(test.test):
   def __check_attest_reg_resp(self,
                               app_id,
                               key_handle,
+                              pub_key,
                               user_secret,
                               expected_response,
                               pad=False):
@@ -438,7 +439,7 @@ class firmware_Cr50U2fCommands(test.test):
         app_id,
         RANDOM_32,  # challenge
         key_handle,
-        'ff' * 65)  # public key (not verified)
+        pub_key)
 
     self.__u2f_attest(user_secret, U2F_ATTEST_FORMAT_REG_RESP, register_resp,
                       expected_response, pad)
@@ -450,7 +451,8 @@ class firmware_Cr50U2fCommands(test.test):
     registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
 
     self.__check_attest_reg_resp(APP_ID, registration['keyHandle'],
-                                 USER_SECRET_1, VENDOR_CMD_RESPONSE_SUCCESS)
+                                 registration['pubKey'], USER_SECRET_1,
+                                 VENDOR_CMD_RESPONSE_SUCCESS)
 
   def __test_attest_simple_padded(self):
     registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
@@ -458,6 +460,7 @@ class firmware_Cr50U2fCommands(test.test):
     self.__check_attest_reg_resp(
         APP_ID,
         registration['keyHandle'],
+        registration['pubKey'],
         USER_SECRET_1,
         VENDOR_CMD_RESPONSE_SUCCESS,
         pad=True)
@@ -466,13 +469,15 @@ class firmware_Cr50U2fCommands(test.test):
     registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
 
     self.__check_attest_reg_resp(APP_ID, registration['keyHandle'],
-                                 USER_SECRET_2, VENDOR_CMD_RESPONSE_NOT_ALLOWED)
+                                 registration['pubKey'], USER_SECRET_2,
+                                 VENDOR_CMD_RESPONSE_NOT_ALLOWED)
 
   def __test_attest_wrong_app_id(self):
     registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
 
     self.__check_attest_reg_resp(APP_ID_2, registration['keyHandle'],
-                                 USER_SECRET_1, VENDOR_CMD_RESPONSE_NOT_ALLOWED)
+                                 registration['pubKey'], USER_SECRET_1,
+                                 VENDOR_CMD_RESPONSE_NOT_ALLOWED)
 
   def __test_attest_garbage_data(self):
     self.__u2f_attest(USER_SECRET_1, U2F_ATTEST_FORMAT_REG_RESP,
@@ -486,7 +491,7 @@ class firmware_Cr50U2fCommands(test.test):
         APP_ID,
         RANDOM_32,  # challenge
         registration['keyHandle'],
-        'ff' * 65)  # public key (not verified)
+        registration['pubKey'])
 
     # Attempt to attest to valid data with invalid format.
     self.__u2f_attest(USER_SECRET_1, 'ff', register_resp,
