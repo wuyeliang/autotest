@@ -479,6 +479,13 @@ class firmware_Cr50U2fCommands(test.test):
                                  registration['pubKey'], USER_SECRET_1,
                                  VENDOR_CMD_RESPONSE_NOT_ALLOWED)
 
+  def __test_attest_wrong_pub_key(self):
+    registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
+
+    self.__check_attest_reg_resp(APP_ID, registration['keyHandle'],
+                                 'FF' * 65, USER_SECRET_1,
+                                 VENDOR_CMD_RESPONSE_NOT_ALLOWED)
+
   def __test_attest_garbage_data(self):
     self.__u2f_attest(USER_SECRET_1, U2F_ATTEST_FORMAT_REG_RESP,
                       'ff' * U2F_ATTEST_REG_RESP_SIZE_BYTES,
@@ -495,6 +502,20 @@ class firmware_Cr50U2fCommands(test.test):
 
     # Attempt to attest to valid data with invalid format.
     self.__u2f_attest(USER_SECRET_1, 'ff', register_resp,
+                      VENDOR_CMD_RESPONSE_NOT_ALLOWED)
+
+  def __test_attest_invalid_reserved_byte(self):
+    registration = self.__u2f_generate(APP_ID, USER_SECRET_1, '00')
+
+    register_resp = '{}{}{}{}{}'.format(
+        '01', # unexpected reserved byte
+        APP_ID,
+        RANDOM_32,  # challenge
+        registration['keyHandle'],
+        registration['pubKey'])
+
+    # Attempt to attest to valid data with invalid format.
+    self.__u2f_attest(USER_SECRET_1, U2F_ATTEST_FORMAT_REG_RESP, register_resp,
                       VENDOR_CMD_RESPONSE_NOT_ALLOWED)
 
   def __test_kh_invalidated_by_powerwash(self):
@@ -551,8 +572,10 @@ class firmware_Cr50U2fCommands(test.test):
     self.__test_attest_simple_padded()
     self.__test_attest_wrong_user()
     self.__test_attest_wrong_app_id()
+    self.__test_attest_wrong_pub_key()
     self.__test_attest_garbage_data()
     self.__test_attest_invalid_format()
+    self.__test_attest_invalid_reserved_byte()
 
     # Powerwash
     self.__test_kh_invalidated_by_powerwash()
