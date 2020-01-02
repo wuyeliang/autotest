@@ -10,7 +10,7 @@ NAME = 'bluetooth_AdapterCLSanity.cl_HID_keyboard_reports_test'
 PURPOSE = ('Test bluetooth adapter receiving reports from '
            'bluetooth HID devices.')
 CRITERIA = 'Adapter should receive HID events correctly.'
-ATTRIBUTES = 'suite:bluetooth_flaky'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_e2e'
 TIME = 'SHORT'  # ~2 minutes on octopus
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'

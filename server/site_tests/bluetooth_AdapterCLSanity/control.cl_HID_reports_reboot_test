@@ -10,7 +10,7 @@ NAME = 'bluetooth_AdapterCLSanity.cl_HID_reports_reboot_test'
 PURPOSE = ('Test bluetooth adapter receiving reports from '
            'bluetooth HID devices after a reboot.')
 CRITERIA = 'Adapter should receive HID events correctly.'
-ATTRIBUTES = 'suite:bluetooth_flaky'
+ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_e2e'
 TIME = 'SHORT'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
