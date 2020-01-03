@@ -264,13 +264,21 @@ class telemetry_Crosperf(test.test):
 
     output_format = 'histograms'
 
+    # For local runs, we set local=True and use local chrome source to run
+    # tests; for lab runs, we use devserver instead.
+    # By default to be True.
+    local = args.get('local', 'true').lower() == 'true'
+
     # If run_local=true, telemetry benchmark will run on DUT, otherwise
     # run remotely from host.
-    telemetry_on_dut = args.get('run_local').lower() == 'true'
+    # By default to be False.
+    # TODO(zhizhouy): It is better to change the field name from "run_local"
+    # to "telemetry_on_dut" in crosperf experiment files for consistency.
+    telemetry_on_dut = args.get('run_local', '').lower() == 'true'
 
-    # Init TelemetryRunner, do not use devserver by setting local=True.
+    # Init TelemetryRunner.
     tr = telemetry_runner.TelemetryRunner(
-        dut, local=True, telemetry_on_dut=telemetry_on_dut)
+        dut, local=local, telemetry_on_dut=telemetry_on_dut)
 
     # Run the test. And collect profile if needed.
     try:
