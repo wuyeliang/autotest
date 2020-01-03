@@ -7,15 +7,13 @@
 import os, unittest
 import mox
 import common
-import subprocess
 import shutil
 import tempfile
 import types
 from autotest_lib.client.common_lib import control_data
-from autotest_lib.server import utils
-from autotest_lib.server.cros.dynamic_suite import constants
 from autotest_lib.server.cros.dynamic_suite import control_file_getter
 from autotest_lib.server.cros.dynamic_suite import suite as suite_module
+from autotest_lib.server.hosts import host_info
 from autotest_lib.site_utils import test_runner_utils
 
 
@@ -167,96 +165,6 @@ class TestRunnerUnittests(mox.MoxTestBase):
             self.assertTrue(isinstance(pred, types.FunctionType))
             self.assertTrue(isinstance(desc, str))
 
-    def test_run_job(self):
-        class Object():
-            pass
-
-        autotest_path = 'htap_tsetotua'
-        autoserv_command = os.path.join(autotest_path, 'server', 'autoserv')
-        remote = 'etomer'
-        results_dir = '/tmp/fakeresults'
-        fast_mode = False
-        job1_results_dir = '/tmp/fakeresults/results-1-gilbert'
-        job2_results_dir = '/tmp/fakeresults/results-2-sullivan'
-        args = 'matey'
-        expected_args_sublist = ['--args', args]
-        experimental_keyval = {constants.JOB_EXPERIMENTAL_KEY: False}
-
-        # Create some dummy job objects.
-        job1 = Object()
-        job2 = Object()
-        setattr(job1, 'control_type', 'cLiEnT')
-        setattr(job1, 'control_file', 'c1')
-        setattr(job1, 'id', 1)
-        setattr(job1, 'name', 'gilbert')
-        setattr(job1, 'keyvals', experimental_keyval)
-
-        setattr(job2, 'control_type', 'Server')
-        setattr(job2, 'control_file', 'c2')
-        setattr(job2, 'id', 2)
-        setattr(job2, 'name', 'sullivan')
-        setattr(job2, 'keyvals', experimental_keyval)
-
-        id_digits = 1
-
-        # Stub out subprocess.Popen and wait calls.
-        # Make them expect correct arguments.
-        def fake_readline():
-            return b''
-        mock_process_1 = self.mox.CreateMock(subprocess.Popen)
-        mock_process_2 = self.mox.CreateMock(subprocess.Popen)
-        fake_stdout = self.mox.CreateMock(file)
-        fake_returncode = 0
-        mock_process_1.stdout = fake_stdout
-        mock_process_1.returncode = fake_returncode
-        mock_process_2.stdout = fake_stdout
-        mock_process_2.returncode = fake_returncode
-
-        self.mox.StubOutWithMock(os, 'makedirs')
-        self.mox.StubOutWithMock(utils, 'write_keyval')
-        self.mox.StubOutWithMock(subprocess, 'Popen')
-
-        os.makedirs(job1_results_dir)
-        utils.write_keyval(job1_results_dir, experimental_keyval)
-        arglist_1 = [autoserv_command, '-p', '-r', job1_results_dir,
-                     '-m', remote, '--no_console_prefix', '-l', 'gilbert',
-                     '-c']
-        subprocess.Popen(mox.And(StartsWithList(arglist_1),
-                                 ContainsSublist(expected_args_sublist)),
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT
-                        ).AndReturn(mock_process_1)
-        mock_process_1.stdout.readline().AndReturn(b'')
-        mock_process_1.wait().AndReturn(0)
-
-        os.makedirs(job2_results_dir)
-        utils.write_keyval(job2_results_dir, experimental_keyval)
-        arglist_2 = [autoserv_command, '-p', '-r', job2_results_dir,
-                     '-m', remote,  '--no_console_prefix', '-l', 'sullivan',
-                     '-s']
-        subprocess.Popen(mox.And(StartsWithList(arglist_2),
-                                 ContainsSublist(expected_args_sublist)),
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT
-                        ).AndReturn(mock_process_2)
-        mock_process_2.stdout.readline().AndReturn(b'')
-        mock_process_2.wait().AndReturn(0)
-
-        # Test run_job.
-        self.mox.ReplayAll()
-        code, job_res = test_runner_utils.run_job(
-                job1, remote, autotest_path,results_dir, fast_mode, id_digits,
-                0, None, args)
-        self.assertEqual(job_res, job1_results_dir)
-        self.assertEqual(code, 0)
-        code, job_res = test_runner_utils.run_job(
-                job2, remote, autotest_path, results_dir, fast_mode, id_digits,
-                0, None, args)
-
-        self.assertEqual(job_res, job2_results_dir)
-        self.assertEqual(code, 0)
-        self.mox.ResetAll()
-
     def test_perform_local_run(self):
         afe = test_runner_utils.setup_local_afe()
         autotest_path = 'ottotest_path'
@@ -327,19 +235,27 @@ class TestRunnerUnittests(mox.MoxTestBase):
         self.mox.StubOutWithMock(test_runner_utils, 'run_provisioning_job')
         self.mox.StubOutWithMock(test_runner_utils, '_auto_detect_labels')
 
-        test_runner_utils._auto_detect_labels(afe, remote)
+        test_runner_utils._auto_detect_labels(afe, remote).AndReturn([])
         # Test perform_local_run. Enforce that run_provisioning_job,
         # run_job and _auto_detect_labels are called correctly.
         test_runner_utils.run_provisioning_job(
-                'cros-version:' + build, remote, autotest_path,
-                 results_dir, fast_mode,
-                 ssh_verbosity, ssh_options,
-                 False, False)
+                'cros-version:' + build,
+                remote,
+                mox.IsA(host_info.HostInfo),
+                autotest_path,
+                results_dir,
+                fast_mode,
+                ssh_verbosity,
+                ssh_options,
+                False,
+                False,
+        )
 
         for control_file in suite_control_files:
             test_runner_utils.run_job(
                     mox.ContainsAttributeValue('control_file', control_file),
                     remote,
+                    mox.IsA(host_info.HostInfo),
                     autotest_path,
                     results_dir,
                     fast_mode,
@@ -349,7 +265,6 @@ class TestRunnerUnittests(mox.MoxTestBase):
                     mox.StrContains(args),
                     False,
                     False,
-                    {},
             ).AndReturn((0, '/fake/dir'))
         self.mox.ReplayAll()
         test_runner_utils.perform_local_run(
