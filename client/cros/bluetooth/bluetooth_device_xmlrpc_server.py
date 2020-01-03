@@ -5,6 +5,7 @@
 # found in the LICENSE file.
 
 import base64
+import collections
 import dbus
 import dbus.mainloop.glib
 import dbus.service
@@ -20,8 +21,13 @@ from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib.cros.bluetooth import bluetooth_socket
 from autotest_lib.client.cros import constants
 from autotest_lib.client.cros import xmlrpc_server
+from autotest_lib.client.cros.audio import check_quality
+from autotest_lib.client.cros.audio import cras_utils
 from autotest_lib.client.cros.bluetooth import advertisement
 from autotest_lib.client.cros.bluetooth import output_recorder
+
+
+CheckQualityArgsClass = collections.namedtuple('args_type', ['filename'])
 
 
 def _dbus_byte_array_to_b64_string(dbus_byte_array):
@@ -216,6 +222,8 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         # Initailize a btmon object to record bluetoothd's activity.
         self.btmon = output_recorder.OutputRecorder(
                 'btmon', stop_delay_secs=self.BTMON_STOP_DELAY_SECS)
+
+        self._cras_test_client = cras_utils.CrasTestClient()
 
         self.advertisements = []
         self._chrc_property = None
@@ -1655,9 +1663,71 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                     'reset_advertising: failed: %s', str(error)))
 
 
+    def start_capturing_audio_subprocess(self, audio_data):
+        """Start capturing audio in a subprocess.
+
+        @param audio_data: the audio test data
+
+        @returns: True on success. False otherwise.
+        """
+        return self._cras_test_client.start_capturing_subprocess(
+                audio_data.file,
+                sample_format=audio_data.format,
+                channels=audio_data.channels,
+                rate=audio_data.rate,
+                duration=audio_data.duration)
+
+
+    def stop_capturing_audio_subprocess(self):
+        """Stop capturing audio.
+
+        @returns: True on success. False otherwise.
+        """
+        return self._cras_test_client.stop_capturing_subprocess()
+
+
+    def play_audio(self, audio_data):
+        """Play audio.
+
+        It blocks until it has completed playing back the audio.
+
+        @param audio_data: the audio test data
+
+        @returns: True on success. False otherwise.
+        """
+        audio_data = json.loads(audio_data)
+        return self._cras_test_client.play(audio_data['file'],
+                                           channels=audio_data['channels'],
+                                           rate=audio_data['rate'],
+                                           duration=audio_data['duration'])
+
+
+    def get_primary_frequencies(self, audio_file):
+        """Get primary frequencies of the audio test file.
+
+        @param audio_file: the audio test file
+
+        @returns: a list of primary frequencies of channels in the audio file
+        """
+        args = CheckQualityArgsClass(filename = audio_file)
+        raw_data, rate = check_quality.read_audio_file(args)
+        checker = check_quality.QualityChecker(raw_data, rate)
+        # The highest frequency recorded would be near 24 Khz
+        # as the max sample rate is 48000 in our tests.
+        # So let's set ignore_high_freq to be 48000.
+        checker.do_spectral_analysis(ignore_high_freq=48000,
+                                     check_quality=False,
+                                     quality_params=None)
+        spectra = checker._spectrals
+        primary_freq = [float(spectra[i][0][0]) if spectra[i] else 0
+                        for i in range(len(spectra))]
+        primary_freq.sort()
+        return primary_freq
+
+
     @xmlrpc_server.dbus_safe(None)
     def get_gatt_attributes_map(self, address):
-        """Return a JSON formated string of the GATT attributes of a device,
+        """Return a JSON formatted string of the GATT attributes of a device,
         keyed by UUID
         @param address: a string of the MAC address of the device
 

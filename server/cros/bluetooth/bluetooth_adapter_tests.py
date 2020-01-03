@@ -53,6 +53,8 @@ SUPPORTED_DEVICE_TYPES = {
     'BLUETOOTH_BASE': lambda chameleon: chameleon.get_bluetooth_base,
     # A phone device that supports Bluetooth
     'BLE_PHONE': lambda chameleon: chameleon.get_ble_phone,
+    # A Bluetooth audio device emulating a headphone
+    'BLUETOOTH_AUDIO': lambda chameleon: chameleon.get_bluetooth_audio,
 }
 
 

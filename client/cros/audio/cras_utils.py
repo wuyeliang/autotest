@@ -6,7 +6,9 @@
 
 import logging
 import re
+import subprocess
 
+from autotest_lib.client.bin import utils
 from autotest_lib.client.cros.audio import cmd_utils
 
 _CRAS_TEST_CLIENT = '/usr/bin/cras_test_client'
@@ -73,15 +75,20 @@ def playback_cmd(playback_file, block_size=None, duration=None,
 
 
 def capture_cmd(capture_file, block_size=None, duration=10,
+                sample_format='S16_LE',
                 pin_device=None, channels=1, rate=48000):
     """Gets a command to capture the audio into the file with given settings.
 
     @param capture_file: the name of file the audio to be stored in.
-    @param pin_device: the device id to record from.
     @param block_size: the number of frames per callback(dictates latency).
     @param duration: seconds to record. If it is None, duration is not set,
                      and command will keep capturing audio until it is
                      terminated.
+    @param sample_format: the sample format;
+                          possible choices: 'S16_LE', 'S24_LE', and 'S32_LE'
+                          default to S16_LE: signed 16 bits/sample,
+                                             little endian
+    @param pin_device: the device id to record from.
     @param channels: number of channels.
     @param rate: the sampling rate.
 
@@ -98,6 +105,7 @@ def capture_cmd(capture_file, block_size=None, duration=10,
         args += ['--duration', str(duration)]
     args += ['--num_channels', str(channels)]
     args += ['--rate', str(rate)]
+    args += ['--format', str(sample_format)]
     return args
 
 
@@ -646,3 +654,171 @@ def get_active_node_volume():
         if node['Active'] == 1 and node['IsInput'] == 0:
             return int(node['NodeVolume'])
     raise CrasUtilsError('Cannot find active node volume from nodes.')
+
+
+class CrasTestClient(object):
+    """An object to perform cras_test_client functions."""
+
+    BLOCK_SIZE = None
+    PIN_DEVICE = None
+    SAMPLE_FORMAT = 'S16_LE'
+    DURATION = 10
+    CHANNELS = 2
+    RATE = 48000
+
+
+    def __init__(self):
+        self._proc = None
+        self._capturing_msg = 'capturing audio file'
+        self._playing_msg = 'playing audio file'
+
+
+    def start_subprocess(self, proc_cmd, filename, proc_msg):
+        """Start a capture or play subprocess
+
+        @param proc_cmd: the process command and its arguments
+        @param filename: the file name to capture or play
+        @param proc_msg: the message to display in logging
+
+        @returns: True if the process is started successfully
+        """
+        logging.info('proc_cmd: %s', str(proc_cmd))
+
+        if self._proc is None:
+            try:
+                self._proc = subprocess.Popen(proc_cmd)
+                logging.info('Start %s %s on the DUT', proc_msg, filename)
+            except Exception as e:
+                logging.error('Failed to popen: %s (%s)', proc_msg, e)
+                return False
+        else:
+            logging.error('cannot run the command twice: %s', proc_msg)
+            return False
+        return True
+
+
+    def stop_subprocess(self, proc, proc_msg):
+        """Stop a subprocess
+
+        @param proc: the process to stop
+        @param proc_msg: the message to display in logging
+
+        @returns: True if the process is stopped successfully
+        """
+        if proc is None:
+            logging.error('cannot run stop %s before starting it.', proc_msg)
+            return False
+
+        proc.terminate()
+        try:
+            utils.poll_for_condition(
+                    condition=lambda: proc.poll() is not None,
+                    exception=CrasUtilsError,
+                    timeout=10,
+                    sleep_interval=0.5,
+                    desc='Waiting for subprocess to terminate')
+        except Exception:
+            logging.warn('Killing subprocess due to timeout')
+            proc.kill()
+            proc.wait()
+
+        logging.info('stop %s on the DUT', proc_msg)
+        return True
+
+
+    def start_capturing_subprocess(self, capture_file, block_size=BLOCK_SIZE,
+                                   duration=DURATION, pin_device=PIN_DEVICE,
+                                   sample_format=SAMPLE_FORMAT,
+                                   channels=CHANNELS, rate=RATE):
+        """Start capturing in a subprocess.
+
+        @param capture_file: the name of file the audio to be stored in
+        @param block_size: the number of frames per callback(dictates latency)
+        @param duration: seconds to record. If it is None, duration is not set,
+                         and will keep capturing audio until terminated
+        @param sample_format: the sample format
+        @param pin_device: the device id to record from
+        @param channels: number of channels
+        @param rate: the sampling rate
+
+        @returns: True if the process is started successfully
+        """
+        proc_cmd = capture_cmd(capture_file, block_size=block_size,
+                               duration=duration, sample_format=sample_format,
+                               pin_device=pin_device, channels=channels,
+                               rate=rate)
+        result = self.start_subprocess(proc_cmd, capture_file,
+                                       self._capturing_msg)
+        if result:
+            self._capturing_proc = self._proc
+        return result
+
+
+    def stop_capturing_subprocess(self):
+        """Stop the capturing subprocess."""
+        result = self.stop_subprocess(self, self._capturing_proc,
+                                       self._capturing_msg)
+        if result:
+            self._capturing_proc = None
+        return result
+
+
+    def start_playing_subprocess(self, audio_file, block_size=BLOCK_SIZE,
+                                 duration=DURATION, pin_device=PIN_DEVICE,
+                                 channels=CHANNELS, rate=RATE):
+        """Start playing the audio file in a subprocess.
+
+        @param audio_file: the name of audio file to play
+        @param block_size: the number of frames per callback(dictates latency)
+        @param duration: seconds to play. If it is None, duration is not set,
+                         and will keep playing audio until terminated
+        @param pin_device: the device id to play to
+        @param channels: number of channels
+        @param rate: the sampling rate
+
+        @returns: True if the process is started successfully
+        """
+        proc_cmd = playback_cmd(audio_file, block_size, duration, pin_device,
+                                channels, rate)
+        result = self.start_subprocess(proc_cmd, audio_file, self._playing_msg)
+        if result:
+            self._playing_proc = self._proc
+        return result
+
+
+    def stop_playing_subprocess(self):
+        """Stop the playing subprocess."""
+        result = self.stop_subprocess(self, self._playing_proc,
+                                       self._playing_msg)
+        if result:
+            self._playing_proc = None
+        return result
+
+
+    def play(self, audio_file, block_size=BLOCK_SIZE, duration=DURATION,
+             pin_device=PIN_DEVICE, channels=CHANNELS, rate=RATE):
+        """Play the audio file.
+
+        This method will get blocked until it has completed playing back.
+        If you do not want to get blocked, use start_playing_subprocess()
+        above instead.
+
+        @param audio_file: the name of audio file to play
+        @param block_size: the number of frames per callback(dictates latency)
+        @param duration: seconds to play. If it is None, duration is not set,
+                         and will keep playing audio until terminated
+        @param pin_device: the device id to play to
+        @param channels: number of channels
+        @param rate: the sampling rate
+
+        @returns: True if the process is started successfully
+        """
+        proc_cmd = playback_cmd(audio_file, block_size, duration, pin_device,
+                                channels, rate)
+        try:
+            self._proc = subprocess.call(proc_cmd)
+            logging.info('call "%s" on the DUT', proc_cmd)
+        except Exception as e:
+            logging.error('Failed to call: %s (%s)', proc_cmd, e)
+            return False
+        return True

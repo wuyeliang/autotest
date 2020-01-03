@@ -783,6 +783,46 @@ class BluetoothDevice(object):
         return self._proxy.reset_advertising()
 
 
+    def start_capturing_audio_subprocess(self, audio_data):
+        """Start capturing audio in a subprocess.
+
+        @param audio_data: the audio test data
+
+        @returns: True on success. False otherwise.
+        """
+        return self._proxy.start_capturing_audio_subprocess(audio_data)
+
+
+    def stop_capturing_audio_subprocess(self):
+        """Stop capturing audio.
+
+        @returns: True on success. False otherwise.
+        """
+        return self._proxy.stop_capturing_audio_subprocess()
+
+
+    def play_audio(self, audio_data):
+        """Play audio.
+
+        It blocks until it has completed playing back the audio.
+
+        @param audio_data: the audio test data
+
+        @returns: True on success. False otherwise.
+        """
+        return self._proxy.play_audio(json.dumps(audio_data))
+
+
+    def get_primary_frequencies(self, audio_file):
+        """Get primary frequencies of the audio test file.
+
+        @param audio_file: the audio test file
+
+        @returns: a list of primary frequencies of channels in the audio file
+        """
+        return self._proxy.get_primary_frequencies(audio_file)
+
+
     def read_characteristic(self, uuid, address):
         """Reads the value of a gatt characteristic.
 
