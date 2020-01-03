@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
-AUTHOR = 'chromeos-chameleon'
+AUTHOR = 'chromeos-bluetooth'
 NAME = 'bluetooth_AdapterSASanity.sa_adapter_suspend_resume_test'
 PURPOSE = ('batch of Bluetooth stand along sanity tests')
 CRITERIA = 'Pass all sanity test'
@@ -28,12 +28,9 @@ DOC = """
     """
 
 args_dict = utils.args_to_dict(args)
-newblue_enable = args_dict['newblue'] == 'enable'\
-  if 'newblue' in args_dict else False
 
 def run(machine):
     host = hosts.create_host(machine)
-    bluetooth_test.enable_newblue(host=host, enable=newblue_enable)
     job.run_test('bluetooth_AdapterSASanity', host=host,
                   num_iterations=1, test_name=NAME.split('.')[1])
 
