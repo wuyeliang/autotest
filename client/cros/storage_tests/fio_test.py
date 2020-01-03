@@ -151,19 +151,21 @@ class FioTest(test.test):
                 ('surfing', []),
                 ('boot', []),
                 ('login', []),
-                ('seq_read', []),
                 ('seq_write', []),
-                ('16k_read', []),
+                ('seq_read', []),
                 ('16k_write', []),
+                ('16k_read', []),
                 ('1m_stress', []),
             ]
         else:
             # TODO(waihong@): Add more test cases for external storage
             requirements = [
-                ('seq_read', []),
                 ('seq_write', []),
-                ('16k_read', []),
+                ('seq_read', []),
                 ('16k_write', []),
+                ('16k_read', []),
+                ('4k_write', []),
+                ('4k_read', []),
                 ('1m_stress', []),
             ]
 
