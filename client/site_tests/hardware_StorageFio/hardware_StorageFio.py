@@ -28,7 +28,7 @@ class hardware_StorageFio(fio_test.FioTest):
         super(hardware_StorageFio, self).initialize(dev=dev, filesize=filesize)
 
     def run_once(self, dev='', quicktest=False, requirements=None,
-                 integrity=False, wait=60 * 60 * 72):
+                 integrity=False, wait=60 * 60 * 72, blkdiscard=True):
         """
         Runs several fio jobs and reports results.
 
@@ -37,9 +37,11 @@ class hardware_StorageFio(fio_test.FioTest):
         @param requirements: list of jobs for fio to run
         @param integrity: test to check data integrity
         @param wait: seconds to wait between a write and subsequent verify
+        @param blkdiscard: do a blkdiscard before running fio
 
         """
         super(hardware_StorageFio, self).run_once(dev=dev, quicktest=quicktest,
                                                   requirements=requirements,
                                                   integrity=integrity,
-                                                  wait=wait)
+                                                  wait=wait,
+                                                  blkdiscard=blkdiscard)
