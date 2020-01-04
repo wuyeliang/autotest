@@ -9,10 +9,14 @@ import time
 
 import numpy
 
+CUSTOM_START = 'PowerTelemetryLogger custom start.'
+CUSTOM_END = 'PowerTelemetryLogger custom end.'
+INTERPOLATION_RESOLUTION = 6
+
+
 class TelemetryUtilsError(Exception):
     """Error class for issues using these utilities."""
 
-INTERPOLATION_RESOLUTION = 6
 
 def interpolate_missing_data(data, max_nan_ratio=None, max_sample_gap=None,
                              max_sample_time_gap=None, timeline=None):
@@ -92,10 +96,6 @@ def interpolate_missing_data(data, max_nan_ratio=None, max_sample_gap=None,
     output = numpy.interp(range(len(data)), sample_idx, sample_vals)
     return [round(x, INTERPOLATION_RESOLUTION) for x in output]
 
-CUSTOM_START = 'PowerTelemetryLogger custom start.'
-CUSTOM_END = 'PowerTelemetryLogger custom end.'
-
-
 def log_event_ts(message=None, timestamp=None, offset=0):
     """Log the event and timestamp for parsing later.
 
@@ -117,11 +117,11 @@ def log_event_ts(message=None, timestamp=None, offset=0):
 def start_measurement(timestamp=None, offset=0):
     """Mark the start of power telemetry measurement.
 
-    Optional. Use only once in the client side test that is wrapped in
-    power_MeasurementWrapper to help pinpoint exactly where power telemetry
-    data should start. PowerTelemetryLogger will trim off excess data before
-    this point. If not used, power telemetry data will start right before the
-    client side test.
+    Optional. Use only once in the client side test that is wrapped in the
+    power measurement wrapper tests to help pinpoint exactly where power
+    telemetry data should start. PowerTelemetryLogger will trim off excess data
+    before this point. If not used, power telemetry data will start right before
+    the client side test.
     @param timestamp: timestamp for the start of measurement, if not provided,
            default to current time. Local seconds since epoch.
     @param offset: offset in seconds from the provided timestamp, or offset from
@@ -133,10 +133,10 @@ def start_measurement(timestamp=None, offset=0):
 def end_measurement(timestamp=None, offset=0):
     """Mark the end of power telemetry measurement.
 
-    Optional. Use only once in the client side test that is wrapped in
-    power_MeasurementWrapper to help pinpoint exactly where power telemetry
-    data should end. PowerTelemetryLogger will trim off excess data after
-    this point. If not used, power telemetry data will end right after the
+    Optional. Use only once in the client side test that is wrapped in the
+    power measurement wrapper tests to help pinpoint exactly where power
+    telemetry data should end. PowerTelemetryLogger will trim off excess data
+    after this point. If not used, power telemetry data will end right after the
     client side test.
     @param timestamp: timestamp for the end of measurement, if not provided,
            default to current time. Local seconds since epoch.
