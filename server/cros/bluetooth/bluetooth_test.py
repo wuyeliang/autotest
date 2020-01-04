@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import logging
-
 from autotest_lib.server import test
 from autotest_lib.server.cros import interactive_client
 from autotest_lib.server.cros.bluetooth import bluetooth_device
@@ -58,51 +56,3 @@ class BluetoothTest(test.test):
             self.tester.close()
 
         super(BluetoothTest, self).cleanup()
-
-
-NEWBLUE_CONFIG_FILE = '/var/lib/bluetooth/newblue'
-
-
-def _is_newblue_enabled(host):
-    """Returns whether newblue is currently enabled
-    :param host: the host DUT
-    :return True if newblue is enabled, false otherwise
-    """
-
-    # Print 1 if NEWBLUE_CONFIG_FILE exists and contains '1', '0' otherwise
-    host_nb_status_cmd = ('if [ -f {0} ] ; then echo $(cat {0}) ; '
-                          'else echo "0" ; fi').format(NEWBLUE_CONFIG_FILE)
-
-    cmd_out = host.run(command=host_nb_status_cmd, ignore_status=True)
-
-    return '1' in cmd_out.stdout
-
-
-def enable_newblue(host, enable=False):
-    """Enable or disable newblue for the kernel
-    :param host: the host DUT
-    :param enable: parsed command line arg
-    :return: none
-    """
-
-    current_newblue_status = _is_newblue_enabled(host)
-
-    # Provide debugging information
-    if enable:
-        logging.info('Test will perform with newblue ENABLED')
-
-    else:
-        logging.info('Test will perform with newblue DISABLED')
-
-    # Exit if we're already in correct state
-    if current_newblue_status == enable:
-        return
-
-    # Create the file if it doesn't exist and write the new state
-    change_state_cmd = 'echo {} > {}'.format(int(enable), NEWBLUE_CONFIG_FILE)
-
-    host.run(command=change_state_cmd, ignore_status=True)
-
-    # We've changed config, so reboot is required
-    logging.info('Reboot is required for newblue setting to take effect')
-    host.reboot()
