@@ -102,10 +102,19 @@ RPC_CATEGORIES = [
                 "silence_result": True,
             },
             {
-                "method_names": [
-                    "run_shell_command",
-                    "run_shell_command_get_status",
+                "method_name": "run_shell_command",
+                "passing_args": [
+                    ("ls -l", ),
+                    ("ls -l", False),
+                    ("ls -l", True)
                 ],
+                "failing_args": [
+                    NO_ARGS,
+                    ("ls", "-l", 'foo'),
+                ],
+            },
+            {
+                "method_name": "run_shell_command_get_status",
                 "passing_args": [
                     ("ls", ),
                 ],

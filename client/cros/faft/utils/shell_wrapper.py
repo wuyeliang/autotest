@@ -47,11 +47,13 @@ class LocalShell(object):
         outputs on the console and dump them into the log. Otherwise suppress
         all output.
 
+        @param block: if True (default), wait for command to finish
         @raise error.CmdError: if block is True and command fails (rc!=0)
         """
         start_time = time.time()
         process = self._run_command(cmd, block)
-        if process.returncode:
+        if block and process.returncode:
+            # Grab output only if an error occurred
             returncode = process.returncode
             stdout = process.stdout.read()
             stderr = process.stderr.read()

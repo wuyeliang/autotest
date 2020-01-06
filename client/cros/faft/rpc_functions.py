@@ -713,12 +713,13 @@ class SystemServicer(object):
             os.remove(self._os_if.log_file)
         return log
 
-    def run_shell_command(self, command):
+    def run_shell_command(self, command, block=True):
         """Run shell command.
 
         @param command: A shell command to be run.
+        @param block: if True (default), wait for command to finish
         """
-        self._os_if.run_shell_command(command)
+        self._os_if.run_shell_command(command, block=block)
 
     def run_shell_command_check_output(self, command, success_token):
         """Run shell command and check its stdout for a string.

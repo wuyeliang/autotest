@@ -84,10 +84,11 @@ class OSInterface(object):
 
         self.cs = Crossystem(self)
 
-    def run_shell_command(self, cmd, modifies_device=False):
+    def run_shell_command(self, cmd, block=True, modifies_device=False):
         """Run a shell command.
 
         @param cmd: the command to run
+        @param block: if True (default), wait for command to finish
         @param modifies_device: If True and running in test mode, just log
                                 the command, but don't actually run it.
                                 This should be set for RPC commands that alter
@@ -98,7 +99,7 @@ class OSInterface(object):
         if self.test_mode and modifies_device:
             self.log('[SKIPPED] %s' % cmd)
         else:
-            self.shell.run_command(cmd)
+            self.shell.run_command(cmd, block=block)
 
     def run_shell_command_check_output(self, cmd, success_token):
         """Run shell command and check its stdout for a string."""
