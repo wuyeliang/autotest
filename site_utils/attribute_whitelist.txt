@@ -193,6 +193,7 @@ suite:power_sanity
 suite:powerplay
 suite:push_to_prod
 suite:regression
+suite:runtime_probe_perbuild
 suite:sanity
 suite:sb65-presubmit
 suite:security

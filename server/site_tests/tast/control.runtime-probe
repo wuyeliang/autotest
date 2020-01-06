@@ -6,6 +6,7 @@ AUTHOR = 'Chromium OS team'
 NAME = 'tast.runtime-probe'
 TIME = 'MEDIUM'
 TEST_TYPE = 'Server'
+ATTRIBUTES = 'suite:runtime_probe_perbuild'
 
 # tast.py uses binaries installed from autotest_server_package.tar.bz2.
 REQUIRE_SSP = True
