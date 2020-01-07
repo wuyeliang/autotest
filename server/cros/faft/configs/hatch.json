@@ -3,6 +3,7 @@
     "chrome_ec": true,
     "ec_capability": [
         "battery",
+        "cbi",
         "charging",
         "keyboard",
         "lid",
