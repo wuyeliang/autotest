@@ -39,7 +39,9 @@ def map_gpu_name(mesa_name):
         'Cannonlake': 'cannonlake',
         'Coffeelake': 'coffeelake',
         'Ice Lake': 'icelake',
-        'Comet Lake': 'cometlake'
+        'Comet Lake': 'cometlake',
+        'Whiskey Lake': 'whiskeylake',
+        'TGL': 'tigerlake'
     }
 
     for name in family_name_map:
@@ -52,7 +54,7 @@ def main():
     """Extract Intel GPU PCI IDs from Mesa and write to JSON file.
     """
 
-    in_files = ['i915_pci_ids.h', 'i965_pci_ids.h']
+    in_files = ['i915_pci_ids.h', 'i965_pci_ids.h', 'iris_pci_ids.h']
     script_dir = os.path.dirname(os.path.realpath(__file__))
     out_file = os.path.join(script_dir, 'intel_pci_ids.json')
     local_repo = os.path.join(script_dir, '../../../../mesa')
@@ -64,6 +66,9 @@ def main():
         chipsets.extend(sp.check_output(cmd + id_file,
                                         shell=True).splitlines())
     for cset in chipsets:
+        # Prevent unexpected lines from being parsed
+        if not 'CHIPSET(' in cset:
+            continue
         cset_attr = cset[len('CHIPSET('):-2].split(',')
 
         # Remove leading and trailing spaces and double quotes.
