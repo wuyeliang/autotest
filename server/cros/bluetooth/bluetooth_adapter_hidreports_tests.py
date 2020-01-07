@@ -85,7 +85,8 @@ class BluetoothAdapterHIDReportTests(
             self.host.reboot()
 
             # NOTE: We need to recreate the bluetooth_facade after a reboot.
-            factory = remote_facade_factory.RemoteFacadeFactory(self.host)
+            factory = remote_facade_factory.RemoteFacadeFactory(
+                self.host, disable_arc=True)
             self.bluetooth_facade = factory.create_bluetooth_hid_facade()
             self.input_facade = factory.create_input_facade()
 

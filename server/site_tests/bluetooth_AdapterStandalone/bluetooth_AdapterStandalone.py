@@ -48,7 +48,8 @@ class bluetooth_AdapterStandalone(BluetoothAdapterTests):
 
         """
         self.host = host
-        factory = remote_facade_factory.RemoteFacadeFactory(host)
+        factory = remote_facade_factory.RemoteFacadeFactory(host,
+                                                            disable_arc=True)
         self.bluetooth_facade = factory.create_bluetooth_hid_facade()
 
         for i in xrange(1, repeat_count + 1):

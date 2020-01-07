@@ -71,7 +71,7 @@ class bluetooth_AdapterAudioLink(
         # Setup Bluetooth widgets and their binder, but do not yet connect.
         audio_test.audio_test_requirement()
         factory = remote_facade_factory.RemoteFacadeFactory(
-                host, results_dir=self.resultsdir)
+                host, results_dir=self.resultsdir, disable_arc=True)
         chameleon_board = self.host.chameleon
         if chameleon_board is None:
             raise error.TestNAError("No chameleon device is present")

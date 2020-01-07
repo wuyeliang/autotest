@@ -143,7 +143,8 @@ class bluetooth_AdapterPowerMeasure(
         """
 
         self.host = host
-        factory = remote_facade_factory.RemoteFacadeFactory(host)
+        factory = remote_facade_factory.RemoteFacadeFactory(host,
+                                                            disable_arc=True)
         self.bluetooth_facade = factory.create_bluetooth_hid_facade()
 
         self.check_chameleon()
