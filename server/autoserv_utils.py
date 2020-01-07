@@ -79,7 +79,7 @@ def autoserv_run_job_command(autoserv_directory, machines,
     if results_directory:
         command += ['-r', results_directory]
     if host_info_subdir:
-        command += ['--local-only-host-info']
+        command += ['--local-only-host-info', 'True']
         command += ['--host-info-subdir', host_info_subdir]
 
     if machines:
