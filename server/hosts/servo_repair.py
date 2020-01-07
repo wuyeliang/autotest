@@ -370,7 +370,6 @@ def create_servo_repair_strategy():
 
     servod_deps = ['job', 'servod', 'pwr_button']
     repair_actions = [
-        (repair_utils.RPMCycleRepair, 'rpm', [], ['servo_ssh']),
         (_RestartServod, 'restart', ['servo_ssh'], config + servod_deps),
         (_ServoRebootRepair, 'servo_reboot', ['servo_ssh'], servod_deps),
         (_DutRebootRepair, 'dut_reboot', ['servod'], ['lid_open']),
