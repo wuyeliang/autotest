@@ -213,7 +213,7 @@ class FioTest(test.test):
         for k, v in results.iteritems():
             if k.endswith('_error'):
                 self._error_code = int(v)
-                if self._fail_count == 0:
+                if self._error_code != 0 and self._fail_count == 0:
                     self._fail_count = 1
             elif k.endswith('_total_err'):
                 self._fail_count = int(v)
