@@ -588,8 +588,9 @@ RPC_CATEGORIES = [
                     ONE_INT_ARG,
                     ONE_STR_ARG,
                 ],
-                "allow_error_msg": (r"command cp -rf /var/tmp/faft/autest/work "
-                                    r"/var/tmp/faft/autest/cbfs failed"),
+                "allow_error_msg": ("command cp -rf /var/tmp/faft/autest/work "
+                                    "/var/tmp/faft/autest/cbfs failed|"
+                                    "Could not detect a usable ec flash device")
             },
             {
                 "method_name": "get_section_fwid",
