@@ -1800,7 +1800,7 @@ def report_temperature(test, keyname):
     @param test: autotest_lib.client.bin.test.test instance
     @param keyname: key to be used when reporting perf value.
     """
-    temperature = get_temperature_input_max()
+    temperature = get_current_temperature_max()
     logging.info('%s = %f degree Celsius', keyname, temperature)
     test.output_perf_value(
         description=keyname,
