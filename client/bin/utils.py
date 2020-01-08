@@ -1887,6 +1887,9 @@ def _get_hex_from_file(path, line, prefix, postfix):
     return int(match, 16)
 
 
+# The paths don't change. Avoid running find all the time.
+_hwmon_paths = {}
+
 def _get_hwmon_datas(file_pattern):
     """Returns a list of reading from hwmon."""
     # Some systems like daisy_spring only have the virtual hwmon.
@@ -1894,9 +1897,11 @@ def _get_hwmon_datas(file_pattern):
     #    /sys/class/hwmon/hwmon*/
     #    /sys/devices/virtual/hwmon/hwmon*/
     #    /sys/devices/platform/coretemp.0/
-    cmd = 'find /sys/class /sys/devices -name "' + file_pattern + '"'
-    _hwmon_paths = utils.run(cmd, verbose=False).stdout.splitlines()
-    for _hwmon_path in _hwmon_paths:
+    if file_pattern not in _hwmon_paths:
+        cmd = 'find /sys/class /sys/devices -name "' + file_pattern + '"'
+        _hwmon_paths[file_pattern] = \
+            utils.run(cmd, verbose=False).stdout.splitlines()
+    for _hwmon_path in _hwmon_paths[file_pattern]:
         try:
             yield _get_float_from_file(_hwmon_path, 0, None, None) * 0.001
         except IOError as err:
