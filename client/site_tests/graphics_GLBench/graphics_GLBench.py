@@ -118,7 +118,6 @@ class graphics_GLBench(graphics_utils.GraphicsTest):
                             stdout_tee=utils.TEE_TO_LOGS,
                             stderr_tee=utils.TEE_TO_LOGS).stdout
       else:
-        utils.report_temperature_critical(self, 'temperature_critical')
         utils.report_temperature(self, 'temperature_1_start')
         # Wrap the test run inside of a PerfControl instance to make machine
         # behavior more consistent.

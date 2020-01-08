@@ -1809,21 +1809,6 @@ def report_temperature(test, keyname):
         higher_is_better=False)
 
 
-def report_temperature_critical(test, keyname):
-    """Report temperature at which we will see throttling with given keyname.
-
-    @param test: autotest_lib.client.bin.test.test instance
-    @param keyname: key to be used when reporting perf value.
-    """
-    temperature = get_temperature_critical()
-    logging.info('%s = %f degree Celsius', keyname, temperature)
-    test.output_perf_value(
-        description=keyname,
-        value=temperature,
-        units='Celsius',
-        higher_is_better=False)
-
-
 # System paths for machine performance state.
 _CPUINFO = '/proc/cpuinfo'
 _DIRTY_WRITEBACK_CENTISECS = '/proc/sys/vm/dirty_writeback_centisecs'
@@ -1887,6 +1872,26 @@ def _get_hex_from_file(path, line, prefix, postfix):
     return int(match, 16)
 
 
+def is_system_thermally_throttled():
+    """
+    Returns whether the system appears to be thermally throttled.
+    """
+    for path in glob.glob('/sys/class/thermal/cooling_device*/type'):
+        with _open_file(path) as f:
+            cdev_type = f.read().strip()
+
+        if not (cdev_type == 'Processor' or
+                cdev_type.startswith('thermal-devfreq') or
+                cdev_type.startswith('thermal-cpufreq')):
+            continue
+
+        cur_state_path = os.path.join(os.path.dirname(path), 'cur_state')
+        if _get_int_from_file(cur_state_path, 0, None, None) > 0:
+            return True
+
+    return False
+
+
 # The paths don't change. Avoid running find all the time.
 _hwmon_paths = {}
 
@@ -1911,39 +1916,14 @@ def _get_hwmon_datas(file_pattern):
                 raise
 
 
-def get_temperature_critical():
+def _get_hwmon_temperatures():
     """
-    Returns temperature at which we will see some throttling in the system.
+    Returns the currently observed temperatures from hwmon
     """
-    min_temperature = 1000.0
-    for temperature in _get_hwmon_datas('temp*_crit'):
-        # Today typical for Intel is 98'C to 105'C while ARM is 85'C. Clamp to 98
-        # if Intel device or the lowest known value otherwise.
-        result = utils.system_output('crossystem arch', retain_output=True,
-                                     ignore_status=True)
-        if (min_temperature < 60.0) or min_temperature > 150.0:
-            if 'x86' in result:
-                min_temperature = 98.0
-            else:
-                min_temperature = 85.0
-            logging.warning('Critical temperature was reset to %.1fC.',
-                            min_temperature)
-
-        min_temperature = min(temperature, min_temperature)
-    return min_temperature
+    return list(_get_hwmon_datas('temp*_input'))
 
 
-def get_temperature_input_max():
-    """
-    Returns the maximum currently observed temperature.
-    """
-    max_temperature = -1000.0
-    for temperature in _get_hwmon_datas('temp*_input'):
-        max_temperature = max(temperature, max_temperature)
-    return max_temperature
-
-
-def get_thermal_zone_temperatures():
+def _get_thermal_zone_temperatures():
     """
     Returns the maximum currently observered temperature in thermal_zones.
     """
@@ -1991,9 +1971,13 @@ def get_current_temperature_max():
     """
     Returns the highest reported board temperature (all sensors) in Celsius.
     """
-    temperature = max([get_temperature_input_max()] +
-                      get_thermal_zone_temperatures() +
-                      get_ec_temperatures())
+    all_temps = (_get_hwmon_temperatures() +
+                 _get_thermal_zone_temperatures() +
+                 get_ec_temperatures())
+    if all_temps:
+        temperature = max(all_temps)
+    else:
+        temperature = -1
     # Sanity check for real world values.
     assert ((temperature > 10.0) and
             (temperature < 150.0)), ('Unreasonable temperature %.1fC.' %

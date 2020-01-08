@@ -468,7 +468,6 @@ class graphics_WebGLAquarium(graphics_utils.GraphicsTest):
             test_url = cr.browser.platform.http_server.UrlOf(
                 os.path.join(self.srcdir, 'aquarium.html'))
 
-            utils.report_temperature_critical(self, 'temperature_critical')
             utils.report_temperature(self, 'temperature_1_start')
             # Wrap the test run inside of a PerfControl instance to make machine
             # behavior more consistent.
