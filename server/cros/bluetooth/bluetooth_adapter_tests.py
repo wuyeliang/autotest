@@ -1043,6 +1043,14 @@ class BluetoothAdapterTests(test.test):
                 'is_discovering': is_discovering}
         return all(self.results.values())
 
+    @_test_retry_and_log(False)
+    def test_is_discovering(self):
+        """Test that the adapter is already discovering."""
+        is_discovering = self._wait_for_condition(
+                self.bluetooth_facade.is_discovering, method_name())
+
+        self.results = {'is_discovering': is_discovering}
+        return all(self.results.values())
 
     @_test_retry_and_log
     def test_stop_discovery(self):
@@ -1069,6 +1077,16 @@ class BluetoothAdapterTests(test.test):
                 'set_discoverable': set_discoverable,
                 'is_discoverable': is_discoverable}
         return all(self.results.values())
+
+    @_test_retry_and_log(False)
+    def test_is_discoverable(self):
+        """Test that the adapter is discoverable."""
+        is_discoverable = self._wait_for_condition(
+                self.bluetooth_facade.is_discoverable, method_name())
+
+        self.results = {'is_discoverable': is_discoverable}
+        return all(self.results.values())
+
 
     def _test_timeout_property(self, set_property, check_property, set_timeout,
                               get_timeout, property_name,
@@ -1374,6 +1392,44 @@ class BluetoothAdapterTests(test.test):
                 'device_discovered': device_discovered}
         return has_device_initially or device_discovered
 
+    def _test_discover_by_device(self, device):
+        device_discovered = device.Discover(self.bluetooth_facade.address)
+
+        self.results = {
+                'device_discovered': device_discovered
+        }
+
+        return all(self.results.values())
+
+    @_test_retry_and_log(False)
+    def test_discover_by_device(self, device):
+        """Test that the device could discover the adapter address.
+
+        @param device: Meta device to represent peer device.
+
+        @returns: True if the adapter is found by the device.
+        """
+        return self._test_discover_by_device(device)
+
+    @_test_retry_and_log(False)
+    def test_discover_by_device_fails(self, device):
+        """Test that the device could not discover the adapter address.
+
+        @param device: Meta device to represent peer device.
+
+        @returns False if the adapter is found by the device.
+        """
+        return not self._test_discover_by_device(device)
+
+    @_test_retry_and_log(False)
+    def test_device_set_discoverable(self, device, discoverable):
+        """Test that we could set the peer device to discoverable. """
+        try:
+            device.SetDiscoverable(discoverable)
+        except:
+            return False
+
+        return True
 
     @_test_retry_and_log
     def test_pairing(self, device_address, pin, trusted=True):
@@ -1603,6 +1659,26 @@ class BluetoothAdapterTests(test.test):
                 'connection_by_device': connection_by_device,
                 'connection_seen_by_adapter': connection_seen_by_adapter}
         return all(self.results.values())
+
+    @_test_retry_and_log
+    def test_connection_by_device_only(self, device, adapter_address):
+      """Test that the device could connect to adapter successfully.
+
+      This is a modified version of test_connection_by_device that only
+      communicates with the peer device and not the host (in case the host is
+      suspended for example).
+
+      @param device: the bluetooth peer device
+      @param adapter_address: address of the adapter
+
+      @returns: True if the connection was established by the device or False.
+      """
+      connected = device.ConnectToRemoteAddress(adapter_address)
+      self.results = {
+          'connection_by_device': connected
+      }
+
+      return all(self.results.values())
 
 
     @_test_retry_and_log
