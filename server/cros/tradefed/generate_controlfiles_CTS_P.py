@@ -151,9 +151,7 @@ CONFIG['BVT_PERBUILD'] = [
 ]
 
 CONFIG['NEEDS_POWER_CYCLE'] = [
-    'CtsBluetoothTestCases',  # b/141472122 TODO(kinaba): remove this
-    'CtsCameraApi25TestCases',  # b/142222651
-    'CtsCameraTestCases',  # b/142222651
+    'CtsBluetoothTestCases',
 ]
 
 CONFIG['HARDWARE_DEPENDENT_MODULES'] = [
