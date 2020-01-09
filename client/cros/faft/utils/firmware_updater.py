@@ -404,13 +404,8 @@ class FirmwareUpdater(object):
                           If None (default), read from extracted manifest.json.
         @type shellball: str | None
         """
-        model_result = cros_config.call_cros_config_get_output(
+        model_name = cros_config.call_cros_config_get_output(
                 '/ name', self.os_if.run_shell_command_get_result)
-
-        if not model_result:
-            return
-
-        model_name = model_result[0]
 
         if not model_name:
             return
