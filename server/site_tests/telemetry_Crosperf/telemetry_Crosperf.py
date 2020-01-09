@@ -320,13 +320,16 @@ class telemetry_Crosperf(test.test):
                 if profiler_args:
                     arguments.extend(profiler_opts)
                 logging.debug('Telemetry Arguments: %s', arguments)
+                perf_value_writer = self
+                artifacts = True if profiler_args else False
                 result = tr.run_telemetry_benchmark(
                         test_name,
-                        None,
+                        perf_value_writer,
                         *arguments,
                         ex_output_format=output_format,
                         results_dir=self.resultsdir,
-                        no_verbose=True)
+                        no_verbose=True,
+                        artifacts=artifacts)
                 logging.info('Telemetry completed with exit status: %s.',
                              result.status)
                 logging.info('output: %s\n', result.output)
@@ -342,17 +345,10 @@ class telemetry_Crosperf(test.test):
             if dut:
                 self.run_cpuinfo(dut, CPUINFO_LOG)
 
-        # Copy the histograms.json file into the test_that results directory,
-        # if necessary.
-        if telemetry_on_dut:
-            result = self.scp_telemetry_results(
-                    client_ip, dut,
-                    os.path.join(DUT_CHROME_RESULTS_DIR, 'histograms.json'),
-                    self.resultsdir)
-        else:
-            filepath = os.path.join(self.resultsdir, 'histograms.json')
-            if not os.path.exists(filepath):
-                raise RuntimeError('Missing results file: %s' % filepath)
+        # Checking whether result file exists.
+        filepath = os.path.join(self.resultsdir, 'histograms.json')
+        if not os.path.exists(filepath):
+            raise RuntimeError('Missing results file: %s' % filepath)
 
         # Copy the perf data file into the test_that profiling directory,
         # if necessary. It always comes from DUT.

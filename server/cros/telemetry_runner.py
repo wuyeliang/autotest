@@ -5,14 +5,14 @@
 import json
 import logging
 import numbers
-import numpy
 import os
 import tempfile
 import StringIO
 
+import numpy
+
 from autotest_lib.client.common_lib import error, utils
 from autotest_lib.client.common_lib.cros import dev_server
-
 
 TELEMETRY_RUN_BENCHMARKS_SCRIPT = 'tools/perf/run_benchmark'
 TELEMETRY_RUN_TESTS_SCRIPT = 'tools/telemetry/run_tests'
@@ -23,6 +23,7 @@ DUT_CHROME_ROOT = '/usr/local/telemetry/src'
 
 CHART_JSON_RESULT = 'results-chart.json'
 HISTOGRAM_SET_RESULT = 'histograms.json'
+PROFILE_ARTIFACTS = 'artifacts'
 
 # Result Statuses
 SUCCESS_STATUS = 'SUCCESS'
@@ -31,11 +32,12 @@ FAILED_STATUS = 'FAILED'
 
 # A list of telemetry tests that cannot run on dut.
 ON_DUT_BLACKLIST = [
-    'cros_ui_smoothness',           # crbug/976839
-    'loading.desktop',              # crbug/882299
-    'rendering.desktop',            # crbug/882291
-    'system_health.memory_desktop', # crbug/874386
+        'cros_ui_smoothness',  # crbug/976839
+        'loading.desktop',  # crbug/882299
+        'rendering.desktop',  # crbug/882291
+        'system_health.memory_desktop',  # crbug/874386
 ]
+
 
 class TelemetryResult(object):
     """Class to represent the results of a telemetry run.
@@ -43,7 +45,6 @@ class TelemetryResult(object):
     This class represents the results of a telemetry run, whether it ran
     successful, failed or had warnings.
     """
-
 
     def __init__(self, exit_code=0, stdout='', stderr=''):
         """Initializes this TelemetryResultObject instance.
@@ -104,6 +105,7 @@ class TelemetryRunner(object):
         self._host = host
         self._devserver = None
         self._telemetry_path = None
+        self._perf_value_writer = None
         self._telemetry_on_dut = telemetry_on_dut
         # TODO (llozano crbug.com/324964). Remove conditional code.
         # Use a class hierarchy instead.
@@ -115,7 +117,6 @@ class TelemetryRunner(object):
 
         logging.debug('Telemetry Path: %s', self._telemetry_path)
 
-
     def _setup_devserver_telemetry(self):
         """Setup Telemetry to use the devserver."""
         logging.debug('Setting up telemetry for devserver testing')
@@ -124,16 +125,16 @@ class TelemetryRunner(object):
         if not info.build:
             logging.error('Unable to locate build label for host: %s.',
                           self._host.host_port)
-            raise error.AutotestError('Failed to grab build for host %s.' %
-                                      self._host.host_port)
+            raise error.AutotestError(
+                    'Failed to grab build for host %s.' % self._host.host_port)
 
         logging.debug('Setting up telemetry for build: %s', info.build)
 
         self._devserver = dev_server.ImageServer.resolve(
                 info.build, hostname=self._host.hostname)
         self._devserver.stage_artifacts(info.build, ['autotest_packages'])
-        self._telemetry_path = self._devserver.setup_telemetry(build=info.build)
-
+        self._telemetry_path = self._devserver.setup_telemetry(
+                build=info.build)
 
     def _setup_local_telemetry(self):
         """Setup Telemetry to use local path to its sources.
@@ -165,7 +166,6 @@ class TelemetryRunner(object):
         self._devserver = None
         self._telemetry_path = telemetry_src
 
-
     def _get_telemetry_cmd(self, script, test_or_benchmark, output_format,
                            *args, **kwargs):
         """Build command to execute telemetry based on script and benchmark.
@@ -175,6 +175,8 @@ class TelemetryRunner(object):
         @param test_or_benchmark: Name of the test or benchmark we want to run,
                                   with the page_set (if required) as part of
                                   the string.
+        @param output_format: Format of the json result file: histogram or
+                              chart-json.
         @param args: additional list of arguments to pass to the script.
         @param kwargs: additional list of keyword arguments to pass to the
                        script.
@@ -186,28 +188,33 @@ class TelemetryRunner(object):
             devserver_hostname = self._devserver.hostname
             telemetry_cmd.extend(['ssh', devserver_hostname])
 
-        results_dir = kwargs.get('results_dir', '')
         no_verbose = kwargs.get('no_verbose', False)
+
+        output_dir = (DUT_CHROME_ROOT
+                      if self._telemetry_on_dut else self._telemetry_path)
+        # Create a temp directory to hold single test run.
+        if self._perf_value_writer:
+            output_dir = os.path.join(
+                    output_dir, self._perf_value_writer.tmpdir.strip('/'))
 
         if self._telemetry_on_dut:
             telemetry_cmd.extend([
-                self._host.ssh_command(alive_interval=900,
-                                       connection_attempts=4),
-                'python2',
-                script,
-                '--output-format=%s' % output_format,
-                '--output-dir=%s' % DUT_CHROME_ROOT,
-                '--browser=system',
+                    self._host.ssh_command(
+                            alive_interval=900, connection_attempts=4),
+                    'python2',
+                    script,
+                    '--output-format=%s' % output_format,
+                    '--output-dir=%s' % output_dir,
+                    '--browser=system',
             ])
         else:
             telemetry_cmd.extend([
-                'python2',
-                script,
-                '--browser=cros-chrome',
-                '--output-format=%s' % output_format,
-                '--output-dir=%s' %
-                (results_dir if results_dir else self._telemetry_path),
-                '--remote=%s' % self._host.host_port,
+                    'python2',
+                    script,
+                    '--browser=cros-chrome',
+                    '--output-format=%s' % output_format,
+                    '--output-dir=%s' % output_dir,
+                    '--remote=%s' % self._host.host_port,
             ])
         if not no_verbose:
             telemetry_cmd.append('--verbose')
@@ -216,13 +223,18 @@ class TelemetryRunner(object):
 
         return ' '.join(telemetry_cmd)
 
-
-    def _scp_telemetry_results_cmd(self, perf_results_dir, output_format):
+    def _scp_telemetry_results_cmd(self, perf_results_dir, output_format,
+                                   artifacts):
         """Build command to copy the telemetry results from the devserver.
 
         @param perf_results_dir: directory path where test output is to be
                                  collected.
-        @returns SCP command to copy the results json to the specified directory.
+        @param output_format: Format of the json result file: histogram or
+                              chart-json.
+        @param artifacts: Whether we want to copy artifacts directory.
+
+        @returns SCP command to copy the results json to the specified
+                 directory.
         """
         if not perf_results_dir:
             return ''
@@ -230,24 +242,39 @@ class TelemetryRunner(object):
         output_filename = CHART_JSON_RESULT
         if output_format == 'histograms':
             output_filename = HISTOGRAM_SET_RESULT
-        scp_cmd = ['scp']
+        scp_cmd = []
         if self._telemetry_on_dut:
-            scp_cmd.append(self._host.make_ssh_options(alive_interval=900,
-                                                       connection_attempts=4))
+            scp_cmd.extend(['scp', '-r'])
+            scp_cmd.append(
+                    self._host.make_ssh_options(
+                            alive_interval=900, connection_attempts=4))
             if not self._host.is_default_port:
                 scp_cmd.append('-P %d' % self._host.port)
-            src = 'root@%s:%s/%s' % (self._host.hostname, DUT_CHROME_ROOT,
-                                     output_filename)
+            src = 'root@%s:%s' % (self._host.hostname, DUT_CHROME_ROOT)
         else:
+            # Use rsync --remove-source-file to move rather than copy from
+            # server. This is because each run will generate certain artifacts
+            # and will not be removed after, making result size getting larger.
+            # We don't do this for results on DUT because 1) rsync doesn't work
+            # 2) DUT will be reflashed frequently and no need to worry about
+            # result size.
+            scp_cmd.extend(['rsync', '-avz', '--remove-source-files'])
             devserver_hostname = ''
             if self._devserver:
                 devserver_hostname = self._devserver.hostname + ':'
-            src = '%s%s/%s' % (devserver_hostname, self._telemetry_path,
-                               output_filename)
+            src = '%s%s' % (devserver_hostname, self._telemetry_path)
 
-        scp_cmd.extend([src, perf_results_dir])
+        if self._perf_value_writer:
+            src = os.path.join(src, self._perf_value_writer.tmpdir.strip('/'))
+
+        scp_cmd.append(os.path.join(src, output_filename))
+
+        # Copy artifacts back to result directory if needed.
+        if artifacts:
+            scp_cmd.append(os.path.join(src, PROFILE_ARTIFACTS))
+
+        scp_cmd.append(perf_results_dir)
         return ' '.join(scp_cmd)
-
 
     def _run_cmd(self, cmd):
         """Execute an command in a external shell and capture the output.
@@ -263,9 +290,11 @@ class TelemetryRunner(object):
         error_output = StringIO.StringIO()
         exit_code = 0
         try:
-            result = utils.run(cmd, stdout_tee=output,
-                               stderr_tee=error_output,
-                               timeout=TELEMETRY_TIMEOUT_MINS*60)
+            result = utils.run(
+                    cmd,
+                    stdout_tee=output,
+                    stderr_tee=error_output,
+                    timeout=TELEMETRY_TIMEOUT_MINS * 60)
             exit_code = result.exit_status
         except error.CmdError as e:
             logging.debug('Error occurred executing.')
@@ -277,9 +306,8 @@ class TelemetryRunner(object):
                       'stderr:%s', exit_code, stdout, stderr)
         return stdout, stderr, exit_code
 
-
-    def _run_telemetry(self, script, test_or_benchmark, output_format,
-                       *args, **kwargs):
+    def _run_telemetry(self, script, test_or_benchmark, output_format, *args,
+                       **kwargs):
         """Runs telemetry on a dut.
 
         @param script: Telemetry script we want to run. For example:
@@ -296,27 +324,25 @@ class TelemetryRunner(object):
         """
         # TODO (sbasi crbug.com/239933) add support for incognito mode.
 
-        telemetry_cmd = self._get_telemetry_cmd(script,
-                                                test_or_benchmark,
-                                                output_format,
-                                                *args,
-                                                **kwargs)
+        telemetry_cmd = self._get_telemetry_cmd(script, test_or_benchmark,
+                                                output_format, *args, **kwargs)
         logging.info('Running Telemetry: %s', telemetry_cmd)
 
         stdout, stderr, exit_code = self._run_cmd(telemetry_cmd)
 
-        return TelemetryResult(exit_code=exit_code, stdout=stdout,
-                               stderr=stderr)
+        return TelemetryResult(
+                exit_code=exit_code, stdout=stdout, stderr=stderr)
 
-
-    def _run_scp(self, perf_results_dir, output_format):
+    def _run_scp(self, perf_results_dir, output_format, artifacts=False):
         """Runs telemetry on a dut.
 
         @param perf_results_dir: The local directory that results are being
                                  collected.
+        @param output_format: Format of the json result file.
+        @param artifacts: Whether we want to copy artifacts directory.
         """
         scp_cmd = self._scp_telemetry_results_cmd(perf_results_dir,
-                                                  output_format)
+                                                  output_format, artifacts)
         logging.debug('Retrieving Results: %s', scp_cmd)
         _, _, exit_code = self._run_cmd(scp_cmd)
         if exit_code != 0:
@@ -326,8 +352,7 @@ class TelemetryRunner(object):
             # Converts to chart json format.
             input_filename = os.path.join(perf_results_dir,
                                           HISTOGRAM_SET_RESULT)
-            output_filename = os.path.join(perf_results_dir,
-                                           CHART_JSON_RESULT)
+            output_filename = os.path.join(perf_results_dir, CHART_JSON_RESULT)
             histograms = json.loads(open(input_filename).read())
             chartjson = TelemetryRunner.convert_chart_json(histograms)
             with open(output_filename, 'w') as fout:
@@ -347,11 +372,11 @@ class TelemetryRunner(object):
         """
         logging.debug('Running telemetry test: %s', test)
         telemetry_script = os.path.join(self._telemetry_path, script)
-        result = self._run_telemetry(telemetry_script, test, 'chartjson', *args)
+        result = self._run_telemetry(telemetry_script, test, 'chartjson',
+                                     *args)
         if result.status is FAILED_STATUS:
             raise error.TestFail('Telemetry test %s failed.' % test)
         return result
-
 
     def run_telemetry_test(self, test, *args):
         """Runs a telemetry test on a dut.
@@ -364,7 +389,6 @@ class TelemetryRunner(object):
                  execution.
         """
         return self._run_test(TELEMETRY_RUN_TESTS_SCRIPT, test, *args)
-
 
     def run_telemetry_benchmark(self,
                                 benchmark,
@@ -387,6 +411,8 @@ class TelemetryRunner(object):
                  execution.
         """
         logging.debug('Running telemetry benchmark: %s', benchmark)
+
+        self._perf_value_writer = perf_value_writer
 
         if benchmark in ON_DUT_BLACKLIST:
             self._telemetry_on_dut = False
@@ -420,9 +446,10 @@ class TelemetryRunner(object):
                                  ' but no test actually passed.\nOutput\n%s\n'
                                  % (benchmark, result.output))
         if perf_value_writer:
-            self._run_scp(perf_value_writer.resultsdir, output_format)
+            artifacts = kwargs.get('artifacts', False)
+            self._run_scp(perf_value_writer.resultsdir, output_format,
+                          artifacts)
         return result
-
 
     def run_gpu_integration_test(self, test, *args):
         """Runs a gpu test on a dut.
@@ -434,16 +461,17 @@ class TelemetryRunner(object):
         @returns A TelemetryResult instance with the results of this telemetry
                  execution.
         """
-        script = os.path.join(DUT_CHROME_ROOT,
-                              TELEMETRY_RUN_GPU_TESTS_SCRIPT)
+        script = os.path.join(DUT_CHROME_ROOT, TELEMETRY_RUN_GPU_TESTS_SCRIPT)
         cmd = []
         if self._devserver:
             devserver_hostname = self._devserver.hostname
             cmd.extend(['ssh', devserver_hostname])
 
-        cmd.extend(
-            [self._host.ssh_command(alive_interval=900, connection_attempts=4),
-             'python2', script])
+        cmd.extend([
+                self._host.ssh_command(
+                        alive_interval=900, connection_attempts=4), 'python2',
+                script
+        ])
         cmd.extend(args)
         cmd.append(test)
         cmd = ' '.join(cmd)
@@ -453,9 +481,8 @@ class TelemetryRunner(object):
             raise error.TestFail('Gpu Integration Test: %s'
                                  ' failed to run.' % test)
 
-        return TelemetryResult(exit_code=exit_code, stdout=stdout,
-                               stderr=stderr)
-
+        return TelemetryResult(
+                exit_code=exit_code, stdout=stdout, stderr=stderr)
 
     def _ensure_deps(self, dut, test_name):
         """
@@ -467,13 +494,13 @@ class TelemetryRunner(object):
         # Get DEPs using host's telemetry.
         # Example output, fetch_benchmark_deps.py --output-deps=deps octane:
         # {'octane': ['tools/perf/page_sets/data/octane_002.wprgo']}
-        fetch_path = os.path.join(self._telemetry_path,
-                                  'tools', 'perf', 'fetch_benchmark_deps.py')
+        fetch_path = os.path.join(self._telemetry_path, 'tools', 'perf',
+                                  'fetch_benchmark_deps.py')
         # Use a temporary file for |deps_path| to avoid race conditions. The
         # created temporary file is assigned to |self._benchmark_deps| to make
         # it valid until |self| is destroyed.
         self._benchmark_deps = tempfile.NamedTemporaryFile(
-            prefix='fetch_benchmark_deps_result.', suffix='.json')
+                prefix='fetch_benchmark_deps_result.', suffix='.json')
         deps_path = self._benchmark_deps.name
         format_fetch = ('python2 %s --output-deps=%s %s')
         command_fetch = format_fetch % (fetch_path, deps_path, test_name)
@@ -501,9 +528,9 @@ class TelemetryRunner(object):
             dst = os.path.join(DUT_CHROME_ROOT, dep)
             if self._devserver:
                 logging.info('Copying: %s -> %s', src, dst)
-                rsync_cmd = utils.sh_escape('rsync %s %s %s:%s' %
-                                            (self._host.rsync_options(), src,
-                                            self._host.hostname, dst))
+                rsync_cmd = utils.sh_escape(
+                        'rsync %s %s %s:%s' % (self._host.rsync_options(), src,
+                                               self._host.hostname, dst))
                 utils.run('ssh %s "%s"' % (devserver_hostname, rsync_cmd))
             else:
                 if not os.path.isfile(src):
@@ -546,11 +573,12 @@ class TelemetryRunner(object):
                 benchmark_name = local_benchmark_name
                 if diagnostics.has_key('benchmarkDescriptions'):
                     benchmark_desc = value_map[
-                        diagnostics['benchmarkDescriptions']][0]
+                            diagnostics['benchmarkDescriptions']][0]
             if benchmark_name != local_benchmark_name:
-                logging.warning('There are more than 1 benchmark names in the'
-                                'result. old: %s, new: %s',
-                                benchmark_name, local_benchmark_name)
+                logging.warning(
+                        'There are more than 1 benchmark names in the'
+                        'result. old: %s, new: %s', benchmark_name,
+                        local_benchmark_name)
                 continue
 
             unit = obj['unit']
@@ -560,27 +588,29 @@ class TelemetryRunner(object):
 
             improvement = 'up'
             for postfix in smaller_postfixes:
-              if unit.endswith(postfix):
-                improvement = 'down'
+                if unit.endswith(postfix):
+                    improvement = 'down'
             for postfix in all_postfixes:
-              if unit.endswith(postfix):
-                unit = unit[:-len(postfix)]
-                break
+                if unit.endswith(postfix):
+                    unit = unit[:-len(postfix)]
+                    break
 
             if unit == 'unitless':
-              unit = 'score'
+                unit = 'score'
 
-            values = [x for x in obj['sampleValues']
-                      if isinstance(x, numbers.Number)]
+            values = [
+                    x for x in obj['sampleValues']
+                    if isinstance(x, numbers.Number)
+            ]
             if metric_name not in charts:
                 charts[metric_name] = {}
             charts[metric_name][story_name] = {
-                'improvement_direction': improvement,
-                'name': metric_name,
-                'std': numpy.std(values),
-                'type': 'list_of_scalar_values',
-                'units': unit,
-                'values': values
+                    'improvement_direction': improvement,
+                    'name': metric_name,
+                    'std': numpy.std(values),
+                    'type': 'list_of_scalar_values',
+                    'units': unit,
+                    'values': values
             }
 
         # Adds summaries.
@@ -596,23 +626,23 @@ class TelemetryRunner(object):
             values.sort()
             std = numpy.std(values)
             metric_content['summary'] = {
-                'improvement_direction': improvement,
-                'name': metric_name,
-                'std': std,
-                'type': metric_type,
-                'units': units,
-                'values': values
+                    'improvement_direction': improvement,
+                    'name': metric_name,
+                    'std': std,
+                    'type': metric_type,
+                    'units': units,
+                    'values': values
             }
 
         benchmark_metadata = {
-            'description': benchmark_desc,
-            'name': benchmark_name,
-            'type': 'telemetry_benchmark'
+                'description': benchmark_desc,
+                'name': benchmark_name,
+                'type': 'telemetry_benchmark'
         }
         return {
-            'benchmark_description': benchmark_desc,
-            'benchmark_metadata': benchmark_metadata,
-            'benchmark_name': benchmark_name,
-            'charts': charts,
-            'format_version': 1.0
+                'benchmark_description': benchmark_desc,
+                'benchmark_metadata': benchmark_metadata,
+                'benchmark_name': benchmark_name,
+                'charts': charts,
+                'format_version': 1.0
         }
