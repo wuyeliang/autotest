@@ -706,7 +706,6 @@ def get_controlfile_content(combined,
     for target, config in get_extra_modules_dict(is_public, abi).items():
         if combined in config['SUBMODULES']:
             target_module = target
-    is_camerabox_test = (camera_facing is not None)
     return _CONTROLFILE_TEMPLATE.render(
         year=CONFIG['COPYRIGHT_YEAR'],
         name=name,
@@ -717,7 +716,7 @@ def get_controlfile_content(combined,
             modules,
             abi,
             is_public,
-            is_camerabox_test=is_camerabox_test),
+            is_camerabox_test=(camera_facing is not None)),
         extra_artifacts=get_extra_artifacts(modules),
         job_retries=get_job_retries(modules, is_public),
         max_result_size_kb=get_max_result_size_kb(modules, is_public),
@@ -729,8 +728,7 @@ def get_controlfile_content(combined,
         tag=tag,
         uri=uri,
         DOC=get_doc(modules, abi, is_public),
-        servo_support_needed=(not is_camerabox_test and
-            servo_support_needed(modules, is_public)),
+        servo_support_needed = servo_support_needed(modules, is_public),
         max_retries=get_max_retries(modules, abi, suites, is_public),
         timeout=calculate_timeout(modules, suites),
         run_template=get_run_template(modules, is_public),
