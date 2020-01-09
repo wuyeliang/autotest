@@ -34,26 +34,6 @@ class provision_FirmwareUpdate(test.test):
             logging.debug('ChromeOS image %s is staged on the USB stick.',
                           info.build)
 
-    def get_ro_firmware_ver(self, host):
-        """Get the RO firmware version from the host."""
-        result = host.run('crossystem ro_fwid', ignore_status=True)
-        if result.exit_status == 0:
-            # The firmware ID is something like "Google_Board.1234.56.0".
-            # Remove the prefix "Google_Board".
-            return result.stdout.split('.', 1)[1]
-        else:
-            return None
-
-    def get_rw_firmware_ver(self, host):
-        """Get the RW firmware version from the host."""
-        result = host.run('crossystem fwid', ignore_status=True)
-        if result.exit_status == 0:
-            # The firmware ID is something like "Google_Board.1234.56.0".
-            # Remove the prefix "Google_Board".
-            return result.stdout.split('.', 1)[1]
-        else:
-            return None
-
     def run_once(self, host, value, rw_only=False, stage_image_to_usb=False,
                  fw_path=None):
         """The method called by the control file to start the test.
@@ -78,23 +58,11 @@ class provision_FirmwareUpdate(test.test):
             if stage_image_to_usb:
                 self.stage_image_to_usb(host)
 
-            host.firmware_install(build=value, rw_only=rw_only,
-                                  dest=self.resultsdir, local_tarball=fw_path)
+            host.firmware_install(build=value,
+                                  rw_only=rw_only,
+                                  dest=self.resultsdir,
+                                  local_tarball=fw_path,
+                                  verify_version=True)
         except Exception as e:
             logging.error(e)
             raise error.TestFail, str(e), sys.exc_info()[2]
-
-        # DUT reboots after the above firmware_install(). Wait it to boot.
-        host.test_wait_for_boot()
-
-        # Only care about the version number.
-        firmware_ver = value.rsplit('-', 1)[1]
-        if not rw_only:
-            current_ro_ver = self.get_ro_firmware_ver(host)
-            if current_ro_ver != firmware_ver:
-                raise error.TestFail('Failed to update RO, still version %s' %
-                                     current_ro_ver)
-        current_rw_ver = self.get_rw_firmware_ver(host)
-        if current_rw_ver != firmware_ver:
-            raise error.TestFail('Failed to update RW, still version %s' %
-                                 current_rw_ver)

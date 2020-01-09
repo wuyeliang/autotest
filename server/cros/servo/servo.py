@@ -47,6 +47,12 @@ def _extract_image_from_tarball(tarball, dest_dir, image_candidates):
     @return: The first path from the image candidates, which succeeds, or None
              if all the image candidates fail.
     """
+
+    # Create the firmware_name subdirectory if it doesn't exist
+    if not os.path.exists(dest_dir):
+        os.mkdir(dest_dir)
+
+    # Try to extract image candidates from tarball
     for image in image_candidates:
         status = server_utils.system(
                 ('tar xf %s -C %s %s' % (tarball, dest_dir, image)),
@@ -1131,60 +1137,15 @@ class Servo(object):
             self._programmer.program_ec(image)
 
 
-    def _reprogram(self, tarball_path, firmware_name, image_candidates,
-                   rw_only):
-        """Helper function to reprogram firmware for EC or BIOS.
-
-        @param tarball_path: The path of the downloaded build tarball.
-        @param: firmware_name: either 'EC' or 'BIOS'.
-        @param image_candidates: A tuple of the paths of image candidates.
-        @param rw_only: True to only install firmware to its RW portions. Keep
-                the RO portions unchanged.
-
-        @raise: TestError if cannot extract firmware from the tarball.
-        """
-        dest_dir = os.path.join(os.path.dirname(tarball_path), firmware_name)
-        # Create the firmware_name subdirectory if it doesn't exist.
-        if not os.path.exists(dest_dir):
-            os.mkdir(dest_dir)
-        image = _extract_image_from_tarball(tarball_path, dest_dir,
-                                            image_candidates)
-        if not image:
-            if firmware_name == 'EC':
-                logging.info('Not a Chrome EC, ignore re-programming it')
-                return
-            else:
-                raise error.TestError('Failed to extract the %s image from '
-                                      'tarball' % firmware_name)
-
-        # Extract subsidiary binaries for EC
-        if firmware_name == 'EC':
-            # Find a monitor binary for NPCX_UUT chip type, if any.
-            mon_candidates = [ w.replace('ec.bin', 'npcx_monitor.bin')
-                                   for w in image_candidates ]
-            _extract_image_from_tarball(tarball_path, dest_dir, mon_candidates)
-
-        logging.info('Will re-program %s %snow', firmware_name,
-                     'RW ' if rw_only else '')
-
-        if firmware_name == 'EC':
-            self.program_ec(os.path.join(dest_dir, image), rw_only)
-        else:
-            self.program_bios(os.path.join(dest_dir, image), rw_only)
-
-
-    def program_firmware(self, board, model, tarball_path, rw_only=False):
-        """Program firmware (EC, if applied, and BIOS) of the DUT.
+    def extract_ec_image(self, board, model, tarball_path):
+        """Helper function to extract EC image from downloaded tarball.
 
         @param board: The DUT board name.
         @param model: The DUT model name.
         @param tarball_path: The path of the downloaded build tarball.
-        @param rw_only: True to only install firmware to its RW portions. Keep
-                the RO portions unchanged.
-        """
-        ap_image_candidates = ('image.bin', 'image-%s.bin' % model,
-                               'image-%s.bin' % board)
 
+        @return: Path to extracted EC image.
+        """
         # Best effort; try to retrieve the EC board from the version as
         # reported by the EC.
         ec_board = None
@@ -1194,16 +1155,44 @@ class Servo(object):
           logging.info('Failed to get ec_board value; ignoring')
           pass
 
-        ec_image_candidates = ['ec.bin', '%s/ec.bin' % model,
+        # Array of candidates for EC image
+        ec_image_candidates = ['ec.bin',
+                               '%s/ec.bin' % model,
                                '%s/ec.bin' % board]
         if ec_board:
           ec_image_candidates.append('%s/ec.bin' % ec_board)
 
-        self._reprogram(tarball_path, 'EC', ec_image_candidates, rw_only)
-        self._reprogram(tarball_path, 'BIOS', ap_image_candidates, rw_only)
+        # Extract EC image from tarball
+        dest_dir = os.path.join(os.path.dirname(tarball_path), 'EC')
+        ec_image = _extract_image_from_tarball(tarball_path, dest_dir,
+                                               ec_image_candidates)
 
-        self.get_power_state_controller().reset()
-        time.sleep(Servo.BOOT_DELAY)
+        # Return path to EC image
+        return os.path.join(dest_dir, ec_image)
+
+
+    def extract_bios_image(self, board, model, tarball_path):
+        """Helper function to extract BIOS image from downloaded tarball.
+
+        @param board: The DUT board name.
+        @param model: The DUT model name.
+        @param tarball_path: The path of the downloaded build tarball.
+
+        @return: Path to extracted BIOS image.
+        """
+
+        # Array of candidates for BIOS image
+        bios_image_candidates = ['image.bin',
+                                 'image-%s.bin' % model,
+                                 'image-%s.bin' % board]
+
+        # Extract BIOS image from tarball
+        dest_dir = os.path.join(os.path.dirname(tarball_path), 'BIOS')
+        bios_image = _extract_image_from_tarball(tarball_path, dest_dir,
+                                                 bios_image_candidates)
+
+        # Return path to BIOS image
+        return os.path.join(dest_dir, bios_image)
 
 
     def _switch_usbkey_power(self, power_state, detection_delay=False):
