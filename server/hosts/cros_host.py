@@ -637,7 +637,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         return release.replace(provision.CROS_IMAGE_ARCHIVE,'').strip('/')
 
 
-    def firmware_install(self, build=None, rw_only=False, dest=None):
+    def firmware_install(self, build=None, rw_only=False, dest=None,
+                         local_tarball=None):
         """Install firmware to the DUT.
 
         Use stateful update if the DUT is already running the same build.
@@ -656,6 +657,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @param rw_only: True to only install firmware to its RW portions. Keep
                         the RO portions unchanged.
         @param dest: Directory to store the firmware in.
+        @param local_tarball: Path to local firmware image for installing
+                              without devserver.
 
         TODO(dshi): After bug 381718 is fixed, update here with corresponding
                     exceptions that could be raised.
@@ -676,27 +679,32 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         if model is None or model == '':
             model = self.get_platform_from_fwid()
 
-        # If build is not set, try to install firmware from stable CrOS.
-        if not build:
-            build = afe_utils.get_stable_faft_version_v2(info)
-            if not build:
-                raise error.TestError(
-                        'Failed to find stable firmware build for %s.',
-                        self.hostname)
-        logging.info('Will install firmware from build %s.', build)
-
-        ds = dev_server.ImageServer.resolve(build, self.hostname)
-        ds.stage_artifacts(build, ['firmware'])
-
+        # If local firmware path not provided fetch it from the dev server
         tmpd = None
-        if not dest:
-            tmpd = autotemp.tempdir(unique_id='fwimage')
-            dest = tmpd.name
-        try:
+        if not local_tarball:
+            # If build is not set, try to install firmware from stable CrOS.
+            if not build:
+                build = afe_utils.get_stable_faft_version_v2(info)
+                if not build:
+                    raise error.TestError(
+                            'Failed to find stable firmware build for %s.',
+                            self.hostname)
+                logging.info('Will install firmware from build %s.', build)
+
+            ds = dev_server.ImageServer.resolve(build, self.hostname)
+            ds.stage_artifacts(build, ['firmware'])
+
+            if not dest:
+                tmpd = autotemp.tempdir(unique_id='fwimage')
+                dest = tmpd.name
+
+            # Download firmware image
             fwurl = self._FW_IMAGE_URL_PATTERN % (ds.url(), build)
             local_tarball = os.path.join(dest, os.path.basename(fwurl))
             ds.download_file(fwurl, local_tarball)
 
+        # Program firmware using servo
+        try:
             self._clear_fw_version_labels(rw_only)
             self.servo.program_firmware(board, model, local_tarball, rw_only)
             if utils.host_is_in_lab_zone(self.hostname):

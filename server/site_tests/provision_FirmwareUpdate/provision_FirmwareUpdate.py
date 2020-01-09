@@ -18,7 +18,6 @@ class provision_FirmwareUpdate(test.test):
 
     version = 1
 
-
     def stage_image_to_usb(self, host):
         """Stage the current ChromeOS image on the USB stick connected to the
         servo.
@@ -56,7 +55,8 @@ class provision_FirmwareUpdate(test.test):
             return None
 
     def run_once(self, host, value, rw_only=False, stage_image_to_usb=False,
-                flash_device=None, get_release_from_image_archive=False):
+                 flash_device=None, get_release_from_image_archive=False,
+                 fw_path=None):
         """The method called by the control file to start the test.
 
         @param host:  a CrosHost object of the machine to update.
@@ -70,6 +70,9 @@ class provision_FirmwareUpdate(test.test):
                              Use this to choose one other than the default
                              device when  servod has run in dual V4 device mode.
                              e.g. flash_device='ccd_cr50'
+        @param fw_path: Path to local firmware image for installing without
+                        devserver.
+
         @raise TestFail: if the firmware version remains unchanged.
                TestNAError: if the test environment is not properly set.
                             e.g. the servo type doesn't support this test.
@@ -100,7 +103,7 @@ class provision_FirmwareUpdate(test.test):
                 value = host.get_latest_release_version(board)
 
             host.firmware_install(build=value, rw_only=rw_only,
-                                  dest=self.resultsdir)
+                                  dest=self.resultsdir, local_tarball=fw_path)
         except Exception as e:
             logging.error(e)
             raise error.TestFail, str(e), sys.exc_info()[2]
