@@ -216,7 +216,7 @@ def get_bluetooth_emulated_device(btpeer, device_type):
       parsed_class_of_device = "0x%04X" % device.class_of_device
     logging.info('class of device: %s', parsed_class_of_device)
 
-    device.device_type = _retry_device_method('GetHIDDeviceType')
+    device.device_type = _retry_device_method('GetDeviceType')
     logging.info('device type: %s', device.device_type)
 
     device.authentication_mode = None
