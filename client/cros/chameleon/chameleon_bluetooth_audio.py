@@ -159,7 +159,7 @@ class BluetoothRefController(object):
         @param chameleon_connection: A ChameleonConnection object.
 
         """
-        self._chameleond_proxy = chameleon_connection.chameleond_proxy
+        self._chameleond_proxy = chameleon_connection
 
 
     def reset(self):
