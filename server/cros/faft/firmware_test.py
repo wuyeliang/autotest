@@ -919,9 +919,32 @@ class FirmwareTest(FAFTBase):
             if uart_file:
                 self.servo.set('%s_uart_capture' % uart, 'off')
 
-    def _get_power_state(self, power_state):
+    def _get_power_state(self):
         """
-        Return the current power state of the AP
+        Return the current power state of the AP (via EC 'powerinfo' command)
+
+        @return the name of the power state, or None if a problem occurred
+        """
+        pattern = r'power state (\w+) = (\w+)'
+
+        try:
+            match = self.ec.send_command_get_output("powerinfo", [pattern])
+        except error.TestFail as err:
+            logging.warn("powerinfo command encountered an error: %s", err)
+            return None
+        if not match:
+            logging.warn("powerinfo output did not match pattern: %r", pattern)
+            return None
+        (line, state_num, state_name) = match[0]
+        logging.debug("%s", line)
+        return state_name
+
+    def _check_power_state(self, power_state):
+        """
+        Check for correct power state of the AP (via EC 'powerinfo' command)
+
+        @return: the line and the match, if the output matched.
+        @raise error.TestFail: if output didn't match after the delay.
         """
         return self.ec.send_command_get_output("powerinfo", [power_state])
 
@@ -943,8 +966,8 @@ class FirmwareTest(FAFTBase):
             logging.info("try count: %d", retries)
             try:
                 retries = retries - 1
-                ret = self._get_power_state(power_state)
-                return True
+                if self._check_power_state(power_state):
+                    return True
             except error.TestFail:
                 pass
         return False
@@ -1166,21 +1189,59 @@ class FirmwareTest(FAFTBase):
         self.switcher.wait_for_client_offline(timeout=100, orig_boot_id=boot_id)
         time.sleep(self.faft_config.shutdown)
         if self.check_ec_capability(['x86'], suppress_warning=True):
-            self.check_shutdown_power_state("G3", pwr_retries=5)
+            self.check_shutdown_power_state(
+                    "G3", pwr_retries=5, orig_boot_id=boot_id)
         # Short press power button to boot DUT again.
         self.servo.power_key(self.faft_config.hold_pwr_button_poweron)
 
-    def check_shutdown_power_state(self, power_state, pwr_retries):
-        """Check whether the device entered into requested EC power state
-        after shutdown.
+    def check_shutdown_power_state(self, power_state, pwr_retries,
+                                   orig_boot_id=None):
+        """Check whether the device shut down and entered the given power state.
+
+        If orig_boot_id is specified, it will check whether the DUT responds to
+        ssh requests, then use orig_boot_id to check if it rebooted.
 
         @param power_state: EC power state has to be checked. Either S5 or G3.
         @param pwr_retries: Times to check if the DUT in expected power state.
+        @param orig_boot_id: Old boot_id, to check for unexpected reboots.
         @raise TestFail: If device failed to enter into requested power state.
         """
         if not self.wait_power_state(power_state, pwr_retries):
-            raise error.TestFail('System not shutdown properly and EC fails '
-                                 'to enter into %s state.' % power_state)
+            current_state = self._get_power_state()
+            if current_state == 'S0' and self._client.wait_up():
+                # DUT is unexpectedly up, so check whether it rebooted instead.
+                new_boot_id = self.get_bootid()
+                logging.debug('orig_boot_id=%s, new_boot_id=%s',
+                              orig_boot_id, new_boot_id)
+                if orig_boot_id is None or new_boot_id is None:
+                    # Can't say anything more specific without values to compare
+                    raise error.TestFail(
+                            "Expected state %s, but the system is unexpectedly"
+                            " still up.  Current state: %s"
+                            % (power_state, current_state))
+                if new_boot_id == orig_boot_id:
+                    raise error.TestFail(
+                            "Expected state %s, but the system didn't shut"
+                            " down.  Current state: %s"
+                            % (power_state, current_state))
+                else:
+                    raise error.TestFail(
+                            "Expected state %s, but the system rebooted instead"
+                            " of shutting down.  Current state: %s"
+                            % (power_state, current_state))
+
+            if current_state is None:
+                current_state = '(unknown)'
+
+            if current_state == power_state:
+                raise error.TestFail(
+                        "Expected state %s, but the system didn't reach it"
+                        " until after the limit of %s tries."
+                        % (power_state, pwr_retries))
+
+            raise error.TestFail('System not shutdown properly and EC fails'
+                                 ' to enter into %s state.  Current state: %s'
+                                 % (power_state, current_state))
         logging.info('System entered into %s state..', power_state)
 
     def check_lid_and_power_on(self):
