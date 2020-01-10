@@ -57,6 +57,7 @@ CONFIG['CTS_MAX_RETRIES'] = {
 }
 
 # Timeout in hours.
+CONFIG['CTS_TIMEOUT_DEFAULT'] = 1.0
 CONFIG['CTS_TIMEOUT'] = {
     'CtsAutoFillServiceTestCases':       2.5,  # TODO(b/134662826)
     'CtsDeqpTestCases':                 30.0,
