@@ -97,6 +97,8 @@ class power_Test(test.test):
         for log in self._meas_logs:
             log.start()
         self._start_time = time.time()
+        if self.status.battery:
+            self._start_energy = self.status.battery.energy
         power_telemetry_utils.start_measurement()
 
     def loop_sleep(self, loop, sleep_secs):
@@ -140,7 +142,12 @@ class power_Test(test.test):
             keyvals['ah_charge_now'] = self.status.battery.charge_now
             keyvals['a_current_now'] = self.status.battery.current_now
             keyvals['wh_energy'] = self.status.battery.energy
-            keyvals['w_energy_rate'] = self.status.battery.energy_rate
+            energy_used = self._start_energy - self.status.battery.energy
+            runtime_minutes = (time.time() - self._start_time) / 60.
+            keyvals['wh_energy_used'] = energy_used
+            keyvals['minutes_tested'] = runtime_minutes
+            if energy_used > 0 and runtime_minutes > 1:
+                keyvals['w_energy_rate'] = energy_used * 60 / runtime_minutes
             keyvals['v_voltage_min_design'] = \
                                 self.status.battery.voltage_min_design
             keyvals['v_voltage_now'] = self.status.battery.voltage_now
