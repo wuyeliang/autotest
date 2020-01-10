@@ -62,6 +62,7 @@ CONFIG['CTS_MAX_RETRIES'] = {
 }
 
 # Timeout in hours.
+CONFIG['CTS_TIMEOUT_DEFAULT'] = 1.0
 CONFIG['CTS_TIMEOUT'] = {
     'CtsActivityManagerDeviceTestCases': 1.5,
     'CtsAppSecurityHostTestCases':       2.0,

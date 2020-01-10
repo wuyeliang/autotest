@@ -640,7 +640,8 @@ def calculate_timeout(modules, suites):
 
     timeout = 0
     # First module gets 1h (standard), all other half hour extra (heuristic).
-    delta = 3600
+    default_timeout = int(3600 * CONFIG['CTS_TIMEOUT_DEFAULT'])
+    delta = default_timeout
     for module in modules:
         if module in CONFIG['CTS_TIMEOUT']:
             # Modules that run very long are encoded here.
@@ -654,7 +655,7 @@ def calculate_timeout(modules, suites):
             timeout += 300
         else:
             timeout += delta
-            delta = 1800
+            delta = default_timeout // 2
     return timeout
 
 

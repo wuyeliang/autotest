@@ -61,6 +61,7 @@ CONFIG['CTS_MAX_RETRIES'] = {}
 
 # TODO(ihf): Update timeouts once P is more stable.
 # Timeout in hours.
+CONFIG['CTS_TIMEOUT_DEFAULT'] = 1.0
 CONFIG['CTS_TIMEOUT'] = {
     _ALL: 5.0,
     _COLLECT: 2.0,

@@ -66,6 +66,7 @@ CONFIG['CTS_MAX_RETRIES'] = {}
 # Times guessed by looking for times > 20m in
 # grep runtime-hint android-cts/testcases/*.config
 # Timeout in hours.
+CONFIG['CTS_TIMEOUT_DEFAULT'] = 1.0
 CONFIG['CTS_TIMEOUT'] = {
     'CtsAppSecurityHostTestCases':      1.5,
     'CtsDeqpTestCases':                 12.0,

@@ -45,13 +45,14 @@ CONFIG['CTS_JOB_RETRIES_IN_PUBLIC'] = 2
 CONFIG['CTS_QUAL_RETRIES'] = 9
 CONFIG['CTS_MAX_RETRIES'] = {}
 
-# TODO(ihf): Update timeouts once P is more stable.
 # Timeout in hours.
 # Modules that run very long are encoded here.
+CONFIG['CTS_TIMEOUT_DEFAULT'] = 0.2
 CONFIG['CTS_TIMEOUT'] = {
     'GtsExoPlayerTestCases': 1.5,
-    'GtsMediaTestCases': 8,
-    'GtsOsTestCases': 0.25,
+    'GtsGmscoreHostTestCases': 1.0,
+    'GtsMediaTestCases': 4,
+    'GtsYouTubeTestCases': 1.0,
     _ALL: 24,
     _COLLECT: 0.5,
     _PUBLIC_COLLECT: 0.5,
