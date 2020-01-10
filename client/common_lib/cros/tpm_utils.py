@@ -135,8 +135,7 @@ def CleanupAndReboot(client):
 
     @param client: client object to run commands on.
     """
-    for rm_file in _RM_FILES + _RM_DIRS:
-        client.run('sudo rm -rf ' + rm_file, ignore_status=True)
-        client.run('sync', ignore_status=True)
-        client.run('ls %s' % rm_file, ignore_status=True)
+    full_rm = 'sudo rm -rf ' + ' '.join(_RM_FILES + _RM_DIRS)
+    client.run(full_rm, ignore_status=True)
+    client.run('sync', ignore_status=True)
     client.reboot()
