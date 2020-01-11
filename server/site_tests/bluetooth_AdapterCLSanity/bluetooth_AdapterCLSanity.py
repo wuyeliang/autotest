@@ -35,6 +35,7 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         device = self.devices['MOUSE'][0]
 
         self.test_discover_device(device.address)
+        self.test_device_name(device.address, device.name)
 
 
     @test_wrapper('Pairing Test', devices={"MOUSE":1})
@@ -132,6 +133,7 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
         self.cl_HID_reports_suspend_resume_test()
         #self.cl_HID_reports_reboot_test()
         self.cl_connect_disconnect_loop_test()
+        self.cl_adapter_discovery_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None,

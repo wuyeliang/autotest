@@ -35,6 +35,7 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         device = self.devices['BLE_MOUSE'][0]
 
         self.test_discover_device(device.address)
+        self.test_device_name(device.address, device.name)
 
 
     @test_wrapper('Connect Disconnect Loop', devices={'BLE_MOUSE':1})
@@ -139,6 +140,7 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         self.le_mouse_reports()
         self.le_keyboard_reports()
         self.le_auto_reconnect()
+        self.le_discovery_test()
 
 
     def run_once(self, host, num_iterations=1, test_name=None,
