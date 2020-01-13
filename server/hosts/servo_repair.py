@@ -193,20 +193,17 @@ class _ServodJobVerifier(hosts.Verifier):
         return 'servod upstart job is running'
 
 
-class _ServodLogsVerifier(hosts.Verifier):
+class _DiskSpaceVerifier(hosts.Verifier):
     """
-    Clean up old servod logs
+    Verifier to make sure there is enough disk space left on servohost.
     """
-    KEEP_LOGS_MAX_DAYS = 5
 
     def verify(self, host):
-        host.run(
-                '/usr/bin/find /var/log/servod_* -mtime +%d -print -delete'
-                % self.KEEP_LOGS_MAX_DAYS, ignore_status=True)
+        host.check_diskspace('/mnt/stateful_partition', 0.1)
 
     @property
     def description(self):
-        return 'old servod logs removed'
+        return 'servohost has enough disk space.'
 
 
 class _ServodConnectionVerifier(hosts.Verifier):
@@ -343,6 +340,33 @@ class _DutRebootRepair(hosts.RepairAction):
         return 'Reset the DUT via servo'
 
 
+class _DiskCleanupRepair(hosts.RepairAction):
+    """
+    Remove old logs/metrics/crash_dumps on servohost to free up disk space.
+    """
+    KEEP_LOGS_MAX_DAYS = 5
+
+    FILE_TO_REMOVE = ['/var/lib/metrics/uma-events',
+                      '/var/spool/crash/*']
+
+    def repair(self, host):
+        if host.is_localhost():
+            # we don't want to remove anything from local testing.
+            return
+
+        # Remove old servod logs.
+        host.run('/usr/bin/find /var/log/servod_* -mtime +%d -print -delete'
+                 % self.KEEP_LOGS_MAX_DAYS, ignore_status=True)
+
+        # Remove pre-defined metrics and crash dumps.
+        for path in self.FILE_TO_REMOVE:
+            host.run('rm %s' % path, ignore_status=True)
+
+    @property
+    def description(self):
+        return 'Clean up old logs/metrics on servohost to free up disk space.'
+
+
 def create_servo_repair_strategy():
     """
     Return a `RepairStrategy` for a `ServoHost`.
@@ -350,11 +374,11 @@ def create_servo_repair_strategy():
     config = ['brd_config', 'ser_config']
     verify_dag = [
         (repair_utils.SshVerifier,   'servo_ssh',   []),
-        (_ServodLogsVerifier,        'servod_logs', ['servo_ssh']),
+        (_DiskSpaceVerifier,         'disk_space',  ['servo_ssh']),
         (_UpdateVerifier,            'update',      ['servo_ssh']),
         (_BoardConfigVerifier,       'brd_config',  ['servo_ssh']),
         (_SerialConfigVerifier,      'ser_config',  ['servo_ssh']),
-        (_ServodJobVerifier,         'job',         config),
+        (_ServodJobVerifier,         'job',         config + ['disk_space']),
         (_ServodConnectionVerifier,  'servod',      ['job']),
         (_PowerButtonVerifier,       'pwr_button',  ['servod']),
         (_LidVerifier,               'lid_open',    ['servod']),
@@ -370,6 +394,7 @@ def create_servo_repair_strategy():
 
     servod_deps = ['job', 'servod', 'pwr_button']
     repair_actions = [
+        (_DiskCleanupRepair, 'disk_cleanup', ['servo_ssh'], ['disk_space']),
         (_RestartServod, 'restart', ['servo_ssh'], config + servod_deps),
         (_ServoRebootRepair, 'servo_reboot', ['servo_ssh'], servod_deps),
         (_DutRebootRepair, 'dut_reboot', ['servod'], ['lid_open']),
