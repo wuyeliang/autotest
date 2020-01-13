@@ -391,14 +391,19 @@ class HostapConfig(object):
 
     @property
     def _ht_mode(self):
-        """@return string one of (None, HT20, HT40+, HT40-)"""
-        if not self._is_11n:
-            return None
-        if self._ht40_plus_allowed:
-            return self.HT_NAMES[self.HT_CHANNEL_WIDTH_40_PLUS]
-        if self._ht40_minus_allowed:
-            return self.HT_NAMES[self.HT_CHANNEL_WIDTH_40_MINUS]
-        return self.HT_NAMES[self.HT_CHANNEL_WIDTH_20]
+        """
+        @return object one of ( None,
+                                HT_CHANNEL_WIDTH_40_PLUS,
+                                HT_CHANNEL_WIDTH_40_MINUS,
+                                HT_CHANNEL_WIDTH_20)
+        """
+        if self._is_11n or self.is_11ac:
+            if self._ht40_plus_allowed:
+                return self.HT_CHANNEL_WIDTH_40_PLUS
+            if self._ht40_minus_allowed:
+                return self.HT_CHANNEL_WIDTH_40_MINUS
+            return self.HT_CHANNEL_WIDTH_20
+        return None
 
 
     @property
@@ -425,6 +430,8 @@ class HostapConfig(object):
                 return packet_capturer.WIDTH_HT40_PLUS
             if ht_mode == self.HT_CHANNEL_WIDTH_40_MINUS:
                 return packet_capturer.WIDTH_HT40_MINUS
+            if ht_mode == self.HT_CHANNEL_WIDTH_20:
+                return packet_capturer.WIDTH_HT20
 
         if self.vht_channel_width == self.VHT_CHANNEL_WIDTH_80:
             return packet_capturer.WIDTH_VHT80
@@ -453,7 +460,7 @@ class HostapConfig(object):
 
         ht_mode = self._ht_mode
         if ht_mode:
-            return ht_mode
+            return self.HT_NAMES[ht_mode]
 
         return '11' + self._hw_mode.upper()
 
