@@ -30,6 +30,7 @@ def run_TS(machine):
         target_module='all.GtsCameraTestCases_-_GtsYouTubeTestCases',
         target_plan=None,
         uri='gs://chromeos-arc-images/cts/bundle/android-gts-7_r3-6045416.zip',
+        prerequisites=['bluetooth'],
         timeout=86400)
 
 parallel_simple(run_TS, machines)

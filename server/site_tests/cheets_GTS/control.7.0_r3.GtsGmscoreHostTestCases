@@ -28,6 +28,7 @@ def run_TS(machine):
         target_module='GtsGmscoreHostTestCases',
         target_plan=None,
         uri='gs://chromeos-arc-images/cts/bundle/android-gts-7_r3-6045416.zip',
+        prerequisites=['bluetooth'],
         timeout=3600)
 
 parallel_simple(run_TS, machines)

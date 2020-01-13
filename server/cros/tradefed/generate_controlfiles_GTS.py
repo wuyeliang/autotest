@@ -146,6 +146,9 @@ CONFIG['EXTRA_ATTRIBUTES'] = {
 }
 CONFIG['EXTRA_ARTIFACTS'] = {}
 
+CONFIG['PREREQUISITES'] = {
+    'GtsGmscoreHostTestCases': ['bluetooth'],
+}
 
 from generate_controlfiles_common import main
 

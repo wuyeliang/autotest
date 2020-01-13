@@ -26,7 +26,7 @@ _PARTNER_GTS_BUCKET = 'gs://chromeos-partner-gts/'
 _PARTNER_GTS_LOCATION = _PARTNER_GTS_BUCKET + 'gts-7_r3-6045416.zip'
 _PARTNER_GTS_AUTHKEY = _PARTNER_GTS_BUCKET + 'gts-arc.json'
 _GTS_MEDIA_URI = ('https://storage.googleapis.com/youtube-test-media/gts/' +
-    'GtsYouTubeTestCases-media-1.2.zip')
+                  'GtsYouTubeTestCases-media-1.2.zip')
 _GTS_MEDIA_LOCALPATH = '/tmp/android-gts-media/GtsYouTubeTestCases'
 
 
@@ -82,6 +82,7 @@ class cheets_GTS(tradefed_test.TradefedTest):
                  precondition_commands=[],
                  login_precondition_commands=[],
                  authkey=None,
+                 prerequisites=[],
                  timeout=_GTS_TIMEOUT_SECONDS):
         """Runs the specified GTS once, but with several retries.
 
@@ -105,6 +106,7 @@ class cheets_GTS(tradefed_test.TradefedTest):
         dut before the test is run, the scripts must already be installed.
         @param login_precondition_commands: a list of scripts to be run on the
         dut before the log-in for the test is performed.
+        @param prerequisites: a list of prerequisites that identify rogue DUTs.
         """
         # Download the GTS auth key to the local temp directory.
         tmpdir = tempfile.mkdtemp()
@@ -124,6 +126,7 @@ class cheets_GTS(tradefed_test.TradefedTest):
                     _GTS_MEDIA_LOCALPATH),
                 enable_default_apps=enable_default_apps,
                 login_precondition_commands=login_precondition_commands,
-                precondition_commands=precondition_commands)
+                precondition_commands=precondition_commands,
+                prerequisites=prerequisites)
         finally:
             shutil.rmtree(tmpdir)

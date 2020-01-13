@@ -78,23 +78,24 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
 
     def initialize_camerabox(self, camera_facing, cmdline_args):
         """Configure DUT and chart running in camerabox environment.
+
         @param camera_facing: the facing of the DUT used in testing
                               (e.g. 'front', 'back').
         """
         chart_address = camerabox_utils.get_chart_address(
-                [h.hostname for h in self._hosts], cmdline_args)
+            [h.hostname for h in self._hosts], cmdline_args)
         if chart_address is None:
             raise error.TestFail(
-                    'Error: missing option --args="chart=<CHART IP>"')
+                'Error: missing option --args="chart=<CHART IP>"')
         chart_hosts = [hosts.create_host(ip) for ip in chart_address]
 
         self.chart_fixtures = [
-                camerabox_utils.ChartFixture(h, self._SCENE_URI)
-                for h in chart_hosts
+            camerabox_utils.ChartFixture(h, self._SCENE_URI)
+            for h in chart_hosts
         ]
         self.dut_fixtures = [
-                camerabox_utils.DUTFixture(self, h, camera_facing)
-                for h in self._hosts
+            camerabox_utils.DUTFixture(self, h, camera_facing)
+            for h in self._hosts
         ]
 
         for chart in self.chart_fixtures:
@@ -119,15 +120,15 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
                    cmdline_args=None,
                    hard_reboot_on_failure=False):
         super(cheets_CTS_P, self).initialize(
-                bundle=bundle,
-                uri=uri,
-                host=host,
-                hosts=hosts,
-                max_retry=max_retry,
-                load_waivers=load_waivers,
-                retry_manual_tests=retry_manual_tests,
-                warn_on_test_retry=warn_on_test_retry,
-                hard_reboot_on_failure=hard_reboot_on_failure)
+            bundle=bundle,
+            uri=uri,
+            host=host,
+            hosts=hosts,
+            max_retry=max_retry,
+            load_waivers=load_waivers,
+            retry_manual_tests=retry_manual_tests,
+            warn_on_test_retry=warn_on_test_retry,
+            hard_reboot_on_failure=hard_reboot_on_failure)
         if camera_facing:
             self.initialize_camerabox(camera_facing, cmdline_args)
 
@@ -147,6 +148,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
                  extra_artifacts_host=[],
                  precondition_commands=[],
                  login_precondition_commands=[],
+                 prerequisites=[],
                  timeout=_CTS_TIMEOUT_SECONDS):
         """Runs the specified CTS once, but with several retries.
 
@@ -171,6 +173,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
         dut before the test is run, the scripts must already be installed.
         @param login_precondition_commands: a list of scripts to be run on the
         dut before the log-in for the test is performed.
+        @param prerequisites: a list of prerequisites that identify rogue DUTs.
         @param timeout: time after which tradefed can be interrupted.
         """
         self._run_tradefed_with_retries(
@@ -190,10 +193,12 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
             extra_artifacts_host=extra_artifacts_host,
             cts_uri=_CTS_URI,
             login_precondition_commands=login_precondition_commands,
-            precondition_commands=precondition_commands)
+            precondition_commands=precondition_commands,
+            prerequisites=prerequisites)
 
     def cleanup_camerabox(self):
         """Cleanup configuration on DUT and chart tablet for running in
+
         camerabox environment.
         """
         for dut in self.dut_fixtures:

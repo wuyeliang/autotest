@@ -29,6 +29,7 @@ def run_TS(machine):
         bundle='x86',
         extra_artifacts_host=['/tmp/diff_*.png'],
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r10-linux_x86-x86.zip',
+        prerequisites=['region_us'],
         timeout=5400)
 
 parallel_simple(run_TS, machines)

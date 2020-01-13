@@ -435,6 +435,7 @@ def get_extra_args(modules, is_public):
     extra_args = set()
     preconditions = []
     login_preconditions = []
+    prerequisites = []
     for module in modules:
         if is_public:
             extra_args.add('warn_on_test_retry=False')
@@ -444,6 +445,8 @@ def get_extra_args(modules, is_public):
             preconditions.extend(CONFIG['PRECONDITION'].get(module, []))
             login_preconditions.extend(
                 CONFIG['LOGIN_PRECONDITION'].get(module, []))
+        prerequisites.extend(CONFIG['PREREQUISITES'].get(module,[]))
+
     # Notice: we are just squishing the preconditions for all modules together
     # with duplicated command removed. This may not always be correct.
     # In such a case one should split the bookmarks in a way that the modules
@@ -459,6 +462,9 @@ def get_extra_args(modules, is_public):
     if login_preconditions:
         extra_args.add('login_precondition_commands=[%s]' % ', '.join(
             deduped(login_preconditions)))
+    if prerequisites:
+        extra_args.add("prerequisites=['%s']" % "', '".join(
+            deduped(prerequisites)))
     return sorted(list(extra_args))
 
 

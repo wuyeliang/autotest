@@ -37,6 +37,7 @@ from autotest_lib.server.cros.tradefed import cts_expected_failure_parser
 from autotest_lib.server.cros.tradefed import tradefed_chromelogin as login
 from autotest_lib.server.cros.tradefed import tradefed_constants as constants
 from autotest_lib.server.cros.tradefed import tradefed_utils
+from autotest_lib.server.cros.tradefed import tradefed_prerequisite
 
 # TODO(kinaba): Move to tradefed_utils together with the setup/cleanup methods.
 MediaAsset = namedtuple('MediaAssetInfo', ['uri', 'localpath'])
@@ -1112,12 +1113,18 @@ class TradefedTest(test.test):
                                    extra_artifacts_host=[],
                                    cts_uri=None,
                                    login_precondition_commands=[],
-                                   precondition_commands=[]):
+                                   precondition_commands=[],
+                                   prerequisites=[]):
         """Run CTS/GTS with retry logic.
 
         We first kick off the specified module. Then rerun just the failures
         on the next MAX_RETRY iterations.
         """
+        for prereq in prerequisites:
+            result = tradefed_prerequisite.check(prereq, self._hosts)
+            if not result[0]:
+                raise error.TestError(result[1])
+
         # On dev and beta channels timeouts are sharp, lenient on stable.
         self._timeout = timeout
         if (self._get_release_branch_number() >=

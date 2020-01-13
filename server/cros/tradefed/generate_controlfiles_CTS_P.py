@@ -603,6 +603,18 @@ CONFIG['EXTRA_ARTIFACTS_HOST'] = {
     'CtsThemeHostTestCases': ["/tmp/diff_*.png"],
 }
 
+_PREREQUISITE_BLUETOOTH = 'bluetooth'
+_PREREQUISITE_REGION_US = 'region_us'
+
+CONFIG['PREREQUISITES'] = {
+    'CtsBluetoothTestCases': [_PREREQUISITE_BLUETOOTH],
+    'CtsStatsdHostTestCases': [_PREREQUISITE_BLUETOOTH],
+    'CtsWebkitTestCases': [_PREREQUISITE_REGION_US],
+    'CtsContentTestCases': [_PREREQUISITE_REGION_US],
+    'CtsAppSecurityTestCases': [_PREREQUISITE_REGION_US],
+    'CtsThemeHostTestCases': [_PREREQUISITE_REGION_US],
+}
+
 from generate_controlfiles_common import main
 
 if __name__ == '__main__':
