@@ -4,7 +4,6 @@
     "delay_reboot_to_ping": 40,
     "hold_pwr_button_poweron": 1.2,
     "has_lid": true,
-    "lid_wake_from_power_off": false,
     "spi_voltage": "pp3300",
     "chrome_ec": false,
     "ec_capability": [],
