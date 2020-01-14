@@ -78,7 +78,7 @@ class BluetoothDevice(object):
 
             date =  datetime.strftime(datetime.now(),"%Y:%m:%d %H:%M:%S:%f")
             msg = "bluetooth autotest --- %s : %s ---" % (date, msg)
-            logging.debug("Broadcasting '%s'")
+            logging.debug("Broadcasting '%s'",msg)
 
             if dut:
                 self._proxy.log_message(msg)
