@@ -33,6 +33,7 @@ _HTML_CHART_STR = '''
         var data = google.visualization.arrayToDataTable([
 {data}
         ]);
+        var numDataCols = data.getNumberOfColumns() - 1;
         var unit = '{unit}';
         var options = {{
             width: 1600,
@@ -46,6 +47,14 @@ _HTML_CHART_STR = '''
         var chart;
         if (unit == 'percent') {{
             options['isStacked'] = true;
+            if (numDataCols == 2) {{
+                options['colors'] = ['#d32f2f', '#43a047']
+            }} else if (numDataCols <= 4) {{
+                options['colors'] = ['#d32f2f', '#f4c7c3', '#cddc39','#43a047'];
+            }} else if (numDataCols <= 9) {{
+                options['colors'] = ['#d32f2f', '#e57373', '#f4c7c3', '#ffccbc',
+                        '#f0f4c3', '#c8e6c9', '#cddc39', '#81c784', '#43a047'];
+            }}
             chart = new google.visualization.SteppedAreaChart(element);
         }} else {{
             chart = new google.visualization.LineChart(element);
