@@ -12,12 +12,19 @@ NOTE: This module should only be used in the context of a running test. Any
 import common
 import logging
 import traceback
+import urlparse
+
 from autotest_lib.client.common_lib import global_config
 from autotest_lib.server.cros import autoupdater
 from autotest_lib.server.cros import provision
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.site_utils import stable_version_classify as sv
 from autotest_lib.server import site_utils as server_utils
+from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
+from autotest_lib.server.cros.dynamic_suite import tools
+
+from chromite.lib import auto_updater
+from chromite.lib import remote_access
 
 
 AFE = frontend_wrappers.RetryingAFE(timeout_min=5, delay_sec=10)
@@ -178,7 +185,7 @@ def add_provision_labels(host, version_prefix, image_name,
 
 def machine_install_and_update_labels(host, update_url,
                                       use_quick_provision=False,
-                                      with_cheets=False):
+                                      with_cheets=False, staging_server=None):
     """Install a build and update the version labels on a host.
 
     @param host: Host object where the build is to be installed.
@@ -187,13 +194,23 @@ def machine_install_and_update_labels(host, update_url,
         quick-provision for the update.
     @param with_cheets: If true, installation is for a specific, custom
         version of Android for a target running ARC.
+    @param staging_server: Sever where images have been staged. Typically,
+        an instance of dev_server.ImageServer.
     """
     clean_provision_labels(host)
-    updater = autoupdater.ChromiumOSUpdater(
-            update_url, host=host, use_quick_provision=use_quick_provision)
-    image_name, host_attributes = updater.run_update()
+    # Get image_name in the format <board>-release/Rxx-12345.0.0 from the
+    # update_url.
+    image_name = '/'.join(urlparse.urlparse(update_url).path.split('/')[-2:])
+    with remote_access.ChromiumOSDeviceHandler(host.ip) as device:
+        updater = auto_updater.ChromiumOSUpdater(
+            device, build_name=None, payload_dir=image_name,
+            staging_server=staging_server.url())
+        updater.CheckPayloads()
+        updater.PreparePayloadPropsFile()
+        updater.RunUpdate()
+    repo_url = tools.get_package_url(staging_server.url(), image_name)
+    host_attributes = {ds_constants.JOB_REPO_URL: repo_url}
     if with_cheets:
         image_name += provision.CHEETS_SUFFIX
-
-    add_provision_labels(
-            host, host.VERSION_PREFIX, image_name, host_attributes)
+    add_provision_labels(host, host.VERSION_PREFIX, image_name,
+                         host_attributes)

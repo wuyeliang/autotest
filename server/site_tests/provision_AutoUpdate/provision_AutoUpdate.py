@@ -176,7 +176,8 @@ class provision_AutoUpdate(test.test):
         failure = None
         try:
             afe_utils.machine_install_and_update_labels(
-                    host, url, not force_update_engine, with_cheets)
+                    host, url, not force_update_engine, with_cheets,
+                    staging_server=ds)
         except BaseException as e:
             failure = e
             raise
