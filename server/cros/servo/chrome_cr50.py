@@ -120,7 +120,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
            'BOARD_NEEDS_SYS_RST_PULL_UP' : 1 << 5,
            'BOARD_USE_PLT_RESET'         : 1 << 6,
            'BOARD_WP_ASSERTED'           : 1 << 8,
-           'BOARD_FORCING_WP '           : 1 << 9,
+           'BOARD_FORCING_WP'            : 1 << 9,
            'BOARD_NO_RO_UART'            : 1 << 10,
            'BOARD_CCD_STATE_MASK'        : 3 << 11,
            'BOARD_DEEP_SLEEP_DISABLED'   : 1 << 13,
@@ -133,6 +133,22 @@ class ChromeCr50(chrome_ec.ChromeConsole):
            'BOARD_ALLOW_CHANGE_TPM_MODE' : 1 << 20,
     }
 
+    # CR50 reset flags as defined in platform ec_commands.h. These are only the
+    # flags used by cr50.
+    RESET_FLAGS = {
+           'RESET_FLAG_OTHER'            : 1 << 0,
+           'RESET_FLAG_BROWNOUT'         : 1 << 2,
+           'RESET_FLAG_POWER_ON'         : 1 << 3,
+           'RESET_FLAG_SOFT'             : 1 << 5,
+           'RESET_FLAG_HIBERNATE'        : 1 << 6,
+           'RESET_FLAG_RTC_ALARM'        : 3 << 7,
+           'RESET_FLAG_WAKE_PIN'         : 1 << 8,
+           'RESET_FLAG_HARD'             : 1 << 11,
+           'RESET_FLAG_USB_RESUME'       : 1 << 14,
+           'RESET_FLAG_RDD'              : 1 << 15,
+           'RESET_FLAG_RBOX'             : 1 << 16,
+           'RESET_FLAG_SECURITY'         : 1 << 17,
+    }
 
     def __init__(self, servo, faft_config):
         """Initializes a ChromeCr50 object.
@@ -1067,8 +1083,18 @@ class ChromeCr50(chrome_ec.ChromeConsole):
 
 
     def get_reset_cause(self):
-        """Returns a string with the sources for the last cr50 reset."""
+        """Returns the reset flags for the last reset."""
         rv = self.send_command_retry_get_output('sysinfo',
-                ['Reset flags:.*\((.*)\)'], compare_output=True)[0][1]
+                ['Reset flags:\s+0x([0-9a-f]{8})\s'], compare_output=True)[0][1]
         logging.info('reset cause: %s', rv)
-        return rv
+        return int(rv, 16)
+
+
+    def was_reset(self, reset_type):
+        """Returns 1 if the reset type is found in the reset_cause.
+
+        @param reset_type: reset name in string type.
+        """
+        reset_cause = self.get_reset_cause()
+        reset_flag = self.RESET_FLAGS[reset_type]
+        return bool(reset_cause & reset_flag)

@@ -200,10 +200,10 @@ class firmware_Cr50DeepSleepStress(FirmwareTest):
         logging.info('suspend %d: deep sleep count %d', act_count, exp_count)
         self.cr50.get_sleepmask()
         self.cr50.get_ccdstate()
-        reset_cause = self.cr50.get_reset_cause()
+        hibernate = self.cr50.was_reset('RESET_FLAG_HIBERNATE')
 
         errors = []
-        if exp_count and 'hibernate' not in reset_cause:
+        if exp_count and not hibernate:
                 errors.append('reset during suspend')
 
         if exp_count != act_count:
