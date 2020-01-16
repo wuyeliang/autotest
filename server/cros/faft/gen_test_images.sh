@@ -10,7 +10,7 @@ set -e
 
 BOARD=$1
 IMAGE=$(readlink -f $2)
-KEY=~/trunk/src/platform/ec/board/${BOARD}/dev_key.pem
+KEY=$(dirname $(readlink -f $0))/fingerprint_dev_keys/${BOARD}/dev_key.pem
 # Increment to different rollback versions
 ROLLBACK0=00000000
 ROLLBACK1=01000000
