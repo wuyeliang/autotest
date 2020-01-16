@@ -256,7 +256,7 @@ class UpdateEngineUtil(object):
 
     def _check_for_update(self, server='http://127.0.0.1', port=8082,
                           interactive=True, ignore_status=False,
-                          wait_for_completion=False):
+                          wait_for_completion=False, **kwargs):
         """
         Starts a background update check.
 
@@ -265,12 +265,18 @@ class UpdateEngineUtil(object):
         @param interactive: True if we are doing an interactive update.
         @param ignore_status: True if we should ignore exceptions thrown.
         @param wait_for_completion: True for --update, False for
-                                    --check_for_update.
+                --check_for_update.
+        @param kwargs: The dictionary to be converted to a query string
+                and appended to the end of the update URL. e.g:
+                {'critical_update': True, 'foo': 'bar'} ->
+                'http:/127.0.0.1:8080/update?critical_update=True&foo=bar'
+                Look at nebraska.py or devserver.py for the list of accepted
+                values.
         """
         update = 'update' if wait_for_completion else 'check_for_update'
-        cmd = 'update_engine_client --%s --omaha_url=%s:%d/update ' % (update,
-                                                                       server,
-                                                                       port)
+        query = '&'.join('%s=%s' % (k, v) for k, v in kwargs.items())
+        cmd = 'update_engine_client --%s --omaha_url="%s:%d/update?%s"' % (
+            update, server, port, query)
 
         if not interactive:
           cmd += ' --interactive=false'
@@ -413,4 +419,3 @@ class UpdateEngineUtil(object):
           return None
         else:
           return targets[-1].rpartition(err_str)[2]
-

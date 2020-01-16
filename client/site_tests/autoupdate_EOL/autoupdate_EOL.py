@@ -6,7 +6,7 @@ import datetime
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chrome
-from autotest_lib.client.cros.update_engine import nano_omaha_devserver
+from autotest_lib.client.cros.update_engine import nebraska_wrapper
 from autotest_lib.client.cros.update_engine import update_engine_test
 
 class autoupdate_EOL(update_engine_test.UpdateEngineTest):
@@ -82,13 +82,13 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
         self._EXPECTED_EOL_DATE = \
             self._EXPECTED_EOL_DATE_TEMPLATE.format(eol_date)
 
-        # Start a devserver to return a response with eol entry.
-        self._omaha = nano_omaha_devserver.NanoOmahaDevserver(eol_date=eol_date)
-        self._omaha.start()
+        # Start a Nebraska server to return a response with eol entry.
+        with nebraska_wrapper.NebraskaWrapper(
+                log_dir=self.resultsdir) as nebraska:
+            # Try to update. It should fail with noupdate.
+            self._check_for_update(port=nebraska.get_port(), ignore_status=True,
+                                   wait_for_completion=True, eol_date=eol_date,
+                                   no_update=True)
 
-        # Try to update using the omaha server. It will fail with noupdate.
-        self._check_for_update(port=self._omaha.get_port(), ignore_status=True,
-                               wait_for_completion=True)
-
-        self._check_eol_info()
-        self._check_eol_notification(eol_date)
+            self._check_eol_info()
+            self._check_eol_notification(eol_date)
