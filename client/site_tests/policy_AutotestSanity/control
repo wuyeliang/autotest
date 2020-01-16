@@ -4,7 +4,7 @@
 
 AUTHOR = 'rzakarian'
 NAME = 'policy_AutotestSanity'
-ATTRIBUTES = 'suite:ent-nightly, suite:policy, suite:bvt-perbuild'
+ATTRIBUTES = 'suite:ent-nightly, suite:policy, suite:bvt-perbuild, suite:smoke'
 TIME = 'SHORT'
 TEST_CATEGORY = 'General'
 TEST_CLASS = 'enterprise'
