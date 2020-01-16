@@ -124,7 +124,14 @@ class power_LoadTest(arc.ArcTest):
                 rsp = "Skipping test for device without battery and powercap."
                 raise error.TestNAError(rsp)
         self._power_status = power_status.get_status()
-        self._tmp_keyvals['b_on_ac'] = self._power_status.on_ac()
+
+        if force_discharge:
+            if not power_utils.charge_control_by_ectool(False):
+                raise error.TestError('Could not run battery force discharge.')
+            self._ac_ok = True
+
+        self._tmp_keyvals['b_on_ac'] = (not force_discharge and
+                                        self._power_status.on_ac())
 
         self._gaia_login = gaia_login
         if gaia_login is None:
@@ -133,12 +140,8 @@ class power_LoadTest(arc.ArcTest):
         self._username = power_load_util.get_username()
         self._password = power_load_util.get_password()
 
-        if not ac_ok:
+        if not self._ac_ok:
             self._power_status.assert_battery_state(percent_initial_charge_min)
-
-        if force_discharge:
-            if not power_utils.charge_control_by_ectool(False):
-                raise error.TestError('Could not run battery force discharge.')
 
         # If force wifi enabled, convert eth0 to backchannel and connect to the
         # specified WiFi AP.
