@@ -205,14 +205,8 @@ _CONFIG_MODULE_COMMAND = "\'modprobe configs\'"
 # TODO(b/126741318): Fix performance regression and remove this.
 _SLEEP_60_COMMAND = "\'sleep 60\'"
 
-# TODO(b/138431480): Fix CTS and remove this.
-_DROP_DISCONNECTED_IF_COMMAND = ("\'ip -o link show | grep \"state DOWN\" | " +
-    "grep -o \"\\<\\(eth\\|mlan\\|wlan\\|wwan\\)[[:digit:]]\" | " +
-    "xargs -L1 -I{} ip link delete veth_{}\'")
-
 # Preconditions applicable to public and internal tests.
 CONFIG['PRECONDITION'] = {
-    'CtsLibcoreTestCases': [_DROP_DISCONNECTED_IF_COMMAND],
     'CtsSecurityHostTestCases': [
         _SECURITY_PARANOID_COMMAND, _CONFIG_MODULE_COMMAND
     ],
@@ -241,8 +235,7 @@ CONFIG['PUBLIC_PRECONDITION'] = {
     ],
     'CtsUsageStatsTestCases': _WIFI_CONNECT_COMMANDS,
     'CtsNetTestCases': _WIFI_CONNECT_COMMANDS,
-    'CtsLibcoreTestCases':
-        _WIFI_CONNECT_COMMANDS + [_DROP_DISCONNECTED_IF_COMMAND],
+    'CtsLibcoreTestCases': _WIFI_CONNECT_COMMANDS,
 }
 
 CONFIG['PUBLIC_DEPENDENCIES'] = {
