@@ -52,7 +52,7 @@ class power_Test(test.test):
         self._seconds_period = seconds_period
 
         measurements = []
-        if not self.status.on_ac():
+        if force_discharge or not self.status.on_ac():
             measurements.append(
                 power_status.SystemPower(self.status.battery_path))
         if power_utils.has_powercap_support():
