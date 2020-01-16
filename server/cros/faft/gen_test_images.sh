@@ -10,7 +10,8 @@ set -e
 
 BOARD=$1
 IMAGE=$(readlink -f $2)
-KEY=$(dirname $(readlink -f $0))/fingerprint_dev_keys/${BOARD}/dev_key.pem
+DIRNAME=$(dirname $(readlink -f $0))
+KEY=${DIRNAME}/fingerprint_dev_keys/${BOARD}/dev_key.pem
 # Increment to different rollback versions
 ROLLBACK0=00000000
 ROLLBACK1=01000000
@@ -22,6 +23,10 @@ cd images
 
 # Use original image for some tests.
 cp $IMAGE ${BOARD}.bin
+
+# Use futility included in autotest source no matter if we are in chroot or lxc
+# container, so that it's easier to notice if things break.
+alias futility=${DIRNAME}/futility
 
 # Generate dev key set
 futility create --desc="${BOARD} dev key" $KEY key
