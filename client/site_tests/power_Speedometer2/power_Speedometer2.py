@@ -21,10 +21,11 @@ class power_Speedometer2(power_test.power_Test):
     """
     version = 1
 
-    def initialize(self, pdash_note=''):
+    def initialize(self, pdash_note='', force_discharge=False):
         """Measure power with a short interval while running Speedometer2."""
-        super(power_Speedometer2, self).initialize(seconds_period=1.,
-                                                   pdash_note=pdash_note)
+        super(power_Speedometer2, self).initialize(
+                seconds_period=1., pdash_note=pdash_note,
+                force_discharge=force_discharge)
 
     def run_once(self, url=URL):
         """Measure power with multiple loggers while running Speedometer2.

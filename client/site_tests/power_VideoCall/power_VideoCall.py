@@ -20,10 +20,12 @@ class power_VideoCall(power_test.power_Test):
     doc_url = 'http://doc.new'
     extra_browser_args = ['--use-fake-ui-for-media-stream']
 
-    def initialize(self, seconds_period=20., pdash_note=''):
+    def initialize(self, seconds_period=20., pdash_note='',
+                   force_discharge=False):
         """initialize method."""
         super(power_VideoCall, self).initialize(seconds_period=seconds_period,
-                                                pdash_note=pdash_note)
+                                                pdash_note=pdash_note,
+                                                force_discharge=force_discharge)
         self._username = power_load_util.get_username()
         self._password = power_load_util.get_password()
 
