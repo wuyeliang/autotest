@@ -15,6 +15,13 @@ class audio_InternalCardNodes(audio_test.AudioTest):
 
     """
     version = 1
+    _jack_plugger = None
+
+    def cleanup(self):
+        """Cleanup for this test."""
+        if self._jack_plugger is not None:
+            self._jack_plugger.plug()
+        super(audio_InternalCardNodes, self).cleanup()
 
     def get_expected_nodes(self, plugged):
         """Gets expected nodes should should be created for internal cards.
@@ -42,19 +49,17 @@ class audio_InternalCardNodes(audio_test.AudioTest):
             nodes[1].append('ECHO_REFERENCE')
         return nodes
 
-    def run_once(self):
+    def run_once(self, plug=True):
         """Runs InternalCardNodes test."""
         if not audio_test_utils.has_audio_jack(self.host):
             audio_test_utils.check_plugged_nodes(
                     self.facade, self.get_expected_nodes(False))
             return
 
-        jack_plugger = self.host.chameleon.get_audio_board().get_jack_plugger()
+        if not plug:
+            self._jack_plugger = self.host.chameleon.get_audio_board(
+            ).get_jack_plugger()
+            self._jack_plugger.unplug()
 
-        jack_plugger.plug()
         audio_test_utils.check_plugged_nodes(self.facade,
-                                             self.get_expected_nodes(True))
-
-        jack_plugger.unplug()
-        audio_test_utils.check_plugged_nodes(self.facade,
-                                             self.get_expected_nodes(False))
+                                             self.get_expected_nodes(plug))

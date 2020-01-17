@@ -5,9 +5,12 @@
 from autotest_lib.server import utils
 
 AUTHOR = "chromeos-chameleon"
-NAME = "audio_InternalCardNodes"
+NAME = "audio_InternalCardNodes.unplug"
 PURPOSE = "Remotely controlled audio test checking audio nodes created for internal card."
-CRITERIA = "This test will fail if the plugged nodes are not expected."
+CRITERIA = """
+This test will fail if the nodes aren't marked as plugged as expected when the
+headset is unplugged.
+"""
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "audio"
@@ -28,6 +31,6 @@ chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
-    job.run_test("audio_InternalCardNodes", host=host)
+    job.run_test("audio_InternalCardNodes", host=host, plug=False)
 
 parallel_simple(run, machines)
