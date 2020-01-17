@@ -82,7 +82,7 @@ class firmware_Cr50TpmMode(Cr50Test):
             raise error.TestFail('TPM is not enabled after reset,')
 
         # Check if Key Ladder is enabled.
-        if not self.cr50.keyladder_is_enabled():
+        if self.cr50.keyladder_is_disabled():
             raise error.TestFail('Failed to restore H1 Key Ladder')
 
         # Check if TPM is enabled through gsctool.
@@ -126,7 +126,7 @@ class firmware_Cr50TpmMode(Cr50Test):
             else:
                 logging.info('TPM did not respond')
 
-            if self.cr50.keyladder_is_enabled():
+            if not self.cr50.keyladder_is_disabled():
                 raise error.TestFail('Failed to revoke H1 Key Ladder')
         else:
             if not 'enabled (1)' in output_log.lower():

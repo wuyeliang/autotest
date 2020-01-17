@@ -955,16 +955,24 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         return result.lower() == 'enabled'
 
 
-    def keyladder_is_enabled(self):
+    def get_keyladder_state(self):
         """Get the status of H1 Key Ladder.
 
-        @return: True if H1 Key Ladder is enabled. False otherwise.
+        @return: The keyladder state string. prod or dev both mean enabled.
         """
         result = self.send_command_retry_get_output('sysinfo',
-                ['(?i)Key\s+Ladder:\s+(enabled|disabled)'], safe=True)[0][1]
+                ['(?i)Key\s+Ladder:\s+(enabled|prod|dev|disabled)'],
+                safe=True)[0][1]
         logging.debug(result)
+        return result
 
-        return result.lower() == 'enabled'
+
+    def keyladder_is_disabled(self):
+        """Get the status of H1 Key Ladder.
+
+        @return: True if H1 Key Ladder is disabled. False otherwise.
+        """
+        return self.get_keyladder_state() == 'disabled'
 
 
     def get_sleepmask(self):
