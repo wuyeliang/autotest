@@ -775,8 +775,9 @@ class HostapConfig(object):
         if self.is_11ac:
             conf['ieee80211ac'] = 1
             conf['vht_oper_chwidth'] = self._vht_oper_chwidth
-            conf['vht_oper_centr_freq_seg0_idx'] = \
-                    self._vht_oper_centr_freq_seg0_idx
+            if self._vht_oper_centr_freq_seg0_idx is not None:
+                conf['vht_oper_centr_freq_seg0_idx'] = \
+                        self._vht_oper_centr_freq_seg0_idx
             conf['vht_capab'] = self._hostapd_vht_capabilities
         if self._wmm_enabled:
             conf['wmm_enabled'] = 1
