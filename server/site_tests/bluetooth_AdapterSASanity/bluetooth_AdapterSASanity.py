@@ -6,15 +6,19 @@
 
 import logging
 
+from autotest_lib.server.cros.bluetooth import advertisements_data
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
      BluetoothAdapterQuickTests
 from autotest_lib.server.cros.bluetooth import bluetooth_default_state_test
 from autotest_lib.server.cros.bluetooth import bluetooth_valid_address_test
+from autotest_lib.server.cros.bluetooth.bluetooth_adapter_leadvertising_tests \
+     import bluetooth_AdapterLEAdvertising
 
 
 class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         bluetooth_default_state_test.bluetooth_Sanity_DefaultStateTest,
-        bluetooth_valid_address_test.bluetooth_Sanity_ValidAddressTest):
+        bluetooth_valid_address_test.bluetooth_Sanity_ValidAddressTest,
+        bluetooth_AdapterLEAdvertising):
     """A Batch of Bluetooth stand alone sanity tests. This test is written as
        a batch of tests in order to reduce test time, since auto-test ramp up
        time is costy. The batch is using BluetoothAdapterQuickTests wrapper
@@ -137,6 +141,38 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
     def sa_valid_address_test(self):
         """Verify that the client Bluetooth adapter has a valid address."""
         self.valid_address_test()
+
+
+    @test_wrapper('Multiple LE advertising test')
+    def sa_multiple_advertising_test(self):
+        """Run all test cases for multiple advertisements."""
+        self.run_le_advertising_test(self.host, \
+            advertisements_data.ADVERTISEMENTS, 'multi_advertising', \
+            num_iterations=1)
+
+
+    @test_wrapper('Single LE advertising test')
+    def sa_single_advertising_test(self):
+        """Run all test cases for single advertisements."""
+        self.run_le_advertising_test(self.host, \
+            advertisements_data.ADVERTISEMENTS, 'single_advertising', \
+            num_iterations=1)
+
+
+    @test_wrapper('Suspend resume LE advertising test')
+    def sa_suspend_resume_advertising_test(self):
+        """Run all test cases for multiple advertisements."""
+        self.run_le_advertising_test(self.host, \
+            advertisements_data.ADVERTISEMENTS, 'suspend_resume', \
+            num_iterations=1)
+
+
+    @test_wrapper('Reboot LE advertising test')
+    def sa_reboot_advertising_test(self):
+        """Run all test cases for single advertisements."""
+        self.run_le_advertising_test(self.host, \
+            advertisements_data.ADVERTISEMENTS, 'reboot', \
+            num_iterations=1)
 
 
     @batch_wrapper('Stand Alone Sanity')

@@ -1,17 +1,15 @@
-# Copyright 2017 The Chromium OS Authors. All rights reserved.
+# Copyright 2020 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 from autotest_lib.server import utils
-from autotest_lib.server.cros.bluetooth import advertisements_data
 
-
-AUTHOR = 'rjahagir'
-NAME = 'bluetooth_AdapterLEAdvertising.reboot.stress_50'
+AUTHOR = 'chromeos-bluetooth'
+NAME = 'bluetooth_AdapterSASanity.sa_single_advertising_test'
 PURPOSE = 'Test bluetooth adapter advertising.'
 CRITERIA = 'Adapter should advertise with correct parameters.'
-ATTRIBUTES = ''
-TIME = 'SHORT'  # Takes approximately 4 hours on elm
+ATTRIBUTES = 'suite:bluetooth_flaky, suite:bluetooth_sanity'
+TIME = 'SHORT'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
@@ -19,13 +17,18 @@ DEPENDENCIES = 'bluetooth'
 
 DOC = """
 This test case verifies that the Bluetooth adapter of the DUT can
-behave as a Bluetooth low-energy device and register advertisement
-with data and parameters while suspending and resuming correctly.
+behave as a Bluetooth low-energy device and register a single
+advertisement with data and parameters correctly. This test case also
+verifies that the single advertisement could be registered and
+unregistered continuously.
 
 This autotest include the following test cases:
-     self.test_case_SI200_RA3_CD_PC_CD_UA3()
-     self.test_case_RA3_CD_SI200_CD_PC_CD_UA3()
-     self.test_case_RA1_CD_SI200_CD_PC_CD_UA1()
+     self.test_case_SI200_RA1_CD_UA1()
+     self.test_case_SI200_RA1_CD_RS()
+     self.test_case_RA1_CD_SI200_CD_UA1()
+     self.test_case_RA1_CD_SI200_CD_RS()
+     self.test_case_RA1_CD_SI200_CD_FSI10_UA1_RA1_CD_UA1()
+     self.test_case_RA1_CD_SI200_CD_FSI20000_UA1_RA1_CD_UA1()
 
 Specifically, the subtests included in this autotest verify the
 following operations and parameters.
@@ -63,8 +66,7 @@ args_dict = utils.args_to_dict(args)
 
 def run(machine):
     host = hosts.create_host(machine)
-    job.run_test('bluetooth_AdapterLEAdvertising', host=host,
-                 advertisements=advertisements_data.ADVERTISEMENTS,
-                 test_type='reboot', num_iterations=50)
+    job.run_test('bluetooth_AdapterSASanity', host=host,
+                  num_iterations=1, test_name=NAME.split('.')[1])
 
 parallel_simple(run, machines)

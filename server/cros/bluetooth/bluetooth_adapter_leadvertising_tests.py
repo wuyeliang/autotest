@@ -35,8 +35,6 @@ import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.bluetooth import bluetooth_adapter_tests
-from autotest_lib.server.cros.multimedia import bluetooth_le_facade_adapter
-
 
 test_case_log = bluetooth_adapter_tests.test_case_log
 
@@ -1031,7 +1029,8 @@ class bluetooth_AdapterLEAdvertising(
 
         self.unregister_advertisements(advertisements)
 
-    def run_once(self, host, advertisements, test_type, num_iterations=1):
+    def run_le_advertising_test(self, host, advertisements, test_type, \
+                                num_iterations=1):
         """Running Bluetooth adapter LE advertising autotest.
 
         @param host: device under test host.
@@ -1054,9 +1053,7 @@ class bluetooth_AdapterLEAdvertising(
         self.five_advertisements = advertisements[0:5]
         self.sixth_advertisement = advertisements[5]
 
-        ble_adapter = bluetooth_le_facade_adapter.BluetoothLEFacadeRemoteAdapter
-        self.bluetooth_le_facade = ble_adapter(self.host)
-        self.bluetooth_facade = self.bluetooth_le_facade
+        self.bluetooth_le_facade = self.bluetooth_facade
 
         # Reset the adapter to forget previous stored data and turn it on.
         self.test_reset_on_adapter()
@@ -1097,13 +1094,13 @@ class bluetooth_AdapterLEAdvertising(
             self.test_case_RA1_CD_SI200_CD_PC_CD_UA1()
 
         elif test_type == 'suspend_resume':
-           # Run all test cases for suspend resume stress testing.
+            # Run all test cases for suspend resume stress testing.
             for i in xrange(num_iterations):
-               logging.info('Starting suspend resume loop #%d', i+1)
-               self.test_case_SI200_RA3_CD_SR_CD_UA3()
-               self.test_case_RA3_CD_SI200_CD_SR_CD_UA3()
-               self.test_case_SI200_RA1_CD_SR_CD_UA1()
-               self.test_case_RA1_CD_SI200_CD_SR_CD_UA1()
+                logging.info('Starting suspend resume loop #%d', i+1)
+                self.test_case_SI200_RA3_CD_SR_CD_UA3()
+                self.test_case_RA3_CD_SI200_CD_SR_CD_UA3()
+                self.test_case_SI200_RA1_CD_SR_CD_UA1()
+                self.test_case_RA1_CD_SI200_CD_SR_CD_UA1()
 
         elif test_type == 'reboot':
             # Run all test cases for reboot stress testing.
