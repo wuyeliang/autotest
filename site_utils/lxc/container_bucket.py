@@ -13,6 +13,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.site_utils.lxc import config as lxc_config
 from autotest_lib.site_utils.lxc import constants
 from autotest_lib.site_utils.lxc import lxc
+from autotest_lib.site_utils.lxc import utils as lxc_utils
 from autotest_lib.site_utils.lxc.cleanup_if_fail import cleanup_if_fail
 from autotest_lib.site_utils.lxc.base_image import BaseImage
 from autotest_lib.site_utils.lxc.constants import \
@@ -155,7 +156,7 @@ class ContainerBucket(object):
             "Force-destroying container %s if it exists, with timeout %s sec",
             name, timeout)
         try:
-          result = common.destroy(
+          result = lxc_utils.destroy(
               self.container_path, name,
               force=True, snapshots=True, ignore_status=True, timeout=timeout
           )
