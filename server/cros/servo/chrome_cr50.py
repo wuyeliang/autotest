@@ -32,6 +32,8 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     provides many interfaces to set and get its behavior via console commands.
     This class is to abstract these interfaces.
     """
+    PROD_RW_KEYIDS = ['0x87b73b67', '0xde88588d']
+    PROD_RO_KEYIDS = ['0xaa66150f']
     OPEN = 'open'
     UNLOCK = 'unlock'
     LOCK = 'lock'
@@ -581,9 +583,9 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     def using_prod_rw_keys(self):
         """Returns True if the RW keyid is prod"""
         rv = self.send_command_retry_get_output('sysinfo',
-                ['RW keyid:.*\(([a-z]+)\)'], safe=True)
-        logging.info(rv)
-        return rv[0][1] == 'prod'
+                ['RW keyid:\s+(0x[0-9a-f]{8})'], safe=True)[0][1]
+        logging.info('RW Keyid: 0x%s', rv)
+        return rv in self.PROD_RW_KEYIDS
 
 
     def get_active_board_id_str(self):
