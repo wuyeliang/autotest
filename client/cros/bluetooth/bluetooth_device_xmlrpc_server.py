@@ -954,16 +954,29 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             not found in the object tree.
 
         """
-        objects = self._bluez.GetManagedObjects(
-                dbus_interface=self.BLUEZ_MANAGER_IFACE)
-        for path, ifaces in objects.iteritems():
-            device = ifaces.get(self.BLUEZ_DEVICE_IFACE)
-            if device is None:
-                continue
-            if (device['Address'] == address and
-                path.startswith(self._adapter.object_path)):
-                return path
-        logging.info('Device path not found')
+
+        # Create device path, i.e. '/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF' based
+        # on path assignment scheme used in bluez
+        address_up = address.replace(':', '_')
+        device_path = '{}/dev_{}'.format(self._adapter.object_path, address_up)
+
+        # Verify the Address property agrees to confirm we have the device
+        try:
+            device = self._system_bus.get_object(self.BLUEZ_SERVICE_NAME,
+                                                 device_path)
+            found_addr = device.Get(self.BLUEZ_DEVICE_IFACE, 'Address',
+                                    dbus_interface=dbus.PROPERTIES_IFACE)
+
+            if found_addr == address:
+                logging.info('Device found at {}'.format(device_path))
+                return device_path
+
+        except dbus.exceptions.DBusException, e:
+            log_msg = 'Couldn\'t reach device: {}'.format(str(e))
+            logging.debug(log_msg)
+
+        logging.debug('No device found at {}'.format(device_path))
+        return None
 
 
     @xmlrpc_server.dbus_safe(False)
