@@ -121,7 +121,7 @@ class UpdateEngineUtil(object):
 
     def _wait_for_update_to_fail(self):
         """Waits for the update to retry until failure."""
-        timeout_minutes = 8
+        timeout_minutes = 20
         timeout = time.time() + 60 * timeout_minutes
         while True:
             if self._check_update_engine_log_for_entry('Reached max attempts ',
@@ -132,11 +132,8 @@ class UpdateEngineUtil(object):
             time.sleep(1)
             self._get_update_engine_status()
             if time.time() > timeout:
-                err_msg = ('Update did not fail as expected. Timeout: %d '
-                           'minutes. Last update status: %s') % (
-                           timeout_minutes, self._get_update_engine_status()[
-                               self._CURRENT_OP])
-                raise error.TestFail(err_msg)
+                raise error.TestFail('Update did not fail as expected. Timeout'
+                                     ': %d minutes.' % timeout_minutes)
 
 
     def _wait_for_update_to_complete(self, finalizing_ok=False):
