@@ -7,6 +7,7 @@ import logging
 import numbers
 import numpy
 import os
+import tempfile
 import StringIO
 
 from autotest_lib.client.common_lib import error, utils
@@ -110,6 +111,7 @@ class TelemetryRunner(object):
             self._setup_local_telemetry()
         else:
             self._setup_devserver_telemetry()
+        self._benchmark_deps = None
 
         logging.debug('Telemetry Path: %s', self._telemetry_path)
 
@@ -465,9 +467,14 @@ class TelemetryRunner(object):
         # Get DEPs using host's telemetry.
         # Example output, fetch_benchmark_deps.py --output-deps=deps octane:
         # {'octane': ['tools/perf/page_sets/data/octane_002.wprgo']}
-        perf_path = os.path.join(self._telemetry_path, 'tools', 'perf')
-        deps_path = os.path.join(perf_path, 'fetch_benchmark_deps_result.json')
-        fetch_path = os.path.join(perf_path, 'fetch_benchmark_deps.py')
+        fetch_path = os.path.join(self._telemetry_path,
+                                  'tools', 'perf', 'fetch_benchmark_deps.py')
+        # Use a temporary file for |deps_path| to avoid race conditions. The
+        # created temporary file is assigned to |self._benchmark_deps| to make
+        # it valid until |self| is destroyed.
+        self._benchmark_deps = tempfile.NamedTemporaryFile(
+            prefix='fetch_benchmark_deps_result.', suffix='.json')
+        deps_path = self._benchmark_deps.name
         format_fetch = ('python2 %s --output-deps=%s %s')
         command_fetch = format_fetch % (fetch_path, deps_path, test_name)
         command_get = 'cat %s' % deps_path
@@ -609,4 +616,3 @@ class TelemetryRunner(object):
             'charts': charts,
             'format_version': 1.0
         }
-
