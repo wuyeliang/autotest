@@ -29,7 +29,7 @@ class audio_AudioAfterSuspend(audio_test.AudioTest):
     RECORD_SECONDS = 5
     RESUME_TIMEOUT_SECS = 60
     SHORT_WAIT = 2
-    SUSPEND_SECONDS = 30
+    SUSPEND_SECONDS = 40
 
 
     def action_plug_jack(self, plug_state):
@@ -82,7 +82,7 @@ class audio_AudioAfterSuspend(audio_test.AudioTest):
         thread = threading.Thread(target=self.action_suspend)
         thread.start()
         try:
-            self.host.test_wait_for_sleep(self.SUSPEND_SECONDS / 3)
+            self.host.test_wait_for_sleep(3 * self.SUSPEND_SECONDS / 4)
         except error.TestFail, ex:
             self.errors.append("%s - %s" % (test_case, str(ex)))
 
