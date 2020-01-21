@@ -36,7 +36,7 @@ class power_Idle(power_test.power_Test):
                                            pdash_note=pdash_note,
                                            force_discharge=force_discharge)
 
-    def run_once(self, warmup_secs=20, idle_secs=120):
+    def run_once(self, warmup_secs=20, idle_secs=120, default_only=False):
         """Collect power stats for idle tests."""
 
         def measure_it(warmup_secs, idle_secs, tagname):
@@ -61,6 +61,11 @@ class power_Idle(power_test.power_Test):
             if not fullscreen:
                 with keyboard.Keyboard() as keys:
                     keys.press_key('f4')
+
+            if default_only:
+                self.start_measurements()
+                measure_it(warmup_secs, idle_secs, 'all-default')
+                return
 
             # test1 : display off, BT off
             power_utils.set_display_power(power_utils.DISPLAY_POWER_ALL_OFF)
