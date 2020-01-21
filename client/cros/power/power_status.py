@@ -2537,8 +2537,9 @@ class PCHPowergatingStats(object):
         """
         # PCH IP block that is on for S0ix. Ignore these IP block.
         S0IX_WHITELIST = set([
-                'PMC', 'OPI-DMI', 'SPI / eSPI', 'XHCI', 'xHCI', 'FUSE', 'PCIE0',
-                'NPKVRC', 'NPKVNN'])
+                'PMC', 'OPI-DMI', 'SPI / eSPI', 'XHCI', 'xHCI', 'FUSE', 'Fuse',
+                'PCIE0', 'NPKVRC', 'NPKVNN', 'NPK_VNN', 'PSF1', 'PSF2', 'PSF3',
+                'PSF4', 'SBR0', 'SBR1', 'SBR2', 'SBR4', 'SBR5', 'SBR6', 'SBR7'])
 
         # PCH IP block that is on/off for S0ix depend on features enabled.
         # Add log when these IPs state are on.
@@ -2549,6 +2550,10 @@ class PCHPowergatingStats(object):
         # CNV device has 0x31dc as devid .
         if len(utils.system_output('lspci -d :31dc')) > 0:
             S0IX_WHITELIST.add('CNV')
+
+        # HrP2 device has 0x02f0 as devid.
+        if len(utils.system_output('lspci -d :02f0')) > 0:
+            S0IX_WHITELIST.update(['CNVI', 'NPK_AON'])
 
         on_ip = set(ip['name'] for ip in self._stat if ip['state'])
         on_ip -= S0IX_WHITELIST
