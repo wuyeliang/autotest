@@ -70,8 +70,17 @@ class provision_FirmwareUpdate(test.test):
                              Use this to choose one other than the default
                              device when  servod has run in dual V4 device mode.
                              e.g. flash_device='ccd_cr50'
+        @raise TestFail: if the firmware version remains unchanged.
+               TestNAError: if the test environment is not properly set.
+                            e.g. the servo type doesn't support this test.
         """
         orig_act_dev = None
+
+        if flash_device == 'ccd_cr50':
+            servo_type = host.servo.get_servo_version()
+            if flash_device not in servo_type:
+                raise error.TestNAError('Unsupporting servo type: %s' %
+                                        servo_type)
         try:
             host.repair_servo()
 
