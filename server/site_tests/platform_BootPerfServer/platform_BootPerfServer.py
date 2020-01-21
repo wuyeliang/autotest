@@ -24,10 +24,11 @@ class platform_BootPerfServer(test.test):
         """Helper function for getting the partition index from the system. """
         # Determine root partition
         rootdev = host.run_output('rootdev -s')
-        # For "mmcblk0p3", partition is 2. Extract the last digit to get the
-        # partition index.
+        # Sample value of rootdev: "/dev/mmcblk0p3" or "/dev/nvme0n1p3." For
+        # "/dev/mmcblk0p3", the target is partition 2. Extract the last digit
+        # to get the partition index.
         logging.info('rootdev: %s', rootdev)
-        match = re.match(r'/dev/mmcblk\dp(\d+)', rootdev)
+        match = re.match(r'^/dev/.*\dp(\d+)$', rootdev)
         if match:
             return int(match.group(1)) - 1
 
