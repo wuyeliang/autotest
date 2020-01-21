@@ -10,6 +10,7 @@ TIME = "LONG"
 TEST_CATEGORY = "General"
 TEST_CLASS = "enterprise"
 TEST_TYPE = "server"
+ATTRIBUTES = "suite:wilco_bve_dock"
 
 DOC = """
 This test verifies the MAC address of the dock with the
