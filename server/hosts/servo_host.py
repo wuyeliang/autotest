@@ -11,6 +11,8 @@
 
 import logging
 import os
+import re
+import tarfile
 import time
 import traceback
 import xmlrpclib
@@ -74,6 +76,65 @@ class ServoHost(base_servohost.BaseServoHost):
     # Ready test function
     SERVO_READY_METHOD = 'get_version'
 
+    # Directory prefix on the servo host where the servod logs are stored.
+    SERVOD_LOG_PREFIX = '/var/log/servod'
+
+    # Exit code to use when symlinks for servod logs are not found.
+    NO_SYMLINKS_CODE = 9
+
+    # Directory in the job's results directory to dump the logs into.
+    LOG_DIR = 'servod'
+
+    # Prefix for joint loglevel files in the logs.
+    JOINT_LOG_PREFIX = 'log'
+
+    # Regex group to extract timestamp from logfile name.
+    TS_GROUP = 'ts'
+
+    # This regex is used to extract the timestamp from servod logs.
+             # files always start with log.
+    TS_RE = (r'log.'
+             # The timestamp is of format %Y-%m-%d--%H-%M-%S.MS
+             r'(?P<%s>\d{4}(\-\d{2}){2}\-(-\d{2}){3}.\d{3})'
+             # The loglevel is optional depending on labstation version.
+             r'(.(INFO|DEBUG|WARNING))?' % TS_GROUP)
+    TS_EXTRACTOR = re.compile(TS_RE)
+
+    # Regex group to extract MCU name from logline in servod logs.
+    MCU_GROUP = 'mcu'
+
+    # Regex group to extract logline from MCU logline in servod logs.
+    LINE_GROUP = 'line'
+
+    # This regex is used to extract the mcu and the line content from an
+    # MCU logline in servod logs. e.g. EC or servo_v4 console logs.
+    # Here is an example log-line:
+    #
+    # 2020-01-23 13:15:12,223 - servo_v4 - EC3PO.Console - DEBUG -
+    # console.py:219:LogConsoleOutput - /dev/pts/9 - cc polarity: cc1
+    #
+    # Here is conceptually how they are formatted:
+    #
+    #  <time> - <MCU> - EC3PO.Console - <LVL> - <file:line:func> - <pts> -
+    #  <output>
+    #
+              # The log format starts with a timestamp
+    MCU_RE = (r'[\d\-]+ [\d:,]+ '
+              # The mcu that is logging this is next.
+              r'- (?P<%s>\w+) - '
+              # Next, we have more log outputs before the actual line.
+              # Information about the file line, logging function etc.
+              # Anchor on EC3PO Console, LogConsoleOutput and dev/pts.
+              # NOTE: if the log format changes, this regex needs to be
+              # adjusted.
+              r'EC3PO\.Console[\s\-\w\d:.]+LogConsoleOutput - /dev/pts/\d+ - '
+              # Lastly, we get the MCU's console line.
+              r'(?P<%s>.+$)' % (MCU_GROUP, LINE_GROUP))
+    MCU_EXTRACTOR = re.compile(MCU_RE)
+
+    # Suffix to identify compressed logfiles.
+    COMPRESSION_SUFFIX = '.tbz2'
+
     def _init_attributes(self):
         self._servo_state = None
         self.servo_port = None
@@ -82,7 +143,9 @@ class ServoHost(base_servohost.BaseServoHost):
         self.servo_serial = None
         self._servo = None
         self._servod_server_proxy = None
-
+        # Flag to make sure that multiple calls to close do not result in the
+        # logic executing multiple times.
+        self._closed = False
 
     def _initialize(self, servo_host='localhost',
                     servo_port=DEFAULT_PORT, servo_board=None,
@@ -112,6 +175,9 @@ class ServoHost(base_servohost.BaseServoHost):
         self.servo_model = servo_model
         self.servo_serial = servo_serial
 
+        # The location of the log files on the servo host for this instance.
+        self.remote_log_dir = '%s_%s' % (self.SERVOD_LOG_PREFIX,
+                                         self.servo_port)
         # Path of the servo host lock file.
         self._lock_file = (self.TEMP_FILE_DIR + str(self.servo_port)
                            + self.LOCK_FILE_POSTFIX)
@@ -287,6 +353,10 @@ class ServoHost(base_servohost.BaseServoHost):
         cmd += ' PORT=%d' % self.servo_port
         if self.servo_serial:
             cmd += ' SERIAL=%s' % self.servo_serial
+        # Remove the symbolic links from the logs. This helps ensure that
+        # a failed servod instantiation does not cause us to grab old logs
+        # by mistake.
+        self.remove_latest_log_symlinks()
         self.run(cmd, timeout=60)
 
         # There's a lag between when `start servod` completes and when
@@ -329,6 +399,181 @@ class ServoHost(base_servohost.BaseServoHost):
         self.stop_servod()
         self.start_servod(quick_startup)
 
+    def _extract_compressed_logs(self, logdir, relevant_files):
+        """Decompress servod logs in |logdir|.
+
+        @param logdir: directory containing compressed servod logs.
+        @param relevant_files: list of files in |logdir| to consider.
+
+        @returns: tuple, (tarfiles, files) where
+                  tarfiles: list of the compressed filenames that have been
+                            extracted and deleted
+                  files:  list of the uncompressed files that were generated
+        """
+        # For all tar-files, first extract them to the directory, and
+        # then let the common flow handle them.
+        tarfiles = [cf for cf in relevant_files if
+                    cf.endswith(self.COMPRESSION_SUFFIX)]
+        files = []
+        for f in tarfiles:
+            norm_name = os.path.basename(f)[:-len(self.COMPRESSION_SUFFIX)]
+            with tarfile.open(f) as tf:
+                # Each tarfile has only one member, as
+                # that's the compressed log.
+                member = tf.members[0]
+                # Manipulate so that it only extracts the basename, and not
+                # the directories etc.
+                member.name = norm_name
+                files.append(os.path.join(logdir, member.name))
+                tf.extract(member, logdir)
+            # File has been extracted: remove the compressed file.
+            os.remove(f)
+        return tarfiles, files
+
+    def _extract_mcu_logs(self, log_subdir):
+        """Extract MCU (EC, Cr50, etc) console output from servod debug logs.
+
+        Using the MCU_EXTRACTOR regex (above) extract and split out MCU console
+        lines from the logs to generate invidiual console logs e.g. after
+        this method, you can find an ec.txt and servo_v4.txt in |log_dir| if
+        those MCUs had any console input/output.
+
+        @param log_subdir: directory with log.DEBUG.txt main servod debug logs.
+        """
+        # Extract the MCU for each one. The MCU logs are only in the .DEBUG
+        # files
+        mcu_lines_file = os.path.join(log_subdir, 'log.DEBUG.txt')
+        if not os.path.exists(mcu_lines_file):
+            logging.info('No DEBUG logs found to extract MCU logs from.')
+            return
+        mcu_files = {}
+        mcu_file_template = '%s.txt'
+        with open(mcu_lines_file, 'r') as f:
+            for line in f:
+                match = self.MCU_EXTRACTOR.match(line)
+                if match:
+                    mcu = match.group(self.MCU_GROUP).lower()
+                    line = match.group(self.LINE_GROUP)
+                    if mcu not in mcu_files:
+                        mcu_file = os.path.join(log_subdir,
+                                                mcu_file_template % mcu)
+                        mcu_files[mcu] = open(mcu_file, 'a')
+                    fd = mcu_files[mcu]
+                    fd.write(line + '\n')
+        for f in mcu_files:
+            mcu_files[f].close()
+
+
+    def remove_latest_log_symlinks(self):
+        """Remove the conveninence symlinks 'latest' servod logs."""
+        symlink_wildcard = '%s/latest*' % self.remote_log_dir
+        cmd = 'rm ' + symlink_wildcard
+        self.run(cmd, stderr_tee=None, ignore_status=True)
+
+    def grab_logs(self, outdir):
+        """Retrieve logs from servo_host to |outdir|/servod_{port}.{ts}/.
+
+        This method first collects all logs on the servo_host side pertaining
+        to this servod instance (port, instatiation). It glues them together
+        into combined log.[level].txt files and extracts all available MCU
+        console I/O from the logs into individual files e.g. servo_v4.txt
+
+        All the output can be found in a directory inside |outdir| that
+        this generates based on |LOG_DIR|, the servod port, and the instance
+        timestamp on the servo_host side.
+
+        @param outdir: directory to create a subdirectory into to place the
+                       servod logs into.
+        """
+        # First, extract the timestamp. This cmd gives the real filename of
+        # the latest aka current log file.
+        cmd = ('if [ -f %(dir)s/latest.DEBUG ];'
+               'then realpath %(dir)s/latest.DEBUG;'
+               'elif [ -f %(dir)s/latest ];'
+               'then realpath %(dir)s/latest;'
+               'else exit %(code)d;'
+               'fi' % {'dir': self.remote_log_dir,
+                       'code': self.NO_SYMLINKS_CODE})
+        res = self.run(cmd, stderr_tee=None, ignore_status=True)
+        if res.exit_status != 0:
+            if res.exit_status == self.NO_SYMLINKS_CODE:
+                logging.warning('servod log latest symlinks not found. '
+                                'This is likely due to an error starting up '
+                                'servod. Ignoring..')
+            else:
+                logging.warning('Failed to find servod logs on servo host.')
+                logging.warning(res.stderr.strip())
+            return
+        fname = os.path.basename(res.stdout.strip())
+        # From the fname, ought to extract the timestamp using the TS_EXTRACTOR
+        instance_ts = self.TS_EXTRACTOR.match(fname).group(self.TS_GROUP)
+        # Create the local results log dir.
+        log_dir = os.path.join(outdir, '%s_%s.%s' % (self.LOG_DIR,
+                                                     str(self.servo_port),
+                                                     instance_ts))
+        logging.info('Saving servod logs to %s.', log_dir)
+        os.mkdir(log_dir)
+        # Now, get all files with that timestamp.
+        cmd = 'find %s -maxdepth 1 -name "log.%s*"' % (self.remote_log_dir,
+                                                       instance_ts)
+        res = self.run(cmd, stderr_tee=None, ignore_status=True)
+        files = res.stdout.strip().split()
+        try:
+            self.get_file(files, log_dir, try_rsync=False)
+
+        except error.AutoservRunError as e:
+            result = e.result_obj
+            if result.exit_status != 0:
+                stderr = result.stderr.strip()
+                logging.warning("Couldn't retrieve servod logs. Ignoring: %s",
+                                stderr or '\n%s' % result)
+            return
+        local_files = [os.path.join(log_dir, f) for f in os.listdir(log_dir)]
+        # TODO(crrev.com/c/1793030): remove no-level case once CL is pushed
+        for level_name in ('DEBUG', 'INFO', 'WARNING', ''):
+            # Create the joint files for each loglevel. i.e log.DEBUG
+            joint_file = self.JOINT_LOG_PREFIX
+            if level_name:
+                joint_file = '%s.%s' % (self.JOINT_LOG_PREFIX, level_name)
+            # This helps with some online tools to avoid complaints about an
+            # unknown filetype.
+            joint_file = joint_file + '.txt'
+            joint_path = os.path.join(log_dir, joint_file)
+            files = [f for f in local_files if level_name in f]
+            if not files:
+                # TODO(crrev.com/c/1793030): remove no-level case once CL
+                # is pushed
+                continue
+            # Extract compressed logs if any.
+            compressed, extracted = self._extract_compressed_logs(log_dir,
+                                                                  files)
+            files = list(set(files) - set(compressed))
+            files.extend(extracted)
+            # Need to sort. As they all share the same timestamp, and
+            # loglevel, the index itself is sufficient. The highest index
+            # is the oldest file, therefore we need a descending sort.
+            def sortkey(f, level=level_name):
+                """Custom sortkey to sort based on rotation number int."""
+                if f.endswith(level_name): return 0
+                return int(f.split('.')[-1])
+
+            files.sort(reverse=True, key=sortkey)
+            # Just rename the first file rather than building from scratch.
+            os.rename(files[0], joint_path)
+            with open(joint_path, 'a') as joint_f:
+                for logfile in files[1:]:
+                    # Transfer the file to the joint file line by line.
+                    with open(logfile, 'r') as log_f:
+                        for line in log_f:
+                            joint_f.write(line)
+                    # File has been written over. Delete safely.
+                    os.remove(logfile)
+            # Need to remove all files form |local_files| so we don't
+            # analyze them again.
+            local_files = list(set(local_files) - set(files) - set(compressed))
+        # Lastly, extract MCU logs from the joint logs.
+        self._extract_mcu_logs(log_dir)
+
 
     def _lock(self):
         """lock servohost by touching a file.
@@ -350,11 +595,23 @@ class ServoHost(base_servohost.BaseServoHost):
 
     def close(self):
         """Close the associated servo and the host object."""
+        if self._closed:
+            logging.debug('ServoHost is already closed.')
+            return
         if self._servo:
+            outdir = None if not self.job else self.job.resultdir
             # In some cases when we run as lab-tools, the job object is None.
-            if self.job and not self._servo.uart_logs_dir:
-                self._servo.uart_logs_dir = self.job.resultdir
-            self._servo.close()
+            self._servo.close(outdir)
+
+        if self.job and not self.is_localhost():
+            # Grab all logs from this servod instance before stopping servod.
+            # TODO(crbug.com/1011516): once enabled, remove the check against
+            # localhost and instead check against log-rotiation enablement.
+            try:
+                self.grab_logs(self.job.resultdir)
+            except error.AutoservRunError as e:
+                logging.info('Failed to grab servo logs due to: %s. '
+                             'This error is forgiven.', str(e))
 
         if self._is_locked:
             # Remove the lock if the servohost has been locked.
@@ -364,16 +621,17 @@ class ServoHost(base_servohost.BaseServoHost):
                 logging.error('Unlock servohost failed due to ssh timeout.'
                               ' It may caused by servohost went down during'
                               ' the task.')
-
         # We want always stop servod after task to minimum the impact of bad
         # servod process interfere other servods.(see crbug.com/1028665)
         try:
             self.stop_servod()
         except error.AutoservRunError as e:
             logging.info("Failed to stop servod due to:\n%s\n"
-                         "This error is forgived.", str(e))
+                         "This error is forgiven.", str(e))
 
         super(ServoHost, self).close()
+        # Mark closed.
+        self._closed = True
 
 
     def get_servo_state(self):

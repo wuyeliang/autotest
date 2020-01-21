@@ -42,8 +42,6 @@ class FAFTBase(test.test):
 
         self.servo = host.servo
 
-        # Rotate old logs out of the way before test starts, to avoid noise.
-        self.servo.rotate_servod_logs(filename=None)
         self.servo.initialize_dut()
 
         self._client = host
@@ -209,7 +207,6 @@ class FirmwareTest(FAFTBase):
         self._setup_ec_write_protect(ec_wp)
         # See chromium:239034 regarding needing this sync.
         self.blocking_sync()
-        self.servo.rotate_servod_logs('servod.init', self.resultsdir)
         logging.info('FirmwareTest initialize done (id=%s)', self.run_id)
 
     def cleanup(self):
@@ -217,19 +214,12 @@ class FirmwareTest(FAFTBase):
         # Unset state checker in case it's set by subclass
         logging.info('FirmwareTest cleaning up (id=%s)', self.run_id)
 
-        # capture servod logs for body of test
-        self.servo.rotate_servod_logs('servod', self.resultsdir)
-
         # Capture UART before doing anything else, so we can guarantee we get
         # some uart results.
         try:
             self._record_uart_capture()
         except:
             logging.warn('Failed initial uart capture during cleanup')
-
-        # Discard redundant log messages containing the captured uart text:
-        # ... Servod - DEBUG - servo_server.py:765:get - ec_uart_stream = '...'
-        self.servo.rotate_servod_logs(filename=None)
 
         try:
             self.faft_client.system.is_available()
@@ -246,11 +236,9 @@ class FirmwareTest(FAFTBase):
         self._remove_faft_lockfile()
         self._remove_old_faft_lockfile()
         self._record_faft_client_log()
-        self.servo.rotate_servod_logs('servod.cleanup', self.resultsdir)
 
         # Capture any new uart output, then discard log messages again.
         self._cleanup_uart_capture()
-        self.servo.rotate_servod_logs(filename=None)
 
         super(FirmwareTest, self).cleanup()
         logging.info('FirmwareTest cleanup done (id=%s)', self.run_id)
