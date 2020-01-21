@@ -116,19 +116,23 @@ class power_LoadTest(arc.ArcTest):
         self._force_discharge = force_discharge
         self._pdash_note = pdash_note
 
-        if not power_utils.has_battery():
+        self._power_status = power_status.get_status()
+
+        if force_discharge:
+            if not self._power_status.battery:
+                raise error.TestNAError('DUT does not have battery. '
+                                        'Could not force discharge.')
+            if not power_utils.charge_control_by_ectool(False):
+                raise error.TestError('Could not run battery force discharge.')
+            self._ac_ok = True
+
+        if not self._power_status.battery:
             if ac_ok and (power_utils.has_powercap_support() or
                           power_utils.has_rapl_support()):
                 logging.info("Device has no battery but has powercap data.")
             else:
                 rsp = "Skipping test for device without battery and powercap."
                 raise error.TestNAError(rsp)
-        self._power_status = power_status.get_status()
-
-        if force_discharge:
-            if not power_utils.charge_control_by_ectool(False):
-                raise error.TestError('Could not run battery force discharge.')
-            self._ac_ok = True
 
         self._tmp_keyvals['b_on_ac'] = (not force_discharge and
                                         self._power_status.on_ac())

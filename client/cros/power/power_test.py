@@ -52,6 +52,15 @@ class power_Test(test.test):
         self._seconds_period = seconds_period
 
         measurements = []
+
+        self._force_discharge = force_discharge
+        if force_discharge:
+            if not self.status.battery:
+                raise error.TestNAError('DUT does not have battery. '
+                                        'Could not force discharge.')
+            if not power_utils.charge_control_by_ectool(False):
+                raise error.TestError('Could not run battery force discharge.')
+
         if force_discharge or not self.status.on_ac():
             measurements.append(
                 power_status.SystemPower(self.status.battery_path))
@@ -77,11 +86,6 @@ class power_Test(test.test):
         self._meas_logs = [self._plog, self._tlog, self._clog]
 
         self._pdash_note = pdash_note
-
-        self._force_discharge = force_discharge
-        if force_discharge:
-            if not power_utils.charge_control_by_ectool(False):
-                raise error.TestError('Could not run battery force discharge.')
 
     def warmup(self, warmup_time=30):
         """Warm up.
