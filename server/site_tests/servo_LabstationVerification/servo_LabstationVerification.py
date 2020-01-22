@@ -262,6 +262,7 @@ class servo_LabstationVerification(test.test):
         -// ServoLabControlVerification where |host| is treated as a DUT.
         Subsequently, all tests use |host| as a servo host to a generated
         DUT host that's hanging on the servo device.
+        - servo_LogGrab
         - platform_ServoPowerStateController without usb
         - servo_USBMuxVerification
         - platform_InstallTestImage
@@ -289,6 +290,8 @@ class servo_LabstationVerification(test.test):
         logging.info('Running the DUT side on DUT %r', self.dut_ip)
         dut_host = factory.create_host(self.dut_ip)
         dut_host.set_servo_host(self.labstation_host)
+        success &= self.runsubtest('servo_LogGrab',
+                                   host=dut_host, disable_sysinfo=True)
         success &= self.runsubtest('platform_ServoPowerStateController',
                                    host=dut_host, usb_available=False,
                                    subdir_tag='no_usb', disable_sysinfo=True)
