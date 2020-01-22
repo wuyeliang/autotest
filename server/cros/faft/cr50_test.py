@@ -58,6 +58,9 @@ class Cr50Test(FirmwareTest):
     # error during the flash operation. Just search for do_flash_op to simplify
     # the search string and make it applicable to all flash op errors.
     CR50_FLASH_OP_ERROR_MSG = 'do_flash_op'
+    # USB issues may show up with the timer sof calibration overflow interrupt.
+    # Count these during cleanup.
+    CR50_USB_ERROR = 'timer_sof_calibration_overflow_int'
 
     def initialize(self, host, cmdline_args, full_args,
                    restore_cr50_image=False, restore_cr50_board_id=False,
@@ -504,13 +507,17 @@ class Cr50Test(FirmwareTest):
             return
 
         flash_error_count = 0
+        usb_error_count = 0
         with open(self.cr50_uart_file, 'r') as f:
             for line in f:
                 if self.CR50_FLASH_OP_ERROR_MSG in line:
                     flash_error_count += 1
+                if self.CR50_USB_ERROR in line:
+                    usb_error_count += 1
 
         # Log any flash operation errors.
         logging.info('do_flash_op count: %d', flash_error_count)
+        logging.info('usb error count: %d', usb_error_count)
 
 
     def _try_to_bring_dut_up(self):
