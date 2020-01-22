@@ -2161,3 +2161,22 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             'cut -f 2 -d " "'           # Cut the ip part
         ]
         return self.run(' | '.join(cmds), ignore_status=True).stdout.strip()
+
+    def connect_to_wifi(self, ssid, passphrase=None, security=None):
+        """
+        Connect to wifi network
+
+        @param ssid       SSID of the wifi network.
+        @param passphrase Passphrase of the wifi network. None if not existed.
+        @param security   Security of the wifi network. Default to "psk" if
+                          passphase is given without security. Possible values
+                          are "none", "psk", "802_1x".
+
+        @return True if succeed, False if not.
+        """
+        cmd = '/usr/local/autotest/cros/scripts/wifi connect ' + ssid
+        if passphrase:
+            cmd += ' ' + passphrase
+            if security:
+                cmd += ' ' + security
+        return self.run(cmd, ignore_status=True).exit_status == 0
