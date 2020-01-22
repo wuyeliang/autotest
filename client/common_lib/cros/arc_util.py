@@ -98,13 +98,13 @@ def should_start_arc(arc_mode):
     @returns: True or False.
 
     """
-    logging.debug('ARC is enabled in mode ' + str(arc_mode))
+    logging.debug('ARC is enabled in mode %s', arc_mode)
     assert arc_mode is None or arc_mode in arc_common.ARC_MODES
     return arc_mode in [arc_common.ARC_MODE_ENABLED,
                         arc_common.ARC_MODE_ENABLED_ASYNC]
 
 
-def post_processing_after_browser(chrome):
+def post_processing_after_browser(chrome, timeout):
     """
     Called when a new browser instance has been initialized.
 
@@ -120,7 +120,7 @@ def post_processing_after_browser(chrome):
     # Wait for Android container ready if ARC is enabled.
     if chrome.arc_mode == arc_common.ARC_MODE_ENABLED:
         try:
-            arc_common.wait_for_android_boot()
+            arc_common.wait_for_android_boot(timeout)
         except Exception:
             # Save dumpstate so that we can figure out why boot does not
             # complete.

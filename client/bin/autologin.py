@@ -25,6 +25,8 @@ def main(args):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-a', '--arc', action='store_true',
                         help='Enable ARC and wait for it to start.')
+    parser.add_argument('--arc_timeout', type=int, default=None,
+                        help='Enable ARC and wait for it to start.')
     parser.add_argument('-d', '--dont_override_profile', action='store_true',
                         help='Keep files from previous sessions.')
     parser.add_argument('-u', '--username',
@@ -53,6 +55,7 @@ def main(args):
     cr = chrome.Chrome(
         extra_browser_args=browser_args,
         arc_mode=('enabled' if args.arc else None),
+        arc_timeout=args.arc_timeout,
         disable_app_sync=args.no_arc_syncs,
         disable_play_auto_install=args.no_arc_syncs,
         username=args.username,

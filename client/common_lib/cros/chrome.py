@@ -59,7 +59,8 @@ class Chrome(object):
                  dont_override_profile=False, disable_gaia_services=True,
                  disable_default_apps=True, auto_login=True, gaia_login=False,
                  username=None, password=None, gaia_id=None,
-                 arc_mode=None, disable_arc_opt_in=True,
+                 arc_mode=None, arc_timeout=None,
+                 disable_arc_opt_in=True,
                  disable_arc_opt_in_verification=True,
                  disable_arc_cpu_restriction=True,
                  disable_app_sync=False,
@@ -100,6 +101,7 @@ class Chrome(object):
         @param gaia_id: Log in using this gaia_id instead of the default.
         @param arc_mode: How ARC instance should be started.  Default is to not
                          start.
+        @param arc_timeout: Timeout to wait for ARC to boot.
         @param disable_arc_opt_in: For opt in flow autotest. This option is used
                                    to disable the arc opt in flow.
         @param disable_arc_opt_in_verification:
@@ -255,7 +257,7 @@ class Chrome(object):
                                 browser=self.browser,
                                 autotest_ext=self.autotest_ext,
                                 wait_for_provisioning=wait_for_provisioning)
-                    arc_util.post_processing_after_browser(self)
+                    arc_util.post_processing_after_browser(self, arc_timeout)
                 if enable_assistant:
                     assistant_util.enable_assistant(self.autotest_ext)
                 break
