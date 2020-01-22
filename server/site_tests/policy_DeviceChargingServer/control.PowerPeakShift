@@ -12,7 +12,7 @@ TIME = 'LONG'
 TEST_CATEGORY = 'General'
 TEST_CLASS = 'enterprise'
 TEST_TYPE = 'server'
-ATTRIBUTES = 'suite:ent-nightly, suite:policy'
+ATTRIBUTES = "suite:wilco_bve"
 
 DOC = """
 Ensures the DUT's battery level is in a testable range, clears the TPM if
