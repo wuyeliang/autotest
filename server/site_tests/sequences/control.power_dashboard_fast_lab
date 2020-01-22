@@ -13,6 +13,7 @@ DOC = """
 Sequence to make sure that power_Dashboard.full_lab tests work fine.
 """
 
+from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 
 # Need separate list for client and server test due to how these test work.
@@ -39,6 +40,7 @@ CLIENT_TESTS = [
 
 SERVO_V4_ETH_VENDOR = '0bda'
 SERVO_V4_ETH_PRODUCT = '8153'
+WIFI_SSID = 'powertest_ap'
 
 # Workaround to make it compatible with moblab autotest UI.
 global args_dict
@@ -52,9 +54,16 @@ pdash_note = args_dict.get('pdash_note', '')
 def run_client_test(machine):
     client = hosts.create_host(machine)
 
+    wlan_ip = client.get_wlan_ip()
+    if not wlan_ip:
+        if not client.connect_to_wifi(WIFI_SSID):
+            raise error.TestFail('Can not connect to wifi.')
+        wlan_ip = client.get_wlan_ip()
+        if not wlan_ip:
+            raise error.TestFail('Can not find wlan ip.')
+
     # Check if we have servo v4 ethernet and can switch to wlan.
     eth_usb = client.find_usb_devices(SERVO_V4_ETH_VENDOR, SERVO_V4_ETH_PRODUCT)
-    wlan_ip = client.get_wlan_ip()
     can_switch_to_wlan = len(eth_usb) == 1 and eth_usb[0] and wlan_ip
     if can_switch_to_wlan:
         wlan_machine = machine
