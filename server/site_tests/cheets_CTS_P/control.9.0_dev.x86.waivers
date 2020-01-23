@@ -29,7 +29,7 @@ def run_TS(machine):
         target_plan='waivers',
         load_waivers=False,
         bundle='x86',
-        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-6060565-linux_x86-x86.zip',
+        uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-6155248-linux_x86-x86.zip',
         timeout=14400)
 
 parallel_simple(run_TS, machines)
