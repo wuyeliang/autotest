@@ -21,13 +21,16 @@ class power_BatteryDrain(test.test):
 
     def cleanup(self):
         '''Cleanup for a test run'''
+        if self._force_discharge:
+            if not power_utils.charge_control_by_ectool(True):
+                logging.warn('Can not restore from force discharge.')
         if self.backlight:
             self.backlight.restore()
         if self.keyboard_backlight:
             default_level = self.keyboard_backlight.get_default_level()
             self.keyboard_backlight.set_level(default_level)
 
-    def run_once(self, drain_to_percent, drain_timeout):
+    def run_once(self, drain_to_percent, drain_timeout, force_discharge=False):
         '''
         Entry point of this test. The DUT must not be connected to AC.
 
@@ -40,12 +43,19 @@ class power_BatteryDrain(test.test):
 
         @param drain_to_percent: Battery percentage to drain to.
         @param drain_timeout: In seconds.
+        @param force_discharge: Force discharge even with AC plugged in.
         '''
-        if not power_utils.has_battery():
+        status = power_status.get_status()
+        if not status.battery:
             raise error.TestNAError('DUT has no battery. Test Skipped')
 
+        self._force_discharge = force_discharge
+        if force_discharge:
+            if not power_utils.charge_control_by_ectool(False):
+                raise error.TestError('Could not run battery force discharge.')
+
         ac_error = error.TestFail('DUT is on AC power, but should not be')
-        if power_status.get_status().on_ac():
+        if not force_discharge and status.on_ac():
             raise ac_error
 
         self.backlight = power_utils.Backlight()
@@ -82,8 +92,9 @@ class power_BatteryDrain(test.test):
                     drain_timeout, drain_to_percent))
 
             def is_battery_low_enough():
-                status = power_status.get_status()
-                if status.on_ac():
+                """Check if battery level reach target."""
+                status.refresh()
+                if not force_discharge and status.on_ac():
                     raise ac_error
                 return status.percent_display_charge() <= drain_to_percent
 
