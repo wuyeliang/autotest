@@ -79,15 +79,18 @@ def _wait_for_process(host, pid, timeout=-1):
 TELEMETRY_AFDO_BENCHMARKS = (
         # page_cycler tests are deprecated. Replace them with loading.desktop.
         ('loading.desktop', ('--pageset-repeat=1',
-                             '--story-tag-filter=typical')),
+                             '--story-tag-filter=typical',
+                             '--legacy-json-trace-format')),
         ('loading.desktop', ('--pageset-repeat=1',
-                             '--story-tag-filter=intl_ja_zh')),
+                             '--story-tag-filter=intl_ja_zh',
+                             '--legacy-json-trace-format')),
         ('rendering.desktop',
          ('--story-tag-filter=tough_canvas',
-          '--story-filter="bouncing\\*\\|canvas\\*\\|microsoft\\*"')),
-        ('octane', ),
-        ('kraken', ),
-        ('speedometer2', ),
+          '--story-filter="bouncing\\*\\|canvas\\*\\|microsoft\\*"',
+          '--legacy-json-trace-format')),
+        ('octane', ('--legacy-json-trace-format')),
+        ('kraken', ('--legacy-json-trace-format')),
+        ('speedometer2', ('--legacy-json-trace-format')),
 )
 
 # Temporarily disable this benchmark because it is failing a
