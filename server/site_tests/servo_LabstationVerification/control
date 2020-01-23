@@ -7,6 +7,7 @@ from autotest_lib.server import utils
 AUTHOR = "Chrome OS Team"
 NAME = "servo_LabstationVerification"
 PURPOSE = "Ensure labstation images can provide basic lab functionality."
+ATTRIBUTES = "suite:labstation_verification"
 TIME = "MEDIUM"
 TEST_CATEGORY = "Benchmark"
 TEST_CLASS = "platform"

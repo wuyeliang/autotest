@@ -244,7 +244,7 @@ class servo_LabstationVerification(test.test):
         # Then, restart servod ourselves.
         host.run_background('start servod BOARD=nami PORT=9999')
         # Give servod plenty of time to come up.
-        time.sleep(20)
+        time.sleep(40)
         try:
             host.run_grep('servodutil show -p 9999',
                           stdout_err_regexp='No servod scratch entry found.')
@@ -277,11 +277,11 @@ class servo_LabstationVerification(test.test):
         # Servod came up successfully - build a servo host and use it to verify
         # basic functionality.
         servo_args = {servo_host.SERVO_HOST_ATTR: self.labstation_host.hostname,
-                      servo_host.SERVO_PORT_ATTR: 9999}
+                      servo_host.SERVO_PORT_ATTR: 9999,
+                      'is_in_lab': False}
         # Close out this host as the test will restart it as a servo host.
         self.labstation_host.close()
-        self.labstation_host = servo_host.ServoHost(is_in_lab=False,
-                                                    **servo_args)
+        self.labstation_host = servo_host.create_servo_host(None, servo_args)
         self.labstation_host.connect_servo()
         servo_proxy = self.labstation_host.get_servo()
         if not self.dut_ip:

@@ -4,7 +4,5 @@ power_state:rec
 power_state:off
 power_state:on
 cold_reset
-uart4_on_flex_en
 ec3po_ec_console
 ctrl_d:tab
-cr50_reboot
