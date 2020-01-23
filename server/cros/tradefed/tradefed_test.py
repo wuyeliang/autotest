@@ -318,19 +318,15 @@ class TradefedTest(test.test):
                                         pipes.quote(filename))
         self._android_shell(host, android_cmd)
 
-    def _connect_adb(self, host, pubkey_path):
+    def _connect_adb(self, host, pubkey):
         """Sets up ADB connection to the ARC container.
 
         @param host: DUT that should be connected to.
-        @param pubkey_path: public key that adb keygen generated.
+        @param pubkey: public key that adb keygen && adb pubkey generated.
         """
         logging.info('Setting up adb connection.')
-        # Generate and push keys for adb.
-        # TODO(elijahtaylor): Extract this code to arc_common and de-duplicate
-        # code in arc.py on the client side tests.
-        with open(pubkey_path, 'r') as f:
-            self._write_android_file(host, constants.ANDROID_ADB_KEYS_PATH,
-                                     f.read())
+        # Push keys for adb.
+        self._write_android_file(host, constants.ANDROID_ADB_KEYS_PATH, pubkey)
         self._android_shell(
             host, 'restorecon ' + pipes.quote(constants.ANDROID_ADB_KEYS_PATH))
 
@@ -394,9 +390,10 @@ class TradefedTest(test.test):
         """Ready ARC and adb in parallel for running tests via tradefed."""
         # Generate the adb keys on server.
         key_path = os.path.join(self.tmpdir, 'test_key')
-        pubkey_path = key_path + '.pub'
         self._run_adb_cmd(verbose=True, args=('keygen', pipes.quote(key_path)))
         os.environ['ADB_VENDOR_KEYS'] = key_path
+        pubkey = self._run_adb_cmd(verbose=True,
+                args=('pubkey', pipes.quote(key_path))).stdout
 
         for _ in range(2):
             try:
@@ -407,7 +404,7 @@ class TradefedTest(test.test):
                 # TODO(pwang): connect_adb takes 10+ seconds on a single DUT.
                 #              Parallelize it if it becomes a bottleneck.
                 for host in self._hosts:
-                    self._connect_adb(host, pubkey_path)
+                    self._connect_adb(host, pubkey)
                     self._disable_adb_install_dialog(host)
                     self._wait_for_arc_boot(host)
                 self._verify_arc_hosts()

@@ -6,8 +6,8 @@
 SDK_TOOLS_DIR = 'gs://chromeos-arc-images/builds/git_nyc-mr1-arc-linux-static_sdk_tools/3544738'
 SDK_TOOLS_FILES = ['aapt']
 
-# To stabilize adb behavior, we use dynamically linked adb.
-ADB_DIR = 'gs://chromeos-arc-images/builds/git_master/4605730'
+# To stabilize adb behavior, we use statically linked adb.
+ADB_DIR = 'gs://chromeos-arc-images/builds/git_qt-release-static_sdk_tools/6118618'
 ADB_FILES = ['adb']
 
 ADB_POLLING_INTERVAL_SECONDS = 1
