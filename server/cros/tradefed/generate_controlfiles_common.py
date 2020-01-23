@@ -190,9 +190,9 @@ def get_bundle_abi(filename):
     In this case we chose to guess by filename, but we could also parse the
     xml files in the module. (Maybe this needs to be done in the future.)
     """
-    if filename.endswith('_x86-arm.zip'):
+    if filename.endswith('arm.zip'):
         return 'arm'
-    if filename.endswith('_x86-x86.zip'):
+    if filename.endswith('x86.zip'):
         return 'x86'
 
     assert(CONFIG['TRADEFED_CTS_COMMAND'] =='gts'), 'Only GTS has empty ABI'
@@ -397,7 +397,8 @@ def get_max_retries(modules, abi, suites, is_public):
         retry = 3
     # During qualification we want at least 9 retries, possibly more.
     # TODO(kinaba&yoshiki): do not abuse suite names
-    if set(CONFIG['QUAL_SUITE_NAMES']) & set(suites):
+    if CONFIG.get('QUAL_SUITE_NAMES') and \
+            set(CONFIG['QUAL_SUITE_NAMES']) & set(suites):
         retry = max(retry, CONFIG['CTS_QUAL_RETRIES'])
     # Collection should never have a retry. This needs to be last.
     if modules.intersection(get_collect_modules(is_public)):
@@ -654,7 +655,8 @@ def calculate_timeout(modules, suites):
     """
     if 'suite:bvt-arc' in suites:
         return int(3600 * CONFIG['BVT_TIMEOUT'])
-    if ((set(CONFIG['QUAL_SUITE_NAMES']) & set(suites)) and
+    if CONFIG.get('QUAL_SUITE_NAMES') and \
+            ((set(CONFIG['QUAL_SUITE_NAMES']) & set(suites)) and \
             not (_COLLECT in modules or _PUBLIC_COLLECT in modules)):
         return int(3600 * CONFIG['QUAL_TIMEOUT'])
 
@@ -804,6 +806,8 @@ def get_tradefed_data(path, is_public, abi):
             modules.add(line)
         elif line.startswith('Gts'):
             # Older GTS plainly lists the module names
+            modules.add(line)
+        elif line.startswith('Vts'):
             modules.add(line)
         elif line.startswith('cts-'):
             modules.add(line)
@@ -1026,7 +1030,7 @@ def write_qualification_controlfiles(modules, abi, revision, build, uri,
     combined = combine_modules_by_bookmark(set(modules))
     for key in combined:
         write_controlfile('all.' + key, combined[key], abi, revision, build,
-                          uri, CONFIG['QUAL_SUITE_NAMES'], is_public)
+                          uri, CONFIG.get('QUAL_SUITE_NAMES'), is_public)
 
 
 def write_qualification_and_regression_controlfile(abi, revision, build, uri,
@@ -1048,7 +1052,8 @@ def write_collect_controlfiles(_modules, abi, revision, build, uri, is_public):
     if is_public:
         suites = [CONFIG['MOBLAB_SUITE_NAME']]
     else:
-        suites = CONFIG['INTERNAL_SUITE_NAMES'] + CONFIG['QUAL_SUITE_NAMES']
+        suites = CONFIG['INTERNAL_SUITE_NAMES'] \
+               + CONFIG.get('QUAL_SUITE_NAMES', [])
     for module in get_collect_modules(is_public):
         write_controlfile(module, set([module]), abi, revision, build, uri,
                           suites, is_public)

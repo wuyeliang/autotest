@@ -41,6 +41,7 @@ suite:arc-gts-qual
 suite:arc-gts-tot
 suite:arc-gts-test
 suite:arc-unit-test
+suite:arc-vts
 suite:audio
 suite:audio_advanced
 suite:audio_basic
