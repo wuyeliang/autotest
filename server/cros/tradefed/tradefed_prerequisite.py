@@ -22,7 +22,7 @@ def region_us(hosts):
     """
     for host in hosts:
         output = host.run('vpd -g region').stdout
-        if out != 'us':
+        if output != 'us':
             return False, 'Failed: Region is not "us".'\
                           'Stdout of the command "vpd -l'\
                           '| grep region" on host %s was %s'\
