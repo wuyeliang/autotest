@@ -80,20 +80,25 @@ class desktopui_CheckRlzPingSent(test.test):
             raise error.TestFail('Timed out trying to lock the device')
 
 
-    def run_once(self, logged_in=True):
+    def run_once(self, ping_timeout=30, logged_in=True):
         """
         Main entry to the test.
 
-        @param logged_in: True for real login or guest mode.
+        @param logged_in: True for real login or False for guest mode.
+        @param ping_timeout: Delay time (seconds) before rlz ping is sent.
 
         """
+        # Browser arg to make DUT send rlz ping after a short delay.
+        rlz_flag = '--rlz-ping-delay=%d' % ping_timeout
+
         # If we are testing the ping is sent in guest mode (logged_in=False),
         # we need to first do a real login and wait for the DUT to become
         # 'locked' for rlz. Then logout and enter guest mode.
         if not logged_in:
-            with chrome.Chrome(logged_in=True):
+            with chrome.Chrome(logged_in=True, extra_browser_args=rlz_flag):
                 self._wait_for_rlz_lock()
 
-        with chrome.Chrome(logged_in=logged_in) as cr:
+        with chrome.Chrome(logged_in=logged_in,
+                           extra_browser_args=rlz_flag) as cr:
             self._check_url_for_rlz(cr)
             self._verify_rlz_data()
