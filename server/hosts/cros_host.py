@@ -618,24 +618,38 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         branch_dir = provision.FW_BRANCH_GLOB % board
         latest_file = os.path.join(provision.CROS_IMAGE_ARCHIVE, branch_dir,
                                 'LATEST-1.0.0')
-        try:
-            result = utils.system_output('gsutil cat ' +  latest_file)
 
-            candidates = re.findall('RNone.+?b[0-9]+', result)
+        try:
+            # The result could be one or more.
+            result = utils.system_output('gsutil ls -d ' +  latest_file)
+
+            candidates = re.findall('gs://.*', result)
         except error.CmdError:
             logging.error('No LATEST release info is available.')
             return None
 
-        release_path = os.path.join(provision.CROS_IMAGE_ARCHIVE, branch_dir,
-                                 candidates[0], board)
-        release = utils.system_output('gsutil ls -d ' + release_path)
-        # Now 'release_ver' has a full directory path: e.g.
-        #  gs://chromeos-image-archive/firmware-octopus-11297.B-firmwarebranch/
-        #       RNone-1.0.0-b4395530/octopus/
-        #
-        # Remove CROS_IMAGE_ARCHIVE and any surrounding '/'s.
-        return release.replace(provision.CROS_IMAGE_ARCHIVE,'').strip('/')
+        for cand_dir in candidates:
+            result = utils.system_output('gsutil cat ' + cand_dir)
 
+            release_path = cand_dir.replace('LATEST-1.0.0', result)
+            release_path = os.path.join(release_path, board)
+            try:
+                # Check if release_path does exist.
+                release = utils.system_output('gsutil ls -d ' + release_path)
+                # Now 'release' has a full directory path: e.g.
+                #  gs://chromeos-image-archive/firmware-octopus-11297.B-
+                #  firmwarebranch/RNone-1.0.0-b4395530/octopus/
+
+                # Remove "gs://chromeos-image-archive".
+                release = release.replace(provision.CROS_IMAGE_ARCHIVE, '')
+
+                # Remove CROS_IMAGE_ARCHIVE and any surrounding '/'s.
+                return release.strip('/')
+            except error.CmdError:
+                # The directory might not exist. Let's try next candidate.
+                pass
+        else:
+            raise error.AutoservError('Cannot find the latest firmware')
 
     def firmware_install(self, build=None, rw_only=False, dest=None,
                          local_tarball=None):
