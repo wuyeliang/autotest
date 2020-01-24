@@ -126,8 +126,8 @@ class firmware_Cr50SetBoardId(Cr50Test):
         self.run_script(self.ERROR_INVALID_RLZ, 'dvt', 'A')
         # dummy_phase is not a valid phase
         self.run_script(self.ERROR_UNKNOWN_PHASE, 'dummy_phase')
-        # The rlz code is checked before the phase
-        self.run_script(self.ERROR_INVALID_RLZ, 'dummy_phase', 'A')
+        # The rlz code is checked after the phase
+        self.run_script(self.ERROR_UNKNOWN_PHASE, 'dummy_phase', 'A')
 
         self.eraseflashinfo()
         # Set the board id so we can verify cr50-set-board-id has the correct
