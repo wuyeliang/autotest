@@ -62,7 +62,8 @@ class provision_FirmwareUpdate(test.test):
                                   rw_only=rw_only,
                                   dest=self.resultsdir,
                                   local_tarball=fw_path,
-                                  verify_version=True)
+                                  verify_version=True,
+                                  try_scp=True)
         except Exception as e:
             logging.error(e)
             raise error.TestFail, str(e), sys.exc_info()[2]

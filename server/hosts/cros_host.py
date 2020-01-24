@@ -156,6 +156,9 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
     # Regular expression for extracting BIOS version string
     _BIOS_REGEX = '(%s\.\w*\.\w*\.\w*)'
 
+    # Command to update firmware located on DUT
+    _FW_UPDATE_CMD = 'chromeos-firmwareupdate --mode=recovery -e %s -i %s %s'
+
     @staticmethod
     def check_host(host, timeout=10):
         """
@@ -669,7 +672,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
 
     def firmware_install(self, build=None, rw_only=False, dest=None,
-                         local_tarball=None, verify_version=False):
+                         local_tarball=None, verify_version=False,
+                         try_scp=False):
         """Install firmware to the DUT.
 
         Use stateful update if the DUT is already running the same build.
@@ -692,6 +696,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                               without devserver.
         @param verify_version: True to verify EC and BIOS versions after
                                programming firmware, default is False.
+        @param try_scp: False to always program using servo, true to try copying
+                        the firmware and programming from the DUT.
 
         TODO(dshi): After bug 381718 is fixed, update here with corresponding
                     exceptions that could be raised.
@@ -744,13 +750,42 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         logging.info('Extracting BIOS image.')
         bios_image = self.servo.extract_bios_image(board, model, local_tarball)
 
+        # Clear firmware version labels
+        self._clear_fw_version_labels(rw_only)
+
+        # Install firmware from local tarball
         try:
-            # Program firmware using servo
-            self._clear_fw_version_labels(rw_only)
-            self.servo.program_ec(ec_image, rw_only)
-            self.servo.program_bios(bios_image, rw_only)
-            if utils.host_is_in_lab_zone(self.hostname):
-                self._add_fw_version_label(build, rw_only)
+            # Check if DUT is available and copying to DUT is enabled
+            if self.is_up() and try_scp:
+                # DUT is available, make temp firmware directory to store images
+                logging.info('Making temp folder.')
+                dest_folder = '/tmp/firmware'
+                self.run('mkdir -p ' + dest_folder)
+
+                # Send EC firmware image to DUT
+                logging.info('Sending EC firmware.')
+                dest_ec_path = os.path.join(dest_folder,
+                                            os.path.basename(ec_image))
+                self.send_file(ec_image, dest_ec_path)
+
+                # Send BIOS firmware image to DUT
+                logging.info('Sending BIOS firmware.')
+                dest_bios_path = os.path.join(dest_folder,
+                                              os.path.basename(bios_image))
+                self.send_file(bios_image, dest_bios_path)
+
+                # Update EC and BIOS firmware on DUT
+                logging.info('Updating EC and BIOS firmware.')
+                fw_cmd = self._FW_UPDATE_CMD % (dest_ec_path,
+                                                dest_bios_path,
+                                                '--wp=1' if rw_only else '')
+                self.run(fw_cmd)
+            else:
+                # Host is not available, program firmware using servo
+                self.servo.program_ec(ec_image, rw_only)
+                self.servo.program_bios(bios_image, rw_only)
+                if utils.host_is_in_lab_zone(self.hostname):
+                    self._add_fw_version_label(build, rw_only)
 
             # Reboot and wait for DUT after installing firmware
             logging.info('Rebooting DUT.')
