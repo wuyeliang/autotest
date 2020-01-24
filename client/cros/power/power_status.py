@@ -448,6 +448,10 @@ class SysStat(object):
             logging.warning("System does not provide power sysfs interface")
 
         self.thermal = ThermalStat()
+        if self.battery_path:
+            self.sys_low_batt_p = float(utils.system_output(
+                    'check_powerd_config --low_battery_shutdown_percent',
+                    ignore_status=True) or 4.0)
 
 
     def refresh(self):
@@ -573,6 +577,16 @@ class SysStat(object):
         if not (min_level <= current_percent <= max_level):
             raise error.TestFail('battery must be in range [{}, {}]'.format(
                                  min_level, max_level))
+
+    def is_low_battery(self, low_batt_margin_p=2.0):
+        """Returns True if battery current charge is low
+
+        @param low_batt_margin_p: percentage of battery that would be added to
+                                  system low battery level.
+        """
+        return (self.battery_discharging() and
+                self.percent_current_charge() < self.sys_low_batt_p +
+                                                low_batt_margin_p)
 
 
 def get_status():

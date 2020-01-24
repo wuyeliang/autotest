@@ -67,10 +67,15 @@ class power_VideoCall(power_test.power_Test):
             self._meas_logs.append(self._vlog)
 
             # Start typing number block
-            end_time = time.time() + duration
             self.start_measurements()
-            while time.time() < end_time:
+            while time.time() - self._start_time < duration:
                 keys.press_key('number_block')
+                self.status.refresh()
+                if self.status.is_low_battery():
+                    logging.info(
+                        'Low battery, stop test early after %.0f minutes',
+                        (time.time() - self._start_time) / 60)
+                    return
 
     def publish_dashboard(self):
         """Report results power dashboard."""

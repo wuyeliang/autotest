@@ -49,7 +49,14 @@ class power_ThermalLoad(power_test.power_Test):
             self._meas_logs.append(self._flog)
 
             self.start_measurements()
-            time.sleep(duration)
+            while time.time() - self._start_time < duration:
+                time.sleep(60)
+                self.status.refresh()
+                if self.status.is_low_battery():
+                    logging.info(
+                        'Low battery, stop test early after %.0f minutes',
+                        (time.time() - self._start_time) / 60)
+                    return
 
     def publish_dashboard(self):
         """Report results power dashboard."""
