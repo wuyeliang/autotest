@@ -37,7 +37,7 @@ class BaseServoHost(ssh_host.SSHHost):
     """Base host class for a host that manage servo(s).
      E.g. beaglebone, labstation.
     """
-    REBOOT_CMD = 'sleep 1; reboot & sleep 10; reboot -f'
+    REBOOT_CMD = 'sleep 5; reboot & sleep 10; reboot -f'
 
     TEMP_FILE_DIR = '/var/lib/servod/'
 
