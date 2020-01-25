@@ -52,6 +52,7 @@ class Chrome(object):
 
     BROWSER_TYPE_LOGIN = 'system'
     BROWSER_TYPE_GUEST = 'system-guest'
+    AUTOTEST_EXT_ID = 'behllobkkfkfnphdnhnkndlbkcpglgmj'
 
     def __init__(self, logged_in=True, extension_paths=None, autotest_ext=False,
                  num_tries=3, extra_browser_args=None,
@@ -154,11 +155,6 @@ class Chrome(object):
         if extension_paths is None:
             extension_paths = []
 
-        if autotest_ext:
-            self._autotest_ext_path = os.path.join(os.path.dirname(__file__),
-                                                   'autotest_private_ext')
-            extension_paths.append(self._autotest_ext_path)
-
         finder_options = browser_options.BrowserFinderOptions()
         if proxy_server:
             finder_options.browser_options.AppendExtraBrowserArgs(
@@ -183,6 +179,13 @@ class Chrome(object):
                 finder_options.browser_options.AppendExtraBrowserArgs(
                     ['--arc-play-store-auto-update=off'])
             logged_in = True
+
+        if autotest_ext:
+            self._autotest_ext_path = os.path.join(os.path.dirname(__file__),
+                                                   'autotest_private_ext')
+            extension_paths.append(self._autotest_ext_path)
+            finder_options.browser_options.AppendExtraBrowserArgs(
+                ['--whitelisted-extension-id=%s' % self.AUTOTEST_EXT_ID])
 
         self._browser_type = (self.BROWSER_TYPE_LOGIN
                               if logged_in else self.BROWSER_TYPE_GUEST)
