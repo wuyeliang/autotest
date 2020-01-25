@@ -1,6 +1,7 @@
 # Copyright 2018 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+
 import datetime
 
 from autotest_lib.client.bin import utils
@@ -19,10 +20,16 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
     _EXPECTED_EOL_DATE_TEMPLATE = 'EOL_DATE={}'
     # Value within {} expected to be the month and year.
     _EXPECTED_WARNING_TITLE = 'Updates end {}'
+    _UNIX_EPOCH = datetime.datetime(1970, 1, 1)
 
     def cleanup(self):
         self._save_extra_update_engine_logs()
         super(autoupdate_EOL, self).cleanup()
+
+
+    def _get_expected_eol_date(self, eol_date):
+        """Figure out the expected eol date."""
+        return self._UNIX_EPOCH + datetime.timedelta(eol_date)
 
 
     def _check_eol_info(self):
@@ -35,8 +42,7 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
 
     def _check_eol_notification(self, eol_date):
         """Checks that we are showing an EOL notification to the user."""
-        epoch = datetime.datetime(1970,1,1)
-        expected_eol_date = (epoch + datetime.timedelta(eol_date))
+        expected_eol_date = self._get_expected_eol_date(eol_date)
         expected_warning_begins_date = (expected_eol_date
                                         - datetime.timedelta(
                                           self._DAYS_BEFORE_EOL_START_WARNING))
@@ -47,38 +53,55 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
 
         def find_notification(expected_title):
             """Helper to find notification."""
-            notifications = cr.get_visible_notifications()
+            notifications = self._cr.get_visible_notifications()
             return any([n['title'] == expected_title
                         for n in (notifications or [])])
 
-        with chrome.Chrome(autotest_ext=True, logged_in=True) as cr:
-            def check_eol_notifications():
-                """ Checks if correct notification is shown """
-                final_notification = find_notification(expected_final_title)
-                warning_notification = find_notification(expected_warning_title)
+        def check_eol_notifications():
+            """Checks if correct notification is shown."""
+            final_notification = find_notification(expected_final_title)
+            warning_notification = find_notification(expected_warning_title)
 
-                now = datetime.datetime.utcnow()
-                if expected_eol_date <= now:
-                    return final_notification and not warning_notification
-                elif expected_warning_begins_date <= now:
-                    return not final_notification and warning_notification
-                return not final_notification and not warning_notification
+            now = datetime.datetime.utcnow()
+            if expected_eol_date <= now:
+                return final_notification and not warning_notification
+            elif expected_warning_begins_date <= now:
+                return not final_notification and warning_notification
+            return not final_notification and not warning_notification
 
-            utils.poll_for_condition(
-                                condition=lambda: check_eol_notifications(),
-                                desc='End of Life Notification UI passed',
-                                timeout=5,
-                                sleep_interval=1)
+        utils.poll_for_condition(condition=lambda: check_eol_notifications(),
+                                 desc='End of Life Notification UI passed',
+                                 timeout=5, sleep_interval=1)
+
+
+    def _check_eol_settings(self, eol_date):
+        """Check that the messages about EOL in Settings are correct."""
+        tab = self._cr.browser.tabs[0]
+        tab.Navigate('chrome://os-settings/help/details')
+        tab.WaitForDocumentReadyStateToBeComplete()
+        eol_js = '''
+            settings.AboutPageBrowserProxyImpl.getInstance().getEndOfLifeInfo()
+        '''
+        eol_promise = tab.EvaluateJavaScript(eol_js, promise=True)
+        expected_eol_date = self._get_expected_eol_date(eol_date)
+        eol_msg = ('This device will get automatic software and security '
+                   'updates until')
+        if expected_eol_date <= datetime.datetime.utcnow():
+            eol_msg = ('This device stopped getting automatic software and '
+                       'security updates in')
+        if eol_msg not in eol_promise['aboutPageEndOfLifeMessage']:
+            raise error.TestFail('"%s" not found in Settings.' % eol_msg)
+
 
     def run_once(self, eol_date):
         """
-        The main test.
+        Checks that DUT behaves correctly in EOL scenarios.
 
         @param eol_date: the days from epoch value passed along to
                          NanoOmahaDevServer placed within the _eol_date tag
                          in the Omaha response.
+
         """
-        # Override the expected values based on input of |eol_date| and params.
         self._EXPECTED_EOL_DATE = \
             self._EXPECTED_EOL_DATE_TEMPLATE.format(eol_date)
 
@@ -91,4 +114,8 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
                                    no_update=True)
 
             self._check_eol_info()
-            self._check_eol_notification(eol_date)
+            with chrome.Chrome(autotest_ext=True, logged_in=True) as cr:
+                self._cr = cr
+                self._check_eol_notification(eol_date)
+                self._check_eol_settings(eol_date)
+
