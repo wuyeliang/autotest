@@ -134,7 +134,7 @@ class power_Test(test.test):
         keyvals['level_backlight_current'] = self.backlight.get_level()
 
         # record battery stats if not on AC
-        if self.status.on_ac():
+        if not self._force_discharge and self.status.on_ac():
             keyvals['b_on_ac'] = 1
         else:
             keyvals['b_on_ac'] = 0
@@ -205,6 +205,7 @@ class power_Test(test.test):
     def postprocess_iteration(self):
         """Write keyval and send data to dashboard."""
         power_telemetry_utils.end_measurement()
+        self.status.refresh()
         for log in self._meas_logs:
             log.done = True
         super(power_Test, self).postprocess_iteration()
