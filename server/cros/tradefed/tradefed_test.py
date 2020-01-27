@@ -268,19 +268,22 @@ class TradefedTest(test.test):
         @param host: DUT that need to be connected.
         @return boolean indicating if adb connected successfully.
         """
+        # Add ADB_TRACE=all for debugging adb connection failures.
+        env = os.environ.copy()
+        env['ADB_TRACE'] = 'all'
         try:
             # This may fail return failure due to a race condition in adb
             # connect (b/29370989). If adb is already connected, this command
             # will immediately return success.
             host_port = self._get_adb_target(host)
             result = self._run_adb_cmd(
-                host, args=('connect', host_port), verbose=True,
+                host, args=('connect', host_port), verbose=True, env=env,
                 ignore_status=True,
                 timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
             if result.exit_status != 0:
                 return False
 
-            result = self._run_adb_cmd(host, args=('devices',),
+            result = self._run_adb_cmd(host, args=('devices',), env=env,
                 timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
             if not re.search(r'{}\s+(device|unauthorized)'.format(
                     re.escape(host_port)), result.stdout):
@@ -293,7 +296,7 @@ class TradefedTest(test.test):
             # a race between detecting the connected device and actually being
             # able to run a commmand with authenticated adb.
             result = self._run_adb_cmd(
-                host, args=('shell', 'exit'), ignore_status=True,
+                host, args=('shell', 'exit'), env=env, ignore_status=True,
                 timeout=constants.ADB_CONNECT_TIMEOUT_SECONDS)
             return result.exit_status == 0
         except error.CmdTimeoutError as e:
