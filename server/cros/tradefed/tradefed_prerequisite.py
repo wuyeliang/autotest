@@ -4,17 +4,19 @@
 
 import logging
 
+_ERROR_PREFIX = 'CTS Test Precondition Failed'
+
 def bluetooth(hosts):
     """Check for missing bluetooth hardware.
     """
     # TODO(ianrlee): Reenable, once a nice check is found in b/148621587.
-    #for host in hosts:
+    # for host in hosts:
     #    output = host.run('hcitool dev').stdout
     #    lines = output.splitlines()
     #    if len(lines) < 2 or not lines[0].startswith('Devices:'):
-    #        return False, 'Failed: Bluetooth device is missing.'\
+    #        return False, '%s: Bluetooth device is missing.'\
     #                      'Stdout of the command "hcitool dev1"'\
-    #                      'on host %s was %s' % (host, output)
+    #                      'on host %s was %s' % (_ERROR_PREFIX, host, output)
     return True, ''
 
 
@@ -24,10 +26,10 @@ def region_us(hosts):
     for host in hosts:
         output = host.run('vpd -g region').stdout
         if output != 'us':
-            return False, 'Failed: Region is not "us".'\
+            return False, '%s: Region is not "us".'\
                           'Stdout of the command "vpd -l'\
                           '| grep region" on host %s was %s'\
-                          % (host, output)
+                          % (_ERROR_PREFIX, host, output)
     return True, ''
 
 prerequisite_map = {
