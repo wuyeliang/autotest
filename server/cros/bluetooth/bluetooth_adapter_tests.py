@@ -43,7 +43,8 @@ SUPPORTED_DEVICE_TYPES = {
     'BLE_MOUSE': lambda btpeer: btpeer.get_ble_mouse,
     'BLE_KEYBOARD': lambda btpeer: btpeer.get_ble_keyboard,
     'A2DP_SINK': lambda btpeer: btpeer.get_bluetooth_a2dp_sink,
-
+    # Tester allows us to test DUT's discoverability, etc. from a peer
+    'BLUETOOTH_TESTER': lambda btpeer: btpeer.get_bluetooth_tester,
     # This is a base object that does not emulate any Bluetooth device.
     # This object is preferred when only a pure XMLRPC server is needed
     # on the btpeer host, e.g., to perform servod methods.
