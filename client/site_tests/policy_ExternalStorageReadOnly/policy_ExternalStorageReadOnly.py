@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import logging
 import os
 
 from autotest_lib.client.bin import utils
@@ -21,7 +20,8 @@ class policy_ExternalStorageReadOnly(
         'NotSet_Allow': None
     }
 
-    TEST_FILE = os.path.join(os.sep, 'media', 'removable', 'STATE', 'test')
+    TEST_DIR = os.path.join(os.sep, 'media', 'removable', 'STATE')
+    TEST_FILE = os.path.join(TEST_DIR, 'test')
 
     def cleanup(self):
         """Delete the test file, if it was created."""
@@ -47,6 +47,8 @@ class policy_ExternalStorageReadOnly(
 
         """
         # Attempt to modify the external storage by creating a file.
+        if not os.path.isdir(self.TEST_DIR):
+            raise error.TestWarn('USB Missing. Exiting')
         if os.path.isfile(self.TEST_FILE):
             raise error.TestWarn('Test file existed prior to test.')
         utils.run('touch %s' % self.TEST_FILE, ignore_status=True)
