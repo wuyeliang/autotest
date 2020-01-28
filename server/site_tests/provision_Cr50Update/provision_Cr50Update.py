@@ -32,14 +32,15 @@ class provision_Cr50Update(Cr50Test):
     version = 1
 
     def initialize(self, host, cmdline_args, full_args, value='',
-                   release_path='', chip_bid_str=''):
+                   release_path='', chip_bid_str='', force=False):
         """Initialize get the cr50 update version information"""
         super(provision_Cr50Update, self).initialize(host, cmdline_args,
             full_args, provision_update=True)
         # TODO(mruthven): remove once the test is successfully scheduled.
         logging.info('SUCCESSFULLY SCHEDULED PROVISION CR50 UPDATE with %r',
                      value)
-        return
+        if not force:
+            return
         self.host = host
         self.chip_bid_str = chip_bid_str
 
@@ -228,11 +229,12 @@ class provision_Cr50Update(Cr50Test):
             raise error.TestFail('Update failures: %s', ', '.join(failed))
 
 
-    def run_once(self):
+    def run_once(self, force=False):
         """The method called by the control file to start the update."""
         # TODO(mruthven): remove once the test is successfully scheduled.
-        logging.info('skipping update')
-        return
+        if not force:
+            logging.info('skipping update')
+            return
         chip_bid_info, set_bid = self.get_new_chip_bid()
 
         logging.info('Updating to image %s with chip board id %s',

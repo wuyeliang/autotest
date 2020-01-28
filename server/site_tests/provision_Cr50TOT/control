@@ -26,10 +26,11 @@ if 'args_dict' not in locals():
 args_dict.update(utils.args_to_dict(args))
 servo_args = hosts.CrosHost.get_servo_arguments(args_dict)
 
+force = args_dict.get("force", "true").lower() == "true"
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
-    job.run_test('provision_Cr50TOT', host=host, cmdline_args=args)
+    job.run_test('provision_Cr50TOT', host=host, cmdline_args=args, force=force)
 
 
 job.parallel_simple(run, machines)
