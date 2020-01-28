@@ -347,7 +347,11 @@ class ServoHost(base_servohost.BaseServoHost):
 
         # We want always stop servod after task to minimum the impact of bad
         # servod process interfere other servods.(see crbug.com/1028665)
-        self.stop_servod()
+        try:
+            self.stop_servod()
+        except error.AutoservRunError as e:
+            logging.info("Failed to stop servod due to:\n%s\n"
+                         "This error is forgived.", str(e))
 
         super(ServoHost, self).close()
 
