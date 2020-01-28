@@ -16,16 +16,12 @@ DOC = """
 This is a test used by the provision control segment in autoserv to set the
 cr50-version label of a host to the desired setting. This test attempts to
 reprogram the cr50 firmware and set the cr50 chip board id using the given
-params in value. value should a string with the
-'prodsigned-rw_ver/image_bid/chip_bid' or 'selfsigned-build_info/chip_bid'.
-build_info is something like 'reef-release/R61-9704.0.0'. For a prodsigned image
-only the rw_ver is manditory. On selfsigned images only the build_info is
-necessary. value is completely ignored if a valid release_path is given.
+params in value. value should a string with the 'image_rw_ver/image_bid'.
+value is completely ignored if a valid release_path is given.
 
 @param value: the release image information. Ignored if release_path is given
 @param release_path: local path to release image
 @param cr50_dbg_image_path: local path to DBG image
-@param chip_bid: the desired cr50 chip board id string
 """
 
 from autotest_lib.client.common_lib import error, utils
@@ -41,7 +37,6 @@ chip_bid = ''
 if not locals().get('value'):
     value = args_dict.get('value', '')
     release_path = args_dict.get('release_path', '')
-    chip_bid_str = args_dict.get('chip_bid', '')
 
 
 force = args_dict.get("force", "").lower() == "true"
@@ -50,7 +45,6 @@ def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
     job.run_test('provision_Cr50Update', host=host, cmdline_args=args,
                  full_args=args_dict, value=value, release_path=release_path,
-                 chip_bid_str=chip_bid_str, force=force)
-
+                 force=force)
 
 job.parallel_simple(run, machines)
