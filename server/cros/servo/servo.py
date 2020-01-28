@@ -314,6 +314,7 @@ class Servo(object):
         self._servo_host = servo_host
         self._servo_serial = servo_serial
         self._server = servo_host.get_servod_server_proxy()
+        self._servo_type = self.get_servo_version()
         self._power_state = _PowerStateController(self)
         self._uart = _Uart(self)
         self._usb_state = None
@@ -1050,8 +1051,7 @@ class Servo(object):
 
     def get_main_servo_device(self):
         """Return the main servo device"""
-        servo_type = self.get_servo_version()
-        return servo_type.split('_with_')[-1].split('_and_')[0]
+        return self._servo_type.split('_with_')[-1].split('_and_')[0]
 
 
     def enable_main_servo_device(self):
@@ -1087,20 +1087,19 @@ class Servo(object):
         if self._programmer:
             return
         # Initialize firmware programmer
-        servo_version = self.get_servo_version()
-        if servo_version.startswith('servo_v2'):
+        if self._servo_type.startswith('servo_v2'):
             self._programmer = firmware_programmer.ProgrammerV2(self)
             self._programmer_rw = firmware_programmer.ProgrammerV2RwOnly(self)
         # Both servo v3 and v4 use the same programming methods so just leverage
         # ProgrammerV3 for servo v4 as well.
-        elif (servo_version.startswith('servo_v3') or
-              servo_version.startswith('servo_v4')):
+        elif (self._servo_type.startswith('servo_v3') or
+              self._servo_type.startswith('servo_v4')):
             self._programmer = firmware_programmer.ProgrammerV3(self)
             self._programmer_rw = firmware_programmer.ProgrammerV3RwOnly(self)
         else:
             raise error.TestError(
                     'No firmware programmer for servo version: %s' %
-                    servo_version)
+                    self._servo_type)
 
 
     def program_bios(self, image, rw_only=False):
@@ -1292,8 +1291,7 @@ class Servo(object):
 
         @param role: Power role for DUT port on servo v4, either 'src' or 'snk'.
         """
-        servo_version = self.get_servo_version()
-        if servo_version.startswith('servo_v4'):
+        if self._servo_type.startswith('servo_v4'):
             value = self.get('servo_v4_role')
             if value != role:
                 self.set_nocheck('servo_v4_role', role)
@@ -1305,12 +1303,12 @@ class Servo(object):
 
     def supports_built_in_pd_control(self):
         """Return whether the servo type supports pd charging and control."""
-        servo_type = self.get('servo_type')
-        if 'servo_v4' not in servo_type:
+        if 'servo_v4' not in self._servo_type:
             # Only servo v4 supports this feature.
-            logging.info('%r type does not support pd control.', servo_type)
+            logging.info('%r type does not support pd control.',
+                         self._servo_type)
             return False
-        # On servo v4, it still needs ot be the type-c version.
+        # On servo v4, it still needs to be the type-c version.
         if not self.get('servo_v4_type') == 'type-c':
             logging.info('PD controls require a type-c servo v4.')
             return False
@@ -1333,14 +1331,14 @@ class Servo(object):
 
         @param state: Set servo v4 dts mode 'off' or 'on'.
         """
-        servo_version = self.get_servo_version()
-        if not servo_version.startswith('servo_v4'):
+        if not self._servo_type.startswith('servo_v4'):
             logging.debug('Not a servo v4, unable to set dts mode %s.', state)
             return
 
         # TODO(mruthven): remove watchdog check once the labstation has been
         # updated to have support for modifying the watchdog.
-        set_watchdog = self.has_control('watchdog') and 'ccd' in servo_version
+        set_watchdog = (self.has_control('watchdog') and
+                        'ccd' in self._servo_type)
         enable_watchdog = state == 'on'
 
         if set_watchdog and not enable_watchdog:
