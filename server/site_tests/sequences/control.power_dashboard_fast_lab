@@ -56,6 +56,7 @@ def run_client_test(machine):
 
     wlan_ip = client.get_wlan_ip()
     if not wlan_ip:
+        autotest.Autotest(client).run_test('dummy_Pass')
         if not client.connect_to_wifi(WIFI_SSID):
             raise error.TestFail('Can not connect to wifi.')
         wlan_ip = client.get_wlan_ip()
