@@ -160,7 +160,7 @@ class autoupdate_StatefulCompatibility(update_engine_test.UpdateEngineTest):
         logging.debug('Payloads: %s', str(payloads))
 
         for payload in payloads:
-            if re.match('.*[a-f|0-9]{16}$', payload) is not None:
+            if re.match('.*-[a-z|0-9]{32}$', payload) is not None:
                 return payload
         return None
 
