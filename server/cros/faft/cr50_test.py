@@ -111,21 +111,27 @@ class Cr50Test(FirmwareTest):
 
         # We successfully saved the device state
         self._saved_state |= self.INITIAL_IMAGE_STATE
+        # Try and download all images necessary to restore cr50 state.
         try:
             self._save_dbg_image(full_args.get('cr50_dbg_image_path', ''))
             self._saved_state |= self.DBG_IMAGE
+        except Exception as e:
+            logging.warning('Error saving DBG image: %s', str(e))
+            if restore_cr50_image:
+                raise error.TestNAError('Need DBG image: %s' % str(e))
+        try:
             self._save_original_images(full_args.get('release_path', ''))
             self._saved_state |= self.DEVICE_IMAGES
+        except Exception as e:
+            logging.warning('Error saving ChromeOS image cr50 firmware: %s',
+                            str(e))
+        try:
             self._save_eraseflashinfo_image(
                     full_args.get('cr50_eraseflashinfo_image_path', ''))
             self._saved_state |= self.ERASEFLASHINFO_IMAGE
         except Exception as e:
-            logging.warning('Error saving images: %s', str(e))
-            if (restore_cr50_image and
-                not self._saved_cr50_state(self.DBG_IMAGE)):
-                raise error.TestNAError('Need DBG image: %s' % str(e))
-            elif (restore_cr50_board_id and
-                  self._saved_cr50_state(self.ERASEFLASHINFO_IMAGE)):
+            logging.warning('Error saving eraseflashinfo image: %s', str(e))
+            if restore_cr50_board_id:
                 raise error.TestNAError('Need eraseflashinfo image: %s' %
                                         str(e))
 
