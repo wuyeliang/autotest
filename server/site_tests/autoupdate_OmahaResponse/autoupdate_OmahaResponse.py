@@ -62,13 +62,11 @@ class autoupdate_OmahaResponse(update_engine_test.UpdateEngineTest):
                                                    image_url=image_url)
 
         if bad_sha256 or bad_metadata_size:
-            sha = 'blahblah' if bad_sha256 else file_info['sha256']
-            metadata = 123 if bad_metadata_size else None
-            self._run_client_test_and_check_result('autoupdate_BadMetadata',
-                                                   image_url=image_url,
-                                                   image_size=file_info['size'],
-                                                   sha256=sha,
-                                                   metadata_size=metadata)
+            self._run_client_test_and_check_result(
+                'autoupdate_BadMetadata',
+                image_url=image_url,
+                bad_metadata_size=bad_metadata_size,
+                bad_sha256=bad_sha256)
 
         if test_backoff:
             self._run_client_test_and_check_result('autoupdate_Backoff',

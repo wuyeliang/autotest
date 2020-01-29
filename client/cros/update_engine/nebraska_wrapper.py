@@ -11,6 +11,13 @@ from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 
 
+# JSON attributes used in payload properties. Look at nebraska.py for more
+# information.
+KEY_PUBLIC_KEY='public_key'
+KEY_METADATA_SIZE='metadata_size'
+KEY_SHA256='sha256_hex'
+
+
 class NebraskaWrapper(object):
     """
     A wrapper around nebraska.py

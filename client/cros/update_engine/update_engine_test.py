@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import json
 import logging
 import os
 import requests
@@ -91,22 +92,34 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
             logging.debug(utils.run('ifconfig', ignore_status=True))
             raise error.TestFail('Disabling the internet connection failed.')
 
-    def _get_payload_properties_file(self, payload_url, target_dir):
+    def _get_payload_properties_file(self, payload_url, target_dir, **kwargs):
         """
         Downloads the payload properties file into a directory.
 
         @param payload_url: The URL to the update payload file.
         @param target_dir: The directory to download the file into.
+        @param kwargs: A dictionary of key/values that needs to be overridden on
+                the payload properties file.
 
         """
         payload_props_url = payload_url + '.json'
         _, _, file_name = payload_props_url.rpartition('/')
         try:
-            response = requests.get(payload_props_url)
-            with open(os.path.join(target_dir, file_name), 'w') as fp:
-                fp.write(response.text)
+            response = json.loads(requests.get(payload_props_url).text)
 
-        except (requests.exceptions.RequestException, IOError) as err:
+            # Override existing keys if any.
+            for k, v in kwargs.iteritems():
+                # Don't set default None values. We don't want to override good
+                # values to None.
+                if v is not None:
+                    response[k] = v
+
+            with open(os.path.join(target_dir, file_name), 'w') as fp:
+                json.dump(response, fp)
+
+        except (requests.exceptions.RequestException,
+                IOError,
+                ValueError) as err:
             raise error.TestError(
                 'Failed to get update payload properties: %s with error: %s' %
                 (payload_props_url, err))
