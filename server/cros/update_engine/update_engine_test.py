@@ -5,13 +5,13 @@
 import json
 import logging
 import os
-import update_engine_event as uee
 import urlparse
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import lsbrelease_utils
 from autotest_lib.client.common_lib import utils
 from autotest_lib.client.common_lib.cros import dev_server
+from autotest_lib.client.cros.update_engine import update_engine_event as uee
 from autotest_lib.client.cros.update_engine import update_engine_util
 from autotest_lib.server import autotest
 from autotest_lib.server import test
@@ -19,7 +19,6 @@ from autotest_lib.server.cros.dynamic_suite import tools
 from autotest_lib.server.cros.update_engine import omaha_devserver
 from chromite.lib import retry_util
 from datetime import datetime, timedelta
-from update_engine_event import UpdateEngineEvent
 
 
 class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
@@ -102,20 +101,20 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         in the correct order with the correct data, timeout, and error
         condition function.
         """
-        initial_check = UpdateEngineEvent(
+        initial_check = uee.UpdateEngineEvent(
             version=source_release,
             on_error=self._error_initial_check)
-        download_started = UpdateEngineEvent(
+        download_started = uee.UpdateEngineEvent(
             event_type=uee.EVENT_TYPE_DOWNLOAD_STARTED,
             event_result=uee.EVENT_RESULT_SUCCESS,
             version=source_release,
             on_error=self._error_incorrect_event)
-        download_finished = UpdateEngineEvent(
+        download_finished = uee.UpdateEngineEvent(
             event_type=uee.EVENT_TYPE_DOWNLOAD_FINISHED,
             event_result=uee.EVENT_RESULT_SUCCESS,
             version=source_release,
             on_error=self._error_incorrect_event)
-        update_complete = UpdateEngineEvent(
+        update_complete = uee.UpdateEngineEvent(
             event_type=uee.EVENT_TYPE_UPDATE_COMPLETE,
             event_result=uee.EVENT_RESULT_SUCCESS,
             version=source_release,
@@ -150,7 +149,7 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
     def _get_expected_event_for_post_reboot_check(self, source_release,
                                                   target_release):
         """Creates the expected event fired during post-reboot update check."""
-        post_reboot_check = UpdateEngineEvent(
+        post_reboot_check = uee.UpdateEngineEvent(
             event_type=uee.EVENT_TYPE_REBOOTED_AFTER_UPDATE,
             event_result=uee.EVENT_RESULT_SUCCESS,
             version=target_release,

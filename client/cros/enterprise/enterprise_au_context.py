@@ -8,15 +8,11 @@ import re
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.cros.update_engine import nano_omaha_devserver
+from autotest_lib.client.cros.update_engine import update_engine_event as uee
 from autotest_lib.client.cros.update_engine import update_engine_util
 
 _MIN_BUILD = '1.1.1'
 _MAX_BUILD = '999999.9.9'
-
-# eventtype value sent by client in an AU request.  Indicates that
-# device rebooted after an update since last check.
-# TODO: remove this, crbug.com/879687
-_EVENT_TYPE_REBOOTED_AFTER_UPDATE = '54'
 
 class NanoOmahaEnterpriseAUContext(object):
     """
@@ -123,7 +119,7 @@ class NanoOmahaEnterpriseAUContext(object):
         for i in xrange(len(requests) - 1, -1, -1):
             search = re.search(MATCH_STR, requests[i])
             if (not search or
-                search.group(1) == _EVENT_TYPE_REBOOTED_AFTER_UPDATE):
+                search.group(1) == uee.EVENT_TYPE_REBOOTED_AFTER_UPDATE):
                 return requests[i]
 
         return None
