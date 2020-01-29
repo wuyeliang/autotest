@@ -3,6 +3,8 @@
 # found in the LICENSE file.
 
 import logging
+import os
+import requests
 import shutil
 
 from autotest_lib.client.bin import test, utils
@@ -89,3 +91,22 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
             logging.debug(utils.run('ifconfig', ignore_status=True))
             raise error.TestFail('Disabling the internet connection failed.')
 
+    def _get_payload_properties_file(self, payload_url, target_dir):
+        """
+        Downloads the payload properties file into a directory.
+
+        @param payload_url: The URL to the update payload file.
+        @param target_dir: The directory to download the file into.
+
+        """
+        payload_props_url = payload_url + '.json'
+        _, _, file_name = payload_props_url.rpartition('/')
+        try:
+            response = requests.get(payload_props_url)
+            with open(os.path.join(target_dir, file_name), 'w') as fp:
+                fp.write(response.text)
+
+        except (requests.exceptions.RequestException, IOError) as err:
+            raise error.TestError(
+                'Failed to get update payload properties: %s with error: %s' %
+                (payload_props_url, err))

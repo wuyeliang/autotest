@@ -520,9 +520,9 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
 
         """
         payload_filename = payload_url.rpartition('/')[2]
-        utils.run('gsutil cp %s %s' % (payload_url, self._CELLULAR_BUCKET))
+        utils.run('gsutil cp %s* %s' % (payload_url, self._CELLULAR_BUCKET))
         new_gs_url = self._CELLULAR_BUCKET + payload_filename
-        utils.run('gsutil acl ch -u AllUsers:R %s' % new_gs_url)
+        utils.run('gsutil acl ch -u AllUsers:R %s*' % new_gs_url)
         return new_gs_url.replace('gs://', 'https://storage.googleapis.com/')
 
 

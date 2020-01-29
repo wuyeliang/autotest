@@ -6,7 +6,6 @@ import logging
 import os
 import requests
 import subprocess
-import time
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
@@ -21,16 +20,22 @@ class NebraskaWrapper(object):
 
     """
 
-    def __init__(self, log_dir=None):
+    def __init__(self, log_dir=None, update_metadata_dir=None,
+                 update_payloads_address=None):
         """
         Initializes the NebraskaWrapper module.
 
         @param log_dir: The directory to write nebraska.log into.
+        @param update_metadata_dir: The directory containing payload properties
+                files. Look at nebraska.py
+        @param update_payloads_address: The base URL for the update payload.
 
         """
         self._nebraska_server = None
         self._port = None
         self._log_dir = log_dir
+        self._update_metadata_dir = update_metadata_dir
+        self._update_payloads_address = update_payloads_address
 
     def __enter__(self):
         """So that NebraskaWrapper can be used as a Context Manager."""
@@ -54,19 +59,23 @@ class NebraskaWrapper(object):
         @raise error.TestError: If fails to start the Nebraska server.
 
         """
-        logging.info('Starting nebraska.py')
-
         # Any previously-existing files (port, pid and log files) will be
         # overriden by Nebraska during bring up.
         runtime_root = '/tmp/nebraska'
         cmd = ['nebraska.py', '--runtime-root', runtime_root]
         if self._log_dir:
             cmd += ['--log-file', os.path.join(self._log_dir, 'nebraska.log')]
+        if self._update_metadata_dir:
+            cmd += ['--update-metadata', self._update_metadata_dir]
+        if self._update_payloads_address:
+            cmd += ['--update-payloads-address', self._update_payloads_address]
+
+        logging.info('Starting nebraska.py with command: %s', cmd)
 
         try:
             self._nebraska_server = subprocess.Popen(cmd,
                                                      stdout=subprocess.PIPE,
-                                                     stderr=subprocess.PIPE)
+                                                     stderr=subprocess.STDOUT)
 
             # Wait for port file to appear.
             port_file = os.path.join(runtime_root, 'port')
@@ -84,12 +93,12 @@ class NebraskaWrapper(object):
 
     def stop(self):
         """Stops the Nebraska server."""
-        logging.info('Stopping nebraska.py')
         if not self._nebraska_server:
             return
         try:
             self._nebraska_server.terminate()
-            self._nebraska_server.communicate()
+            stdout, _ = self._nebraska_server.communicate()
+            logging.info('Stopping nebraska.py with stdout %s', stdout)
             self._nebraska_server.wait()
         except subprocess.TimeoutExpired:
             logging.error('Failed to stop Nebraska. Ignoring...')
