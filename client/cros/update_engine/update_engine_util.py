@@ -255,13 +255,16 @@ class UpdateEngineUtil(object):
 
 
     def _check_for_update(self, server='http://127.0.0.1', port=8082,
-                          interactive=True, ignore_status=False,
-                          wait_for_completion=False, **kwargs):
+                          update_path='update', interactive=True,
+                          ignore_status=False, wait_for_completion=False,
+                          **kwargs):
         """
         Starts a background update check.
 
         @param server: The omaha server to call in the update url.
         @param port: The omaha port to call in the update url.
+        @param update_path: The /update part of the URL. When using a lab
+                            devserver, pass update/<board>-release/RXX-X.X.X.
         @param interactive: True if we are doing an interactive update.
         @param ignore_status: True if we should ignore exceptions thrown.
         @param wait_for_completion: True for --update, False for
@@ -274,9 +277,10 @@ class UpdateEngineUtil(object):
                 values.
         """
         update = 'update' if wait_for_completion else 'check_for_update'
+        update_path = update_path.lstrip('/')
         query = '&'.join('%s=%s' % (k, v) for k, v in kwargs.items())
-        cmd = 'update_engine_client --%s --omaha_url="%s:%d/update?%s"' % (
-            update, server, port, query)
+        cmd = 'update_engine_client --%s --omaha_url="%s:%d/%s?%s"' % (
+            update, server, port, update_path, query)
 
         if not interactive:
           cmd += ' --interactive=false'

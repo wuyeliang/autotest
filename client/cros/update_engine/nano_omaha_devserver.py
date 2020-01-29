@@ -168,7 +168,7 @@ class NanoOmahaDevserver(object):
         """Inner class for handling HTTP requests."""
         def do_POST(self):
             """Handler for POST requests."""
-            if self.path == '/update':
+            if '/update' in self.path:
                 # Parse the app id from the request to use in the response.
                 content_len = int(self.headers.getheader('content-length'))
                 request_string = self.rfile.read(content_len)
