@@ -25,8 +25,8 @@ def get_ap_list():
 
     """
     aps = []
-    # chaos_shadow_ap_list.conf is used for testing against local APs.
-    for filename in ('chaos_ap_list.conf', 'chaos_shadow_ap_list.conf'):
+    # chaos_ap_list.conf holds static conf of all APs in lab.
+    for filename in ['chaos_ap_list.conf']:
         ap_config = ConfigParser.RawConfigParser(
                 {AP.CONF_RPM_MANAGED: 'False'})
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)),

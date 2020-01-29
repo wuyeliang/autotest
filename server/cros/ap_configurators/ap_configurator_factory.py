@@ -15,8 +15,6 @@ from autotest_lib.server.cros.ap_configurators import ap_spec
 from autotest_lib.server.cros.ap_configurators import static_ap_configurator
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 
-CHAOS_URL = 'https://chaos-188802.appspot.com'
-
 
 class APConfiguratorFactory(object):
     """Class that instantiates all available APConfigurators.
@@ -156,45 +154,6 @@ class APConfiguratorFactory(object):
         return aps
 
 
-    def _get_aps_by_lab_location(self, want_chamber_aps, ap_list):
-        """Returns APs that are inside or outside of the chaos/clique lab.
-
-        @param want_chamber_aps: True to select only APs in the chaos/clique
-        chamber. False to select APs outside of the chaos/clique chamber.
-        @param ap_list: a list of APConfigurator objects.
-
-        @return a list of APConfigurators
-        """
-        aps = []
-        afe = frontend_wrappers.RetryingAFE(
-                timeout_min=10, delay_sec=5, server=site_utils.get_global_afe_hostname())
-        if self.test_type == ap_constants.AP_TEST_TYPE_CHAOS:
-            ap_label = 'chaos_ap'
-            lab_label = 'chaos_chamber'
-        elif self.test_type == ap_constants.AP_TEST_TYPE_CLIQUE:
-            ap_label = 'clique_ap'
-            lab_label = 'clique_chamber'
-        elif self.test_type == ap_constants.AP_TEST_TYPE_CASEY5:
-            ap_label = 'casey_ap5'
-            lab_label = 'casey_chamber5'
-        elif self.test_type == ap_constants.AP_TEST_TYPE_CASEY7:
-            ap_label = 'casey_ap7'
-            lab_label = 'casey_chamber7'
-        else:
-            return None
-        all_aps = set(afe.get_hostnames(label=ap_label))
-        chamber_devices = set(afe.get_hostnames(label=lab_label))
-        chamber_aps = all_aps.intersection(chamber_devices)
-        for ap in ap_list:
-            if want_chamber_aps and ap.host_name in chamber_aps:
-                aps.append(ap)
-
-            if not want_chamber_aps and ap.host_name not in chamber_aps:
-                aps.append(ap)
-
-        return aps
-
-
     def get_ap_configurators_by_spec(self, spec=None, pre_configure=False):
         """Returns available configurators meeting spec.
 
@@ -208,20 +167,16 @@ class APConfiguratorFactory(object):
         if not spec:
             return self.ap_list
 
-        # APSpec matching is exact.  With the exception of lab location, even
-        # if a hostname is passed the capabilities of a given configurator
-        # much match everything in the APSpec.  This helps to prevent failures
-        # during the pre-scan phase.
+        # APSpec matching is exact. With AFE deprecated and AP's lock mechanism
+        # in datastore, there is no need to check spec.hostnames by location.
+        # If a hostname is passed, the capabilities of a given configurator
+        # match everything in the APSpec. This helps to prevent failures during
+        # the pre-scan phase.
         aps = self._get_aps_by_band(spec.band, channel=spec.channel)
         aps &= self._get_aps_by_mode(spec.band, spec.mode)
         aps &= self._get_aps_by_security(spec.security)
         aps &= self._get_aps_by_visibility(spec.visible)
         matching_aps = list(aps)
-        # If APs hostnames are provided, assume the tester knows the location
-        # of the AP and skip AFE calls.
-        if spec.hostnames is None:
-            matching_aps = self._get_aps_by_lab_location(spec.lab_ap,
-                                                         matching_aps)
 
         if spec.configurator_type != ap_spec.CONFIGURATOR_ANY:
             matching_aps = self._get_aps_by_configurator_type(

@@ -14,7 +14,6 @@ from autotest_lib.server.cros.ap_configurators import \
     ap_configurator_factory
 from autotest_lib.client.common_lib.cros.network import ap_constants
 from autotest_lib.server.cros.ap_configurators import ap_cartridge
-from autotest_lib.server.cros.chaos_lib import chaos_datastore_utils as dutils
 
 # Max number of retry attempts to lock an ap.
 MAX_RETRIES = 3
@@ -93,8 +92,8 @@ class ApBatchLocker(object):
     """
 
 
-    MIN_SECONDS_TO_SLEEP = 30
-    MAX_SECONDS_TO_SLEEP = 120
+    MIN_SECONDS_TO_SLEEP = 10
+    MAX_SECONDS_TO_SLEEP = 20
 
 
     def __init__(self, lock_manager, ap_spec, retries=MAX_RETRIES,
@@ -123,15 +122,12 @@ class ApBatchLocker(object):
         return len(self.aps_to_lock) > 0
 
 
-    def lock_ap_in_afe(self, ap_locker):
-        """Locks an AP host in AFE.
+    def lock_ap(self, ap_locker):
+        """Locks an AP host in DataStore.
 
         @param ap_locker: an ApLocker object, AP to be locked.
-        @return a boolean, True iff ap_locker is locked.
+        @return a boolean, True if ap_locker is locked.
         """
-        if not utils.host_is_in_lab_zone(ap_locker.configurator.host_name):
-            ap_locker.to_be_locked = False
-            return True
 
         if self.manager.lock([ap_locker.configurator.host_name]):
             self._locked_aps.append(ap_locker)
@@ -151,62 +147,13 @@ class ApBatchLocker(object):
         return False
 
 
-    def lock_ap_in_datastore(self, ap_locker):
-        """
-        Lock an AP host in datastore.
-
-        Test iterates through list of APs available in chaos_ap_list.conf file.
-        If AP with host_name is not found in datastore, this method adds the
-        same and shall use it for locking and testing.
-
-        @param ap_locker: an ApLocker object, AP to be locked.
-        @return a boolean, True iff ap_locker is locked.
-
-        """
-        #ToDo dsunkara@: Find if below check is needed when not using Autotest.
-        if not utils.host_is_in_lab_zone(ap_locker.configurator.host_name):
-            ap_locker.to_be_locked = False
-            return True
-
-        # Get status of AP in datastore.
-        ap_device = dutils.show_device(ap_locker.configurator.host_name)
-        # Check if both Find / Add operations failed.
-        if not ap_device:
-            logging.error("Unable to find: %s in Datastore.",
-                          ap_locker.configurator.host_name)
-            ap_locker.to_be_locked = False
-        # Check lock status of AP before trying to lock it.
-        # Lock AP if its not locked, else retry
-        elif ap_device['lock_status']:
-            logging.error("AP is already locked by %s at %s",
-                          ap_device['locked_by'],
-                          ap_device['lock_status_updated'])
-            ap_locker.to_be_locked = False
-        else:
-            # Lock device in datastore.
-            if dutils.lock_device(ap_locker.configurator.host_name):
-                self._locked_aps.append(ap_locker)
-                ap_locker.to_be_locked = False
-                return True
-            else:
-                ap_locker.retries -= 1
-                logging.info('%d retries left for %s',
-                         ap_locker.retries,
-                         ap_locker.configurator.host_name)
-                if ap_locker.retries == 0:
-                    logging.info('No more retries left. Remove %s from list',
-                                 ap_locker.configurator.host_name)
-                    ap_locker.to_be_locked = False
-
-        return False
-
 
     def get_ap_batch(self, batch_size=ap_cartridge.THREAD_MAX):
         """Allocates a batch of locked APs.
 
         @param batch_size: an integer, max. number of aps to lock in one batch.
                            Defaults to THREAD_MAX in ap_cartridge.py
-        @return a list of APConfigurator objects, locked on AFE.
+        @return a list of APConfigurator objects, locked in datastore.
         """
         # We need this while loop to continuously loop over the for loop.
         # To exit the while loop, we either:
@@ -218,7 +165,7 @@ class ApBatchLocker(object):
             for ap_locker in self.aps_to_lock:
                 logging.info('checking %s', ap_locker.configurator.host_name)
                 # Lock AP in DataStore
-                if self.lock_ap_in_datastore(ap_locker):
+                if self.lock_ap(ap_locker):
                     ap_batch.append(ap_locker.configurator)
                     if len(ap_batch) == batch_size:
                         break
@@ -247,9 +194,13 @@ class ApBatchLocker(object):
 
 
     def unlock_one_ap(self, host_name):
-        """Unlock one AP after we're done.
+        """
+        Unlock one AP from datastore after we're done.
 
-        @param host_name: a string, host name.
+        @param host_name: a string, AP host name.
+
+        @raise TestError: when unable to unlock AP in datastore.
+
         """
         for ap_locker in self._locked_aps:
             if host_name == ap_locker.configurator.host_name:
@@ -261,29 +212,6 @@ class ApBatchLocker(object):
                       host_name)
 
 
-    def unlock_one_ap_in_datastore(self, host_name):
-        """
-        Unlock one AP from datastore after we're done.
-
-        @param host_name: a string, AP host name.
-
-        @raise TestError: when unable to unlock AP in datastore.
-
-        """
-        for ap_locker in self._locked_aps:
-            if host_name == ap_locker.configurator.host_name:
-                # Unlock in datastore
-                # ToDo @dsunkara: change method name to unlock_one_ap
-                # once all dependencies are cleared on AFE.
-                unlocked_device = dutils.unlock_device(host_name)
-                if not unlocked_device:
-                    raise error.TestError('Failed to unlock AP: %s',
-                                          host_name)
-                else:
-                    self._locked_aps.remove(ap_locker)
-                return
-
-
     def unlock_aps(self):
         """Unlock APs after we're done."""
         # Make a copy of all of the hostnames to process
@@ -292,7 +220,7 @@ class ApBatchLocker(object):
         for ap_locker in self._locked_aps:
             host_names.append(ap_locker.configurator.host_name)
         for host_name in host_names:
-            self.unlock_one_ap_in_datastore(host_name)
+            self.unlock_one_ap(host_name)
 
 
     def unlock_and_reclaim_ap(self, host_name):
@@ -303,7 +231,7 @@ class ApBatchLocker(object):
         for ap_locker in self._locked_aps:
             if host_name == ap_locker.configurator.host_name:
                 self.aps_to_lock.append(ap_locker)
-                self.unlock_one_ap_in_datastore(host_name)
+                self.unlock_one_ap(host_name)
                 return
 
 

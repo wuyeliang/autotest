@@ -65,8 +65,7 @@ class StaticRunner(object):
         lock_manager = host_lock_manager.HostLockManager()
 
         with host_lock_manager.HostsLockedBy(lock_manager):
-            capture_host = utils.allocate_packet_capturer_in_datastore(
-                    lock_manager)
+            capture_host = utils.allocate_packet_capturer(lock_manager)
 
             # Cleanup and reboot packet capturer before the test.
             utils.sanitize_client(capture_host)
@@ -100,7 +99,7 @@ class StaticRunner(object):
                         'chaos test?!')
 
             if conn_worker is not None:
-                work_client_machine = utils.allocate_packet_capturer_in_datastore(
+                work_client_machine = utils.allocate_packet_capturer(
                         lock_manager, hostname=work_client_hostname)
                 conn_worker.prepare_work_client(work_client_machine)
 
