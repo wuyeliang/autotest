@@ -329,15 +329,26 @@ class Cr50Test(FirmwareTest):
         self.cr50_update(image)
 
 
-    def _restore_running_cr50_image(self, state_mismatch):
-        """Restore the cr50 image and board id.
+    def update_cr50_image_and_board_id(self, image_path, bid):
+        """Set the chip board id and updating the cr50 image.
 
         Make 3 attempts to update to the original image. Use a rollback from
         the DBG image to erase the state that can only be erased by a DBG image.
-        Set the chip board id during rollback
+        Set the chip board id during rollback.
 
-        @param state_mismatch: a dictionary of the mismatched state.
+        @param image_path: path of the image to update to.
+        @param bid: the board id to set.
         """
+        current_bid = cr50_utils.GetChipBoardId(self.host)
+        bid_mismatch = current_bid != bid
+        set_bid = bid_mismatch and bid != cr50_utils.ERASED_CHIP_BID
+        bid_is_erased = current_bid == cr50_utils.ERASED_CHIP_BID
+        eraseflashinfo = bid_mismatch and not bid_is_erased
+
+        if (eraseflashinfo and not
+            self._saved_cr50_state(self.ERASEFLASHINFO_IMAGE)):
+            raise error.TestFail('Did not save eraseflashinfo image')
+
         # Remove prepvt and prod iamges, so they don't interfere with the test
         # rolling back and updating to images that my be older than the images
         # on the device.
@@ -345,28 +356,17 @@ class Cr50Test(FirmwareTest):
             self.host.run('rm %s' % cr50_utils.CR50_PREPVT, ignore_status=True)
             self.host.run('rm %s' % cr50_utils.CR50_PROD, ignore_status=True)
 
-        bid_mismatch = 'chip_bid' in state_mismatch
-        original_bid = self._original_image_state['chip_bid']
-        set_bid = bid_mismatch and original_bid != cr50_utils.ERASED_CHIP_BID
-        bid_is_erased = (cr50_utils.GetChipBoardId(self.host) ==
-                         cr50_utils.ERASED_CHIP_BID)
-        eraseflashinfo = bid_mismatch and not bid_is_erased
-
-        if (eraseflashinfo and not
-            self._saved_cr50_state(self.ERASEFLASHINFO_IMAGE)):
-            raise error.TestFail('Did not save eraseflashinfo image')
-
         if eraseflashinfo:
             self.run_update_to_eraseflashinfo()
 
         self._retry_cr50_update(self._dbg_image_path, 3, False)
 
-        chip_bid = original_bid[0]
-        chip_flags = original_bid[2]
+        chip_bid = bid[0]
+        chip_flags = bid[2]
         if set_bid:
             self.cr50.set_board_id(chip_bid, chip_flags)
 
-        self._retry_cr50_update(self.get_saved_cr50_original_path(), 3, True)
+        self._retry_cr50_update(image_path, 3, True)
 
 
     def _cleanup_required(self, state_mismatch, image_type):
@@ -570,7 +570,9 @@ class Cr50Test(FirmwareTest):
 
         # Use the DBG image to restore the original image.
         if self._cleanup_required(state_mismatch, self.DBG_IMAGE):
-            self._restore_running_cr50_image(state_mismatch)
+            self.update_cr50_image_and_board_id(
+                    self.get_saved_cr50_original_path(),
+                    self._original_image_state['chip_bid'])
 
         new_mismatch = self._check_original_image_state()
         # Copy the original .prod and .prepvt images back onto the DUT.
