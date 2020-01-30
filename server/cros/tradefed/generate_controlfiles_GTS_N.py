@@ -140,7 +140,7 @@ CONFIG['EXTRA_ATTRIBUTES'] = {
     'tradefed-run-collect-tests-only-internal': ['suite:arc-gts'],
 }
 CONFIG['EXTRA_ARTIFACTS'] = {}
-
+CONFIG['PREREQUISITES'] = {}
 
 from generate_controlfiles_common import main
 

@@ -444,7 +444,7 @@ CONFIG['EXTRA_COMMANDLINE'] = {
 CONFIG['EXTRA_ATTRIBUTES'] = {}
 
 CONFIG['EXTRA_ARTIFACTS'] = {}
-
+CONFIG['PREREQUISITES'] = {}
 
 from generate_controlfiles_common import main
 

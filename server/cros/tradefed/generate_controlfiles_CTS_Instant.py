@@ -175,6 +175,7 @@ CONFIG['EXTRA_ATTRIBUTES'] = {
 
 CONFIG['EXTRA_ARTIFACTS'] = {}
 
+CONFIG['PREREQUISITES'] = {}
 
 if __name__ == '__main__':
         main(CONFIG)
