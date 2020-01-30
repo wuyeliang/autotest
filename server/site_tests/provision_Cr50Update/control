@@ -44,7 +44,7 @@ if not locals().get('value'):
     chip_bid_str = args_dict.get('chip_bid', '')
 
 
-force = args_dict.get("force", "true").lower() == "true"
+force = args_dict.get("force", "").lower() == "true"
 
 def run(machine):
     host = hosts.create_host(machine, servo_args=servo_args)
