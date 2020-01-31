@@ -194,6 +194,7 @@ suite:power_sanity
 suite:powerplay
 suite:push_to_prod
 suite:regression
+suite:rlz
 suite:runtime_probe_perbuild
 suite:sanity
 suite:sb65-presubmit
