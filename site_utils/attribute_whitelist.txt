@@ -47,6 +47,7 @@ suite:audio_advanced
 suite:audio_basic
 suite:audio_essential
 suite:au_fsi
+suite:au-oobe
 suite:au-perbuild
 suite:av_webcam
 suite:bluestreak-partners
