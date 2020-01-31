@@ -973,7 +973,7 @@ class BluetoothAdapterTests(test.test):
     @_test_retry_and_log
     def test_start_discovery(self):
         """Test that the adapter could start discovery."""
-        start_discovery = self.bluetooth_facade.start_discovery()
+        start_discovery, _ = self.bluetooth_facade.start_discovery()
         is_discovering = self._wait_for_condition(
                 self.bluetooth_facade.is_discovering, method_name())
 
@@ -986,7 +986,7 @@ class BluetoothAdapterTests(test.test):
     @_test_retry_and_log
     def test_stop_discovery(self):
         """Test that the adapter could stop discovery."""
-        stop_discovery = self.bluetooth_facade.stop_discovery()
+        stop_discovery, _ = self.bluetooth_facade.stop_discovery()
         is_not_discovering = self._wait_for_condition(
                 lambda: not self.bluetooth_facade.is_discovering(),
                 method_name())
@@ -1230,23 +1230,26 @@ class BluetoothAdapterTests(test.test):
 
         if has_device(device_address):
             has_device_initially = True
-        elif self.bluetooth_facade.start_discovery():
-            start_discovery = True
-            try:
-                utils.poll_for_condition(
-                        condition=(lambda: has_device(device_address)),
-                        timeout=self.ADAPTER_DISCOVER_TIMEOUT_SECS,
-                        sleep_interval=self.ADAPTER_DISCOVER_POLLING_SLEEP_SECS,
-                        desc='Waiting for discovering %s' % device_address)
-                device_discovered = True
-            except utils.TimeoutError as e:
-                logging.error('test_discover_device: %s', e)
-            except Exception as e:
-                logging.error('test_discover_device: %s', e)
-                err = 'bluetoothd probably crashed. Check out /var/log/messages'
-                logging.error(err)
-            except:
-                logging.error('test_discover_device: unexpected error')
+        else:
+            start_discovery, _ = self.bluetooth_facade.start_discovery()
+            if start_discovery:
+                try:
+                    utils.poll_for_condition(
+                            condition=(lambda: has_device(device_address)),
+                            timeout=self.ADAPTER_DISCOVER_TIMEOUT_SECS,
+                            sleep_interval=
+                            self.ADAPTER_DISCOVER_POLLING_SLEEP_SECS,
+                            desc='Waiting for discovering %s' % device_address)
+                    device_discovered = True
+                except utils.TimeoutError as e:
+                    logging.error('test_discover_device: %s', e)
+                except Exception as e:
+                    logging.error('test_discover_device: %s', e)
+                    err = ('bluetoothd probably crashed.'
+                           'Check out /var/log/messages')
+                    logging.error(err)
+                except:
+                    logging.error('test_discover_device: unexpected error')
 
         self.results = {
                 'has_device_initially': has_device_initially,

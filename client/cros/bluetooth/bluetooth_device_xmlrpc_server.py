@@ -13,6 +13,7 @@ import json
 import logging
 import logging.handlers
 import subprocess
+import functools
 
 import common
 from autotest_lib.client.bin import utils
@@ -35,6 +36,49 @@ def _b64_string_to_dbus_byte_array(b64_string):
   for byte in bytes:
     dbus_array.append(dbus.Byte(byte))
   return dbus_array
+
+
+def dbus_print_error():
+    """Catch all DBus exceptions and return the error.
+
+    Wrap a function with a try block that catches DBus exceptions and
+    returns the error with the return status. The exception is logged
+    to aid in debugging.
+
+    @param wrapped_function function to wrap.
+
+    """
+    def decorator(wrapped_function):
+        """Call a function and catch DBus errors.
+
+        @param wrapped_function function to call in dbus safe context.
+        @return function return value or default_return_value on failure.
+
+        """
+        @functools.wraps(wrapped_function)
+        def wrapper(*args, **kwargs):
+            """Pass args and kwargs to a dbus safe function.
+
+            @param args formal python arguments.
+            @param kwargs keyword python arguments.
+            @return function return value or default_return_value on failure.
+
+            """
+            logging.debug('%s()', wrapped_function.__name__)
+            try:
+                return wrapped_function(*args, **kwargs)
+
+            except dbus.exceptions.DBusException as e:
+                logging.debug('Exception while performing operation %s: %s: %s',
+                              wrapped_function.__name__,
+                              e.get_dbus_name(),
+                              e.get_dbus_message())
+                return (False, str(e))
+
+        return wrapper
+
+    return decorator
+
 
 
 class PairingAgent(dbus.service.Object):
@@ -829,7 +873,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return json.dumps(dict())
 
 
-    @xmlrpc_server.dbus_safe(False)
+    @dbus_print_error()
     def start_discovery(self):
         """Start discovery of remote devices.
 
@@ -840,12 +884,12 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         """
         if not self._adapter:
-            return False
+            return (False, "Adapter Not Found")
         self._adapter.StartDiscovery(dbus_interface=self.BLUEZ_ADAPTER_IFACE)
-        return True
+        return (True, None)
 
 
-    @xmlrpc_server.dbus_safe(False)
+    @dbus_print_error()
     def stop_discovery(self):
         """Stop discovery of remote devices.
 
@@ -853,9 +897,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         """
         if not self._adapter:
-            return False
+            return (False, "Adapter Not Found")
         self._adapter.StopDiscovery(dbus_interface=self.BLUEZ_ADAPTER_IFACE)
-        return True
+        return (True, None)
 
 
     def get_dev_info(self):
