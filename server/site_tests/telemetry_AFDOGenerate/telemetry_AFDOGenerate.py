@@ -88,9 +88,9 @@ TELEMETRY_AFDO_BENCHMARKS = (
          ('--story-tag-filter=tough_canvas',
           '--story-filter="bouncing\\*\\|canvas\\*\\|microsoft\\*"',
           '--legacy-json-trace-format')),
-        ('octane', ('--legacy-json-trace-format')),
-        ('kraken', ('--legacy-json-trace-format')),
-        ('speedometer2', ('--legacy-json-trace-format')),
+        ('octane', ('--legacy-json-trace-format',)),
+        ('kraken', ('--legacy-json-trace-format',)),
+        ('speedometer2', ('--legacy-json-trace-format',)),
 )
 
 # Temporarily disable this benchmark because it is failing a
