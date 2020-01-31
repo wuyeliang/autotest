@@ -94,6 +94,8 @@ class audio_AudioVolume(audio_test.AudioTest):
 
             node_type = audio_test_utils.cros_port_id_to_cras_node_type(
                     source.port_id)
+            if node_type == 'HEADPHONE':
+                node_type = audio_test_utils.get_headphone_node(host)
             audio_facade.set_chrome_active_node_type(node_type, None)
             audio_test_utils.dump_cros_audio_logs(
                     host, audio_facade, self.resultsdir, 'after_select')
