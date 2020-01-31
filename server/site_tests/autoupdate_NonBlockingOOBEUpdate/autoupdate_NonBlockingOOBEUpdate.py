@@ -50,7 +50,6 @@ class autoupdate_NonBlockingOOBEUpdate(update_engine_test.UpdateEngineTest):
 
         self._run_client_test_and_check_result('autoupdate_StartOOBEUpdate',
                                                image_url=update_url,
-                                               full_payload=full_payload,
                                                critical_update=False)
 
         # Check that the update failed as expected.

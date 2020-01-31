@@ -115,3 +115,14 @@ class NebraskaWrapper(object):
     def get_port(self):
         """Returns the port which Nebraska is running."""
         return self._port
+
+    def get_update_url(self, **kwargs):
+        """
+        Returns a URL for getting updates from this Nebraska instance.
+
+        @param kwargs: A set of key/values to form a search query to instruct
+                Nebraska to do a set of activities. See
+                nebraska.py::ResponseProperties for examples key/values.
+        """
+        query = '&'.join('%s=%s' % (k, v) for k, v in kwargs.items())
+        return 'http://127.0.0.1:%d/update?%s' % (self._port, query)

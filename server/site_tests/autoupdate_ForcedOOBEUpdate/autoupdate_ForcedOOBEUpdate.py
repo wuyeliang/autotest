@@ -93,19 +93,11 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         payload_info = None
         if cellular:
             self._change_cellular_setting_in_update_engine(True)
-            # Get the payload's information (size, SHA256 etc) since we will be
-            # setting up our own omaha instance on the DUT. We pass this to
-            # the client test.
-            payload = self._get_payload_url(full_payload=full_payload)
-            staged_url, _ = self._stage_payload_by_uri(payload)
-            payload_info = self._get_staged_file_info(staged_url)
 
         # Call client test to start the forced OOBE update.
         self._run_client_test_and_check_result('autoupdate_StartOOBEUpdate',
                                                image_url=update_url,
-                                               cellular=cellular,
-                                               payload_info=payload_info,
-                                               full_payload=full_payload)
+                                               cellular=cellular)
 
         if interrupt is not None:
             # Choose a random downloaded progress to interrupt the update.
