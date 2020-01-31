@@ -208,23 +208,24 @@ class UpdateEngineUtil(object):
         @return Boolean if the update engine log contains the entry.
 
         """
-        if update_engine_log:
-            result = self._run('echo "%s" | grep "%s"' % (update_engine_log,
-                                                          entry),
-                               ignore_status=True)
-        else:
-            result = self._run('cat %s | grep "%s"' % (
-                self._UPDATE_ENGINE_LOG, entry), ignore_status=True)
+        if isinstance(entry, str):
+            # Create a tuple of strings so we can itarete over it.
+            entry = (entry,)
 
-        if result.exit_status != 0:
-            if raise_error:
-                error_str = 'Did not find expected string in update_engine ' \
-                            'log: %s' % entry
-                logging.debug(error_str)
-                raise error.TestFail(err_str if err_str else error_str)
-            else:
-                return False
-        return True
+        if not update_engine_log:
+            update_engine_log = self._run(
+                'cat %s' % self._UPDATE_ENGINE_LOG).stdout
+
+        if all(msg in update_engine_log for msg in entry):
+            return True
+
+        if not raise_error:
+            return False
+
+        error_str = ('Did not find expected string(s) in update_engine log: '
+                     '%s' % entry)
+        logging.debug(error_str)
+        raise error.TestFail(err_str if err_str else error_str)
 
 
     def _is_update_finished_downloading(self):

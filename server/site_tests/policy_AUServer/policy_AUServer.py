@@ -47,7 +47,6 @@ class policy_AUServer(update_engine_test.UpdateEngineTest):
         # Figure out the payload to use for the current build.
         payload = self._get_payload_url(full_payload=full_payload)
         image_url, _ = self._stage_payload_by_uri(payload)
-        file_info = self._get_staged_file_info(image_url)
 
         if running_at_desk:
             image_url = self._copy_payload_to_public_bucket(payload)
@@ -55,10 +54,7 @@ class policy_AUServer(update_engine_test.UpdateEngineTest):
                          'public location: %s', image_url)
 
         logging.info('url: %s', image_url)
-        logging.info('file_info: %s', file_info)
 
         self._run_client_test_and_check_result(client_test,
                                                case=case,
-                                               image_url=image_url,
-                                               image_size=file_info['size'],
-                                               sha256=file_info['sha256'])
+                                               image_url=image_url)
