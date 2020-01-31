@@ -302,7 +302,7 @@ CONFIG['EXTRA_MODULES'] = {
             'CtsDeqpTestCases.dEQP-GLES31',
             'CtsDeqpTestCases.dEQP-VK'
         ]),
-        'SUITES': ['suite:arc-cts-deqp', 'suite:graphics_per-day'],
+        'SUITES': ['suite:arc-cts-deqp', 'suite:graphics_per-week'],
     },
     _WM_PRESUBMIT: {
         'SUBMODULES': set([_WM_PRESUBMIT]),
@@ -577,19 +577,19 @@ CONFIG['EXTRA_COMMANDLINE'] = {
 CONFIG['EXTRA_ATTRIBUTES'] = {
     'CtsDeqpTestCases': ['suite:arc-cts', 'suite:arc-cts-deqp'],
     'CtsDeqpTestCases.dEQP-EGL': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
+        'suite:arc-cts-deqp', 'suite:graphics_per-week'
     ],
     'CtsDeqpTestCases.dEQP-GLES2': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
+        'suite:arc-cts-deqp', 'suite:graphics_per-week'
     ],
     'CtsDeqpTestCases.dEQP-GLES3': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
+        'suite:arc-cts-deqp', 'suite:graphics_per-week'
     ],
     'CtsDeqpTestCases.dEQP-GLES31': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
+        'suite:arc-cts-deqp', 'suite:graphics_per-week'
     ],
     'CtsDeqpTestCases.dEQP-VK': [
-        'suite:arc-cts-deqp', 'suite:graphics_per-day'
+        'suite:arc-cts-deqp', 'suite:graphics_per-week'
     ],
     _COLLECT: ['suite:arc-cts-qual', 'suite:arc-cts'],
 }

@@ -6,7 +6,7 @@
 
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_N.7.1_r29.arm.CtsDeqpTestCases.dEQP-GLES3'
-ATTRIBUTES = 'suite:arc-cts-deqp, suite:graphics_per-day'
+ATTRIBUTES = 'suite:arc-cts-deqp, suite:graphics_per-week'
 DEPENDENCIES = 'arc'
 JOB_RETRIES = 0
 TEST_TYPE = 'server'
