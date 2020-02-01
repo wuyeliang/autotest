@@ -1279,7 +1279,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                     duration, fields=metric_fields)
 
 
-    def suspend(self, suspend_time=60,
+    def suspend(self, suspend_time=60, delay_seconds=0,
                 suspend_cmd=None, allow_early_resume=False):
         """
         This function suspends the site host.
@@ -1297,7 +1297,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             suspend_cmd = ' && '.join([
                 'echo 0 > /sys/class/rtc/rtc0/wakealarm',
                 'echo +%d > /sys/class/rtc/rtc0/wakealarm' % suspend_time,
-                'powerd_dbus_suspend --delay=0'])
+                'powerd_dbus_suspend --delay=%d' % delay_seconds])
         super(CrosHost, self).suspend(suspend_time, suspend_cmd,
                                       allow_early_resume);
 
