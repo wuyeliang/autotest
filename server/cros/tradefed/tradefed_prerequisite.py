@@ -7,13 +7,14 @@ import logging
 def bluetooth(hosts):
     """Check for missing bluetooth hardware.
     """
-    for host in hosts:
-        output = host.run('hcitool dev').stdout
-        lines = output.splitlines()
-        if len(lines) < 2 or not lines[0].startswith('Devices:'):
-            return False, 'Failed: Bluetooth device is missing.'\
-                          'Stdout of the command "hcitool dev1"'\
-                          'on host %s was %s' % (host, output)
+    # TODO(ianrlee): Reenable, once a nice check is found in b/148621587.
+    #for host in hosts:
+    #    output = host.run('hcitool dev').stdout
+    #    lines = output.splitlines()
+    #    if len(lines) < 2 or not lines[0].startswith('Devices:'):
+    #        return False, 'Failed: Bluetooth device is missing.'\
+    #                      'Stdout of the command "hcitool dev1"'\
+    #                      'on host %s was %s' % (host, output)
     return True, ''
 
 
