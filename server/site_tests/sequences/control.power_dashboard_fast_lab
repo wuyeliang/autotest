@@ -68,7 +68,11 @@ def run_client_test(machine):
     can_switch_to_wlan = len(eth_usb) == 1 and eth_usb[0] and wlan_ip
     if can_switch_to_wlan:
         wlan_machine = machine
-        wlan_machine['hostname'] = wlan_ip
+        if '.cros' in machine['hostname']:
+            wlan_machine['hostname'] = \
+                machine['hostname'].replace('.cros', '-wlan.cros')
+        else:
+            wlan_machine['hostname'] = wlan_ip
         client = hosts.create_host(wlan_machine)
         eth_node = eth_usb[0]
 
