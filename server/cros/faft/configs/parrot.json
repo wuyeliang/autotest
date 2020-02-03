@@ -1,6 +1,0 @@
-{
-    "platform": "parrot",
-    "ec_boot_to_console": 4,
-    "dark_resume_capable": true,
-    "smm_store": false
-}
