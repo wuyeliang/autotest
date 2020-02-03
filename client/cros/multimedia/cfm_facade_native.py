@@ -19,12 +19,6 @@ from autotest_lib.client.common_lib.cros import enrollment
 from autotest_lib.client.common_lib.cros import kiosk_utils
 from autotest_lib.client.cros.graphics import graphics_utils
 
-try:
-    from telemetry.core.exceptions import BrowserConnectionGoneException
-except ImportError:
-    # Telemetry isn't available in unit tests (which don't cover enrollment)
-    pass
-
 
 class TimeoutException(Exception):
     """Timeout Exception class."""
@@ -65,17 +59,6 @@ class CFMFacadeNative(object):
             "auto_login": False,
             "disable_gaia_services": False,
             "extra_browser_args": extra_browser_args})
-        # TODO(turg) If possible, remove switching enrollment altogether
-        try:
-            enrollment.SwitchToRemora(self._resource._browser)
-        except BrowserConnectionGoneException:
-            logging.error('Chrome restarted without DevTools when switching enrollment mode')
-            logging.error('Attempting to restart')
-
-            self._resource.start_custom_chrome({
-                "auto_login": False,
-                "disable_gaia_services": False,
-                "extra_browser_args": extra_browser_args})
 
         enrollment.RemoraEnrollment(self._resource._browser, self._USER_ID,
                 self._PWD)

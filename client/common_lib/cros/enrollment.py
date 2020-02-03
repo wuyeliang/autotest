@@ -16,24 +16,6 @@ def _ExecuteOobeCmd(browser, cmd):
     oobe.ExecuteJavaScript(cmd)
 
 
-def SwitchToRemora(browser):
-    """Switch to Remora enrollment.
-
-    @param browser: telemetry browser object.
-    """
-    logging.info('Attempting to switch to Meet enrollment')
-    try:
-        chrome.Chrome.wait_for_browser_restart(
-                lambda: _ExecuteOobeCmd(browser,
-                                        'Oobe.remoraRequisitionForTesting();'),
-                browser)
-    except utils.TimeoutError:
-        logging.warning('Timeout waiting for browser to restart after switching enrollment modes')
-        logging.warning('DUT may have started in Meet enrollment -- attempting to continue')
-
-    utils.poll_for_condition(lambda: browser.oobe_exists, timeout=30)
-
-
 def RemoraEnrollment(browser, user_id, password):
     """Enterprise login for a Remora device.
 
