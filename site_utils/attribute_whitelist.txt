@@ -163,6 +163,7 @@ suite:kernel_usb
 suite:kernel_usb_set1
 suite:kernel_weekly_regression
 suite:kiosk_longevity
+suite:labstation_verification
 suite:link_perf
 suite:longevity
 suite:longevity_two
