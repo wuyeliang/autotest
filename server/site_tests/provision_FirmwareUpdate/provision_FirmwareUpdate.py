@@ -55,7 +55,6 @@ class provision_FirmwareUpdate(test.test):
             return None
 
     def run_once(self, host, value, rw_only=False, stage_image_to_usb=False,
-                 flash_device=None, get_release_from_image_archive=False,
                  fw_path=None):
         """The method called by the control file to start the test.
 
@@ -66,24 +65,12 @@ class provision_FirmwareUpdate(test.test):
         @param rw_only: True to only update the RW firmware.
         @param stage_image_to_usb: True to stage the current ChromeOS image on
                 the USB stick connected to the servo. Default is False.
-        @param flash_device: Servo V4 Flash Device name.
-                             Use this to choose one other than the default
-                             device when  servod has run in dual V4 device mode.
-                             e.g. flash_device='ccd_cr50'
         @param fw_path: Path to local firmware image for installing without
                         devserver.
 
         @raise TestFail: if the firmware version remains unchanged.
-               TestNAError: if the test environment is not properly set.
-                            e.g. the servo type doesn't support this test.
         """
-        orig_act_dev = None
 
-        if flash_device == 'ccd_cr50':
-            servo_type = host.servo.get_servo_version()
-            if flash_device not in servo_type:
-                raise error.TestNAError('Unsupporting servo type: %s' %
-                                        servo_type)
         try:
             host.repair_servo()
 
@@ -91,25 +78,11 @@ class provision_FirmwareUpdate(test.test):
             if stage_image_to_usb:
                 self.stage_image_to_usb(host)
 
-            if flash_device == 'ccd_cr50':
-                orig_act_dev = host.servo.get('active_v4_device').strip()
-                host.servo.set('active_v4_device', 'ccd_cr50')
-
-            # If build info was not given and explicitly it was requested to
-            # get the release version from image archive search, then
-            # do it so.
-            if value == None and get_release_from_image_archive:
-                board = host.servo.get_board()
-                value = host.get_latest_release_version(board)
-
             host.firmware_install(build=value, rw_only=rw_only,
                                   dest=self.resultsdir, local_tarball=fw_path)
         except Exception as e:
             logging.error(e)
             raise error.TestFail, str(e), sys.exc_info()[2]
-        finally:
-            if orig_act_dev != None:
-                host.servo.set_nocheck('active_v4_device', orig_act_dev)
 
         # DUT reboots after the above firmware_install(). Wait it to boot.
         host.test_wait_for_boot()
