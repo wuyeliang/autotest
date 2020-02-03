@@ -172,13 +172,13 @@ class power_Test(test.test):
 
         # publish power values
         for key, values in self.keyvals.iteritems():
-            if key.endswith('pwr'):
+            if key.endswith('pwr_avg'):
                 self.output_perf_value(description=key, value=values, units='W',
                                    higher_is_better=False, graph='power')
 
         # publish temperature values
         for key, values in self.keyvals.iteritems():
-            if key.endswith('temp'):
+            if key.endswith('temp_avg'):
                 self.output_perf_value(description=key, value=values, units='C',
                                    higher_is_better=False, graph='temperature')
 
