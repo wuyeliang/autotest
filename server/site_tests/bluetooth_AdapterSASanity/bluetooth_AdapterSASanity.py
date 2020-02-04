@@ -198,6 +198,12 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         self.test_dbus_stop_discovery_success()
         self.test_dbus_stop_discovery_fail_discovery_not_in_progress()
         self.test_dbus_stop_discovery_fail_power_off()
+        self.test_dbus_pause_discovery_success()
+        self.test_dbus_pause_discovery_success_no_discovery_in_progress()
+        self.test_dbus_pause_discovery_fail_already_paused()
+        self.test_dbus_pause_discovery_fail_power_off()
+        self.test_dbus_get_supported_capabilities_success()
+        self.test_dbus_get_supported_capabilities_success_power_off()
 
 
 
@@ -220,7 +226,7 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         self.sa_adapter_discoverable_timeout_test()
         self.sa_default_state_test()
         self.sa_valid_address_test()
-        #self.sa_dbus_api_tests()  Disabled since tests is not stable yet.
+        #self.sa_dbus_api_tests()  # Disabled since tests is not stable yet.
 
 
     def run_once(self, host, num_iterations=1, test_name=None,

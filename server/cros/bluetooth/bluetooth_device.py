@@ -469,7 +469,7 @@ class BluetoothDevice(object):
         Obtain the discovered device information using get_devices(), called
         stop_discovery() when done.
 
-        @return True on success, False otherwise.
+        @return (True, None) on success, (False, <error>) otherwise.
 
         """
         return self._proxy.start_discovery()
@@ -478,10 +478,30 @@ class BluetoothDevice(object):
     def stop_discovery(self):
         """Stop discovery of remote devices.
 
-        @return True on success, False otherwise.
+        @return (True, None) on success, (False, <error>) otherwise.
 
         """
         return self._proxy.stop_discovery()
+
+    def pause_discovery(self, system_suspend_resume=False):
+        """ Pause discovery of remote devices
+
+        @params: boolean system_suspend_resume Is this request related to
+                 system suspend resume.
+
+        @return (True, None) on success (False, <error>) otherwise
+        """
+        return self._proxy.pause_discovery(system_suspend_resume)
+
+    def unpause_discovery(self, system_suspend_resume=False):
+        """ Unpause discovery of remote devices
+
+        @params: boolean system_suspend_resume Is this request related to
+                 system suspend resume.
+
+        @return (True, None) on success (False, <error>) otherwise
+        """
+        return self._proxy.unpause_discovery(system_suspend_resume)
 
 
     def pause_discovery(self, system_suspend_resume=False):
@@ -538,6 +558,11 @@ class BluetoothDevice(object):
         """
         return json.loads(self._proxy.get_dev_info())
 
+    def get_supported_capabilities(self):
+        """ Get the supported_capabilities of the adapter
+        @returns (capabilities,None) on success (None, <error>) on failure
+        """
+        return self._proxy.get_supported_capabilities()
 
     def register_profile(self, path, uuid, options):
         """Register new profile (service).

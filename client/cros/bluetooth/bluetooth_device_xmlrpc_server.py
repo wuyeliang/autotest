@@ -38,11 +38,11 @@ def _b64_string_to_dbus_byte_array(b64_string):
   return dbus_array
 
 
-def dbus_print_error():
+def dbus_print_error(default_return_value=False):
     """Catch all DBus exceptions and return the error.
 
     Wrap a function with a try block that catches DBus exceptions and
-    returns the error with the return status. The exception is logged
+    returns the error with the specified return status. The exception is logged
     to aid in debugging.
 
     @param wrapped_function function to wrap.
@@ -73,7 +73,7 @@ def dbus_print_error():
                               wrapped_function.__name__,
                               e.get_dbus_name(),
                               e.get_dbus_message())
-                return (False, str(e))
+                return (default_return_value, str(e))
 
         return wrapper
 
@@ -703,7 +703,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             props = objects[self._adapter.object_path][self.BLUEZ_ADAPTER_IFACE]
         else:
             props = {}
-        logging.debug('get_adapter_properties: %s', props)
+        logging.debug('get_adapter_properties')
+        for i in props.items():
+            logging.debug(i)
         return props
 
 
@@ -918,6 +920,30 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         self._adapter.StopDiscovery(dbus_interface=self.BLUEZ_ADAPTER_IFACE)
         return (True, None)
 
+    @dbus_print_error()
+    def pause_discovery(self, system_suspend_resume):
+        """Pause discovery of remote devices.
+
+        @return (True, None) on success, (False,<error>) otherwise.
+
+        """
+        self._adapter.PauseDiscovery(dbus.Boolean(system_suspend_resume,
+                                                  variant_level=1),
+                                     dbus_interface=self.BLUEZ_ADAPTER_IFACE)
+        return (True, None)
+
+    @dbus_print_error()
+    def unpause_discovery(self, system_suspend_resume):
+        """Unpause discovery of remote devices.
+
+        @return (True, None) on success, (False,<error>) otherwise.
+
+        """
+        self._adapter.UnpauseDiscovery(dbus.Boolean(system_suspend_resume,
+                                                    variant_level=1),
+                                       dbus_interface=self.BLUEZ_ADAPTER_IFACE)
+        return (True, None)
+
 
     @xmlrpc_server.dbus_safe(False)
     @dbus_print_error()
@@ -973,6 +999,16 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         """
         return json.dumps(self._raw.get_dev_info(0))
 
+
+    @dbus_print_error(None)
+    def get_supported_capabilities(self):
+        """ Get supported capabilities of the adapter
+
+        @returns (capabilities, None) on Success. (None, <error>) on failure
+        """
+        value = self._adapter.GetSupportedCapabilities(
+            dbus_interface=self.BLUEZ_ADAPTER_IFACE)
+        return (json.dumps(value), None)
 
     @xmlrpc_server.dbus_safe(False)
     def register_profile(self, path, uuid, options):
