@@ -549,6 +549,8 @@ class BluetoothAdapterTests(test.test):
             'PNP_UUID': '00001200-0000-1000-8000-00805f9b34fb',
             'GAP_UUID': '00001800-0000-1000-8000-00805f9b34fb'}
 
+    # Board list for name/ID test check. These devices don't need to be tested
+    REFERENCE_BOARDS = ['rambi', 'nyan', 'oak', 'reef', 'yorp', 'bip']
 
     def group_chameleons_type(self):
         """Group all chameleons by the type of their detected device."""
@@ -1207,6 +1209,62 @@ class BluetoothAdapterTests(test.test):
                 'set_nonpairable': set_nonpairable,
                 'is_nonpairable': is_nonpairable}
         return all(self.results.values())
+
+
+    @_test_retry_and_log(False)
+    def test_check_valid_adapter_id(self):
+        """Fail if the Bluetooth ID is not in the correct format.
+
+        @returns True if adapter ID follows expected format, False otherwise
+        """
+
+        # Boards which only support bluetooth version 3 and below
+        BLUETOOTH_3_BOARDS = ['x86-mario', 'x86-zgb']
+
+        device = self.host.get_platform()
+        adapter_info = self.get_adapter_properties()
+
+        # Don't complete test if this is a reference board
+        if device in self.REFERENCE_BOARDS:
+            return True
+
+        modalias = adapter_info['Modalias']
+        logging.debug('Saw Bluetooth ID of: %s', modalias)
+
+        if device in BLUETOOTH_3_BOARDS:
+            bt_format = 'bluetooth:v00E0p24..d0300'
+        else:
+            bt_format = 'bluetooth:v00E0p24..d0400'
+
+        if not re.match(bt_format, modalias):
+            return False
+
+        return True
+
+
+    @_test_retry_and_log(False)
+    def test_check_valid_alias(self):
+        """Fail if the Bluetooth alias is not in the correct format.
+
+        @returns True if adapter alias follows expected format, False otherwise
+        """
+
+        device = self.host.get_platform()
+        adapter_info = self.get_adapter_properties()
+
+        # Don't complete test if this is a reference board
+        if device in self.REFERENCE_BOARDS:
+            return True
+
+        alias = adapter_info['Alias']
+        logging.debug('Saw Bluetooth Alias of: %s', alias)
+
+        device_type = self.host.get_board_type().lower()
+        alias_format = '%s_[a-z0-9]{4}' % device_type
+        if not re.match(alias_format, alias.lower()):
+            return False
+
+        return True
 
 
     # -------------------------------------------------------------------

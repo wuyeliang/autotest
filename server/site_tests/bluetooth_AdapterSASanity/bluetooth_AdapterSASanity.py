@@ -146,6 +146,18 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         self.valid_address_test()
 
 
+    @test_wrapper('Valid adapter ID test')
+    def sa_valid_id_test(self):
+        """Verify that the adapter has a correctly-formatted ID"""
+        self.test_check_valid_adapter_id()
+
+
+    @test_wrapper('Valid adapter alias test')
+    def sa_valid_alias_test(self):
+        """Verify that the adapter has a correctly-formatted alias"""
+        self.test_check_valid_alias()
+
+
     @test_wrapper('Multiple LE advertising test')
     def sa_multiple_advertising_test(self):
         """Run all test cases for multiple advertisements."""
