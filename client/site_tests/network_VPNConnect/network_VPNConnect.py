@@ -177,7 +177,8 @@ class network_VPNConnect(test.test):
         """Connects the client to the VPN server."""
         proxy = self._shill_proxy
         with tpm_store.TPMStore() as tpm:
-            service = proxy.get_service(self.get_vpn_client_properties(tpm))
+            service = proxy.configure_service(
+                self.get_vpn_client_properties(tpm))
             service.Connect()
             result = proxy.wait_for_property_in(service,
                                                 proxy.SERVICE_PROPERTY_STATE,
