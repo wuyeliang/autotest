@@ -38,10 +38,24 @@ class power_CameraSuspend(test.test):
     def run_once(self, capability, save_images=False):
         device_capability.DeviceCapability().ensure_capability(capability)
         # open the camera via opencv
-        cam_name, cam_index = camera_utils.find_camera()
-        if cam_index is None:
+        cam_list = camera_utils.find_cameras()
+        if not cam_list:
             raise error.TestError('no camera found')
-        cam = cv2.VideoCapture(cam_index)
+
+        save_images=False
+        cam_name = None
+        cam_index = None
+        cam = None
+        for camera in cam_list:
+            camera_i = int(camera[5:])
+            cap = cv2.VideoCapture(camera_i)
+            if cap.isOpened():
+                cam_name = camera
+                cam_index = camera_i
+                cam = cap
+                break
+        if not cam:
+            raise error.TestError('No camera can be opened for video capture')
 
         # kick off async suspend
         logging.info('starting subprocess to suspend system')
