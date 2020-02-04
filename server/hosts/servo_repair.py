@@ -2,11 +2,35 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import functools
 import logging
 
 import common
 from autotest_lib.client.common_lib import hosts
+from autotest_lib.server.cros.servo import servo
 from autotest_lib.server.hosts import repair_utils
+
+
+def ignore_exception_for_non_cros_host(func):
+    """
+    Decorator to ignore ControlUnavailableError if servo host is not cros host.
+    When using test_that command on a workstation, this enables usage of
+    additional servo devices such as servo micro and Sweetberry. This shall not
+    change any lab behavior.
+    """
+    @functools.wraps(func)
+    def wrapper(self, host):
+        """
+        Wrapper around func.
+        """
+        try:
+            func(self, host)
+        except servo.ControlUnavailableError as e:
+            if host.is_cros_host():
+                raise
+            logging.warning("Servo host is not cros host, ignore %s: %s",
+                            type(e).__name__, e)
+    return wrapper
 
 
 class _UpdateVerifier(hosts.Verifier):
@@ -239,6 +263,7 @@ class _PowerButtonVerifier(hosts.Verifier):
     # with a dummy pwr_button signal.
     _BOARDS_WO_PWR_BUTTON = ['arkham', 'gale', 'mistral', 'storm', 'whirlwind']
 
+    @ignore_exception_for_non_cros_host
     def verify(self, host):
         if host.servo_board in self._BOARDS_WO_PWR_BUTTON:
             return
@@ -246,6 +271,7 @@ class _PowerButtonVerifier(hosts.Verifier):
         if button != 'release':
             raise hosts.AutoservVerifyError(
                     'Check ribbon cable: \'pwr_button\' is stuck')
+
 
     @property
     def description(self):
@@ -257,6 +283,7 @@ class _LidVerifier(hosts.Verifier):
     Verifier to check sanity of the `lid_open` signal.
     """
 
+    @ignore_exception_for_non_cros_host
     def verify(self, host):
         lid_open = host.get_servo().get('lid_open')
         if lid_open != 'yes' and lid_open != 'not_applicable':

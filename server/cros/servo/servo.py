@@ -444,9 +444,13 @@ class Servo(object):
             e.filename = '%s:%s' % (self._servo_host.hostname,
                                     self._servo_host.servo_port)
             raise
-        self.set('usb_mux_oe1', 'on')
         self._usb_state = None
-        self.switch_usbkey('off')
+        if self.has_control('usb_mux_oe1'):
+            self.set('usb_mux_oe1', 'on')
+            self.switch_usbkey('off')
+        else:
+            logging.warning('Servod command \'usb_mux_oe1\' is not available. '
+                            'Any USB drive related servo routines will fail.')
         self._uart.start_capture()
         if cold_reset:
             self._power_state.reset()
