@@ -426,11 +426,13 @@ class ShillProxy(object):
         """Configure a service with given properties.
 
         @param config dictionary of service property:value pairs.
+        @return DBus object interface representing configured Service.
 
         """
         # Convert configuration values to dbus variant typed values.
         dbus_config = ShillProxy.service_properties_to_dbus_types(config)
-        self.manager.ConfigureService(dbus_config)
+        path = self.manager.ConfigureService(dbus_config)
+        return self.get_dbus_object(self.DBUS_TYPE_SERVICE, path)
 
 
     def configure_service_for_profile(self, path, config):
