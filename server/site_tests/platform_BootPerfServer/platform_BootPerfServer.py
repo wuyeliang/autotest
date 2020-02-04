@@ -20,6 +20,11 @@ class platform_BootPerfServer(test.test):
     """A test that reboots the client and collect boot perf data."""
     version = 1
 
+    def _is_rootfs_verification_enabled(self, host):
+        """Helper function to check whether rootfs verification is enabled"""
+        kernel_cmdline = host.run_output('cat /proc/cmdline')
+        return 'dm_verity.dev_wait=1' in kernel_cmdline
+
     def _get_root_partition(self, host):
         """Helper function for getting the partition index from the system. """
         # Determine root partition
@@ -53,9 +58,20 @@ class platform_BootPerfServer(test.test):
                 '--partitions %d') % (tmp_name, partition))
 
     def initialize(self, host):
-        """Bootchart is shipped but disabled by default in the image. Before
-        the test, enable by adding 'cros_bootchart' to the kernel arg list.
-        """
+        """Initialization steps before running the test"""
+        # Some tests might disable rootfs verification and mount rootfs as rw.
+        # If we run after those tests, re-enable rootfs verification to get
+        # consistent boot perf metrics.
+        if not self._is_rootfs_verification_enabled(host):
+            logging.info('Reimage to enable rootfs verification.')
+            version = host.get_release_builder_path()
+            # Force reimage to the current version to enable rootfs
+            # verification.
+            self.job.run_test('provision_AutoUpdate', host=host, value=version,
+                              force_update_engine=True)
+
+        # Bootchart is shipped but disabled by default in the image. Before
+        # the test, enable by adding 'cros_bootchart' to the kernel arg list.
         kernel_cmdline = host.run_output('cat /proc/cmdline')
         if 'cros_bootchart' in kernel_cmdline:
             logging.warn('cros_bootchart is enabled before the test.')
