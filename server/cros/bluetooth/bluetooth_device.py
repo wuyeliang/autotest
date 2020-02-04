@@ -868,6 +868,17 @@ class BluetoothDevice(object):
         return self._proxy.get_connection_info(address)
 
 
+    def set_discovery_filter(self, filter):
+        """Set the discovery filter.
+
+        @param filter: The discovery filter to set.
+
+        @return True on success, False otherwise.
+
+        """
+        return self._proxy.set_discovery_filter(filter)
+
+
     def close(self, close_host=True):
         """Tear down state associated with the client.
 

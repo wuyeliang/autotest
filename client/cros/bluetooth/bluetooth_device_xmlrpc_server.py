@@ -873,6 +873,23 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return json.dumps(dict())
 
 
+    @xmlrpc_server.dbus_safe(False)
+    def set_discovery_filter(self, filter):
+        """Set the discovery filter.
+
+        @param filter: The discovery filter to set.
+
+        @return True on success, False otherwise.
+
+        """
+        if not self._adapter:
+            return False
+        self._adapter.SetDiscoveryFilter(
+                filter, dbus_interface=self.BLUEZ_ADAPTER_IFACE)
+        return True
+
+
+    @xmlrpc_server.dbus_safe(False)
     @dbus_print_error()
     def start_discovery(self):
         """Start discovery of remote devices.
