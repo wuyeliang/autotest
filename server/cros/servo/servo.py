@@ -758,40 +758,55 @@ class Servo(object):
         """
         return re.sub('^.*>:', '', xmlexc.faultString)
 
-    def has_control(self, control):
-        """Query servod server to determine if |control| is a valid control.
+    def has_control(self, ctrl_name, prefix=''):
+        """Query servod server to determine if |ctrl_name| is a valid control.
 
-        @param control: str, control name to query
+        @param ctrl_name Name of the control.
+        @param prefix: prefix to route control to correct servo device.
 
-        @returns: true if |control| is a known control, false otherwise.
+        @returns: true if |ctrl_name| is a known control, false otherwise.
         """
-        assert control
+        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
         try:
             # If the control exists, doc() will work.
-            self._server.doc(control)
+            self._server.doc(ctrl_name)
             return True
         except xmlrpclib.Fault as e:
-            if re.search('No control %s' % control,
+            if re.search('No control %s' % ctrl_name,
                          self._get_xmlrpclib_exception(e)):
                 return False
             raise e
 
-    def get(self, gpio_name):
+    def _build_ctrl_name(self, ctrl_name, prefix):
+        """Helper to build the control name if a prefix is used.
+
+        @param ctrl_name Name of the control.
+        @param prefix: prefix to route control to correct servo device.
+
+        @returns: [|prefix|.]ctrl_name depending on whether prefix is non-empty.
+        """
+        assert ctrl_name
+        if prefix:
+            return '%s.%s' % (prefix, ctrl_name)
+        return ctrl_name
+
+    def get(self, ctrl_name, prefix=''):
         """Get the value of a gpio from Servod.
 
-        @param gpio_name Name of the gpio.
+        @param ctrl_name Name of the control.
+        @param prefix: prefix to route control to correct servo device.
 
-        @returns: server response to |gpio_name| request.
+        @returns: server response to |ctrl_name| request.
 
-        @raise ControlUnavailableError: if |gpio_name| not a known control.
+        @raise ControlUnavailableError: if |ctrl_name| not a known control.
         @raise error.TestFail: for all other failures doing get().
         """
-        assert gpio_name
+        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
         try:
-            return self._server.get(gpio_name)
+            return self._server.get(ctrl_name)
         except  xmlrpclib.Fault as e:
             err_str = self._get_xmlrpclib_exception(e)
-            err_msg = "Getting '%s' :: %s" % (gpio_name, err_str)
+            err_msg = "Getting '%s' :: %s" % (ctrl_name, err_str)
             unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
             if unknown_ctrl:
                 raise ControlUnavailableError('No control named %r' %
@@ -801,46 +816,50 @@ class Servo(object):
                 raise error.TestFail(err_msg)
 
 
-    def set(self, gpio_name, gpio_value):
+    def set(self, ctrl_name, ctrl_value, prefix=''):
         """Set and check the value of a gpio using Servod.
 
-        @param gpio_name Name of the gpio.
-        @param gpio_value New setting for the gpio.
+        @param ctrl_name: Name of the control.
+        @param ctrl_value: New setting for the control.
+        @param prefix: prefix to route control to correct servo device.
         @raise error.TestFail: if the control value fails to change.
         """
-        self.set_nocheck(gpio_name, gpio_value)
+        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
+        self.set_nocheck(ctrl_name, ctrl_value)
         retry_count = Servo.GET_RETRY_MAX
-        actual_value = self.get(gpio_name)
-        while gpio_value != actual_value and retry_count:
-            logging.warning("%s != %s, retry %d", gpio_name, gpio_value,
+        actual_value = self.get(ctrl_name)
+        while ctrl_value != actual_value and retry_count:
+            logging.warning("%s != %s, retry %d", ctrl_name, ctrl_value,
                             retry_count)
             retry_count -= 1
             time.sleep(Servo.SHORT_DELAY)
-            actual_value = self.get(gpio_name)
+            actual_value = self.get(ctrl_name)
 
-        if gpio_value != actual_value:
+        if ctrl_value != actual_value:
             raise error.TestFail(
                     'Servo failed to set %s to %s. Got %s.'
-                    % (gpio_name, gpio_value, actual_value))
+                    % (ctrl_name, ctrl_value, actual_value))
 
 
-    def set_nocheck(self, gpio_name, gpio_value):
+    def set_nocheck(self, ctrl_name, ctrl_value, prefix=''):
         """Set the value of a gpio using Servod.
 
-        @param gpio_name Name of the gpio.
-        @param gpio_value New setting for the gpio.
+        @param ctrl_name Name of the control.
+        @param ctrl_value New setting for the control.
+        @param prefix: prefix to route control to correct servo device.
 
-        @raise ControlUnavailableError: if |gpio_name| not a known control.
+        @raise ControlUnavailableError: if |ctrl_name| not a known control.
         @raise error.TestFail: for all other failures doing set().
         """
+        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
         # The real danger here is to pass a None value through the xmlrpc.
-        assert gpio_name and gpio_value is not None
-        logging.debug('Setting %s to %r', gpio_name, gpio_value)
+        assert ctrl_value is not None
+        logging.debug('Setting %s to %r', ctrl_name, ctrl_value)
         try:
-            self._server.set(gpio_name, gpio_value)
+            self._server.set(ctrl_name, ctrl_value)
         except  xmlrpclib.Fault as e:
             err_str = self._get_xmlrpclib_exception(e)
-            err_msg = "Setting '%s' :: %s" % (gpio_name, err_str)
+            err_msg = "Setting '%s' :: %s" % (ctrl_name, err_str)
             unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
             if unknown_ctrl:
                 raise ControlUnavailableError('No control named %r' %
