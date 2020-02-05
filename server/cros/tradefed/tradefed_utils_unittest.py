@@ -144,165 +144,206 @@ class TradefedTestTest(unittest.TestCase):
     def test_get_perf_metrics_from_test_result_xml(self):
         perf_result = tradefed_utils.get_perf_metrics_from_test_result_xml(
             os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                         'tradefed_utils_unittest_data', 'test_result.xml'))
+                         'tradefed_utils_unittest_data', 'test_result.xml'),
+            os.path.join('/', 'resultsdir'))
         expected_result = [
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordLocalMono16Bit',
              'value': '7.1688596491228065', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordLocalMono16BitShort',
              'value': '2.5416666666666665', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordLocalNonblockingStereoFloat',
              'value': '1.75', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordMonoFloat',
              'value': '12.958881578947368', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordResamplerMono8Bit',
              'value': '0.0', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordResamplerStereo8Bit',
              'value': '3.5', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioRecordTest'
                             '#testAudioRecordStereo16Bit',
              'value': '3.5', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioTrackTest'
                             '#testFastTimestamp',
              'value': '0.1547618955373764', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioTrackTest'
                             '#testGetTimestamp',
              'value': '0.1490119844675064', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioTrack_ListenerTest'
                             '#testAudioTrackCallback',
              'value': '9.347127739984884', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioTrack_ListenerTest'
                             '#testAudioTrackCallbackWithHandler',
              'value': '7.776177955844914', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioTrack_ListenerTest'
                             '#testStaticAudioTrackCallback',
              'value': '7.776177955844914', 'higher_is_better': False},
-            {'units': 'ms', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'ms',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.AudioTrack_ListenerTest'
                             '#testStaticAudioTrackCallbackWithHandler',
              'value': '9.514361300075587', 'higher_is_better': False},
-            {'units': 'count', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'count',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.DecoderTest'
                             '#testH264ColorAspects',
              'value': '1.0', 'higher_is_better': True},
-            {'units': 'count', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'count',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.DecoderTest'
                             '#testH265ColorAspects',
              'value': '1.0', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcGoog0Perf0320x0240',
              'value': '580.1607045151507', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcGoog0Perf0720x0480',
              'value': '244.18184010611358', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcGoog0Perf1280x0720',
              'value': '70.96290491279275', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcGoog0Perf1920x1080',
              'value': '31.299613935451564', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcOther0Perf0320x0240',
              'value': '1079.6843075197307', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcOther0Perf0720x0480',
              'value': '873.7785366761784', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcOther0Perf1280x0720',
              'value': '664.6463289568261', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testAvcOther0Perf1920x1080',
              'value': '382.10811352923474', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testH263Goog0Perf0176x0144',
              'value': '1511.3027429644353', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testHevcGoog0Perf0352x0288',
              'value': '768.8737453173384', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testHevcGoog0Perf0640x0360',
              'value': '353.7226028743237', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testHevcGoog0Perf0720x0480',
              'value': '319.3122874170939', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testHevcGoog0Perf1280x0720',
              'value': '120.89218432028369', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testMpeg4Goog0Perf0176x0144',
              'value': '1851.890822618321', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Goog0Perf0320x0180',
              'value': '1087.946513466716', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Goog0Perf0640x0360',
              'value': '410.18461316281423', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Goog0Perf1920x1080',
              'value': '36.26433070651982', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Other0Perf0320x0180',
              'value': '1066.7819511702078', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Other0Perf0640x0360',
              'value': '930.261434505189', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Other0Perf1280x0720',
              'value': '720.4170603577236', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp8Other0Perf1920x1080',
              'value': '377.55742437554915', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp9Goog0Perf0320x0180',
              'value': '988.6158776121617', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp9Goog0Perf0640x0360',
              'value': '409.8162085338674', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp9Goog0Perf1280x0720',
              'value': '147.75847359424512', 'higher_is_better': True},
-            {'units': 'fps', 'graph': 'cheets_CTS.CtsMediaTestCases',
+            {'units': 'fps',
+             'resultsdir': '/resultsdir/tests/cheets_CTS.CtsMediaTestCases',
              'description': 'android.media.cts.VideoDecoderPerfTest'
                             '#testVp9Goog0Perf1920x1080',
              'value': '83.95677136649255', 'higher_is_better': True}
@@ -312,7 +353,8 @@ class TradefedTestTest(unittest.TestCase):
         perf_result = tradefed_utils.get_perf_metrics_from_test_result_xml(
             os.path.join(os.path.dirname(os.path.realpath(__file__)),
                          'tradefed_utils_unittest_data',
-                         'malformed_test_result.xml'))
+                         'malformed_test_result.xml'),
+            os.path.join('/', 'resultsdir'))
         self.assertListEqual(list(perf_result), [])
 
 

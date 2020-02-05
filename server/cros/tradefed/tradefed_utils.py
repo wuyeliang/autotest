@@ -219,7 +219,7 @@ def get_test_result_xml_path(results_destination):
     return last_result_path
 
 
-def get_perf_metrics_from_test_result_xml(result_path):
+def get_perf_metrics_from_test_result_xml(result_path, resultsdir):
     """Parse test_result.xml and each <Metric /> is mapped to a dict that
     can be used as kwargs of |TradefedTest.output_perf_value|."""
     try:
@@ -244,7 +244,8 @@ def get_perf_metrics_from_test_result_xml(result_path):
                             value=metric[0].text,
                             units=units,
                             higher_is_better=higher_is_better,
-                            graph=PERF_MODULE_NAME_PREFIX + module_name
+                            resultsdir=os.path.join(resultsdir, 'tests',
+                                PERF_MODULE_NAME_PREFIX + module_name)
                         )
     except Exception as e:
         logging.warning(

@@ -163,7 +163,7 @@ class TradefedTest(test.test):
                          self._get_tradefed_base_dir()))
         if path:
             for metric in tradefed_utils.get_perf_metrics_from_test_result_xml(
-                path):
+                path, self.resultsdir):
                 self.output_perf_value(**metric)
 
     def cleanup(self):
