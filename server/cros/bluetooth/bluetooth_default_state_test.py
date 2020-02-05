@@ -20,55 +20,6 @@ class bluetooth_Sanity_DefaultStateTest(
     """
     version = 1
 
-    def _log_settings(self, msg, settings):
-        """helper function to log the states in settings"""
-        strs = []
-        if settings & bluetooth_socket.MGMT_SETTING_POWERED:
-            strs.append("POWERED")
-        if settings & bluetooth_socket.MGMT_SETTING_CONNECTABLE:
-            strs.append("CONNECTABLE")
-        if settings & bluetooth_socket.MGMT_SETTING_FAST_CONNECTABLE:
-            strs.append("FAST-CONNECTABLE")
-        if settings & bluetooth_socket.MGMT_SETTING_DISCOVERABLE:
-            strs.append("DISCOVERABLE")
-        if settings & bluetooth_socket.MGMT_SETTING_PAIRABLE:
-            strs.append("PAIRABLE")
-        if settings & bluetooth_socket.MGMT_SETTING_LINK_SECURITY:
-            strs.append("LINK-SECURITY")
-        if settings & bluetooth_socket.MGMT_SETTING_SSP:
-            strs.append("SSP")
-        if settings & bluetooth_socket.MGMT_SETTING_BREDR:
-            strs.append("BR/EDR")
-        if settings & bluetooth_socket.MGMT_SETTING_HS:
-            strs.append("HS")
-        if settings & bluetooth_socket.MGMT_SETTING_LE:
-            strs.append("LE")
-        logging.debug(msg + ': %s', " ".join(strs))
-
-    def _log_flags(self, msg, flags):
-        """helper function to log the flags in flags"""
-        strs = []
-        if flags & bluetooth_socket.HCI_UP:
-            strs.append("UP")
-        else:
-            strs.append("DOWN")
-        if flags & bluetooth_socket.HCI_INIT:
-            strs.append("INIT")
-        if flags & bluetooth_socket.HCI_RUNNING:
-            strs.append("RUNNING")
-        if flags & bluetooth_socket.HCI_PSCAN:
-            strs.append("PSCAN")
-        if flags & bluetooth_socket.HCI_ISCAN:
-            strs.append("ISCAN")
-        if flags & bluetooth_socket.HCI_AUTH:
-            strs.append("AUTH")
-        if flags & bluetooth_socket.HCI_ENCRYPT:
-            strs.append("ENCRYPT")
-        if flags & bluetooth_socket.HCI_INQUIRY:
-            strs.append("INQUIRY")
-        if flags & bluetooth_socket.HCI_RAW:
-            strs.append("RAW")
-        logging.debug(msg + ' [HCI]: %s', " ".join(strs))
 
 
     def compare_property(self, bluez_property, mgmt_setting, current_settings):
@@ -99,7 +50,7 @@ class bluetooth_Sanity_DefaultStateTest(
         ( address, bluetooth_version, manufacturer_id,
                 supported_settings, current_settings, class_of_device,
                 name, short_name ) = self.read_info()
-        self._log_settings('Initial state', current_settings)
+        self.log_settings('Initial state', current_settings)
 
         if current_settings & bluetooth_socket.MGMT_SETTING_POWERED:
             raise error.TestFail('Bluetooth adapter is powered')
@@ -128,7 +79,7 @@ class bluetooth_Sanity_DefaultStateTest(
         # Compare with the raw HCI state of the adapter as well, this should
         # be just not "UP", otherwise something deeply screwy is happening.
         flags = self.get_dev_info()[3]
-        self._log_flags('Initial state', flags)
+        self.log_flags('Initial state', flags)
 
         if flags & bluetooth_socket.HCI_UP:
             raise error.TestFail('HCI UP flag does not match kernel while '
@@ -138,7 +89,7 @@ class bluetooth_Sanity_DefaultStateTest(
         # powered up, pairable, but not discoverable.
         self.test_power_on_adapter()
         current_settings = self.read_info()[4]
-        self._log_settings("Powered up", current_settings)
+        self.log_settings("Powered up", current_settings)
 
         if not current_settings & bluetooth_socket.MGMT_SETTING_POWERED:
             raise error.TestFail('Bluetooth adapter is not powered')
@@ -176,7 +127,7 @@ class bluetooth_Sanity_DefaultStateTest(
         # Compare with the raw HCI state of the adapter while powered up as
         # well.
         flags = self.get_dev_info()[3]
-        self._log_flags('Powered up', flags)
+        self.log_flags('Powered up', flags)
 
         if not flags & bluetooth_socket.HCI_UP:
             raise error.TestFail('HCI UP flag does not match kernel while '
@@ -218,7 +169,7 @@ class bluetooth_Sanity_DefaultStateTest(
                 self.test_nondiscoverable()
                 current_settings = self.read_info()[4]
                 flags = self.get_dev_info()[3]
-                self._log_flags('Discoverability Toggled', flags)
+                self.log_flags('Discoverability Toggled', flags)
                 if flags & bluetooth_socket.HCI_PSCAN:
                     raise error.TestFail('PSCAN on after toggling DISCOVERABLE')
 
@@ -230,14 +181,15 @@ class bluetooth_Sanity_DefaultStateTest(
             # Wait for a few seconds before reading the settings
             time.sleep(3)
             current_settings = self.read_info()[4]
-            self._log_settings("After add device", current_settings)
+            self.log_settings("After add device",
+                                              current_settings)
 
             flags = self.get_dev_info()[3]
-            self._log_flags('After add device', flags)
+            self.log_flags('After add device', flags)
 
             if current_settings != previous_settings:
-                self._log_settings("previous settings", previous_settings)
-                self._log_settings("current settings", current_settings)
+                self.log_settings("previous settings", previous_settings)
+                self.log_settings("current settings", current_settings)
                 raise error.TestFail(
                     'Bluetooth adapter settings changed after add device')
             if not flags & bluetooth_socket.HCI_PSCAN:
@@ -250,10 +202,10 @@ class bluetooth_Sanity_DefaultStateTest(
             # on older devices. Wait for few second before reading the settigs
             time.sleep(3)
             current_settings = self.read_info()[4]
-            self._log_settings("After remove device", current_settings)
+            self.log_settings("After remove device", current_settings)
 
             flags = self.get_dev_info()[3]
-            self._log_flags('After remove device', flags)
+            self.log_flags('After remove device', flags)
 
             if current_settings != previous_settings:
                 raise error.TestFail(
@@ -265,7 +217,7 @@ class bluetooth_Sanity_DefaultStateTest(
         # returned to powered down.
         self.test_power_off_adapter()
         current_settings = self.read_info()[4]
-        self._log_settings("After power down", current_settings)
+        self.log_settings("After power down", current_settings)
 
         if current_settings & bluetooth_socket.MGMT_SETTING_POWERED:
             raise error.TestFail('Bluetooth adapter is powered after power off')
@@ -287,7 +239,7 @@ class bluetooth_Sanity_DefaultStateTest(
 
         # And one last comparison with the raw HCI state of the adapter.
         flags = self.get_dev_info()[3]
-        self._log_flags('After power down', flags)
+        self.log_flags('After power down', flags)
 
         if flags & bluetooth_socket.HCI_UP:
             raise error.TestFail('HCI UP flag does not match kernel after '
