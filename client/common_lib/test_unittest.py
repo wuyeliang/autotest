@@ -208,6 +208,18 @@ class Test_base_test_execute(TestTestCase):
                            "value": 1, "improvement_direction": "up"}}}
         self.assertDictEqual(expected_result, json.loads(f.read()))
 
+    def test_output_perf_value_with_custom_resultsdir(self):
+        self.test.resultsdir = tempfile.mkdtemp()
+
+        resultsdir = self.test.resultsdir + "/tests/tmp"
+        self.test.output_perf_value("Test", 1, units="ms",higher_is_better=True,
+                                    resultsdir=resultsdir)
+
+        f = open(self.test.resultsdir + "/tests/tmp/results-chart.json")
+        expected_result = {"Test": {"summary": {"units": "ms", "type": "scalar",
+                           "value": 1, "improvement_direction": "up"}}}
+        self.assertDictEqual(expected_result, json.loads(f.read()))
+
 
     def test_output_single_perf_value_twice(self):
         self.test.resultsdir = tempfile.mkdtemp()
