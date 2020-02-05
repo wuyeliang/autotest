@@ -18,8 +18,6 @@ from jinja2 import Template
 Test = namedtuple('Test', 'filter, suite, shards, time, hasty, tag, test_file, perf_failure_description')
 
 
-ATTRIBUTES_BVT_CQ = (
-    'suite:deqp, suite:graphics_per-day, suite:graphics_system, suite:bvt-inline')
 ATTRIBUTES_BVT_PB = (
     'suite:deqp, suite:graphics_per-day, suite:graphics_system, '
     'suite:bvt-perbuild'
@@ -104,8 +102,6 @@ def get_controlfilename(test, shard=0):
 
 
 def get_attributes(test):
-    if test.suite == Suite.bvtcq:
-        return ATTRIBUTES_BVT_CQ
     if test.suite == Suite.bvtpb:
         return ATTRIBUTES_BVT_PB
     if test.suite == Suite.daily:
