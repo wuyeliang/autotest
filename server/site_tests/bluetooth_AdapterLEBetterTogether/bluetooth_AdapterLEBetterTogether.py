@@ -4,6 +4,8 @@
 
 """A Batch of Bluetooth LE tests for Better Together"""
 
+import logging
+
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
      BluetoothAdapterQuickTests
 from autotest_lib.server.cros.bluetooth.bluetooth_adapter_pairing_tests import \
@@ -28,10 +30,23 @@ class bluetooth_AdapterLEBetterTogether(BluetoothAdapterQuickTests,
         """Simulate the Smart Unlock flow"""
 
         filter = {'Transport':'le'}
+        parameters = {'MinimumConnectionInterval':6,
+                      'MaximumConnectionInterval':6}
         device = self.devices['BLE_KEYBOARD'][0]
-        self.bluetooth_facade.set_discovery_filter(filter)
+
+        if not self.bluetooth_facade.set_discovery_filter(filter):
+            logging.error("Failed to set discovery filter")
+            return False
+
         self.test_discover_device(device.address)
-        self.bluetooth_facade.stop_discovery()
+
+        self.test_stop_discovery()
+
+        if not self.bluetooth_facade.set_le_connection_parameters(
+                device.address, parameters):
+            logging.error("Failed to set LE connection parameters")
+            return False
+
         self.test_connection_by_adapter(device.address)
 
     @batch_wrapper('Better Together')

@@ -879,6 +879,18 @@ class BluetoothDevice(object):
         return self._proxy.set_discovery_filter(filter)
 
 
+    def set_le_connection_parameters(self, address, parameters):
+        """Set the LE connection parameters.
+
+        @param address: The MAC address of the device.
+        @param parameters: The LE connection parameters to set.
+
+        @return: True on success. False otherwise.
+
+        """
+        return self._proxy.set_le_connection_parameters(address, parameters)
+
+
     def close(self, close_host=True):
         """Tear down state associated with the client.
 
