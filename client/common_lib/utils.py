@@ -2020,6 +2020,31 @@ def host_is_in_lab_zone(hostname):
         return False
 
 
+def host_is_in_power_lab(hostname):
+    """Check if the hostname is in power lab.
+
+    Example: chromeos1-power-host2.cros
+
+    @param hostname: The hostname to check.
+    @returns True if hostname match power lab hostname, otherwise False.
+    """
+    pattern = r'chromeos\d+-power-host\d+(\.cros(\.corp(\.google\.com)?)?)?$'
+    return re.match(pattern, hostname) is not None
+
+
+def get_power_lab_wlan_hostname(hostname):
+    """Return wlan hostname for host in power lab.
+
+    Example: chromeos1-power-host2.cros -> chromeos1-power-host2-wlan.cros
+
+    @param hostname: The hostname in power lab.
+    @returns wlan hostname.
+    """
+    split_host = hostname.split('.')
+    split_host[0] += '-wlan'
+    return '.'.join(split_host)
+
+
 def in_moblab_ssp():
     """Detects if this execution is inside an SSP container on moblab."""
     config_is_moblab = CONFIG.get_config_value('SSP', 'is_moblab', type=bool,

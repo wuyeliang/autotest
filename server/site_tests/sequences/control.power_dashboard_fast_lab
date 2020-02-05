@@ -68,9 +68,9 @@ def run_client_test(machine):
     can_switch_to_wlan = len(eth_usb) == 1 and eth_usb[0] and wlan_ip
     if can_switch_to_wlan:
         wlan_machine = machine
-        if '.cros' in machine['hostname']:
+        if utils.host_is_in_power_lab(machine['hostname']):
             wlan_machine['hostname'] = \
-                machine['hostname'].replace('.cros', '-wlan.cros')
+                utils.get_power_lab_wlan_hostname(machine['hostname'])
         else:
             wlan_machine['hostname'] = wlan_ip
         client = hosts.create_host(wlan_machine)
