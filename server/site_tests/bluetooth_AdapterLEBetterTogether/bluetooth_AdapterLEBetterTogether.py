@@ -47,7 +47,17 @@ class bluetooth_AdapterLEBetterTogether(BluetoothAdapterQuickTests,
             logging.error("Failed to set LE connection parameters")
             return False
 
+        if not self.bluetooth_facade.pause_discovery():
+            logging.error("Failed to pause discovery")
+            return False
+
         self.test_connection_by_adapter(device.address)
+
+        if not self.bluetooth_facade.unpause_discovery():
+            logging.error("Failed to unpause discovery")
+            return False
+
+        self.test_set_trusted(device.address)
 
     @batch_wrapper('Better Together')
     def better_together_batch_run(self, num_iterations=1, test_name=None):

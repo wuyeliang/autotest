@@ -919,6 +919,46 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return (True, None)
 
 
+    @xmlrpc_server.dbus_safe(False)
+    @dbus_print_error()
+    def pause_discovery(self, system_suspend_resume=False):
+        """Pause discovery of remote devices.
+
+        This pauses all device discovery sessions.
+
+        @param system_suspend_resume: whether the
+               request is related to system suspend/resume.
+
+        @return True on success, False otherwise.
+
+        """
+        if not self._adapter:
+            return (False, "Adapter Not Found")
+        self._adapter.PauseDiscovery(
+                system_suspend_resume, dbus_interface=self.BLUEZ_ADAPTER_IFACE)
+        return (True, None)
+
+
+    @xmlrpc_server.dbus_safe(False)
+    @dbus_print_error()
+    def unpause_discovery(self, system_suspend_resume=False):
+        """Unpause discovery of remote devices.
+
+        This unpauses all device discovery sessions.
+
+        @param system_suspend_resume: whether the
+               request is related to system suspend/resume.
+
+        @return True on success, False otherwise.
+
+        """
+        if not self._adapter:
+            return (False, "Adapter Not Found")
+        self._adapter.UnpauseDiscovery(
+                system_suspend_resume, dbus_interface=self.BLUEZ_ADAPTER_IFACE)
+        return (True, None)
+
+
     def get_dev_info(self):
         """Read raw HCI device information.
 
