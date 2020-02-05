@@ -195,13 +195,21 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         self.test_dbus_start_discovery_success()
         self.test_dbus_start_discovery_fail_discovery_in_progress()
         self.test_dbus_start_discovery_fail_power_off()
+
         self.test_dbus_stop_discovery_success()
         self.test_dbus_stop_discovery_fail_discovery_not_in_progress()
         self.test_dbus_stop_discovery_fail_power_off()
+
         self.test_dbus_pause_discovery_success()
         self.test_dbus_pause_discovery_success_no_discovery_in_progress()
         self.test_dbus_pause_discovery_fail_already_paused()
         self.test_dbus_pause_discovery_fail_power_off()
+
+        self.test_dbus_unpause_discovery_success()
+        self.test_dbus_unpause_discovery_fail_without_pause()
+        self.test_dbus_unpause_discovery_fail_power_off()
+        self.test_dbus_unpause_discovery_fail_already_unpaused()
+
         self.test_dbus_get_supported_capabilities_success()
         self.test_dbus_get_supported_capabilities_success_power_off()
 

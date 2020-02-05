@@ -1,4 +1,4 @@
-# Copyright 2019 The Chromium OS Authors. All rights reserved.
+# Copyright 2020 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -13,12 +13,19 @@ from autotest_lib.server.cros.bluetooth import bluetooth_adapter_tests
 method_name = bluetooth_adapter_tests.method_name
 _test_retry_and_log = bluetooth_adapter_tests._test_retry_and_log
 
+DEFAULT_START_DELAY_SECS = 2
+DEFAULT_HOLD_INTERVAL = 10
+DEFAULT_HOLD_TIMEOUT = 60
+
 # String representation of DBus exceptions
-DBUS_ERRORS  ={
+DBUS_ERRORS  = {
     'InProgress' : 'org.bluez.Error.InProgress: Operation already in progress',
     'NotReady' : 'org.bluez.Error.NotReady: Resource Not Ready',
     'Failed': {
-        'discovery' : 'org.bluez.Error.Failed: No discovery started'}}
+        'discovery_start' : 'org.bluez.Error.Failed: No discovery started',
+        'discovery_unpause' : 'org.bluez.Error.Failed: Discovery not paused'
+              }
+               }
 
 
 class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
@@ -55,6 +62,46 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
             return False
         else:
             return True
+
+    def _compare_error(self, expected, actual):
+        """ Helper function to compare error and log. """
+        if expected == actual:
+            return True
+        else:
+            logging.debug("Expected error is %s Actual error is %s",expected,
+                          actual)
+            return False
+
+    def _get_hci_state(self, msg=''):
+        """ get state of bluetooth controller. """
+        hci_state = self.log_flags(msg, self.get_dev_info()[3])
+        logging.debug("hci_state is %s", hci_state)
+        return hci_state
+
+    def _wait_till_hci_state_inquiry(self):
+        """ Wait till adapter is in INQUIRY state.
+
+        @return: True if adapter does INQUIRY before timeout, False otherwise
+        """
+        return self._wait_for_condition(
+            lambda: 'INQUIRY' in self._get_hci_state('Expecting INQUIRY'),
+            method_name(),
+            start_delay = DEFAULT_START_DELAY_SECS)
+
+    def _wait_till_hci_state_no_inquiry_holds(self):
+        """ Wait till adapter does not enter INQUIRY for a period of time
+
+        @return : True if adapter is not in INQUIRY for a period of time before
+                  timeout. Otherwise False.
+        """
+        return self._wait_till_condition_holds(
+            lambda: 'INQUIRY' not in self._get_hci_state('Expecting NOINQUIRY'),
+            method_name(),
+            hold_interval = DEFAULT_HOLD_INTERVAL,
+            timeout = DEFAULT_HOLD_TIMEOUT,
+            start_delay = DEFAULT_START_DELAY_SECS)
+
+
 
     def _wait_till_discovery_stops(self, stop_discovery=True):
         """stop discovery if specified and wait for discovery to stop
@@ -141,11 +188,14 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         start_discovery, error =  self.bluetooth_facade.start_discovery()
 
         is_discovering = self._wait_till_discovery_starts(start_discovery=False)
+        inquiry_state = self._wait_till_hci_state_inquiry()
+
         self.results = {'reset' : reset,
                         'is_power_on' : is_power_on,
                         'is_not_discovering': is_not_discovering,
                         'start_discovery' : start_discovery,
-                        'is_discovering': is_discovering
+                        'is_discovering': is_discovering,
+                        'inquiry_state' : inquiry_state
                         }
         return all(self.results.values())
 
@@ -161,10 +211,13 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
         start_discovery, error =  self.bluetooth_facade.start_discovery()
 
+
         self.results = {'reset' : reset,
                         'is_discovering' : is_discovering,
                         'start_discovery_failed' : not start_discovery,
-                        'error_matches' : error == DBUS_ERRORS['InProgress']}
+                        'error_matches' : self._compare_error(error,
+                                                    DBUS_ERRORS['InProgress'])
+        }
         return all(self.results.values())
 
     @_test_retry_and_log(False)
@@ -183,7 +236,8 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.results = {'reset' : reset,
                         'power_off' : is_power_off,
                         'start_discovery_failed' : not start_discovery,
-                        'error_matches' : error == DBUS_ERRORS['NotReady'],
+                        'error_matches' : self._compare_error(error,
+                                                    DBUS_ERRORS['NotReady']),
                         'power_on' : is_power_on}
         return all(self.results.values())
 
@@ -225,6 +279,7 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         stop_discovery, error =  self.bluetooth_facade.stop_discovery()
         is_not_discovering = self._wait_till_discovery_stops(
             stop_discovery=False)
+        self._wait_till_hci_state_no_inquiry_holds()
         self.results = {'reset' : reset,
                         'is_power_on' : is_power_on,
                         'is_discovering': is_discovering,
@@ -251,7 +306,8 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
             'reset' : reset,
             'is_not_discovering' : is_not_discovering,
             'stop_discovery_failed' : not stop_discovery,
-            'error_matches' : error == DBUS_ERRORS['Failed']['discovery'],
+            'error_matches' : self._compare_error(error,
+                                DBUS_ERRORS['Failed']['discovery_start']),
             'still_not_discovering': still_not_discovering}
         return all(self.results.values())
 
@@ -271,7 +327,8 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.results = {'reset' : reset,
                         'is_power_off' : is_power_off,
                         'stop_discovery_failed' : not stop_discovery,
-                        'error_matches' : error == DBUS_ERRORS['NotReady'],
+                        'error_matches' : self._compare_error(error,
+                                                    DBUS_ERRORS['NotReady']),
                         'is_power_on' : is_power_on}
         return all(self.results.values())
 
@@ -315,13 +372,15 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         """ Test success case of pause_discovery call. """
         reset = self._reset_state()
         is_discovering = self._wait_till_discovery_starts()
+        self._wait_till_hci_state_inquiry()
+
         pause_discovery, error = self.bluetooth_facade.pause_discovery(False)
 
-        #TODO: Confirm discovery is paused by check the state of the adapter
-
+        no_inquiry = self._wait_till_hci_state_no_inquiry_holds()
         self.results = {'reset' : reset,
                         'is_discovering': is_discovering,
                         'pause_discovery' : pause_discovery,
+                        'no_inquiry' : no_inquiry
                         }
         return all(self.results.values())
 
@@ -334,12 +393,12 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
 
         pause_discovery, error = self.bluetooth_facade.pause_discovery(False)
 
-        #TODO: Confirm discovery is paused by check the state of the adapter
-
+        no_inquiry = self._wait_till_hci_state_no_inquiry_holds()
         self.results = {'reset' : reset,
                         'is_power_on' : is_power_on,
                         'is_not_discovering': is_not_discovering,
                         'pause_discovery' : pause_discovery,
+                        'no_inquiry' : no_inquiry
                         }
         return all(self.results.values())
 
@@ -362,7 +421,8 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.results = {'reset' : reset,
                         'is_power_off' : is_power_off,
                         'pause_discovery_failed' : not pause_discovery,
-                        'error_matches' : error == DBUS_ERRORS['NotReady'],
+                        'error_matches' : self._compare_error(error,
+                                                    DBUS_ERRORS['NotReady']),
                         'is_power_on' : is_power_on,
                         'discovery_started' : discovery_started
                        }
@@ -381,17 +441,146 @@ class BluetoothDBusAPITests(bluetooth_adapter_tests.BluetoothAdapterTests):
         pause_discovery, _ = self.bluetooth_facade.pause_discovery()
 
         pause_discovery_again, error = self.bluetooth_facade.pause_discovery()
-        #TODO: Confirm discovery is paused by check the state of the adapter
+
+        no_inquiry = self._wait_till_hci_state_no_inquiry_holds()
 
         self.results = {'reset' : reset,
                         'is_power_on' : is_power_on,
                         'is_discovering': is_discovering,
                         'pause_discovery' : pause_discovery,
                         'pause_discovery_failed' : not pause_discovery_again,
-                        'error_matches' : error == DBUS_ERRORS['InProgress'],
+                        'error_matches' : self._compare_error(error,
+                                                    DBUS_ERRORS['InProgress']),
+                        'no_inquiry' : no_inquiry,
                         }
         return all(self.results.values())
 
+########################################################################
+# dbus call: unpause_discovery
+# arguments: boolean system_suspend_resume
+# returns : True/False
+# Notes: 1: argument system_suspend_resume is ignored in the code
+#        2: pause/unpause state is not reflected in Discovering state
+#####################################################
+# Positive cases
+# Case 1
+# preconditions: Adapter powered on AND
+#                Discovery started and Discovery currently paused
+# Argument: [True|False]
+######################################################
+# Negative cases
+#
+# result: Success
+# Case 1
+# preconditions: Adapter powered on AND
+#                Discovery currently not paused
+# Argument: [True|False]
+# result: Failed
+#
+# Case 2
+# preconditions: Adapter powered off
+# result: Failure
+# error : NotReady
+#
+# Case 3
+# precondition: Adapter powered on AND
+#               Discovery paused
+# result: Failure
+# error: Busy
+#########################################################################
+    @_test_retry_and_log(False)
+    def test_dbus_unpause_discovery_success(self):
+        """ Test success case of unpause_discovery call. """
+        reset = self._reset_state()
+        is_discovering = self._wait_till_discovery_starts()
+        pause_discovery, _ = self.bluetooth_facade.pause_discovery()
+        no_inquiry_after_pause = self._wait_till_hci_state_no_inquiry_holds()
+
+        unpause_discovery, error = self.bluetooth_facade.unpause_discovery()
+
+        inquiry_after_unpause = self._wait_till_hci_state_inquiry()
+        self.results = {'reset' : reset,
+                        'is_discovering': is_discovering,
+                        'pause_discovery' : pause_discovery,
+                        'no_inquiry_after_pause' : no_inquiry_after_pause,
+                        'unpause_discovery' : unpause_discovery,
+                        'error' : error is None,
+                        'inquiry_after_unpause' : inquiry_after_unpause
+                        }
+        return all(self.results.values())
+
+    @_test_retry_and_log(False)
+    def test_dbus_unpause_discovery_fail_without_pause(self):
+        """ Test failure case of unpause_discovery call.
+
+        Call unpause_discovery without calling pause_discovery and check it will
+        fail with  org.bluez.Error.Failed: Discovery not paused'
+        """
+        reset = self._reset_state()
+        is_discovering = self._wait_till_discovery_starts()
+
+        unpause_discovery, error = self.bluetooth_facade.unpause_discovery()
+
+        inquiry_after_unpause = self._wait_till_hci_state_inquiry()
+        self.results = {'reset' : reset,
+                        'is_discovering': is_discovering,
+                        'unpause_discovery_fails' : not unpause_discovery,
+                        'error' : self._compare_error(error,
+                                    DBUS_ERRORS['Failed']['discovery_unpause']),
+                        'inquiry_after_unpause' : inquiry_after_unpause
+                        }
+        return all(self.results.values())
+
+    @_test_retry_and_log(False)
+    def test_dbus_unpause_discovery_fail_power_off(self):
+        """ Test Failure case of unpause_discovery call.
+
+        unpause discovery when adapter is turned off and confirm it fails with
+         'org.bluez.Error.Failed: Discovery not paused'
+
+        """
+        reset = self._reset_state()
+        is_power_off = self._wait_till_power_off()
+
+        unpause_discovery, error = self.bluetooth_facade.unpause_discovery()
+
+        self.results = {'reset' : reset,
+                        'is_power_off' : is_power_off,
+                        'unpause_discovery_failed' : not unpause_discovery,
+                        'error_matches' : self._compare_error(error,
+                                    DBUS_ERRORS['Failed']['discovery_unpause']),
+
+                       }
+        return all(self.results.values())
+
+
+    @_test_retry_and_log(False)
+    def test_dbus_unpause_discovery_fail_already_unpaused(self):
+        """ Test Failure case of unpause_discovery call.
+
+        Call unpause discovery twice and make sure second call fails
+        with 'org.bluez.Error.InProgress: Operation already in progress'.
+        """
+        reset = self._reset_state()
+        is_discovering = self._wait_till_discovery_starts()
+        pause_discovery, error = self.bluetooth_facade.pause_discovery()
+        unpause_discovery, _ = self.bluetooth_facade.unpause_discovery()
+
+        unpause_again, error = self.bluetooth_facade.unpause_discovery()
+
+        inquiry_after_unpause = self._wait_till_hci_state_inquiry()
+
+        self.results = {
+            'reset' : reset,
+            'is_discovering': is_discovering,
+            'pause_discovery' : pause_discovery,
+            'unpause_discovery' : unpause_discovery,
+            'unpause_again_failed': not unpause_again,
+            'error_matches' : self._compare_error(error,
+                                    DBUS_ERRORS['Failed']['discovery_unpause']),
+            'inquiry_after_unpause':inquiry_after_unpause
+        }
+        return all(self.results.values())
 
 ########################################################################
 # dbus call: get_suppported_capabilities
