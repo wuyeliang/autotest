@@ -2914,6 +2914,65 @@ def poll_for_condition_ex(condition, timeout=10, sleep_interval=0.1, desc=None):
     raise to_raise
 
 
+def poll_till_condition_holds(condition,
+                              exception=None,
+                              timeout=10,
+                              sleep_interval=0.1,
+                              hold_interval=5,
+                              desc=None):
+    """Polls until a condition is evaluated to true for a period of time
+
+    This function checks that a condition remains true for the 'hold_interval'
+    seconds after it first becomes true. If the condition becomes false
+    subsequently, the timer is reset. This function will not detect if
+    condition becomes false for any period of time less than the sleep_interval.
+
+    @param condition: function taking no args and returning anything that will
+                      evaluate to True in a conditional check
+    @param exception: exception to throw if condition doesn't evaluate to true
+    @param timeout: maximum number of seconds to wait
+    @param sleep_interval: time to sleep between polls
+    @param hold_interval: time period for which the condition should hold true
+    @param desc: description of default TimeoutError used if 'exception' is
+                 None
+
+    @return The evaluated value that caused the poll loop to terminate.
+
+    @raise 'exception' arg if supplied; TimeoutError otherwise
+    """
+    start_time = time.time()
+    cond_is_held = False
+    cond_hold_start_time = None
+
+    while True:
+        value = condition()
+        if value:
+            if cond_is_held:
+                if time.time() - cond_hold_start_time > hold_interval:
+                    return value
+            else:
+                cond_is_held = True
+                cond_hold_start_time = time.time()
+        else:
+            cond_is_held = False
+
+        time_remaining = timeout - (time.time() - start_time)
+        if time_remaining < hold_interval:
+            if exception:
+                logging.error('Will raise error %r due to unexpected return: '
+                              '%r', exception, value)
+                raise exception # pylint: disable=raising-bad-type
+
+            if desc:
+                desc = 'Timed out waiting for condition: ' + desc
+            else:
+                desc = 'Timed out waiting for unnamed condition'
+            logging.error(desc)
+            raise TimeoutError(message=desc)
+
+        time.sleep(sleep_interval)
+
+
 def shadowroot_query(element, action):
     """Recursively queries shadowRoot.
 
