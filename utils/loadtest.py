@@ -41,6 +41,7 @@ atest host mod -u DUT1 DUT2
 import collections
 import datetime
 import json
+import logging
 import random
 import re
 import signal
@@ -52,7 +53,6 @@ import common
 from autotest_lib.client.common_lib import time_utils
 from autotest_lib.client.common_lib.cros import dev_server
 from chromite.lib import commandline
-from chromite.lib import cros_logging as logging
 from chromite.lib import locking
 from chromite.lib import parallel
 

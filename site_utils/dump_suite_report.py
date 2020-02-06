@@ -8,12 +8,12 @@
 from __future__ import print_function
 
 import common
+import logging
 import sys
 
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
 from autotest_lib.server.lib import suite_report
 from chromite.lib import commandline
-from chromite.lib import cros_logging as logging
 from chromite.lib import ts_mon_config
 
 def GetParser():
