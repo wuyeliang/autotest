@@ -3,17 +3,17 @@
 # jobs based on the delay specified in order to throttle the jobs
 # and not overwhelm the system.
 
+import argparse
 import sys
 
 import common
 import time
 
 from autotest_lib.server import frontend
-from chromite.lib import commandline
 
 def GetParser():
     """Creates the argparse parser."""
-    parser = commandline.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=str, action='store',
                         help='File with hostnames to repair')
     parser.add_argument('--delay_seconds', type=int, action='store', default=5,
