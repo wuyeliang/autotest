@@ -855,24 +855,31 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return self._encode_base64_json(devices)
 
 
-    @xmlrpc_server.dbus_safe(False)
-    def get_device_by_address(self, address):
-        """Read information about the remote device with the specified address.
+    @xmlrpc_server.dbus_safe(None)
+    def get_device_property(self, address, prop_name):
+        """Read a property of BT device by directly querying device dbus object
 
-        @param address: Address of the device to get.
+        @param address: Address of the device to query
+        @param prop_name: Property to be queried
 
-        @return the properties of the device as a JSON-encoded dictionary
-            on success, the value False otherwise.
-
+        @return Base 64 JSON repr of property if device is found and has
+                property, otherwise None on failure. JSON is a recursive
+                converter, automatically converting dbus types to python natives
+                and base64 allows us to pass special characters over xmlrpc.
+                Decode is done in bluetooth_device.py
         """
-        objects = self._bluez.GetManagedObjects(
-                dbus_interface=self.BLUEZ_MANAGER_IFACE, byte_arrays=True)
-        devices = []
-        devices = self._get_devices()
-        for device in devices:
-            if device.get('Address') == address:
-                return self._encode_base64_json(device)
-        return json.dumps(dict())
+
+        prop_val = None
+
+        # Grab dbus object, _find_device will catch any thrown dbus error
+        device_obj = self._find_device(address)
+
+        if device_obj:
+            # Query dbus object for property
+            prop_val = device_obj.Get(self.BLUEZ_DEVICE_IFACE, prop_name,
+                                      dbus_interface=dbus.PROPERTIES_IFACE)
+
+        return self._encode_base64_json(prop_val)
 
 
     @xmlrpc_server.dbus_safe(False)

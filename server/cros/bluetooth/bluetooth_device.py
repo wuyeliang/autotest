@@ -448,19 +448,23 @@ class BluetoothDevice(object):
         return self._decode_json_base64(encoded_devices)
 
 
-    def get_device_properties(self, address):
-        """Read information about remote devices known to the adapter.
+    def get_device_property(self, address, prop_name):
+        """Read a property of BT device by directly querying device dbus object
 
-        An example of the device information of RN-42 looks like
+        @param address: Address of the device to query
+        @param prop_name: Property to be queried
 
-        @param address: Address of the device to pair.
-
-        @returns: a dictionary of device properties of the device on success;
-                  an empty dictionary otherwise.
-
+        @return The property if device is found and has property, None otherwise
         """
-        encoded_devices = self._proxy.get_device_by_address(address)
-        return self._decode_json_base64(encoded_devices)
+
+        prop_val = self._proxy.get_device_property(address, prop_name)
+
+        # Handle dbus error case returned by xmlrpc_server.dbus_safe decorator
+        if prop_val is None:
+            return prop_val
+
+        # Decode and return property value
+        return self._decode_json_base64(prop_val)
 
 
     def start_discovery(self):

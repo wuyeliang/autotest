@@ -1475,9 +1475,8 @@ class BluetoothAdapterTests(test.test):
         set_trusted = self.bluetooth_facade.set_trusted(
                 device_address, trusted)
 
-        properties = self.bluetooth_facade.get_device_properties(
-                device_address)
-        actual_trusted = properties.get('Trusted')
+        actual_trusted = self.bluetooth_facade.get_device_property(
+                                device_address, 'Trusted')
 
         self.results = {
                 'set_trusted': set_trusted,
@@ -1783,9 +1782,10 @@ class BluetoothAdapterTests(test.test):
         @returns: True if the device name is derived. None otherwise.
 
         """
-        properties = self.bluetooth_facade.get_device_properties(
-                device_address)
-        self.discovered_device_name = properties.get('Name')
+
+        self.discovered_device_name = self.bluetooth_facade.get_device_property(
+                                device_address, 'Name')
+
         return bool(self.discovered_device_name)
 
 
@@ -1829,9 +1829,9 @@ class BluetoothAdapterTests(test.test):
                   expected class of service. False otherwise.
 
         """
-        properties = self.bluetooth_facade.get_device_properties(
-                device_address)
-        device_class = properties.get('Class')
+
+        device_class = self.bluetooth_facade.get_device_property(device_address,
+                                                                 'Class')
         discovered_class_of_service = (device_class & self.CLASS_OF_SERVICE_MASK
                                        if device_class else None)
 
@@ -1854,9 +1854,9 @@ class BluetoothAdapterTests(test.test):
                   expected class of device. False otherwise.
 
         """
-        properties = self.bluetooth_facade.get_device_properties(
-                device_address)
-        device_class = properties.get('Class')
+
+        device_class = self.bluetooth_facade.get_device_property(device_address,
+                                                                 'Class')
         discovered_class_of_device = (device_class & self.CLASS_OF_DEVICE_MASK
                                       if device_class else None)
 
