@@ -22,7 +22,7 @@ try:
 except ImportError:
     metrics = utils.metrics_mock
 
-from chromite.lib import constants as chromite_constants
+ISOLATESERVER = 'https://isolateserver.appspot.com'
 
 # Naming convention of test container, e.g., test_300_1422862512_2424, where:
 # 300:        The test job ID.
@@ -545,7 +545,7 @@ class Container(object):
 
         return utils.run(_command.format(
             sha=isolate_hash, dest_dir=dest_path,
-            log_file=log_file, server=chromite_constants.ISOLATESERVER))
+            log_file=log_file, server=ISOLATESERVER))
 
 
     def install_control_file(self, control_file):
