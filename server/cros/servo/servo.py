@@ -6,6 +6,7 @@
 # prompt, such as within the Chromium OS development chroot.
 
 import ast
+import functools
 import logging
 import os
 import re
@@ -73,7 +74,6 @@ class _PowerStateController(object):
     board types.
 
     """
-
     # Constants acceptable to be passed for the `rec_mode` parameter
     # to power_on().
     #
@@ -89,6 +89,16 @@ class _PowerStateController(object):
     # warm reset.
     _RESET_HOLD_TIME = 0.5
 
+    def power_state_command(func):
+        """For methods that should only run when power_state is available."""
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            """Ignore those functions if dts mode control is not supported."""
+            if self.supported:
+                return self.func(*args, **kwargs)
+            raise error.TestFail('power_state controls not supported')
+        return wrapper
+
     def __init__(self, servo):
         """Initialize the power state control.
 
@@ -97,7 +107,12 @@ class _PowerStateController(object):
 
         """
         self._servo = servo
+        self.supported = self._servo.has_control('power_state')
+        if not self.supported:
+            logging.info('Servo setup does not support power-state operations. '
+                         'All power-state calls will lead to error.TestFail')
 
+    @power_state_command
     def reset(self):
         """Force the DUT to reset.
 
@@ -109,6 +124,7 @@ class _PowerStateController(object):
         """
         self._servo.set_nocheck('power_state', 'reset')
 
+    @power_state_command
     def warm_reset(self):
         """Apply warm reset to the DUT.
 
@@ -125,7 +141,7 @@ class _PowerStateController(object):
             self._servo.set_get_all(['warm_reset:on',
                                  'sleep:%.4f' % self._RESET_HOLD_TIME,
                                  'warm_reset:off'])
-
+    @power_state_command
     def power_off(self):
         """Force the DUT to power off.
 
@@ -137,6 +153,7 @@ class _PowerStateController(object):
         """
         self._servo.set_nocheck('power_state', 'off')
 
+    @power_state_command
     def power_on(self, rec_mode=REC_OFF):
         """Force the DUT to power on.
 
@@ -453,7 +470,11 @@ class Servo(object):
                             'Any USB drive related servo routines will fail.')
         self._uart.start_capture()
         if cold_reset:
-            self._power_state.reset()
+            if not self._power_state.supported:
+                logging.info('Cold-reset for DUT requested, but servo '
+                             'setup does not support power_state. Skipping.')
+            else:
+                self._power_state.reset()
         logging.debug('Servo initialized, version is %s',
                       self._server.get_version())
         if self.has_control('init_keyboard'):
