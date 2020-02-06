@@ -86,11 +86,26 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         """Inits the test batch"""
         self.host = host
         #factory can not be declared as local variable, otherwise
-        #factory._proxy.__del__ will be invoked, which shutdown the xmlrpc server,
-        #which log out the user.
-        self.factory = remote_facade_factory.RemoteFacadeFactory(host,
-                                                                 disable_arc=True)
-        self.bluetooth_facade = self.factory.create_bluetooth_hid_facade()
+        #factory._proxy.__del__ will be invoked, which shutdown the xmlrpc
+        # server, which log out the user.
+
+        try:
+            self.factory = remote_facade_factory.RemoteFacadeFactory(host,
+                           disable_arc=True)
+            self.bluetooth_facade = self.factory.create_bluetooth_hid_facade()
+
+        # For b:142276989, catch 'object_path' fault and reboot to prevent
+        # failures from continuing into future tests
+        except Exception, e:
+            if (e.__class__.__name__ == 'Fault' and
+                """object has no attribute 'object_path'""" in str(e)):
+
+                logging.error('Caught b/142276989, rebooting DUT')
+                self.host.reboot()
+
+            # Raise the original exception
+            raise
+
         self.use_chameleon = use_chameleon
         if self.use_chameleon:
             self.input_facade = self.factory.create_input_facade()
