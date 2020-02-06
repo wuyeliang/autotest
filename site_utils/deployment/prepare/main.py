@@ -94,7 +94,7 @@ def main():
 
     if 'update-label' in opts.actions:
       try:
-        host.labels.update_labels(host)
+        host.labels.update_labels(host, task_name='deploy')
       except Exception as err:
         logging.error("fail to update label: %s", err)
         return RETURN_CODES.UPDATE_LABEL_FAILURE

@@ -20,6 +20,10 @@ from autotest_lib.server.hosts.cros_label import Cr50ROVersionLabel
 from autotest_lib.server.hosts.cros_label import Cr50RWVersionLabel
 from autotest_lib.server.hosts.cros_label import DeviceSkuLabel
 from autotest_lib.server.hosts.cros_label import ModelLabel
+from autotest_lib.server.hosts.cros_label import AudioLoopbackDongleLabel
+from autotest_lib.server.hosts.cros_label import ChameleonConnectionLabel
+from autotest_lib.server.hosts.cros_label import ChameleonLabel
+from autotest_lib.server.hosts.cros_label import ChameleonPeripheralsLabel
 from autotest_lib.server.hosts.cros_label import ServoLabel
 from autotest_lib.server.hosts import host_info
 
@@ -239,6 +243,11 @@ class DeviceSkuLabelTests(unittest.TestCase):
         host = MockHost(['device-sku:48'])
         self.assertEqual(DeviceSkuLabel().generate_labels(host), ['48'])
 
+    def test_update_for_task(self):
+        self.assertTrue(DeviceSkuLabel().update_for_task(''))
+        self.assertFalse(DeviceSkuLabel().update_for_task('repair'))
+        self.assertTrue(DeviceSkuLabel().update_for_task('deploy'))
+
 
 class BrandCodeLabelTests(unittest.TestCase):
     """Unit tests for DeviceSkuLabel"""
@@ -439,6 +448,39 @@ class ServoLabelTests(unittest.TestCase):
           prefix_labels, full_labels = servo.get_all_labels()
           self.assertEqual(prefix_labels, set(['servo_state']))
           self.assertEqual(full_labels, set(['servo']))
+
+    def test_update_for_task(self):
+        self.assertTrue(ServoLabel().update_for_task(''))
+        self.assertTrue(ServoLabel().update_for_task('repair'))
+        self.assertFalse(ServoLabel().update_for_task('deploy'))
+
+
+class AudioLoopbackDongleLabelTests(unittest.TestCase):
+    def test_update_for_task(self):
+        self.assertTrue(AudioLoopbackDongleLabel().update_for_task(''))
+        self.assertTrue(AudioLoopbackDongleLabel().update_for_task('repair'))
+        self.assertFalse(AudioLoopbackDongleLabel().update_for_task('deploy'))
+
+
+class ChameleonConnectionLabelTests(unittest.TestCase):
+    def test_update_for_task(self):
+        self.assertTrue(ChameleonConnectionLabel().update_for_task(''))
+        self.assertFalse(ChameleonConnectionLabel().update_for_task('repair'))
+        self.assertTrue(ChameleonConnectionLabel().update_for_task('deploy'))
+
+
+class ChameleonLabelTests(unittest.TestCase):
+    def test_update_for_task(self):
+        self.assertTrue(ChameleonLabel().update_for_task(''))
+        self.assertTrue(ChameleonLabel().update_for_task('repair'))
+        self.assertFalse(ChameleonLabel().update_for_task('deploy'))
+
+
+class ChameleonPeripheralsLabelTests(unittest.TestCase):
+    def test_update_for_task(self):
+        self.assertTrue(ChameleonPeripheralsLabel().update_for_task(''))
+        self.assertFalse(ChameleonPeripheralsLabel().update_for_task('repair'))
+        self.assertTrue(ChameleonPeripheralsLabel().update_for_task('deploy'))
 
 
 if __name__ == '__main__':

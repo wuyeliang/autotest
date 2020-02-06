@@ -43,7 +43,9 @@ def repair(machine):
         logging.debug('Repair with labels list %s', labels_list)
 
         try:
-            target.labels.update_labels(target, keep_pool=True)
+            target.labels.update_labels(target,
+                                        task_name='repair',
+                                        keep_pool=True)
         except Exception:
             logging.exception('Exception while updating labels.')
     except Exception:
