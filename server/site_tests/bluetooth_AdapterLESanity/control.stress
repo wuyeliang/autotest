@@ -5,21 +5,21 @@
 from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
-AUTHOR = 'chromeos-bluetooth'
-NAME = 'bluetooth_AdapterSASanity'
-PURPOSE = ('batch of Bluetooth stand alone sanity tests')
+AUTHOR = 'chromeos-chameleon'
+NAME = 'bluetooth_AdapterLESanity.stress'
+PURPOSE = ('Batch of Bluetooth LE sanity tests')
 CRITERIA = 'Pass all sanity test'
-ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_standalone'
-TIME = 'MEDIUM'
+ATTRIBUTES = 'suite:bluetooth_stress'
+TIME = 'LONG'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth'
+DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
 
 DOC = """
-    A Batch of Bluetooth stand alone sanity tests. This test is written as a
-    batch of tests in order to reduce test time, since auto-test ramp up time
-    is costy. The batch is using BluetoothAdapterQuickTests wrapper methods to
+    A Batch of Bluetooth LE sanity tests. This test is written as a batch
+    of tests in order to reduce test time, since auto-test ramp up time is
+    costy. The batch is using BluetoothAdapterQuickTests wrapper methods to
     start and end a test and a batch of tests.
 
     This class can be called to run the entire test batch or to run a
@@ -28,10 +28,11 @@ DOC = """
     """
 
 args_dict = utils.args_to_dict(args)
+chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
 
 def run(machine):
-    host = hosts.create_host(machine)
-    job.run_test('bluetooth_AdapterSASanity', host=host,
-                  num_iterations=1)
+    host = hosts.create_host(machine, chameleon_args=chameleon_args)
+    job.run_test('bluetooth_AdapterLESanity', host=host,
+                  num_iterations=15)
 
 parallel_simple(run, machines)

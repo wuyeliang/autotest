@@ -5,12 +5,12 @@
 from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
-AUTHOR = 'chromeos-chameleon'
+AUTHOR = 'chromeos-bluetooth'
 NAME = 'bluetooth_AdapterQuickSanity.stress'
 PURPOSE = ('Stress test for package of Bluetooth quick sanity tests')
 CRITERIA = 'Pass all sanity test'
 ATTRIBUTES = 'suite:bluetooth_stress'
-TIME = 'MEDIUM'
+TIME = 'LONG'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'

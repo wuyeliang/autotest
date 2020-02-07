@@ -6,11 +6,11 @@ from autotest_lib.server import utils
 from autotest_lib.server.cros.bluetooth import bluetooth_test
 
 AUTHOR = 'chromeos-bluetooth'
-NAME = 'bluetooth_AdapterSASanity'
+NAME = 'bluetooth_AdapterSASanity.stress'
 PURPOSE = ('batch of Bluetooth stand alone sanity tests')
 CRITERIA = 'Pass all sanity test'
-ATTRIBUTES = 'suite:bluetooth, suite:bluetooth_standalone'
-TIME = 'MEDIUM'
+ATTRIBUTES = 'suite:bluetooth_stress'
+TIME = 'LONG'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
@@ -32,6 +32,6 @@ args_dict = utils.args_to_dict(args)
 def run(machine):
     host = hosts.create_host(machine)
     job.run_test('bluetooth_AdapterSASanity', host=host,
-                  num_iterations=1)
+                  num_iterations=15)
 
 parallel_simple(run, machines)
