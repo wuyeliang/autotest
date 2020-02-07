@@ -15,7 +15,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.server import utils
 from autotest_lib.server.cros import lockfile
 
-PERF_MODULE_NAME_PREFIX = 'cheets_CTS.'
+PERF_MODULE_NAME_PREFIX = 'CTS.'
 
 @contextlib.contextmanager
 def lock(filename):
