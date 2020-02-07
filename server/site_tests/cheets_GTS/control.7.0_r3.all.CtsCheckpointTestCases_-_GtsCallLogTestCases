@@ -21,7 +21,6 @@ def run_TS(machine):
         hosts=host_list,
         iterations=1,
         max_retry=9,
-        enable_default_apps=True,
         tag='7.0_r3.all.CtsCheckpointTestCases_-_GtsCallLogTestCases',
         test_name='cheets_GTS.7.0_r3.all.CtsCheckpointTestCases_-_GtsCallLogTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
