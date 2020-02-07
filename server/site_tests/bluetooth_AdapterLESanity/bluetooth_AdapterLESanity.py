@@ -35,7 +35,10 @@ class bluetooth_AdapterLESanity(BluetoothAdapterQuickTests,
         device = self.devices['BLE_MOUSE'][0]
 
         self.test_discover_device(device.address)
-        self.test_device_name(device.address, device.name)
+
+        # Removed due to b:149093897 - the raspi peer can't instantly update
+        # the advertised name, causing this test to fail
+        # self.test_device_name(device.address, device.name)
 
 
     @test_wrapper('Connect Disconnect Loop', devices={'BLE_MOUSE':1})
