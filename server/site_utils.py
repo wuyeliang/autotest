@@ -614,24 +614,10 @@ def get_hqe_exec_path(tag, execution_subdir):
 def is_inside_chroot():
     """Check if the process is running inside chroot.
 
-    This is a wrapper around chromite.lib.cros_build_lib.IsInsideChroot(). The
-    method checks if cros_build_lib can be imported first.
-
-    @return: True if the process is running inside chroot or cros_build_lib
-             cannot be imported.
+    @return: True if the process is running inside chroot.
 
     """
-    try:
-        # TODO(crbug.com/739466) This module import is delayed because it adds
-        # 1-2 seconds to the module import time and most users of site_utils
-        # don't need it. The correct fix is to break apart site_utils into more
-        # meaningful chunks.
-        from chromite.lib import cros_build_lib
-    except ImportError:
-        logging.warn('Unable to import chromite. Can not detect chroot. '
-                     'Defaulting to False')
-        return False
-    return cros_build_lib.IsInsideChroot()
+    return os.path.exists('/etc/cros_chroot_version')
 
 
 def parse_job_name(name):

@@ -240,7 +240,7 @@ def _main_for_local_run(argv, arguments):
     @param argv: Script command line arguments.
     @param arguments: Parsed command line arguments.
     """
-    if not cros_build_lib.IsInsideChroot():
+    if not os.path.exists('/etc/cros_chroot_version'):
         print >> sys.stderr, 'For local runs, script must be run inside chroot.'
         return 1
 

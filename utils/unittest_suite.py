@@ -201,13 +201,7 @@ def is_inside_chroot():
 
     @return: True if the process is running inside the chroot, False otherwise.
     """
-    try:
-        # chromite may not be setup, e.g., in vm, therefore the ImportError
-        # needs to be handled.
-        from chromite.lib import cros_build_lib
-        return cros_build_lib.IsInsideChroot()
-    except ImportError:
-        return False
+    return os.path.exists('/etc/cros_chroot_version')
 
 
 def find_and_run_tests(start, options):
