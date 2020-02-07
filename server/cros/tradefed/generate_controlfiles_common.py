@@ -446,7 +446,7 @@ def get_extra_args(modules, is_public):
             preconditions.extend(CONFIG['PRECONDITION'].get(module, []))
             login_preconditions.extend(
                 CONFIG['LOGIN_PRECONDITION'].get(module, []))
-        prerequisites.extend(CONFIG['PREREQUISITES'].get(module,[]))
+            prerequisites.extend(CONFIG['PREREQUISITES'].get(module,[]))
 
     # Notice: we are just squishing the preconditions for all modules together
     # with duplicated command removed. This may not always be correct.
