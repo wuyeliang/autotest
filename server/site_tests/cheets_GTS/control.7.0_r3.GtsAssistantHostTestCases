@@ -20,7 +20,6 @@ def run_TS(machine):
         'cheets_GTS',
         hosts=host_list,
         iterations=1,
-        enable_default_apps=True,
         tag='7.0_r3.GtsAssistantHostTestCases',
         test_name='cheets_GTS.7.0_r3.GtsAssistantHostTestCases',
         authkey='gs://chromeos-arc-images/cts/bundle/gts-arc.json',
