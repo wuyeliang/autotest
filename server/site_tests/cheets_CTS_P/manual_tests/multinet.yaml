@@ -1,2 +1,0 @@
-libcore.java.nio.channels.DatagramChannelMulticastTest#test_joinAnySource_IPv4: [fizz, sentry, celes, cyan, kefka, reks, setzer, wizpig]
-libcore.java.nio.channels.DatagramChannelMulticastTest#test_joinAnySource_multicastLoopOption_IPv4: [fizz, sentry, celes, cyan, kefka, reks, setzer, wizpig]
