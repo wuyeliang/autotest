@@ -61,8 +61,6 @@ import tempfile
 import time
 import traceback
 
-from chromite.lib import gs
-
 import common
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import host_states
@@ -78,7 +76,6 @@ from autotest_lib.server.hosts import afe_store
 from autotest_lib.server.hosts import servo_host
 from autotest_lib.site_utils.deployment import cmdvalidate
 from autotest_lib.site_utils.deployment.prepare import dut as preparedut
-from autotest_lib.site_utils.stable_images import build_data
 from autotest_lib.utils import labellib
 
 
@@ -142,8 +139,7 @@ def _upload_logs(dirpath, gspath):
     @param dirpath  Path to directory containing the logs.
     @param gspath   Path to GS bucket.
     """
-    ctx = gs.GSContext()
-    ctx.Copy(dirpath, gspath, recursive=True)
+    utils.run(['gsutil', 'cp', '-r', '--', dirpath, gspath])
 
 
 def _get_omaha_build(board):
@@ -160,8 +156,8 @@ def _get_omaha_build(board):
             R##-####.#.#.  Will return `None` if no Beta channel
             entry is found.
     """
-    ctx = gs.GSContext()
-    omaha_status = json.loads(ctx.Cat(_OMAHA_STATUS))
+    ret = utils.run(['gsutil', 'cat', '--', _OMAHA_STATUS])
+    omaha_status = json.loads(ret.stdout)
     omaha_board = board.replace('_', '-')
     for e in omaha_status['omaha_data']:
         if (e['channel'] == 'beta' and
