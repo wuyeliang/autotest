@@ -19,7 +19,7 @@ class autoupdate_NonBlockingOOBEUpdate(update_engine_test.UpdateEngineTest):
         super(autoupdate_NonBlockingOOBEUpdate, self).cleanup()
 
 
-    def run_once(self, full_payload=True, moblab=False, job_repo_url=None):
+    def run_once(self, full_payload=True, job_repo_url=None):
         """
         Tries an autoupdate during ChromeOS OOBE without a deadline.
 
@@ -28,7 +28,6 @@ class autoupdate_NonBlockingOOBEUpdate(update_engine_test.UpdateEngineTest):
         not have a deadline and should not be executed.
 
         @param full_payload: True for a full payload. False for delta.
-        @param moblab: True if we are running on moblab.
         @param job_repo_url: Used for debugging locally. This is used to figure
                              out the current build and the devserver to use.
                              The test will read this from a host argument
@@ -43,19 +42,17 @@ class autoupdate_NonBlockingOOBEUpdate(update_engine_test.UpdateEngineTest):
         tpm_utils.ClearTPMOwnerRequest(self._host)
 
         # Get an update url that will return non critical update responses.
-        update_url = self.get_update_url_for_test(job_repo_url,
-                                                  full_payload=full_payload,
-                                                  critical_update=False,
-                                                  moblab=moblab)
+        self._job_repo_url = job_repo_url
+        payload = self._get_payload_url(full_payload=full_payload)
+        image_url, _ = self._stage_payload_by_uri(payload)
 
         self._run_client_test_and_check_result('autoupdate_StartOOBEUpdate',
-                                               image_url=update_url,
+                                               image_url=image_url,
                                                critical_update=False)
 
         # Check that the update failed as expected.
         if self._check_update_engine_log_for_entry(self._NON_CRITICAL_ERROR):
             return
-
 
         err_str = "The update was expected to fail with error code " \
                   "'kNonCriticalUpdateInOOBE' because the update response " \

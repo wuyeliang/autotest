@@ -126,4 +126,14 @@ class autoupdate_StartOOBEUpdate(update_engine_test.UpdateEngineTest):
                 raise error.TestFail(e)
 
         else:
-            self._start_oobe_update(image_url)
+            if self._critical_update:
+                self._start_oobe_update(image_url)
+            else:
+                metadata_dir = autotemp.tempdir()
+                self._get_payload_properties_file(image_url, metadata_dir.name)
+                base_url = ''.join(image_url.rpartition('/')[0:2])
+                with nebraska_wrapper.NebraskaWrapper(
+                        log_dir=metadata_dir.name,
+                        update_metadata_dir=metadata_dir.name,
+                        update_payloads_address=base_url) as nebraska:
+                    self._start_oobe_update(nebraska.get_update_url())
