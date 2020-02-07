@@ -97,18 +97,6 @@ class Cr50Test(FirmwareTest):
 
         self._save_original_state()
 
-        # Verify cr50 is still running the correct version
-        cr50_qual_version = full_args.get('cr50_qual_version', '').strip()
-        if cr50_qual_version:
-            _, running_rw, running_bid = self.get_saved_cr50_original_version()
-            expected_rw, expected_bid_sym = cr50_qual_version.split('/')
-            expected_bid = cr50_utils.GetBoardIdInfoString(expected_bid_sym,
-                                                           symbolic=False)
-            logging.debug('Running %s %s Expect %s %s', running_rw, running_bid,
-                          expected_rw, expected_bid)
-            if running_rw != expected_rw or expected_bid != running_bid:
-                raise error.TestError('Not running %s' % cr50_qual_version)
-
         # We successfully saved the device state
         self._saved_state |= self.INITIAL_IMAGE_STATE
         # Try and download all images necessary to restore cr50 state.
@@ -134,6 +122,7 @@ class Cr50Test(FirmwareTest):
             if restore_cr50_board_id:
                 raise error.TestNAError('Need eraseflashinfo image: %s' %
                                         str(e))
+
 
 
     def _saved_cr50_state(self, state):
