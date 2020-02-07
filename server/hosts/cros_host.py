@@ -157,7 +157,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
     _BIOS_REGEX = '(%s\.\w*\.\w*\.\w*)'
 
     # Command to update firmware located on DUT
-    _FW_UPDATE_CMD = 'chromeos-firmwareupdate --mode=recovery -e %s -i %s %s'
+    _FW_UPDATE_CMD = 'chromeos-firmwareupdate --mode=recovery -i %s %s'
 
     @staticmethod
     def check_host(host, timeout=10):
@@ -762,27 +762,33 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 dest_folder = '/tmp/firmware'
                 self.run('mkdir -p ' + dest_folder)
 
-                # Send EC firmware image to DUT
-                logging.info('Sending EC firmware.')
-                dest_ec_path = os.path.join(dest_folder,
-                                            os.path.basename(ec_image))
-                self.send_file(ec_image, dest_ec_path)
-
                 # Send BIOS firmware image to DUT
                 logging.info('Sending BIOS firmware.')
                 dest_bios_path = os.path.join(dest_folder,
                                               os.path.basename(bios_image))
                 self.send_file(bios_image, dest_bios_path)
 
-                # Update EC and BIOS firmware on DUT
-                logging.info('Updating EC and BIOS firmware.')
-                fw_cmd = self._FW_UPDATE_CMD % (dest_ec_path,
-                                                dest_bios_path,
+                # Initialize firmware update command for BIOS image
+                fw_cmd = self._FW_UPDATE_CMD % (dest_bios_path,
                                                 '--wp=1' if rw_only else '')
+
+                # Send EC firmware image to DUT when EC image was found
+                if ec_image:
+                    logging.info('Sending EC firmware.')
+                    dest_ec_path = os.path.join(dest_folder,
+                                                os.path.basename(ec_image))
+                    self.send_file(ec_image, dest_ec_path)
+
+                    # Add EC image to firmware update command
+                    fw_cmd += ' -e %s' % dest_ec_path
+
+                # Update firmware on DUT
+                logging.info('Updating firmware.')
                 self.run(fw_cmd)
             else:
                 # Host is not available, program firmware using servo
-                self.servo.program_ec(ec_image, rw_only)
+                if ec_image:
+                    self.servo.program_ec(ec_image, rw_only)
                 self.servo.program_bios(bios_image, rw_only)
                 if utils.host_is_in_lab_zone(self.hostname):
                     self._add_fw_version_label(build, rw_only)
@@ -795,16 +801,17 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
             # When enabled verify EC and BIOS firmware version after programming
             if verify_version:
-                # Check programmed EC firmware against expected version
-                logging.info('Checking EC firmware version.')
-                dest_ec_version = self.get_ec_version()
-                ec_regex = self._EC_REGEX % model
-                image_ec_version = self.get_version_from_image(ec_image,
-                                                               ec_regex)
-                if dest_ec_version != image_ec_version:
-                    raise error.TestFail(
-                        'Failed to update EC RO, version %s (expected %s)' %
-                        (dest_ec_version, image_ec_version))
+                # Check programmed EC firmware when EC image was found
+                if ec_image:
+                    logging.info('Checking EC firmware version.')
+                    dest_ec_version = self.get_ec_version()
+                    ec_regex = self._EC_REGEX % model
+                    image_ec_version = self.get_version_from_image(ec_image,
+                                                                ec_regex)
+                    if dest_ec_version != image_ec_version:
+                        raise error.TestFail(
+                            'Failed to update EC RO, version %s (expected %s)' %
+                            (dest_ec_version, image_ec_version))
 
                 # Check programmed BIOS firmware against expected version
                 logging.info('Checking BIOS firmware version.')

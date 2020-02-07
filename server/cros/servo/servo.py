@@ -1212,10 +1212,10 @@ class Servo(object):
         # reported by the EC.
         ec_board = None
         try:
-          ec_board = self.get('ec_board')
+            ec_board = self.get('ec_board')
         except Exception as err:
-          logging.info('Failed to get ec_board value; ignoring')
-          pass
+            logging.info('Failed to get ec_board value; ignoring')
+            pass
 
         # Array of candidates for EC image
         ec_image_candidates = ['ec.bin',
@@ -1229,8 +1229,12 @@ class Servo(object):
         ec_image = _extract_image_from_tarball(tarball_path, dest_dir,
                                                ec_image_candidates)
 
-        # Return path to EC image
-        return os.path.join(dest_dir, ec_image)
+        # Check if EC image was found and return path or None
+        if ec_image:
+            return os.path.join(dest_dir, ec_image)
+        else:
+            logging.info('Not a Chrome EC, ignore re-programming it')
+            return None
 
 
     def extract_bios_image(self, board, model, tarball_path):
@@ -1253,8 +1257,12 @@ class Servo(object):
         bios_image = _extract_image_from_tarball(tarball_path, dest_dir,
                                                  bios_image_candidates)
 
-        # Return path to BIOS image
-        return os.path.join(dest_dir, bios_image)
+        # Check if BIOS image was found and return path or raise error
+        if bios_image:
+            return os.path.join(dest_dir, bios_image)
+        else:
+            raise error.TestError('Failed to extract BIOS image from %s',
+                                  tarball_path)
 
 
     def _switch_usbkey_power(self, power_state, detection_delay=False):
