@@ -540,9 +540,45 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         self.send_command('bid 0x%x 0x%x' % (chip_bid, chip_flags))
 
 
-    def eraseflashinfo(self):
-        """Run eraseflashinfo."""
-        self.send_command('eraseflashinfo')
+    def get_board_id(self):
+        """Get the chip board id type and flags.
+
+        bid_type_inv will be '' if the bid output doesn't show it. If no board
+        id type inv is shown, then board id is erased will just check the type
+        and flags.
+
+        @returns a tuple (A string of bid_type:bid_type_inv:bid_flags,
+                          True if board id is erased)
+        """
+        bid = self.send_command_retry_get_output('bid',
+                    ['Board ID: (\S{8}):?(|\S{8}), flags (\S{8})\s'],
+                    safe=True)[0][1:]
+        bid_str = ':'.join(bid)
+        bid_is_erased =  set(bid).issubset({'', 'ffffffff'})
+        logging.info('chip board id: %s', bid_str)
+        logging.info('chip board id is erased: %s',
+                     'yes' if bid_is_erased else 'no')
+        return bid_str, bid_is_erased
+
+
+    def eraseflashinfo(self, retries=10):
+        """Run eraseflashinfo.
+
+        @returns True if the board id is erased
+        """
+        for i in range(retries):
+            # The console could drop characters while matching 'eraseflashinfo'.
+            # Retry if the command times out. It's ok to run eraseflashinfo
+            # multiple times.
+            rv = self.send_command_retry_get_output(
+                    'eraseflashinfo', ['eraseflashinfo(.*)>'])[0][1].strip()
+            logging.info('eraseflashinfo output: %r', rv)
+            bid_erased = self.get_board_id()[1]
+            eraseflashinfo_issue = 'Busy' in rv or 'do_flash_op' in rv
+            if not eraseflashinfo_issue and bid_erased:
+                break
+            logging.info('Retrying eraseflashinfo')
+        return bid_erased
 
 
     def rollback(self):
@@ -626,7 +662,6 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         a flex cable is being used, use the CCD_MODE_L gpio setting to determine
         if Cr50 has ccd enabled.
 
-        Returns:
         @return: 'off' or 'on' based on whether the cr50 console is working.
         """
         if self._servo.main_device_is_ccd():

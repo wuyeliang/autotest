@@ -315,7 +315,10 @@ class Cr50Test(FirmwareTest):
         """
         self._retry_cr50_update(self._dbg_image_path, 3, False)
         self._retry_cr50_update(self._eraseflashinfo_image_path, 3, True)
-        self.cr50.eraseflashinfo()
+        if not self.cr50.eraseflashinfo():
+            raise error.TestError('Unable to erase the board id')
+
+
 
 
     def eraseflashinfo_and_restore_image(self, image=''):

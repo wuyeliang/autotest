@@ -152,7 +152,8 @@ class firmware_Cr50GetName(Cr50Test):
             flags: The flag int to test.
             clear_bid: True if the board id should be erased and not reset.
         """
-        self.cr50.eraseflashinfo()
+        if not self.cr50.eraseflashinfo():
+            raise error.TestError('Unable to erase the board id')
 
         if not clear_bid:
             cr50_utils.SetChipBoardId(self.host, brand, flags)
