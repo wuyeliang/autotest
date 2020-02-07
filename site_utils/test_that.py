@@ -23,15 +23,6 @@ from autotest_lib.server.hosts import factory
 from autotest_lib.site_utils import test_runner_utils
 
 
-try:
-    from chromite.lib import cros_build_lib
-except ImportError:
-    print 'Unable to import chromite.'
-    print 'This script must be either:'
-    print '  - Be run in the chroot.'
-    print '  - (not yet supported) be run after running '
-    print '    ../utils/build_externals.py'
-
 _QUICKMERGE_SCRIPTNAME = '/mnt/host/source/chromite/bin/autotest_quickmerge'
 
 
@@ -112,11 +103,10 @@ def _parse_arguments_internal(argv):
                              'and the lab server code rather than local '
                              'changes.')
     test_runner_utils.add_common_args(parser)
-    default_board = cros_build_lib.GetDefaultBoard()
-    parser.add_argument('-b', '--board', metavar='BOARD', default=default_board,
+    parser.add_argument('-b', '--board', metavar='BOARD',
                         action='store',
-                        help='Board for which the test will run. Default: %s' %
-                             (default_board or 'Not configured'))
+                        help='Board for which the test will run. '
+                             'Default: %(default)s')
     parser.add_argument('-m', '--model', metavar='MODEL', default='',
                         help='Specific model the test will run against. '
                              'Matches the model:FAKE_MODEL label for the host.')
