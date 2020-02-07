@@ -588,8 +588,9 @@ RPC_CATEGORIES = [
                     ONE_INT_ARG,
                     ONE_STR_ARG,
                 ],
-                "allow_error_msg": ("command cp -rf /var/tmp/faft/autest/work "
-                                    "/var/tmp/faft/autest/cbfs failed|"
+                "allow_error_msg": ("command cp -rf "
+                                    "/usr/local/tmp/faft/autest/work "
+                                    "/usr/local/tmp/faft/autest/cbfs failed|"
                                     "Could not detect a usable ec flash device")
             },
             {
@@ -712,7 +713,7 @@ RPC_CATEGORIES = [
                     NO_ARGS,
                     ONE_INT_ARG,
                 ],
-                "allow_error_msg": "cbfstool /var/tmp/faft/"
+                "allow_error_msg": "cbfstool /usr/local/tmp/faft/"
             },
             {
                 "method_name": "copy_bios",

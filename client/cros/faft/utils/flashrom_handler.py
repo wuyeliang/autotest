@@ -131,7 +131,8 @@ class FlashromHandler(object):
                              files, for use in signing
         @param target: flashrom target ('bios' or 'ec')
         @param subdir: name of subdirectory of state dir, to use for sections
-                    Default: same as target, resulting in '/var/tmp/faft/bios'
+                    Default: same as target, resulting in
+                    '/usr/local/tmp/faft/bios'
         @type os_if: client.cros.faft.utils.os_interface.OSInterface
         @type pub_key_file: str | None
         @type dev_key_path: str
@@ -194,7 +195,7 @@ class FlashromHandler(object):
     def section_file(self, *paths):
         """
         Return a full path for the given basename, in this handler's subdir.
-        Example: subdir 'bios' -> '/var/tmp/faft/bios/FV_GBB'
+        Example: subdir 'bios' -> '/usr/local/tmp/faft/bios/FV_GBB'
 
         @param paths: variable number of path pieces, same as in os.path.join
         @return: an absolute path from this handler's subdir and the pieces.

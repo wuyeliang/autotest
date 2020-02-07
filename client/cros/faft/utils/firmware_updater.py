@@ -22,10 +22,10 @@ class FirmwareUpdaterError(Exception):
 class FirmwareUpdater(object):
     """An object to support firmware update.
 
-    This object will create a temporary directory in /var/tmp/faft/autest with
-    two subdirectory keys/ and work/. You can modify the keys in keys/
-    directory. If you want to provide a given shellball to do firmware update,
-    put shellball under /var/tmp/faft/autest with name chromeos-firmwareupdate.
+    This object will create a temporary directory in /usr/local/tmp/faft/autest
+    with two subdirs, keys/ and work/. You can modify the keys in keys/ dir. If
+    you want to provide a given shellball to do firmware update, put shellball
+    under /usr/local/tmp/faft/autest with name chromeos-firmwareupdate.
 
     @type os_if: autotest_lib.client.cros.faft.utils.os_interface.OSInterface
     """
@@ -35,7 +35,7 @@ class FirmwareUpdater(object):
     HEXDUMP = 'hexdump -v -e \'1/1 "0x%02x\\n"\''
 
     DEFAULT_SHELLBALL = '/usr/sbin/chromeos-firmwareupdate'
-    DEFAULT_SUBDIR = 'autest'  # subdirectory of /var/tmp/faft/
+    DEFAULT_SUBDIR = 'autest'  # subdirectory of os_interface.state_dir
     DEFAULT_SECTION_FOR_TARGET = {'bios': 'a', 'ec': 'rw'}
 
     def __init__(self, os_if):

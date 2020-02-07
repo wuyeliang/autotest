@@ -48,7 +48,7 @@ class FAFTBase(test.test):
 
         self._client = host
         self.faft_client = RPCProxy(host)
-        self.lockfile = '/var/tmp/faft/lock'
+        self.lockfile = '/usr/local/tmp/faft/lock'
 
 
 class FirmwareTest(FAFTBase):
@@ -205,6 +205,7 @@ class FirmwareTest(FAFTBase):
         self._setup_gbb_flags()
         self.faft_client.updater.stop_daemon()
         self._create_faft_lockfile()
+        self._create_old_faft_lockfile()
         self._setup_ec_write_protect(ec_wp)
         # See chromium:239034 regarding needing this sync.
         self.blocking_sync()
@@ -243,6 +244,7 @@ class FirmwareTest(FAFTBase):
         self.faft_client.updater.start_daemon()
         self.faft_client.updater.cleanup()
         self._remove_faft_lockfile()
+        self._remove_old_faft_lockfile()
         self._record_faft_client_log()
         self.servo.rotate_servod_logs('servod.cleanup', self.resultsdir)
 
@@ -574,11 +576,36 @@ class FirmwareTest(FAFTBase):
         command = 'touch %s' % (self.lockfile)
         self.faft_client.system.run_shell_command(command)
 
+    def _create_old_faft_lockfile(self):
+        """
+        Creates the FAFT lockfile in its legacy location.
+
+        TODO (once M83 is stable, approx. June 9 2020):
+        Delete this function, as platform/installer/chromeos-setgoodkernel
+        will look for the lockfile in the new location
+        (/usr/local/tmp/faft/lock)
+        """
+        logging.info('Creating legacy FAFT lockfile...')
+        self.faft_client.system.run_shell_command('mkdir -p /var/tmp/faft')
+        self.faft_client.system.run_shell_command('touch /var/tmp/faft/lock')
+
     def _remove_faft_lockfile(self):
         """Removes the FAFT lockfile."""
         logging.info('Removing FAFT lockfile...')
         command = 'rm -f %s' % (self.lockfile)
         self.faft_client.system.run_shell_command(command)
+
+    def _remove_old_faft_lockfile(self):
+        """
+        Removes the FAFT lockfile from its legacy location.
+
+        TODO (once M83 is stable, approx. June 9 2020):
+        Delete this function, as platform/installer/chromeos-setgoodkernel
+        will look for the lockfile in the new location
+        (/usr/local/tmp/faft/lock)
+        """
+        logging.info('Removing legacy FAFT lockfile...')
+        self.faft_client.system.run_shell_command('rm -rf /var/tmp/faft')
 
     def clear_set_gbb_flags(self, clear_mask, set_mask):
         """Clear and set the GBB flags in the current flashrom.

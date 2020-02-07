@@ -65,7 +65,7 @@ class OSInterface(object):
 
         # We keep the state of FAFT test in a permanent directory over reboots.
         if state_dir is None:
-            state_dir = '/var/tmp/faft'
+            state_dir = '/usr/local/tmp/faft'
 
         if log_file is None:
             log_file = 'faft_client.log'
