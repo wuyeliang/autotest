@@ -422,7 +422,7 @@ class AudioLoopbackDongleLabel(base_label.BaseLabel):
                               ignore_status=True).stdout
         if (cras_utils.node_type_is_plugged('HEADPHONE', nodes_info) and
             cras_utils.node_type_is_plugged('MIC', nodes_info)):
-                return True
+            return True
         return False
 
 
@@ -551,15 +551,28 @@ class StorageLabel(base_label.StringPrefixLabel):
         # All other internal device / error case will always fall here
         return False
 
-
     def generate_labels(self, host):
         return [self.type_str]
 
 
 class ServoLabel(base_label.BaseLabel):
-    """Label to apply if a servo is present."""
+    """
+    Label servo is applying if a servo is present.
+    Label servo_state present always.
+    """
 
-    _NAME = 'servo'
+    _NAME_OLD = 'servo'
+    _NAME = 'servo_state'
+    _NAME_WORKING = 'servo_state:WORKING'
+    _NAME_BROKEN = 'servo_state:BROKEN'
+
+    def get(self, host):
+        if self.exists(host):
+            return [self._NAME_OLD, self._NAME_WORKING]
+        return [self._NAME_BROKEN]
+
+    def get_all_labels(self):
+        return set([self._NAME]), set([self._NAME_OLD])
 
     def exists(self, host):
         # Based on crbug.com/995900, Servo sometimes flips.
@@ -579,6 +592,9 @@ class ServoLabel(base_label.BaseLabel):
         info = host.host_info_store.get()
         for label in info.labels:
             if label.startswith(self._NAME):
+                if label.startswith(self._NAME_WORKING):
+                    return True
+            elif label.startswith(self._NAME_OLD):
                 return True
         return False
 

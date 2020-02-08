@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import mock
 import unittest
 
 import common
@@ -19,6 +20,7 @@ from autotest_lib.server.hosts.cros_label import Cr50ROVersionLabel
 from autotest_lib.server.hosts.cros_label import Cr50RWVersionLabel
 from autotest_lib.server.hosts.cros_label import DeviceSkuLabel
 from autotest_lib.server.hosts.cros_label import ModelLabel
+from autotest_lib.server.hosts.cros_label import ServoLabel
 from autotest_lib.server.hosts import host_info
 
 # pylint: disable=missing-docstring
@@ -108,6 +110,7 @@ Current versions:
 RO 0.0.10
 RW 0.4.15
 """
+
 
 class MockCmd(object):
     """Simple mock command with base command and results"""
@@ -294,13 +297,13 @@ class Cr50RWKeyidTests(unittest.TestCase):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
         self.assertEqual(Cr50RWKeyidLabel().get(host),
-                ['cr50-rw-keyid:0xde88588d','cr50-rw-keyid:prod'])
+                         ['cr50-rw-keyid:0xde88588d', 'cr50-rw-keyid:prod'])
 
     def test_cr50_dev_rw(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_DEV_RW))
         self.assertEqual(Cr50RWKeyidLabel().get(host),
-                ['cr50-rw-keyid:0xb93d6539', 'cr50-rw-keyid:dev'])
+                         ['cr50-rw-keyid:0xb93d6539', 'cr50-rw-keyid:dev'])
 
     def test_gsctool_fails(self):
         host = MockHost([],
@@ -315,13 +318,13 @@ class Cr50ROKeyidTests(unittest.TestCase):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
         self.assertEqual(Cr50ROKeyidLabel().get(host),
-                ['cr50-ro-keyid:0xaa66150f', 'cr50-ro-keyid:prod'])
+                         ['cr50-ro-keyid:0xaa66150f', 'cr50-ro-keyid:prod'])
 
     def test_cr50_dev_ro(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_DEV_RO))
         self.assertEqual(Cr50ROKeyidLabel().get(host),
-                ['cr50-ro-keyid:0x3716ee6b', 'cr50-ro-keyid:dev'])
+                         ['cr50-ro-keyid:0x3716ee6b', 'cr50-ro-keyid:dev'])
 
     def test_gsctool_fails(self):
         host = MockHost([],
@@ -336,13 +339,13 @@ class Cr50RWVersionTests(unittest.TestCase):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PVT))
         self.assertEqual(Cr50RWVersionLabel().get(host),
-                ['cr50-rw-version:0.3.14'])
+                         ['cr50-rw-version:0.3.14'])
 
     def test_cr50_dev_rw(self):
         host = MockHost([],
                         MockCmd('gsctool -a -f', 0, GSCTOOL_OUTPUT_PREPVT))
         self.assertEqual(Cr50RWVersionLabel().get(host),
-                ['cr50-rw-version:0.4.15'])
+                         ['cr50-rw-version:0.4.15'])
 
     def test_gsctool_fails(self):
         host = MockHost([],
@@ -370,21 +373,73 @@ class HWIDLabelTests(unittest.TestCase):
         self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists([], []), [])
 
     def test_merge_hwid_label_lists_singleton(self):
-        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists([], ["4"]), ["4"])
-        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(["7"], []), ["7"])
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists([], ["4"]),
+                         ["4"])
+        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(["7"], []),
+                         ["7"])
 
     def test_merge_hwid_label_lists_override(self):
-        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(old=["7:a"], new=["7:b"]), ["7:b"])
+        self.assertEqual(
+            cros_label.HWIDLabel._merge_hwid_label_lists(old=["7:a"], new=["7:b"]),
+            ["7:b"])
 
     def test_merge_hwid_label_lists_no_override(self):
-        self.assertEqual(cros_label.HWIDLabel._merge_hwid_label_lists(old=["7a"], new=["7b"]), ["7a", "7b"])
+        self.assertEqual(
+            cros_label.HWIDLabel._merge_hwid_label_lists(old=["7a"], new=["7b"]),
+            ["7a", "7b"])
 
     def test_hwid_label_names(self):
         class HWIDLabelTester(cros_label.HWIDLabel):
             def get_all_labels(self):
                 return [], []
+
         item = HWIDLabelTester()
         self.assertEqual(item._hwid_label_names(), cros_label.HWID_LABELS_FALLBACK)
+
+
+class ServoLabelTests(unittest.TestCase):
+    """Unit tests for ServoLabel"""
+
+    def test_servo_working_and_in_cache(self):
+        host = MockHost(['servo_state:WORKING'])
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo', 'servo_state:WORKING'])
+        self.assertEqual(servo.exists(host), True)
+
+    def test_servo_working_and_in_cache_but_not_connected(self):
+        host = MockHost(['servo_state:NOT_CONNECTED'])
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo_state:BROKEN'])
+        self.assertEqual(servo.exists(host), False)
+
+    def test_servo_not_in_cache_and_not_working(self):
+        host = MockHostWithoutAFE(['not_servo_state:WORKING'])
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo_state:BROKEN'])
+        self.assertEqual(servo.exists(host), False)
+
+    @mock.patch('autotest_lib.server.hosts.servo_host.get_servo_args_for_host')
+    @mock.patch('autotest_lib.server.hosts.servo_host.servo_host_is_up')
+    def test_servo_not_in_cache_but_working(self,
+                                            servo_host_is_up,
+                                            get_servo_args_for_host):
+        get_servo_args_for_host.return_value = {"servo_host": "some_servo_host_name"}
+        servo_host_is_up.return_value = True
+        host = MockHostWithoutAFE(['not_servo_state:WORKING'])
+
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo', 'servo_state:WORKING'])
+        self.assertEqual(servo.exists(host), True)
+        get_servo_args_for_host.assert_called()
+        servo_host_is_up.assert_called()
+        servo_host_is_up.assert_called_with('some_servo_host_name')
+
+    def test_get_all_labels_lists_of_generating_labels(self):
+          servo = ServoLabel()
+          prefix_labels, full_labels = servo.get_all_labels()
+          self.assertEqual(prefix_labels, set(['servo_state']))
+          self.assertEqual(full_labels, set(['servo']))
+
 
 if __name__ == '__main__':
     unittest.main()

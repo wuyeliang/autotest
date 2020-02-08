@@ -75,3 +75,5 @@ hwid_key
 
 # Present on Skylab drones
 /swarming_state/
+
+.idea
