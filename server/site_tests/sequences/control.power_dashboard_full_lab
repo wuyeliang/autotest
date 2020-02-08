@@ -17,8 +17,6 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 
 CLIENT_TESTS = [
-    ('power_Standby', {
-        'tag' : 'fast', 'sample_hours' : 0.334, 'test_hours' : 0.334}),
     ('power_LoadTest', {
         'tag' : '1hour', 'loop_time' : 3600, 'loop_count' : 1,
         'test_low_batt_p' : 6}),
@@ -28,6 +26,8 @@ CLIENT_TESTS = [
         'tag' : 'sw_decoder', 'use_hw_decode' : False}),
     ('power_Display', {}),
     ('power_WebGL', {}),
+    ('power_Standby', {
+        'tag' : 'fast', 'sample_hours' : 0.334, 'test_hours' : 0.334}),
 ]
 
 SERVO_V4_ETH_VENDOR = '0bda'
