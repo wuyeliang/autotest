@@ -1965,6 +1965,79 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
 
     @xmlrpc_server.dbus_safe(False)
+    def start_notify(self, address, uuid, cccd_value):
+        """Starts the notification session on the gatt characteristic.
+
+        @param address: The MAC address of the remote device.
+        @param uuid: The uuid of the characteristic.
+        @param cccd_value: Possible CCCD values include
+               0x00 - inferred from the remote characteristic's properties
+               0x01 - notification
+               0x02 - indication
+
+        @returns: True if the operation succeeds.
+                  False if the characteristic is not found, or
+                      if a DBus exception was raised by the operation.
+
+        """
+        char_obj = self._get_char_object(uuid, address)
+        if char_obj is None:
+            return False
+
+        try:
+            char_obj.StartNotify(dbus.Byte(cccd_value))
+            return True
+        except Exception as e:
+            logging.error('start_notify: %s', e)
+        except:
+            logging.error('start_notify: unexpected error')
+        return False
+
+
+    @xmlrpc_server.dbus_safe(False)
+    def stop_notify(self, address, uuid):
+        """Stops the notification session on the gatt characteristic.
+
+        @param address: The MAC address of the remote device.
+        @param uuid: The uuid of the characteristic.
+
+        @returns: True if the operation succeeds.
+                  False if the characteristic is not found, or
+                      if a DBus exception was raised by the operation.
+
+        """
+        char_obj = self._get_char_object(uuid, address)
+        if char_obj is None:
+            return False
+
+        try:
+            char_obj.StopNotify()
+            return True
+        except Exception as e:
+            logging.error('stop_notify: %s', e)
+        except:
+            logging.error('stop_notify: unexpected error')
+        return False
+
+
+    @xmlrpc_server.dbus_safe(False)
+    def is_notifying(self, address, uuid):
+        """Is the GATT characteristic in a notifying session?
+
+        @param address: The MAC address of the remote device.
+        @param uuid: The uuid of the characteristic.
+
+        @return True if it is in a notification session. False otherwise.
+
+        """
+        path = self.get_characteristic_map(address).get(uuid)
+        if not path:
+            return False
+
+        return self.get_gatt_characteristic_property(path, 'Notifying')
+
+
+    @xmlrpc_server.dbus_safe(False)
     def is_characteristic_path_resolved(self, uuid, address):
         """Checks whether a characteristic is in the object tree.
 

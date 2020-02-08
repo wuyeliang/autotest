@@ -22,6 +22,11 @@ class bluetooth_AdapterLEBetterTogether(BluetoothAdapterQuickTests,
        specific test only
     """
 
+    BETTER_TOGETHER_SERVICE_UUID = 'b3b7e28e-a000-3e17-bd86-6e97b9e28c11'
+    CLIENT_RX_CHARACTERISTIC_UUID = '00000100-0004-1000-8000-001A11000102'
+    CLIENT_TX_CHARACTERISTIC_UUID = '00000100-0004-1000-8000-001A11000101'
+    CCCD_VALUE_INDICATION = 0x02
+
     test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
     batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
 
@@ -58,6 +63,15 @@ class bluetooth_AdapterLEBetterTogether(BluetoothAdapterQuickTests,
             return False
 
         self.test_set_trusted(device.address)
+
+        self.test_service_resolved(device.address)
+
+        self.test_start_notify(device.address,
+                               self.CLIENT_RX_CHARACTERISTIC_UUID,
+                               self.CCCD_VALUE_INDICATION)
+
+        self.test_stop_notify(device.address,
+                              self.CLIENT_RX_CHARACTERISTIC_UUID)
 
     @batch_wrapper('Better Together')
     def better_together_batch_run(self, num_iterations=1, test_name=None):

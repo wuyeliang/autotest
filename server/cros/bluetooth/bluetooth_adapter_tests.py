@@ -2881,6 +2881,55 @@ class BluetoothAdapterTests(test.test):
         return power_mw <= max_power_mw
 
 
+    @_test_retry_and_log
+    def test_start_notify(self, address, uuid, cccd_value):
+        """Test that a notification can be started on a characteristic
+
+        @param address: The MAC address of the remote device.
+        @param uuid: The uuid of the characteristic.
+        @param cccd_value: Possible CCCD values include
+               0x00 - inferred from the remote characteristic's properties
+               0x01 - notification
+               0x02 - indication
+
+        @returns: The test results.
+
+        """
+        start_notify = self.bluetooth_facade.start_notify(
+            address, uuid, cccd_value)
+        is_notifying = self._wait_for_condition(
+            lambda: self.bluetooth_facade.is_notifying(
+                address, uuid), method_name())
+
+        self.results = {
+            'start_notify': start_notify,
+            'is_notifying': is_notifying}
+
+        return all(self.results.values())
+
+
+    @_test_retry_and_log
+    def test_stop_notify(self, address, uuid):
+        """Test that a notification can be stopped on a characteristic
+
+        @param address: The MAC address of the remote device.
+        @param uuid: The uuid of the characteristic.
+
+        @returns: The test results.
+
+        """
+        stop_notify = self.bluetooth_facade.stop_notify(address, uuid)
+        is_not_notifying = self._wait_for_condition(
+            lambda: not self.bluetooth_facade.is_notifying(
+                address, uuid), method_name())
+
+        self.results = {
+            'stop_notify': stop_notify,
+            'is_not_notifying': is_not_notifying}
+
+        return all(self.results.values())
+
+
     # -------------------------------------------------------------------
     # Autotest methods
     # -------------------------------------------------------------------
