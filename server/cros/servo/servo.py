@@ -1176,7 +1176,7 @@ class Servo(object):
                                '%s/ec.bin' % model,
                                '%s/ec.bin' % board]
         if ec_board:
-          ec_image_candidates.append('%s/ec.bin' % ec_board)
+            ec_image_candidates.append('%s/ec.bin' % ec_board)
 
         # Extract EC image from tarball
         dest_dir = os.path.join(os.path.dirname(tarball_path), 'EC')
@@ -1201,10 +1201,21 @@ class Servo(object):
         @return: Path to extracted BIOS image.
         """
 
+        # Best effort; try to retrieve the EC board from the version as
+        # reported by the EC.
+        ec_board = None
+        try:
+            ec_board = self.get('ec_board')
+        except Exception as err:
+            logging.info('Failed to get ec_board value; ignoring')
+            pass
+
         # Array of candidates for BIOS image
         bios_image_candidates = ['image.bin',
                                  'image-%s.bin' % model,
                                  'image-%s.bin' % board]
+        if ec_board:
+            bios_image_candidates.append('image-%s.bin' % ec_board)
 
         # Extract BIOS image from tarball
         dest_dir = os.path.join(os.path.dirname(tarball_path), 'BIOS')
