@@ -20,7 +20,6 @@ def run_TS(machine):
         'cheets_GTS',
         hosts=host_list,
         iterations=1,
-        max_retry=2,
         needs_push_media=True,
         tag='GtsYouTubeTestCases',
         test_name='cheets_GTS.GtsYouTubeTestCases',
