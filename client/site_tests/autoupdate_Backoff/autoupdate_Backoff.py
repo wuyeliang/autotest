@@ -67,7 +67,8 @@ class autoupdate_Backoff(update_engine_test.UpdateEngineTest):
             # Only set one URL in the Nebraska response so we can test the
             # backoff functionality quicker.
             response_props = {'disable_payload_backoff': not backoff,
-                              'failures_per_url': 1}
+                              'failures_per_url': 1,
+                              'critical_update': True}
 
             # Start the update.
             self._check_for_update(port=nebraska.get_port(),

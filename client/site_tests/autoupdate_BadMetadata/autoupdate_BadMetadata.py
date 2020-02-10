@@ -51,7 +51,8 @@ class autoupdate_BadMetadata(update_engine_test.UpdateEngineTest):
 
             try:
                 self._check_for_update(port=nebraska.get_port(),
-                                       wait_for_completion=True)
+                                       wait_for_completion=True,
+                                       critical_update=True)
                 raise error.TestFail('Update completed when it should have '
                                      'failed. Check the update_engine log.')
             except error.CmdError as e:

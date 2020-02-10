@@ -31,7 +31,8 @@ class autoupdate_UrlSwitch(update_engine_test.UpdateEngineTest):
 
             # Start the update that will return two Urls. This matches what test
             # and production omaha does today.
-            self._check_for_update(port=nebraska.get_port(), num_urls=2)
+            self._check_for_update(port=nebraska.get_port(), num_urls=2,
+                                   critical_update=True)
             self._wait_for_progress(0.2)
 
             # Pull the network cable so the update fails.
@@ -46,7 +47,8 @@ class autoupdate_UrlSwitch(update_engine_test.UpdateEngineTest):
                 'Reached max number of failures for Url')
 
             # The next update attempt should resume and finish successfully.
-            self._check_for_update(port=nebraska.get_port())
+            self._check_for_update(port=nebraska.get_port(),
+                                   critical_update=True)
             self._wait_for_update_to_complete()
             self._check_update_engine_log_for_entry(
                 'Resuming an update that was previously started.')
