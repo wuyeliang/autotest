@@ -223,7 +223,8 @@ class _DiskSpaceVerifier(hosts.Verifier):
     """
 
     def verify(self, host):
-        host.check_diskspace('/mnt/stateful_partition', 0.1)
+        # Check available space of stateful is greater than threshold, in Gib.
+        host.check_diskspace('/mnt/stateful_partition', 0.5)
 
     @property
     def description(self):
