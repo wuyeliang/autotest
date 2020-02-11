@@ -1,0 +1,22 @@
+AUTHOR = "puthik"
+NAME = "power_VideoEncode.fast"
+PURPOSE = "Measure video encode power usage."
+CRITERIA = "This test is a benchmark."
+TIME = "FAST"
+TEST_CATEGORY = "Benchmark"
+TEST_CLASS = "power"
+TEST_TYPE = "client"
+
+DOC = """
+This test makes sure that power_VideoEncode is working fine.
+"""
+
+codecs = ['h264', 'vp9']
+resolutions = ['1080']
+framerates = [60]
+
+args_dict = utils.args_to_dict(args)
+pdash_note = args_dict.get('pdash_note', '')
+job.run_test('power_VideoEncode', tag=NAME.split('.')[1], sec_per_test=30,
+             seconds_period=5, codecs=codecs, resolutions=resolutions,
+             framerates=framerates, pdash_note=pdash_note)
