@@ -49,10 +49,10 @@ class servo_LabControlVerification(test.test):
             # Note: the attributes are named after the arguments expected in
             # servo.py to be able to use the dictionary as a kwargs. Be mindful
             # of changing them &| keep them in sync.
-            ctrl = {'gpio_name': ctrl_elems[0]}
+            ctrl = {'ctrl_name': ctrl_elems[0]}
             if len(ctrl_elems) == 2:
                 # This a set servod control.
-                ctrl['gpio_value'] = ctrl_elems[1]
+                ctrl['ctrl_value'] = ctrl_elems[1]
             elif len(ctrl_elems) > 2:
                 logging.warn('The line containing %r in the control sequence '
                              'file has an unkown format. Ignoring for now.',
@@ -123,16 +123,16 @@ class servo_LabControlVerification(test.test):
             if len(ctrl) == 2:
                 ctrl_type = 'set'
                 ctrl_func = self.servo_proxy.set_nocheck
-            logstr = 'About to %s control %r' % (ctrl_type, ctrl['gpio_name'])
+            logstr = 'About to %s control %r' % (ctrl_type, ctrl['ctrl_name'])
             if ctrl_type == 'set':
-                logstr = '%s to %s' % (logstr, ctrl['gpio_value'])
+                logstr = '%s to %s' % (logstr, ctrl['ctrl_value'])
             logging.info(logstr)
             try:
                 ctrl_func(**ctrl)
-                logging.info('Success running %r', ctrl['gpio_name'])
+                logging.info('Success running %r', ctrl['ctrl_name'])
             except error.TestFail as e:
                 failed = True
-                logging.error('Error running %r. %s', ctrl['gpio_name'], str(e))
+                logging.error('Error running %r. %s', ctrl['ctrl_name'], str(e))
         if self.servo_version != 'servo_v3':
             # Servo V3 does not support Cr50 console. Skip this verification.
             try:
