@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import urlparse
-
 from autotest_lib.server.cros.update_engine import update_engine_test
 
 
@@ -31,19 +29,14 @@ class autoupdate_DataPreserved(update_engine_test.UpdateEngineTest):
                              when run in the lab.
 
         """
-        update_url = self.get_update_url_for_test(job_repo_url,
-                                                  full_payload=full_payload)
-
-        # Split the URL into server and port.
-        url_split = urlparse.urlsplit(update_url)
-        server, port = url_split.netloc.split(':')
+        self._job_repo_url = job_repo_url
+        payload = self._get_payload_url(full_payload=full_payload)
+        image_url, _ = self._stage_payload_by_uri(payload)
 
         # Change input method and timezone, create a file, then start update.
         self._run_client_test_and_check_result(self._USER_DATA_TEST,
-                                               server=server, port=int(port),
-                                               update_path=url_split.path,
+                                               image_url=image_url,
                                                tag='before_update')
-        self._wait_for_update_to_complete()
         self._host.reboot()
 
         # Ensure preferences and downloads are the same as before the update.

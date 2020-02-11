@@ -6,8 +6,10 @@ import logging
 import os
 
 from autotest_lib.client.bin import utils
+from autotest_lib.client.common_lib import autotemp
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chrome
+from autotest_lib.client.cros.update_engine import nebraska_wrapper
 from autotest_lib.client.cros.update_engine import update_engine_test
 
 class autoupdate_UserData(update_engine_test.UpdateEngineTest):
@@ -101,23 +103,31 @@ class autoupdate_UserData(update_engine_test.UpdateEngineTest):
                                      'automatic.')
 
 
-    def run_once(self, server=None, port=None, update_path=None):
+    def run_once(self, image_url=None):
         """
         Tests that user settings are not reset by update.
 
-        @param server: The update server to use.
-        @param port: The port of the update server.
-        @param update_path: The /update part of the url.
+        @param image_url: The payload url to use.
 
         """
-        if server:
-            with chrome.Chrome(autotest_ext=True) as cr:
-                self._cr = cr
-                utils.run('echo hello > %s' % self._TEST_FILE)
-                self._modify_input_methods()
-                self._modify_time_zone()
-                self._check_for_update(server=server, port=port,
-                                       update_path=update_path)
-                self._wait_for_progress(0.2)
+        if image_url:
+            metadata_dir = autotemp.tempdir()
+            self._get_payload_properties_file(image_url, metadata_dir.name)
+            base_url = ''.join(image_url.rpartition('/')[0:2])
+            with nebraska_wrapper.NebraskaWrapper(
+                    log_dir=self.resultsdir,
+                    update_metadata_dir=metadata_dir.name,
+                    update_payloads_address=base_url) as nebraska:
+                with chrome.Chrome(autotest_ext=True) as cr:
+                    self._cr = cr
+                    utils.run('echo hello > %s' % self._TEST_FILE)
+                    self._modify_input_methods()
+                    self._modify_time_zone()
+                    self._check_for_update(port=nebraska.get_port(),
+                                           critical_update=True)
+                # Sign out of Chrome and wait for the update to complete.
+                # If we waited for the update to complete and then logged out
+                # the DUT will auto-reboot and the client test cannot return.
+                self._wait_for_update_to_complete()
         else:
             self._perform_after_update_checks()
