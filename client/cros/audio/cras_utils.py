@@ -188,15 +188,6 @@ def set_node_volume(node_id, volume):
     get_cras_control_interface().SetOutputNodeVolume(node_id, volume)
 
 
-def set_capture_gain(gain):
-    """Set the system capture gain.
-
-    @param gain the capture gain in db*100 (100 = 1dB)
-
-    """
-    get_cras_control_interface().SetInputGain(gain)
-
-
 def get_cras_control_interface(private=False):
     """Gets Cras DBus control interface.
 

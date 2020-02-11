@@ -431,8 +431,6 @@ def cras_rms_test_setup():
     cras_utils.set_system_volume(_DEFAULT_PLAYBACK_VOLUME)
     cras_utils.set_selected_output_node_volume(_DEFAULT_PLAYBACK_VOLUME)
 
-    cras_utils.set_capture_gain(_DEFAULT_CAPTURE_GAIN)
-
     cras_utils.set_system_mute(False)
     cras_utils.set_capture_mute(False)
 

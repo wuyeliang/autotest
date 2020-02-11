@@ -301,9 +301,6 @@ class AudioWidgetFactory(object):
                 elif is_usb:
                     return audio_widget.CrosUSBInputWidgetHandler(
                             self._audio_facade)
-                elif is_internal_mic:
-                    return audio_widget.CrosIntMicInputWidgetHandler(
-                            self._audio_facade, self._system_facade)
                 elif is_hotwording:
                     return audio_widget.CrosHotwordingWidgetHandler(
                             self._audio_facade, self._system_facade)
