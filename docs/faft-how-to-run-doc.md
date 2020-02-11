@@ -18,9 +18,8 @@
 FAFT (Fully Automated Firmware Tests) is a collection of tests and related
 infrastructure that exercise and verify capabilities of Chrome OS.
 The features tested by FAFT are implemented through low-level software
-(firmware/BIOS) and hardware.
-FAFT evolved from SAFT (Semi-Automated Firmware Tests) and you can locate tests
-in the [FAFT suite](https://chromium.googlesource.com/chromiumos/third_party/autotest/+/master/server/site_tests/)
+(firmware/BIOS) and hardware. FAFT evolved from SAFT
+(Semi-Automated Firmware Tests) and you can locate tests in the [FAFT suite]
 in the Autotest tree as directories with the prefix `firmware_`.
 
 The founding principles of FAFT are:
@@ -31,12 +30,7 @@ The founding principles of FAFT are:
 - Easy to integrate with existing test infrastructure (e.g. test lab, continuous testing, etc).
 
 To access some of these low-level capabilities, the tests require a
-[servo](https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/README.md#Power-Measurement)
-board
-([servo v2](https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_v2.md),
-[servo v4](https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_v4.md)
-with [servo micro](https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_micro.md)
-or [servo v4 Type-C](https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_v4.md#Type_C-Version)).
+[servo] board ([servo v2], [servo v4] with [servo micro] or [servo v4 Type-C])
 
 The servo board is connected directly to the DUT (Device Under Test) to enable
 access to low-level hardware interfaces, as well as staging areas for backup
@@ -79,9 +73,9 @@ Note: Do not use a type C servo
 (but using a type A servo v4 with a converter to type C is fine.
 A pure type C setup will put the security chip into debug mode).
 
-Figure 1.Diagram of hardware configuration for a ServoV4 Type-A with servo micro
-
 ![Figure1](assets/faft_rc_typeA.png)
+
+**Figure 1.Diagram of hardware configuration for a ServoV4 Type-A with servo micro.**
 
 Details of servoV4 Type-A with micro connections:
 
@@ -108,9 +102,9 @@ Figure 2 shows a diagram of how to connect a servoV4 Type-C, to the test
 controller, DUT, and network. It is important to ensure the DUT is powered off
 before plugging in cables and components to the servo and DUT.
 
-Figure 2.Diagram of hardware configuration for a ServoV4 Type-C.
-
 ![Figure2](assets/faft_rc_typec.png)
+
+**Figure 2.Diagram of hardware configuration for a ServoV4 Type-C.**
 
 Details of servoV4 Type-C connections in Figure 2:
 
@@ -124,9 +118,9 @@ Details of servoV4 Type-C connections in Figure 2:
 Make sure to use the following servo type and configuration
 for running the FAFT PD suite
 
-Figure 3.Diagram of hardware configuration for a ServoV4 Type-C with servo micro
-
 ![Figure3](assets/faft_rc_pd_typeC.png)
+
+**Figure 3.Diagram of hardware configuration for a ServoV4 Type-C with servo micro.**
 
 Details about FAFT PD's ServoV4 Type-C + servo micro setup (Figure 3):
 
@@ -149,6 +143,8 @@ To check or upgrade the FW on the servo v4 and servo micro, respectively, before
 deprecated servo v2 board to the test controller, test device, and network.
 
 ![Figure4](assets/faft_rc_servov2_deprecated.jpg)
+
+**Figure 4.Diagram of hardware configuration for a ServoV2 board.**
 
 Details of servo v2 connections:
 
@@ -173,10 +169,23 @@ prepare and install a test Chromium OS image:
 ### Setup Confirmation {#setup-confirmation}
 
 To run FAFT you use the test_that tool, which does not automatically start a
-servod process for communicating with the servo board. Before running any tests:
+servod process for communicating with the servo board. Before running any tests, go into chroot:
 
-1. Run `$ sudo servod --board=$BOARD --no-ns-pid` where `$BOARD` is the code name of the board you are testing. For example: `$ sudo servod --board=eve`
-2. Run the `firmware_FAFTSetup` test to verify basic functionality and ensure that your setup is correct. If test_that is in `/usr/bin`, the syntax is `$ /usr/bin/test_that --board=$BOARD $DUT_IP firmware_FAFTSetup`
+1.  (chroot 1) Run `$ sudo servod --board=$BOARD --no-ns-pid` where `$BOARD` is the code name of the board you are testing. For example: `$ sudo servod --board=eve`
+1.  Go into a second chroot
+1.  (chroot 2) Run the `firmware_FAFTSetup` test to verify basic functionality and ensure that your setup is correct.
+1.  If test_that is in `/usr/bin`, the syntax is `$ /usr/bin/test_that --board=$BOARD $DUT_IP firmware_FAFTSetup`
+
+It is important to note that this syntax will work only if the correct packages
+for the DUT have been built. To build the packages, which usually takes
+a few hours, run the following from chroot:
+
+`$ ./build_packages --board=$BOARD` where `$BOARD` is the code name of the board under test
+
+If packages have not been built, the command won't work unless a path to the
+autotest directory is included in the command as follows:
+
+`$ test_that --autotest_dir ~/trunk/src/third_party/autotest/files/ --args="servo_host=localhost servo_port=9999" -b $BOARD $IP $TEST_NAME`
 
 ### Sample Commands {#sample-commands}
 
@@ -214,7 +223,7 @@ To run servod in a different host, specify the servo_host and servo_port argumen
 
 - `$ /usr/bin/test_that --board=$BOARD $DUT_IP --args "servo_host=$SERVO_HOST servo_port=$SERVO_PORT" suite:faft_lv1`
 
-To run multiple servo boards on the same servo host, use serial and port number.
+To run multiple servo boards on the same servo host (labstation), use serial and port number.
 
 - `$ sudo servod --board=$BOARD --port $port_number --serial $servo_serial_number`
 - `$ /usr/bin/test_that --board=$BOARD $DUT_IP --args "servo_host=localhost servo_port=$port_number faft_iterations=5000" f:.*firmware_ConsecutiveBoot/control`
@@ -238,3 +247,10 @@ Q: I still need help. Who can help me?
 Q: I got an error while running FAFT: `AutoservRunError: command execution error:  sudo -n which flash_ec` . What's wrong?
 
 - A: Run `sudo emerge chromeos-ec` inside your chroot.
+
+[FAFT suite]: https://chromium.googlesource.com/chromiumos/third_party/autotest/+/master/server/site_tests/
+[servo]: https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/README.md#Power-Measurement
+[servo v2]: https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_v2.md
+[servo v4]: https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_v4.md
+[servo micro]: https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_micro.md
+[servo v4 Type-C]: https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/refs/heads/master/docs/servo_v4.md#Type_C-Version
