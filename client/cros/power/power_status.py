@@ -19,7 +19,9 @@ import threading
 import time
 
 from autotest_lib.client.bin import utils
-from autotest_lib.client.common_lib import error, enum
+from autotest_lib.client.common_lib import enum
+from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib.cros import retry
 from autotest_lib.client.common_lib.utils import poll_for_condition_ex
 from autotest_lib.client.cros import kernel_trace
 from autotest_lib.client.cros.power import power_utils
@@ -2185,10 +2187,13 @@ class VideoFpsLogger(MeasurementLogger):
         self.refresh()
 
     def refresh(self):
-        current = self._tab.EvaluateJavaScript(
-            'Array.from(document.getElementsByTagName("video")).map('
-            'v => v.webkitDecodedFrameCount)')
-        fps = [(b - a) / self.seconds_period
+        @retry.retry(Exception, timeout_min=0.5, delay_sec=0.1)
+        def get_fps():
+            return self._tab.EvaluateJavaScript(
+                'Array.from(document.getElementsByTagName("video")).map('
+                'v => v.webkitDecodedFrameCount)')
+        current = get_fps()
+        fps = [(b - a if b >= a else b) / self.seconds_period
                for a, b in zip(self._last , current)]
         self._last = current
         return fps
