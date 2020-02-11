@@ -17,11 +17,6 @@ import re
 import struct
 import sys
 import time
-#import traceback
-# Please limit the use of the uinput library to this file. Try not to spread
-# dependencies and abstract as much as possible to make switching to a different
-# input library in the future easier.
-import uinput
 
 from autotest_lib.client.bin import test
 from autotest_lib.client.bin import utils
@@ -30,6 +25,12 @@ from autotest_lib.client.common_lib import test as test_utils
 from autotest_lib.client.cros.input_playback import input_playback
 from autotest_lib.client.cros.power import power_utils
 from functools import wraps
+
+# The uinput module might not be available at SDK test time.
+try:
+  from autotest_lib.client.cros.graphics import graphics_uinput
+except ImportError:
+  graphics_uinput = None
 
 
 class GraphicsTest(test.test):
@@ -327,9 +328,9 @@ def hide_typing_cursor():
 def screen_wakeup():
     """Wake up the screen if it is dark."""
     # Move the mouse a little bit to wake up the screen.
-    device = _get_uinput_device_mouse_rel()
-    _uinput_emit(device, 'REL_X', 1)
-    _uinput_emit(device, 'REL_X', -1)
+    device = graphics_uinput.get_device_mouse_rel()
+    graphics_uinput.emit(device, 'REL_X', 1)
+    graphics_uinput.emit(device, 'REL_X', -1)
 
 
 def switch_screen_on(on):
@@ -341,116 +342,6 @@ def switch_screen_on(on):
     raise error.TestFail('switch_screen_on is not implemented.')
 
 
-# Don't create a device during build_packages or for tests that don't need it.
-uinput_device_keyboard = None
-uinput_device_touch = None
-uinput_device_mouse_rel = None
-
-# Don't add more events to this list than are used. For a complete list of
-# available events check python2.7/site-packages/uinput/ev.py.
-UINPUT_DEVICE_EVENTS_KEYBOARD = [
-    uinput.KEY_F4,
-    uinput.KEY_F11,
-    uinput.KEY_KPPLUS,
-    uinput.KEY_KPMINUS,
-    uinput.KEY_LEFTCTRL,
-    uinput.KEY_TAB,
-    uinput.KEY_UP,
-    uinput.KEY_DOWN,
-    uinput.KEY_LEFT,
-    uinput.KEY_RIGHT,
-    uinput.KEY_RIGHTSHIFT,
-    uinput.KEY_LEFTALT,
-    uinput.KEY_A,
-    uinput.KEY_M,
-    uinput.KEY_Q,
-    uinput.KEY_V
-]
-# TODO(ihf): Find an ABS sequence that actually works.
-UINPUT_DEVICE_EVENTS_TOUCH = [
-    uinput.BTN_TOUCH,
-    uinput.ABS_MT_SLOT,
-    uinput.ABS_MT_POSITION_X + (0, 2560, 0, 0),
-    uinput.ABS_MT_POSITION_Y + (0, 1700, 0, 0),
-    uinput.ABS_MT_TRACKING_ID + (0, 10, 0, 0),
-    uinput.BTN_TOUCH
-]
-UINPUT_DEVICE_EVENTS_MOUSE_REL = [
-    uinput.REL_X,
-    uinput.REL_Y,
-    uinput.BTN_MOUSE,
-    uinput.BTN_LEFT,
-    uinput.BTN_RIGHT
-]
-
-
-def _get_uinput_device_keyboard():
-    """
-    Lazy initialize device and return it. We don't want to create a device
-    during build_packages or for tests that don't need it, hence init with None.
-    """
-    global uinput_device_keyboard
-    if uinput_device_keyboard is None:
-        uinput_device_keyboard = uinput.Device(UINPUT_DEVICE_EVENTS_KEYBOARD)
-    return uinput_device_keyboard
-
-
-def _get_uinput_device_mouse_rel():
-    """
-    Lazy initialize device and return it. We don't want to create a device
-    during build_packages or for tests that don't need it, hence init with None.
-    """
-    global uinput_device_mouse_rel
-    if uinput_device_mouse_rel is None:
-        uinput_device_mouse_rel = uinput.Device(UINPUT_DEVICE_EVENTS_MOUSE_REL)
-    return uinput_device_mouse_rel
-
-
-def _get_uinput_device_touch():
-    """
-    Lazy initialize device and return it. We don't want to create a device
-    during build_packages or for tests that don't need it, hence init with None.
-    """
-    global uinput_device_touch
-    if uinput_device_touch is None:
-        uinput_device_touch = uinput.Device(UINPUT_DEVICE_EVENTS_TOUCH)
-    return uinput_device_touch
-
-
-def _uinput_translate_name(event_name):
-    """
-    Translates string |event_name| to uinput event.
-    """
-    return getattr(uinput, event_name)
-
-
-def _uinput_emit(device, event_name, value, syn=True):
-    """
-    Wrapper for uinput.emit. Emits event with value.
-    Example: ('REL_X', 20), ('BTN_RIGHT', 1)
-    """
-    event = _uinput_translate_name(event_name)
-    device.emit(event, value, syn)
-
-
-def _uinput_emit_click(device, event_name, syn=True):
-    """
-    Wrapper for uinput.emit_click. Emits click event. Only KEY and BTN events
-    are accepted, otherwise ValueError is raised. Example: 'KEY_A'
-    """
-    event = _uinput_translate_name(event_name)
-    device.emit_click(event, syn)
-
-
-def _uinput_emit_combo(device, event_names, syn=True):
-    """
-    Wrapper for uinput.emit_combo. Emits sequence of events.
-    Example: ['KEY_LEFTCTRL', 'KEY_LEFTALT', 'KEY_F5']
-    """
-    events = [_uinput_translate_name(en) for en in event_names]
-    device.emit_combo(events, syn)
-
-
 def press_keys(key_list):
     """Presses the given keys as one combination.
 
@@ -458,7 +349,7 @@ def press_keys(key_list):
 
     @param key: A list of key strings, e.g. ['LEFTCTRL', 'F4']
     """
-    _uinput_emit_combo(_get_uinput_device_keyboard(), key_list)
+    graphics_uinput.emit_combo(graphics_uinput.get_device_keyboard(), key_list)
 
 
 def click_mouse():
@@ -467,18 +358,18 @@ def click_mouse():
     """
     logging.info('click_mouse()')
     # Move a little to make the cursor appear.
-    device = _get_uinput_device_mouse_rel()
-    _uinput_emit(device, 'REL_X', 1)
+    device = graphics_uinput.get_device_mouse_rel()
+    graphics_uinput.emit(device, 'REL_X', 1)
     # Some sleeping is needed otherwise events disappear.
     time.sleep(0.1)
     # Move cursor back to not drift.
-    _uinput_emit(device, 'REL_X', -1)
+    graphics_uinput.emit(device, 'REL_X', -1)
     time.sleep(0.1)
     # Click down.
-    _uinput_emit(device, 'BTN_LEFT', 1)
+    graphics_uinput.emit(device, 'BTN_LEFT', 1)
     time.sleep(0.2)
     # Release click.
-    _uinput_emit(device, 'BTN_LEFT', 0)
+    graphics_uinput.emit(device, 'BTN_LEFT', 0)
 
 
 # TODO(ihf): this function is broken. Make it work.
@@ -491,14 +382,16 @@ def activate_focus_at(rel_x, rel_y):
     @param rel_y: relattive vertical position between 0 and 1.
     """
     width, height = get_internal_resolution()
-    device = _get_uinput_device_touch()
-    _uinput_emit(device, 'ABS_MT_SLOT', 0, syn=False)
-    _uinput_emit(device, 'ABS_MT_TRACKING_ID', 1, syn=False)
-    _uinput_emit(device, 'ABS_MT_POSITION_X', int(rel_x * width), syn=False)
-    _uinput_emit(device, 'ABS_MT_POSITION_Y', int(rel_y * height), syn=False)
-    _uinput_emit(device, 'BTN_TOUCH', 1, syn=True)
+    device = graphics_uinput.get_device_touch()
+    graphics_uinput.emit(device, 'ABS_MT_SLOT', 0, syn=False)
+    graphics_uinput.emit(device, 'ABS_MT_TRACKING_ID', 1, syn=False)
+    graphics_uinput.emit(device, 'ABS_MT_POSITION_X', int(rel_x * width),
+                         syn=False)
+    graphics_uinput.emit(device, 'ABS_MT_POSITION_Y', int(rel_y * height),
+                         syn=False)
+    graphics_uinput.emit(device, 'BTN_TOUCH', 1, syn=True)
     time.sleep(0.2)
-    _uinput_emit(device, 'BTN_TOUCH', 0, syn=True)
+    graphics_uinput.emit(device, 'BTN_TOUCH', 0, syn=True)
 
 
 def take_screenshot(resultsdir, fname_prefix):
