@@ -6,7 +6,6 @@
 # prompt, such as within the Chromium OS development chroot.
 
 import ast
-import functools
 import logging
 import os
 import re
@@ -89,15 +88,6 @@ class _PowerStateController(object):
     # warm reset.
     _RESET_HOLD_TIME = 0.5
 
-    def power_state_command(func):
-        """For methods that should only run when power_state is available."""
-        @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
-            """Ignore those functions if dts mode control is not supported."""
-            if self.supported:
-                return self.func(*args, **kwargs)
-            raise error.TestFail('power_state controls not supported')
-        return wrapper
 
     def __init__(self, servo):
         """Initialize the power state control.
@@ -112,7 +102,11 @@ class _PowerStateController(object):
             logging.info('Servo setup does not support power-state operations. '
                          'All power-state calls will lead to error.TestFail')
 
-    @power_state_command
+    def _check_supported(self):
+        """Throw an error if dts mode control is not supported."""
+        if not self.supported:
+            raise error.TestFail('power_state controls not supported')
+
     def reset(self):
         """Force the DUT to reset.
 
@@ -122,9 +116,9 @@ class _PowerStateController(object):
         been restarted.
 
         """
+        self._check_supported()
         self._servo.set_nocheck('power_state', 'reset')
 
-    @power_state_command
     def warm_reset(self):
         """Apply warm reset to the DUT.
 
@@ -134,6 +128,7 @@ class _PowerStateController(object):
         """
         # TODO: warm_reset support has added to power_state.py. Once it
         # available to labstation remove fallback method.
+        self._check_supported()
         try:
             self._servo.set_nocheck('power_state', 'warm_reset')
         except error.TestFail as err:
@@ -141,7 +136,6 @@ class _PowerStateController(object):
             self._servo.set_get_all(['warm_reset:on',
                                  'sleep:%.4f' % self._RESET_HOLD_TIME,
                                  'warm_reset:off'])
-    @power_state_command
     def power_off(self):
         """Force the DUT to power off.
 
@@ -151,9 +145,9 @@ class _PowerStateController(object):
         working OS software.
 
         """
+        self._check_supported()
         self._servo.set_nocheck('power_state', 'off')
 
-    @power_state_command
     def power_on(self, rec_mode=REC_OFF):
         """Force the DUT to power on.
 
@@ -174,6 +168,7 @@ class _PowerStateController(object):
                         power on. default: REC_OFF aka 'off'
 
         """
+        self._check_supported()
         self._servo.set_nocheck('power_state', rec_mode)
 
 
