@@ -656,6 +656,7 @@ def calculate_timeout(modules, suites):
     if 'suite:bvt-arc' in suites:
         return int(3600 * CONFIG['BVT_TIMEOUT'])
     if CONFIG.get('QUAL_SUITE_NAMES') and \
+            CONFIG.get('QUAL_TIMEOUT') and \
             ((set(CONFIG['QUAL_SUITE_NAMES']) & set(suites)) and \
             not (_COLLECT in modules or _PUBLIC_COLLECT in modules)):
         return int(3600 * CONFIG['QUAL_TIMEOUT'])

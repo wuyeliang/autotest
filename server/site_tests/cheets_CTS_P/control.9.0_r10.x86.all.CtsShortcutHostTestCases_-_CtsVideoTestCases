@@ -31,6 +31,6 @@ def run_TS(machine):
         extra_artifacts_host=['/tmp/diff_*.png'],
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r10-linux_x86-x86.zip',
         prerequisites=['bluetooth', 'region_us'],
-        timeout=172800)
+        timeout=77400)
 
 parallel_simple(run_TS, machines)

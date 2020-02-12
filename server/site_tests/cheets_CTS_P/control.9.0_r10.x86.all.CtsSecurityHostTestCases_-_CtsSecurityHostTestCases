@@ -30,6 +30,6 @@ def run_TS(machine):
         bundle='x86',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r10-linux_x86-x86.zip',
         precondition_commands=['echo 3 > /proc/sys/kernel/perf_event_paranoid', 'modprobe configs'],
-        timeout=172800)
+        timeout=3600)
 
 parallel_simple(run_TS, machines)

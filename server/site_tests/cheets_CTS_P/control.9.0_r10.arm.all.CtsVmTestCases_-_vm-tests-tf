@@ -30,6 +30,6 @@ def run_TS(machine):
         bundle='arm',
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r10-linux_x86-arm.zip',
         prerequisites=['region_us'],
-        timeout=172800)
+        timeout=30600)
 
 parallel_simple(run_TS, machines)
