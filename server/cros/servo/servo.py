@@ -56,7 +56,7 @@ def _extract_image_from_tarball(tarball, dest_dir, image_candidates):
     for image in image_candidates:
         status = server_utils.system(
                 ('tar xf %s -C %s %s' % (tarball, dest_dir, image)),
-                timeout=60, ignore_status=True)
+                timeout=120, ignore_status=True)
         if status == 0:
             return image
     return None
