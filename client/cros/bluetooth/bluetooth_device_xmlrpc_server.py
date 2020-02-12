@@ -1504,21 +1504,22 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         @param error_handler: the error handler for the dbus method.
         @param *args: additional arguments for the dbus method.
 
-        @returns: True on success.
-                  False if the dbus method fails or exception occurs.
+        @returns: an empty string '' on success;
+                  None if there is no _advertising interface manager; and
+                  an error string if the dbus method fails or exception occurs
 
         """
         def successful_cb():
             """Called when the dbus_method completed successfully."""
             reply_handler()
-            self.dbus_async_method_ret = True
+            self.dbus_cb_msg = ''
             self._dbus_mainloop.quit()
 
 
         def error_cb(error):
             """Called when the dbus_method failed."""
             error_handler(error)
-            self.dbus_async_method_ret = False
+            self.dbus_cb_msg = str(error)
             self._dbus_mainloop.quit()
 
 
@@ -1528,11 +1529,11 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                         error_handler=error_cb)
         except Exception as e:
             logging.error('Exception %s in dbus_async_method ', e)
-            return False
+            return str(e)
 
         self._dbus_mainloop.run()
 
-        return self.dbus_async_method_ret
+        return self.dbus_cb_msg
 
 
     def register_advertisement(self, advertisement_data):
@@ -2100,7 +2101,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         if plugin_device is None:
             return False
 
-        return self.dbus_async_method(
+        return not self.dbus_async_method(
                 plugin_device.SetLEConnectionParameters,
                 # reply handler
                 lambda: logging.info(
