@@ -878,40 +878,16 @@ class ReferenceDesignLabel(base_label.StringPrefixLabel):
 
 
 CROS_LABELS = [
-    AccelsLabel(),
-    ArcLabel(),
-    AudioLoopbackDongleLabel(),
-    BluetoothLabel(),
-    BoardLabel(),
-    ModelLabel(),
-    ChameleonConnectionLabel(),
-    ChameleonLabel(),
-    ChameleonPeripheralsLabel(),
+    AudioLoopbackDongleLabel(), #STATECONFIG
+    ChameleonConnectionLabel(), #LABCONFIG
+    ChameleonLabel(), #STATECONFIG
+    ChameleonPeripheralsLabel(), #LABCONFIG
     common_label.OSLabel(),
-    Cr50Label(),
-    Cr50ROKeyidLabel(),
-    Cr50RWKeyidLabel(),
-    Cr50ROVersionLabel(),
-    Cr50RWVersionLabel(),
-    CtsArchLabel(),
-    DetachableBaseLabel(),
-    DeviceSkuLabel(),
-    BrandCodeLabel(),
-    ECLabel(),
-    FingerprintLabel(),
+    DeviceSkuLabel(), #LABCONFIG
     HWIDLabel(),
-    InternalDisplayLabel(),
-    LucidSleepLabel(),
-    PowerSupplyLabel(),
-    ReferenceDesignLabel(),
-    ServoLabel(),
-    StorageLabel(),
-    VideoGlitchLabel(),
+    ServoLabel(), #STATECONFIG
 ]
 
 LABSTATION_LABELS = [
-    BoardLabel(),
-    ModelLabel(),
     common_label.OSLabel(),
-    PowerSupplyLabel(),
 ]
