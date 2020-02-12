@@ -31,6 +31,6 @@ def run_TS(machine):
         extra_artifacts=['/storage/emulated/0/SurfaceViewSyncTest/'],
         uri='gs://chromeos-arc-images/cts/bundle/P/android-cts-9.0_r10-linux_x86-arm.zip',
         precondition_commands=['sleep 60'],
-        timeout=172800)
+        timeout=3600)
 
 parallel_simple(run_TS, machines)

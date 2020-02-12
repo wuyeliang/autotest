@@ -96,8 +96,6 @@ CONFIG['CTS_TIMEOUT'] = {
 # timeouts), it's ok to let them go in. Bad state of camre should be caught by
 # camera tests, not by this general CTS sanity test.
 CONFIG['BVT_TIMEOUT'] = 0.2
-# We allow a very long runtime for qualification (2 days).
-CONFIG['QUAL_TIMEOUT'] = 48
 
 CONFIG['QUAL_BOOKMARKS'] = sorted([
     'A',  # A bookend to simplify partition algorithm.
