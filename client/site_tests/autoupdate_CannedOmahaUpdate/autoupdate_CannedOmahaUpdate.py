@@ -35,7 +35,7 @@ class autoupdate_CannedOmahaUpdate(update_engine_test.UpdateEngineTest):
         """
 
         try:
-            self._check_for_update(port=port)
+            self._check_for_update(port=port, critical_update=True)
         except error.CmdError as e:
             if not allow_failure:
                 raise error.TestFail('Update attempt failed: %s' %
@@ -44,8 +44,8 @@ class autoupdate_CannedOmahaUpdate(update_engine_test.UpdateEngineTest):
                 logging.info('Ignoring failed update. Failure reason: %s', e)
 
 
-    def run_once(self, image_url, allow_failure=False,
-                 public_key=None, use_cellular=False):
+    def run_once(self, image_url, allow_failure=False, public_key=None,
+                 use_cellular=False):
         """
         Runs an update with canned response using Nebraska.
 
