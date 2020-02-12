@@ -551,18 +551,12 @@ class power_LoadTest(arc.ArcTest):
         if minutes_battery_life_tested * 60 < self._loop_time :
             logging.info('Data is less than 1 loop, skip sending to dashboard.')
             return
-        pdash = power_dashboard.PowerLoggerDashboard( \
-                self._plog, self.tagged_testname, self.resultsdir,
-                note=self._pdash_note)
-        pdash.upload()
-        cdash = power_dashboard.CPUStatsLoggerDashboard( \
-                self._clog, self.tagged_testname, self.resultsdir,
-                note=self._pdash_note)
-        cdash.upload()
-        tdash = power_dashboard.TempLoggerDashboard( \
-                self._tlog, self.tagged_testname, self.resultsdir,
-                note=self._pdash_note)
-        tdash.upload()
+
+        dashboard_factory = power_dashboard.get_dashboard_factory()
+        for log in self._meas_logs:
+            dashboard = dashboard_factory.createDashboard(log,
+                self.tagged_testname, self.resultsdir, note=self._pdash_note)
+            dashboard.upload()
 
 
     def cleanup(self):

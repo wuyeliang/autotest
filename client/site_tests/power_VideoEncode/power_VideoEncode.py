@@ -7,7 +7,6 @@ import time
 
 from autotest_lib.client.common_lib.cros import chrome
 from autotest_lib.client.cros.input_playback import keyboard
-from autotest_lib.client.cros.power import power_dashboard
 from autotest_lib.client.cros.power import power_status
 from autotest_lib.client.cros.power import power_test
 
@@ -70,12 +69,3 @@ class power_VideoEncode(power_test.power_Test):
                 self.loop_sleep(loop, seconds_per_test)
                 self.checkpoint_measurements(tagname, loop_start)
                 loop += 1
-
-    def publish_dashboard(self):
-        """Report results power dashboard."""
-        super(power_VideoEncode, self).publish_dashboard()
-
-        vdash = power_dashboard.VideoFpsLoggerDashboard(
-            self._vlog, self.tagged_testname, self.resultsdir,
-            note=self._pdash_note)
-        vdash.upload()
