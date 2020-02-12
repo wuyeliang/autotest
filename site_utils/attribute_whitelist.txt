@@ -186,6 +186,7 @@ suite:perfalerts
 suite:policy
 suite:power_build
 suite:power_daily
+suite:power_dashboard
 suite:power_idle
 suite:power_loadtest
 suite:power_loadtest_1hour
