@@ -53,13 +53,19 @@ def _extract_image_from_tarball(tarball, dest_dir, image_candidates):
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
 
-    # Try to extract image candidates from tarball
+    # Generate a list of all tarball files
+    tarball_files = server_utils.system_output(
+        ('tar tf %s' % tarball), timeout=120, ignore_status=True).splitlines()
+
+    # Check if image candidates are in the list of tarball files
     for image in image_candidates:
-        status = server_utils.system(
+        if image in tarball_files:
+            # Extract and return the first image candidate found
+            status = server_utils.system(
                 ('tar xf %s -C %s %s' % (tarball, dest_dir, image)),
                 timeout=120, ignore_status=True)
-        if status == 0:
-            return image
+            if status == 0:
+                return image
     return None
 
 
