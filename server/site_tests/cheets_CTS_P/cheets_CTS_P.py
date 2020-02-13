@@ -57,6 +57,11 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
         if not utils.is_in_container():
             logging.info('Running outside of lab, adding extra debug options.')
             cmd.append('--log-level-display=DEBUG')
+        elif self._timeout <= 3600:
+            # TODO(kinaba): remove once crbug.com/1041833 is resolved.
+            logging.info('Add more debug log for small modules')
+            cmd.append('--log-level-display=VERBOSE')
+
         return cmd
 
     def _get_default_bundle_url(self, bundle):
