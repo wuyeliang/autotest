@@ -17,6 +17,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import lsbrelease_utils
 from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros.servo import firmware_programmer
+from autotest_lib.server.cros.faft.utils.config import Config as FAFTConfig
 
 # Time to wait when probing for a usb device, it takes on avg 17 seconds
 # to do a full probe.
@@ -1203,6 +1204,13 @@ class Servo(object):
 
         @return: Path to extracted EC image.
         """
+
+        # Ignore extracting EC image and re-programming if not a Chrome EC
+        chrome_ec = FAFTConfig(board).chrome_ec
+        if not chrome_ec:
+            logging.info('Not a Chrome EC, ignore re-programming it')
+            return None
+
         # Best effort; try to retrieve the EC board from the version as
         # reported by the EC.
         ec_board = None
@@ -1224,12 +1232,12 @@ class Servo(object):
         ec_image = _extract_image_from_tarball(tarball_path, dest_dir,
                                                ec_image_candidates)
 
-        # Check if EC image was found and return path or None
+        # Check if EC image was found and return path or raise error
         if ec_image:
             return os.path.join(dest_dir, ec_image)
         else:
-            logging.info('Not a Chrome EC, ignore re-programming it')
-            return None
+            raise error.TestError('Failed to extract EC image from %s',
+                                  tarball_path)
 
 
     def extract_bios_image(self, board, model, tarball_path):
