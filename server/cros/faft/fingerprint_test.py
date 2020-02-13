@@ -107,6 +107,12 @@ class FingerprintTest(test.test):
                 _FIRMWARE_VERSION_RW_VERSION: 'nocturne_fp_v2.2.191-1d529566e',
                 _FIRMWARE_VERSION_KEY_ID: '6f38c866182bd9bf7a4462c06ac04fa6a0074351',
             },
+            'nocturne_fp_v2.0.3266-99b5e2c98.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: '73d822071518cf1b6e705d9c5903c2bcf37bae536784b275b96d916c44d3b6b7',
+                _FIRMWARE_VERSION_RO_VERSION: 'nocturne_fp_v2.2.64-58cf5974e',
+                _FIRMWARE_VERSION_RW_VERSION: 'nocturne_fp_v2.0.3266-99b5e2c98',
+                _FIRMWARE_VERSION_KEY_ID: '6f38c866182bd9bf7a4462c06ac04fa6a0074351',
+            },
         },
         _FP_BOARD_NAME_NAMI: {
             'nami_fp_v2.2.144-7a08e07eb.bin': {
@@ -119,6 +125,12 @@ class FingerprintTest(test.test):
                 _FIRMWARE_VERSION_SHA256SUM: '684b63b1a2c929cf2be2fd564e9ae6032fdbbcfe0991d860c540420c40405776',
                 _FIRMWARE_VERSION_RO_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
                 _FIRMWARE_VERSION_RW_VERSION: 'nami_fp_v2.2.191-1d529566e',
+                _FIRMWARE_VERSION_KEY_ID: '35486c0090ca390408f1fbbf2a182966084fe2f8',
+            },
+            'nami_fp_v2.0.3266-99b5e2c98.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: '115bca7045428ce6639b41cc0fdc13d1ca414f6e76842e805a9fbb798a9cd7ad',
+                _FIRMWARE_VERSION_RO_VERSION: 'nami_fp_v2.2.144-7a08e07eb',
+                _FIRMWARE_VERSION_RW_VERSION: 'nami_fp_v2.0.3266-99b5e2c98',
                 _FIRMWARE_VERSION_KEY_ID: '35486c0090ca390408f1fbbf2a182966084fe2f8',
             },
         },
