@@ -206,17 +206,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @param args_dict Dictionary from which to extract the chameleon
           arguments.
         """
-        if 'chameleon_host_list' in args_dict:
-            result = []
-            for chameleon in args_dict['chameleon_host_list'].split(','):
-                result.append({key: value for key,value in
-                    zip(('chameleon_host','chameleon_port'),
-                    chameleon.split(':'))})
-
-            logging.info(result)
-            return result
-        else:
-           return {key: args_dict[key]
+        return {key: args_dict[key]
                 for key in ('chameleon_host', 'chameleon_port')
                 if key in args_dict}
 
@@ -317,22 +307,10 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         self._default_power_method = None
 
         # TODO(waihong): Do the simplication on Chameleon too.
-        if type(chameleon_args) is list:
-            self.multi_chameleon = True
-            chameleon_args_list = chameleon_args
-        else:
-            self.multi_chameleon = False
-            chameleon_args_list = [chameleon_args]
-
-        self._chameleon_host_list = [
-            chameleon_host.create_chameleon_host(
-            dut=self.hostname, chameleon_args=_args)
-            for _args in chameleon_args_list]
-
-        self.chameleon_list = [_host.create_chameleon_board() for _host in
-                               self._chameleon_host_list if _host is not None]
-        if len(self.chameleon_list) > 0:
-            self.chameleon = self.chameleon_list[0]
+        self._chameleon_host = chameleon_host.create_chameleon_host(
+            dut=self.hostname, chameleon_args=chameleon_args)
+        if self._chameleon_host:
+            self.chameleon = self._chameleon_host.create_chameleon_board()
         else:
             self.chameleon = None
 
@@ -971,9 +949,8 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         """Close connection."""
         super(CrosHost, self).close()
 
-        for chameleon_host in self._chameleon_host_list:
-            if chameleon_host:
-                chameleon_host.close()
+        if self._chameleon_host:
+            self._chameleon_host.close()
 
         if self._servo_host:
             self._servo_host.close()

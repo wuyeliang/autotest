@@ -297,19 +297,14 @@ class ChameleonLabel(base_label.BaseLabel):
 
     def exists(self, host):
         # See crbug.com/1004500#2 for details.
-        # https://chromium.googlesource.com/chromiumos/third_party/autotest/+
-        # /refs/heads/master/server/hosts/cros_host.py#335 shows that
-        # _chameleon_host_list is not reliable.
-        has_chameleon = len(host.chameleon_list) > 0
+        has_chameleon = host._chameleon_host is not None
         # TODO(crbug.com/995900) -- debug why chameleon label is flipping
         try:
             logging.info("has_chameleon %s", has_chameleon)
-            logging.info("chameleon_host_list %s",
-                         getattr(host, "_chameleon_host_list", "NO_ATTRIBUTE"))
-            logging.info("chameleon_list %s",
-                         getattr(host, "chameleon_list", "NO_ATTRIBUTE"))
-            logging.info("multi_chameleon %s",
-                         getattr(host, "multi_chameleon", "NO_ATTRIBUTE"))
+            logging.info("_chameleon_host %s",
+                         getattr(host, "_chameleon_host", "NO_ATTRIBUTE"))
+            logging.info("chameleon %s",
+                         getattr(host, "chameleon", "NO_ATTRIBUTE"))
         except:
             pass
         return has_chameleon
@@ -326,11 +321,10 @@ class ChameleonConnectionLabel(base_label.StringPrefixLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        return len(host._chameleon_host_list) > 0
-
+        return host._chameleon_host is not None
 
     def generate_labels(self, host):
-        return [chameleon.get_label() for chameleon in host.chameleon_list]
+        return [host.chameleon.get_label()]
 
     def update_for_task(self, task_name):
         # This label is stored in the lab config, so only deploy tasks update it
@@ -351,58 +345,43 @@ class ChameleonPeripheralsLabel(base_label.StringPrefixLabel):
     _NAME = 'chameleon'
 
     def exists(self, host):
-        return len(host._chameleon_host_list) > 0
-
+        return host._chameleon_host is not None
 
     def generate_labels(self, host):
-        labels_list = []
+        labels = []
+        try:
+            bt_hid_device = host.chameleon.get_bluetooth_hid_mouse()
+            if bt_hid_device.CheckSerialConnection():
+                labels.append('bt_hid')
+        except:
+            logging.error('Error with initializing bt_hid_mouse')
 
-        for chameleon, chameleon_host in \
-                        zip(host.chameleon_list, host._chameleon_host_list):
-            labels = []
-            try:
-                bt_hid_device = chameleon.get_bluetooth_hid_mouse()
-                if bt_hid_device.CheckSerialConnection():
-                    labels.append('bt_hid')
-            except:
-                logging.error('Error with initializing bt_hid_mouse on '
-                              'chameleon %s', chameleon_host.hostname)
+        try:
+            ble_hid_device = host.chameleon.get_ble_mouse()
+            if ble_hid_device.CheckSerialConnection():
+                labels.append('bt_ble_hid')
+        except:
+            logging.error('Error with initializing ble_hid_mouse')
 
-            try:
-                ble_hid_device = chameleon.get_ble_mouse()
-                if ble_hid_device.CheckSerialConnection():
-                    labels.append('bt_ble_hid')
-            except:
-                logging.error('Error with initializing ble_hid_mouse on '
-                              'chameleon %s', chameleon_host.hostname)
+        try:
+            bt_a2dp_sink = host.chameleon.get_bluetooth_a2dp_sink()
+            if bt_a2dp_sink.CheckSerialConnection():
+                labels.append('bt_a2dp_sink')
+        except:
+            logging.error('Error with initializing bt_a2dp_sink')
 
-            try:
-                bt_a2dp_sink = chameleon.get_bluetooth_a2dp_sink()
-                if bt_a2dp_sink.CheckSerialConnection():
-                    labels.append('bt_a2dp_sink')
-            except:
-                logging.error('Error with initializing bt_a2dp_sink on '
-                              'chameleon %s', chameleon_host.hostname)
+        try:
+            bt_base_device = host.chameleon.get_bluetooth_base()
+            if bt_base_device.IsDetected():
+                labels.append('bt_base')
+        except:
+            logging.error('Error in detecting bt_base')
 
-            try:
-                bt_base_device = chameleon.get_bluetooth_base()
-                if bt_base_device.IsDetected():
-                    labels.append('bt_base')
-            except:
-                logging.error('Error in detecting bt_base on '
-                              'chameleon %s', chameleon_host.hostname)
+        if labels != []:
+            labels.append('bt_peer')
 
-            if labels != []:
-                labels.append('bt_peer')
-
-            if host.multi_chameleon:
-                labels_list.append(labels)
-            else:
-                labels_list.extend(labels)
-
-
-        logging.info('Bluetooth labels are %s', labels_list)
-        return labels_list
+        logging.info('Chameleon Bluetooth labels are %s', labels)
+        return labels
 
     def update_for_task(self, task_name):
         # This label is stored in the lab config, so only deploy tasks update it
