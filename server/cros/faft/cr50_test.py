@@ -115,7 +115,6 @@ class Cr50Test(FirmwareTest):
                                         str(e))
 
 
-
     def _saved_cr50_state(self, state):
         """Returns True if the test has saved the given state
 
@@ -379,20 +378,6 @@ class Cr50Test(FirmwareTest):
         return not not restore
 
 
-    def _restore_device_files(self):
-        """Copy the original .prod and .prepvt images onto the dut."""
-        if not filesystem_util.is_rootfs_writable(self.host):
-            return
-        # Copy the original .prod file onto the DUT.
-        if self._device_prod_image:
-            cr50_utils.InstallImage(self.host, self._device_prod_image,
-                    cr50_utils.CR50_PROD)
-        # Copy the original .prepvt file onto the DUT.
-        if self._device_prepvt_image:
-            cr50_utils.InstallImage(self.host, self._device_prepvt_image,
-                    cr50_utils.CR50_PREPVT)
-
-
     def _get_image_information(self, ext):
         """Get the image information for the .prod or .prepvt image.
 
@@ -555,35 +540,58 @@ class Cr50Test(FirmwareTest):
             logging.info('DUT did not respond. Resetting it.')
 
 
-    def _restore_device_images_and_running_cr50_image(self):
-        """Restore the images on the device and the running cr50 image."""
-        state_mismatch = self._check_original_image_state()
-        if not state_mismatch:
-            logging.info('Cr50 and device are using the original images.')
-            return
-        if self._provision_update:
+    def _update_device_images_and_running_cr50_firmware(
+            self, state, release_path, prod_path, prepvt_path):
+        """Update cr50, set the board id, and copy firmware to the DUT.
+
+        @param state: A dictionary with the expected running version, board id,
+                      device cr50 firmware versions.
+        @param release_path: The image to update cr50 to
+        @param prod_path: The path to the .prod image
+        @param prepvt_path: The path to the .prepvt image
+        @raises TestError: if setting any state failed
+        """
+        mismatch = self._check_running_image_and_board_id(state)
+        if not mismatch:
+            logging.info('Nothing to do.')
             return
 
         # Use the DBG image to restore the original image.
-        if self._cleanup_required(state_mismatch, self.DBG_IMAGE):
-            self.update_cr50_image_and_board_id(
-                    self.get_saved_cr50_original_path(),
-                    self._original_image_state['chip_bid'])
+        if self._cleanup_required(mismatch, self.DBG_IMAGE):
+            self.update_cr50_image_and_board_id(release_path, state['chip_bid'])
 
-        new_mismatch = self._check_original_image_state()
+        new_mismatch = self._check_running_image_and_board_id(state)
         # Copy the original .prod and .prepvt images back onto the DUT.
-        if self._cleanup_required(new_mismatch, self.DEVICE_IMAGES):
-            self._restore_device_files()
+        if (self._cleanup_required(new_mismatch, self.DEVICE_IMAGES) and
+            filesystem_util.is_rootfs_writable(self.host)):
+            # Copy the .prod file onto the DUT.
+            if prod_path and 'prod_version' in new_mismatch:
+                cr50_utils.InstallImage(self.host, prod_path,
+                                        cr50_utils.CR50_PROD)
+            # Copy the .prepvt file onto the DUT.
+            if prepvt_path and 'prepvt_version' in new_mismatch:
+                cr50_utils.InstallImage(self.host, prepvt_path,
+                                        cr50_utils.CR50_PREPVT)
 
-        mismatch_last = self._check_original_image_state()
-        if mismatch_last:
-            raise error.TestError('Could not restore state: %s' %
-                                  mismatch_last)
+        final_mismatch = self._check_running_image_and_board_id(state)
+        if final_mismatch:
+            raise error.TestError('Could not update cr50 image state: %s' %
+                                  final_mismatch)
+        logging.info('Successfully updated all device cr50 firmware state.')
 
-        logging.info('Successfully restored the original cr50 state')
-        if self._raise_error_on_mismatch:
+
+    def _restore_device_images_and_running_cr50_firmware(self):
+        """Restore the images on the device and the running cr50 image."""
+        if self._provision_update:
+            return
+        mismatch = self._check_original_image_state()
+        self._update_device_images_and_running_cr50_firmware(
+                self._original_image_state, self.get_saved_cr50_original_path(),
+                self._device_prod_image, self._device_prepvt_image)
+
+        if self._raise_error_on_mismatch and mismatch:
             raise error.TestError('Unexpected state mismatch during '
-                                  'cleanup %s' % state_mismatch)
+                                  'cleanup %s' % mismatch)
 
 
     def _restore_ccd_settings(self):
@@ -621,7 +629,7 @@ class Cr50Test(FirmwareTest):
         dev signed images completely clears the CCD state.
         """
         try:
-            self._restore_device_images_and_running_cr50_image()
+            self._restore_device_images_and_running_cr50_firmware()
         except Exception as e:
             logging.warning('Issue restoring Cr50 image: %s', str(e))
             raise
