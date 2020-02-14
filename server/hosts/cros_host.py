@@ -662,6 +662,15 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
     @staticmethod
     def get_version_from_image(image, version_regex):
+        """Get version string from binary image using regular expression.
+
+        @param image: Binary image to search
+        @param version_regex: Regular expression to search for
+
+        @return Version string
+
+        @raises TestFail if no version string is found in image
+        """
         with open(image, 'rb') as f:
             image_data = f.read()
         match = re.findall(version_regex, image_data)
@@ -805,9 +814,10 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                 if ec_image:
                     logging.info('Checking EC firmware version.')
                     dest_ec_version = self.get_ec_version()
-                    ec_regex = self._EC_REGEX % model
+                    ec_version_prefix = dest_ec_version.split('_', 1)[0]
+                    ec_regex = self._EC_REGEX % ec_version_prefix
                     image_ec_version = self.get_version_from_image(ec_image,
-                                                                ec_regex)
+                                                                   ec_regex)
                     if dest_ec_version != image_ec_version:
                         raise error.TestFail(
                             'Failed to update EC RO, version %s (expected %s)' %
