@@ -28,7 +28,6 @@ class provision_Cr50Update(Cr50Test):
 
     """
     version = 1
-    MP_FLAGS = 0x7f80
 
     def initialize(self, host, cmdline_args, full_args, value='',
                    release_path='', force=False):
@@ -58,7 +57,8 @@ class provision_Cr50Update(Cr50Test):
         self.local_path, self.image_ver = image_info
         self.image_rw = self.image_ver[1]
         self.image_bid = self.image_ver[2]
-        self.chip_bid = self.get_chip_bid_from_image_bid()
+        self.chip_bid = cr50_utils.GetChipBIDFromImageBID(
+                self.image_bid, self.get_device_brand())
 
 
     def init_local_image(self, release_path):
@@ -73,33 +73,6 @@ class provision_Cr50Update(Cr50Test):
         ver = cr50_utils.InstallImage(self.host, release_path,
                                       '/tmp/release.bin')[1]
         return release_path, ver
-
-
-    def get_chip_bid_from_image_bid(self):
-        """Calculate a chip bid that will work with the image bid.
-
-        Returns:
-            A tuple of integers (bid type, ~bid type, bid flags)
-        """
-        brand = self.get_device_brand()
-        image_bid_tuple = cr50_utils.GetBoardIdInfoTuple(self.image_bid)
-        # GetBoardIdInfoTuple returns None if the image isn't board id locked.
-        # Generate a Tuple of all 0s the rest of the function can use.
-        if not image_bid_tuple:
-            image_bid_tuple = (0, 0, 0)
-
-        image_bid, image_mask, image_flags = image_bid_tuple
-        if image_mask:
-            new_brand = cr50_utils.GetSymbolicBoardId(image_bid)
-        else:
-            new_brand = brand
-        new_flags = image_flags or self.MP_FLAGS
-        bid_type = cr50_utils.GetIntBoardId(new_brand)
-        # If the board id type is erased, type_inv should also be unset.
-        if bid_type == cr50_utils.ERASED_BID_INT:
-            return (cr50_utils.ERASED_BID_INT, cr50_utils.ERASED_BID_INT,
-                    new_flags)
-        return bid_type, 0xffffffff & ~bid_type, new_flags
 
 
     def run_once(self, force=False):

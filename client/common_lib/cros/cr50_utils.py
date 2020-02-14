@@ -74,6 +74,7 @@ VERSION_RE = {
 UPDATE_TIMEOUT = 60
 UPDATE_OK = 1
 
+MP_BID_FLAGS = 0x7f80
 ERASED_BID_INT = 0xffffffff
 ERASED_BID_STR = hex(ERASED_BID_INT)
 # With an erased bid, the flags and board id will both be erased
@@ -570,6 +571,31 @@ def GetChipBoardId(client):
         raise error.TestFail('board_id_inv should be ~board_id got %x %x' %
                              (board_id, board_id_inv))
     return board_id, board_id_inv, flags
+
+
+def GetChipBIDFromImageBID(image_bid, brand):
+    """Calculate a chip bid that will work with the image bid.
+
+    Returns:
+        A tuple of integers (bid type, ~bid type, bid flags)
+    """
+    image_bid_tuple = GetBoardIdInfoTuple(image_bid)
+    # GetBoardIdInfoTuple returns None if the image isn't board id locked.
+    # Generate a Tuple of all 0s the rest of the function can use.
+    if not image_bid_tuple:
+        image_bid_tuple = (0, 0, 0)
+
+    image_bid, image_mask, image_flags = image_bid_tuple
+    if image_mask:
+        new_brand = GetSymbolicBoardId(image_bid)
+    else:
+        new_brand = brand
+    new_flags = image_flags or MP_BID_FLAGS
+    bid_type = GetIntBoardId(new_brand)
+    # If the board id type is erased, type_inv should also be unset.
+    if bid_type == ERASED_BID_INT:
+        return (ERASED_BID_INT, ERASED_BID_INT, new_flags)
+    return bid_type, 0xffffffff & ~bid_type, new_flags
 
 
 def CheckChipBoardId(client, board_id, flags, board_id_inv=None):
