@@ -15,7 +15,7 @@ def bluetooth(hosts):
     #    lines = output.splitlines()
     #    if len(lines) < 2 or not lines[0].startswith('Devices:'):
     #        return False, '%s: Bluetooth device is missing.'\
-    #                      'Stdout of the command "hcitool dev1"'\
+    #                      'Stdout of the command "hcitool dev"'\
     #                      'on host %s was %s' % (_ERROR_PREFIX, host, output)
     return True, ''
 
@@ -24,11 +24,11 @@ def region_us(hosts):
     """Check that region is set to "us".
     """
     for host in hosts:
-        output = host.run('vpd -g region').stdout
-        if output != 'us':
-            return False, '%s: Region is not "us".'\
-                          'Stdout of the command "vpd -l'\
-                          '| grep region" on host %s was %s'\
+        output = host.run('vpd -g region', ignore_status=True).stdout
+        if output not in ['us', '']:
+            return False, '%s: Region is not "us" or empty. '\
+                          'STDOUT of the command "vpd -l '\
+                          'region" on host %s was %s'\
                           % (_ERROR_PREFIX, host, output)
     return True, ''
 
