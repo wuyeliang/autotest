@@ -31,6 +31,7 @@ class Cr50Test(FirmwareTest):
     CR50_DEBUG_FILE =  '*/cr50.dbg.%s.bin.*%s'
     CR50_ERASEFLASHINFO_FILE = (
             '*/cr50_Unknown_NodeLocked-%s_cr50-accessory-mp.bin')
+    CR50_QUAL_VERSION_FILE = 'chromeos-cr50-QUAL_VERSION'
     NONE = 0
     # Saved the original device state during init.
     INITIAL_IMAGE_STATE = 1 << 0
@@ -113,6 +114,106 @@ class Cr50Test(FirmwareTest):
             if restore_cr50_board_id:
                 raise error.TestNAError('Need eraseflashinfo image: %s' %
                                         str(e))
+
+        # TODO(b/143888583): remove qual update during init once new design to
+        # to provision cr50 updates is in place.
+        is_qual = full_args.get('is_qual', '').lower() == 'true'
+        if is_qual or self.running_qual_suite():
+            release_ver_arg = full_args.get('release_ver', '')
+            release_path_arg = full_args.get('release_path', '')
+            self.ensure_qual_image_is_running(release_ver_arg, release_path_arg)
+
+
+    def running_qual_suite(self):
+        """Return True if the qual image needs to be running."""
+        for pool in self.host.host_info_store.get().pools:
+            # TODO(b/149109740): remove once the pool values are verified.
+            # Change to run with faft-cr50 and faft-cr50-experimental suites.
+            logging.info('Checking pool: %s', pool)
+            if 'faft-cr50-experimental' in pool:
+                return True
+        return False
+
+
+    def ensure_qual_image_is_running(self, qual_ver_str, qual_path):
+        """Update to the qualification image if it's not running.
+
+        qual_ver_str and path are command line args that may be supplied to
+        specify a local version or path. If neither are supplied, the version
+        from gs will be used to determine what version cr50 should run.
+
+        qual_ver_str and qual_path should not be supplied together. If they are,
+        the path will be used. It's not a big deal as long as they agree with
+        each other.
+
+        @param qual_ver_str: qualification version string or None.
+        @param qual_path: local path to the qualification image or None.
+        """
+        # Get the local image information.
+        if qual_path:
+            dest, qual_ver = cr50_utils.InstallImage(self.host, qual_path,
+                                                           '/tmp/qual_cr50.bin')
+            self.host.run('rm ' + dest)
+            qual_bid_str = (cr50_utils.GetBoardIdInfoString(qual_ver[2], False)
+                            if qual_ver[2] else '')
+            qual_ver_str = '%s/%s' % (qual_ver[1], qual_bid_str)
+
+        # Determine the qualification version from.
+        if not qual_ver_str:
+            gsurl = os.path.join(self.GS_PRIVATE, self.CR50_QUAL_VERSION_FILE)
+            dut_path = self.download_cr50_gs_file(gsurl, False)[1]
+            qual_ver_str = self.host.run('cat ' + dut_path).stdout.strip()
+
+        # Download the qualification image based on the version.
+        if not qual_path:
+            rw, bid = qual_ver_str.split('/')
+            qual_path, qual_ver = self.download_cr50_release_image(rw, bid)
+
+        logging.info('Cr50 Qual Version: %s', qual_ver_str)
+        logging.info('Cr50 Qual Path: %s', qual_path)
+        qual_chip_bid = cr50_utils.GetChipBIDFromImageBID(
+                qual_ver[2], self.get_device_brand())
+        logging.info('Cr50 Qual Chip BID: %s', qual_chip_bid)
+
+        # Replace only the prod or prepvt image based on the major version.
+        if int(qual_ver[1].split('.')[1]) % 2:
+            prod_ver = self._original_image_state['prod_version']
+            prepvt_ver = qual_ver
+            prod_path = self._device_prod_image
+            prepvt_path = qual_path
+        else:
+            prod_ver = qual_ver
+            prepvt_ver = self._original_image_state['prepvt_version']
+            prod_path = qual_path
+            prepvt_path = self._device_prepvt_image
+
+        # Generate a dictionary with all of the expected state.
+        qual_state = {}
+        qual_state['prod_version'] = prod_ver
+        qual_state['prepvt_version'] = prepvt_ver
+        qual_state['chip_bid'] = qual_chip_bid
+        qual_state['running_image_bid'] = qual_ver[2]
+        # The test can't rollback RO. The newest RO should be running at the end
+        # of the test. max_ro will be none if the versions are the same. Use the
+        # running_ro in that case.
+        running_ro = self.get_saved_cr50_original_version()[0]
+        max_ro = cr50_utils.GetNewestVersion(running_ro, qual_ver[0])
+        qual_state['running_image_ver'] = (max_ro or running_ro, qual_ver[1],
+                                           None)
+        mismatch = self._check_running_image_and_board_id(qual_state)
+        if not mismatch:
+            logging.info('Running qual image. No update needed.')
+            return
+        logging.info('Cr50 qual update required.')
+        # TODO(b/149109740): remove once running_qual_suite logic has been
+        # verified.
+        logging.info('Skipping until logic has been verified')
+        return
+        filesystem_util.make_rootfs_writable(self.host)
+        self._update_device_images_and_running_cr50_firmware(qual_state,
+                qual_path, prod_path, prepvt_path)
+        logging.info("Recording qual device state as 'original' device state")
+        self._save_original_state(qual_path)
 
 
     def _saved_cr50_state(self, state):
