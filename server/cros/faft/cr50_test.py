@@ -93,10 +93,8 @@ class Cr50Test(FirmwareTest):
         elif self.original_ccd_level != 'lock':
             raise error.TestNAError('Lock the console before running cr50 test')
 
-        self._save_original_state()
+        self._save_original_state(full_args.get('release_path', ''))
 
-        # We successfully saved the device state
-        self._saved_state |= self.INITIAL_IMAGE_STATE
         # Try and download all images necessary to restore cr50 state.
         try:
             self._save_dbg_image(full_args.get('cr50_dbg_image_path', ''))
@@ -105,12 +103,7 @@ class Cr50Test(FirmwareTest):
             logging.warning('Error saving DBG image: %s', str(e))
             if restore_cr50_image:
                 raise error.TestNAError('Need DBG image: %s' % str(e))
-        try:
-            self._save_original_images(full_args.get('release_path', ''))
-            self._saved_state |= self.DEVICE_IMAGES
-        except Exception as e:
-            logging.warning('Error saving ChromeOS image cr50 firmware: %s',
-                            str(e))
+
         try:
             self._save_eraseflashinfo_image(
                     full_args.get('cr50_eraseflashinfo_image_path', ''))
@@ -224,14 +217,27 @@ class Cr50Test(FirmwareTest):
                     running_rw, running_bid)[0]
 
 
-    def _save_original_state(self):
+    def _save_original_state(self, release_path):
         """Save the cr50 related state.
 
-        Save the device's current cr50 version, cr50 board id, and image
-        at /opt/google/cr50/firmware/cr50.bin.prod. These will be used to
-        restore the state during cleanup.
+        Save the device's current cr50 version, cr50 board id, the running cr50
+        image, the prepvt, and prod cr50 images. These will be used to restore
+        the cr50 state during cleanup.
+
+        @param release_path: the optional command line arg of path for the local
+                             cr50 image.
         """
+        self._saved_state &= ~self.INITIAL_IMAGE_STATE
         self._original_image_state = self.get_image_and_bid_state()
+        # We successfully saved the device state
+        self._saved_state |= self.INITIAL_IMAGE_STATE
+        self._saved_state &= ~self.DEVICE_IMAGES
+        try:
+            self._save_original_images(release_path)
+            self._saved_state |= self.DEVICE_IMAGES
+        except Exception as e:
+            logging.warning('Error saving ChromeOS image cr50 firmware: %s',
+                            str(e))
 
 
     def get_saved_cr50_original_version(self):
