@@ -31,8 +31,6 @@ class Cr50Test(FirmwareTest):
     CR50_DEBUG_FILE =  '*/cr50.dbg.%s.bin.*%s'
     CR50_ERASEFLASHINFO_FILE = (
             '*/cr50_Unknown_NodeLocked-%s_cr50-accessory-mp.bin')
-    CR50_TOT_VER_FILE = 'tot/LATEST'
-    CR50_TOT_FILE = 'tot/cr50.bin.%s.%s'
     NONE = 0
     # Saved the original device state during init.
     INITIAL_IMAGE_STATE = 1 << 0
