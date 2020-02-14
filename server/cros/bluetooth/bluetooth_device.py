@@ -821,11 +821,28 @@ class BluetoothDevice(object):
             uuid, address, base64.standard_b64encode(bytes_to_write))
 
 
-    def start_notify(self, address, uuid, cccd_value):
+    def exchange_messages(self, tx_object_path, rx_object_path, bytes_to_write):
+        """Performs a write operation on a gatt characteristic and wait for
+        the response on another characteristic.
+
+        @param tx_object_path: the object path of the characteristic to write.
+        @param rx_object_path: the object path of the characteristic to read.
+        @param value: A byte array containing the data to write.
+
+        @returns: The value of the characteristic to read from.
+                  None if the uuid/address was not found in the object tree, or
+                      if a DBus exception was raised by the write operation.
+
+        """
+        return self._proxy.exchange_messages(
+            tx_object_path, rx_object_path,
+            base64.standard_b64encode(bytes_to_write))
+
+
+    def start_notify(self, object_path, cccd_value):
         """Starts the notification session on the gatt characteristic.
 
-        @param address: The MAC address of the remote device.
-        @param uuid: The uuid of the characteristic.
+        @param object_path: the object path of the characteristic.
         @param cccd_value: Possible CCCD values include
                0x00 - inferred from the remote characteristic's properties
                0x01 - notification
@@ -836,33 +853,31 @@ class BluetoothDevice(object):
                       if a DBus exception was raised by the operation.
 
         """
-        return self._proxy.start_notify(address, uuid, cccd_value)
+        return self._proxy.start_notify(object_path, cccd_value)
 
 
-    def stop_notify(self, address, uuid):
+    def stop_notify(self, object_path):
         """Stops the notification session on the gatt characteristic.
 
-        @param address: The MAC address of the remote device.
-        @param uuid: The uuid of the characteristic.
+        @param object_path: the object path of the characteristic.
 
         @returns: True if the operation succeeds.
                   False if the characteristic is not found, or
                       if a DBus exception was raised by the operation.
 
         """
-        return self._proxy.stop_notify(address, uuid)
+        return self._proxy.stop_notify(object_path)
 
 
-    def is_notifying(self, address, uuid):
+    def is_notifying(self, object_path):
         """Is the GATT characteristic in a notifying session?
 
-        @param address: The MAC address of the remote device.
-        @param uuid: The uuid of the characteristic.
+        @param object_path: the object path of the characteristic.
 
         @return True if it is in a notification session. False otherwise.
 
         """
-        return self._proxy.is_notifying(address, uuid)
+        return self._proxy.is_notifying(object_path)
 
 
     def is_characteristic_path_resolved(self, uuid, address):
@@ -945,6 +960,19 @@ class BluetoothDevice(object):
         @return: base64 string of dbus bytearray
         """
         return self._proxy.gatt_descriptor_read_value(uuid, object_path)
+
+
+    def get_gatt_object_path(self, address, uuid):
+        """Get property from a characteristic attribute
+
+        @param address: The MAC address of the remote device.
+        @param uuid: The uuid of the attribute.
+
+        @return: the object path of the attribute if success,
+                 none otherwise
+
+        """
+        return self._proxy.get_gatt_object_path(address, uuid)
 
 
     def copy_logs(self, destination):

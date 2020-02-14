@@ -165,6 +165,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
     # after reset.
     ADAPTER_TIMEOUT = 30
 
+    # How long we should wait for property update signal before we cancel it
+    PROPERTY_UPDATE_TIMEOUT_MILLI_SECS = 5000
+
     def __init__(self):
         super(BluetoothDeviceXmlRpcDelegate, self).__init__()
 
@@ -1664,7 +1667,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         attribute_map = dict()
 
         device_object_path = self._get_device_path(address)
-        service_map = self._get_service_map(device_object_path)
+        objects = self._bluez.GetManagedObjects(
+            dbus_interface=self.BLUEZ_MANAGER_IFACE, byte_arrays=False)
+        service_map = self._get_service_map(device_object_path, objects)
 
         servs = dict()
         attribute_map['services'] = servs
@@ -1678,7 +1683,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
             serv['characteristics'] = dict()
             chrcs = serv['characteristics']
 
-            chrcs_map = self._get_characteristic_map(path)
+            chrcs_map = self._get_characteristic_map(path, objects)
             for uuid, path in chrcs_map.items():
                 chrcs[uuid] = dict()
                 chrc = chrcs[uuid]
@@ -1687,7 +1692,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                 chrc['descriptors'] = dict()
                 descs = chrc['descriptors']
 
-                descs_map = self._get_descriptor_map(path)
+                descs_map = self._get_descriptor_map(path, objects)
 
                 for uuid, path in descs_map.items():
                     descs[uuid] = dict()
@@ -1810,7 +1815,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
 
     @xmlrpc_server.dbus_safe(False)
-    def _get_attribute_map(self, object_path, dbus_interface):
+    def _get_attribute_map(self, object_path, dbus_interface, objects):
         """Gets a map of object paths under an object path.
 
         Walks the object tree, and returns a map of UUIDs to object paths for
@@ -1818,6 +1823,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         @param object_path: The object path of the attribute to retrieve
             gatt  UUIDs and paths from.
+        @param objects: The managed objects.
 
         @returns: A dictionary of object paths, keyed by UUID.
 
@@ -1825,9 +1831,6 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         attr_map = {}
 
         if object_path:
-            objects = self._bluez.GetManagedObjects(
-              dbus_interface=self.BLUEZ_MANAGER_IFACE, byte_arrays=False)
-
             for path, ifaces in objects.iteritems():
                 if (dbus_interface in ifaces and
                   path.startswith(object_path)):
@@ -1840,19 +1843,34 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return attr_map
 
 
-    def _get_service_map(self, device_path):
-        """Gets a map of service paths for a device."""
-        return self._get_attribute_map(device_path, self.BLUEZ_GATT_SERV_IFACE)
+    def _get_service_map(self, device_path, objects):
+        """Gets a map of service paths for a device.
+
+        @param device_path: the object path of the device.
+        @param objects: The managed objects.
+        """
+        return self._get_attribute_map(
+            device_path, self.BLUEZ_GATT_SERV_IFACE, objects)
 
 
-    def _get_characteristic_map(self, serv_path):
-        """Gets a map of characteristic paths for a service."""
-        return self._get_attribute_map(serv_path, self.BLUEZ_GATT_CHAR_IFACE)
+    def _get_characteristic_map(self, serv_path, objects):
+        """Gets a map of characteristic paths for a service.
+
+        @param serv_path: the object path of the service.
+        @param objects: The managed objects.
+        """
+        return self._get_attribute_map(
+            serv_path, self.BLUEZ_GATT_CHAR_IFACE, objects)
 
 
-    def _get_descriptor_map(self, chrc_path):
-        """Gets a map of descriptor paths for a characteristic."""
-        return self._get_attribute_map(chrc_path, self.BLUEZ_GATT_DESC_IFACE)
+    def _get_descriptor_map(self, chrc_path, objects):
+        """Gets a map of descriptor paths for a characteristic.
+
+        @param chrc_path: the object path of the characteristic.
+        @param objects: The managed objects.
+        """
+        return self._get_attribute_map(
+            chrc_path, self.BLUEZ_GATT_DESC_IFACE, objects)
 
 
     @xmlrpc_server.dbus_safe(None)
@@ -1919,6 +1937,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         """
         path = self.get_characteristic_map(address).get(uuid)
         if not path:
+            logging.error("path not found: %s %s", uuid, address)
             return None
         return dbus.Interface(
             self._system_bus.get_object(self.BLUEZ_SERVICE_NAME, path),
@@ -1972,12 +1991,75 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         return True
 
 
+    @xmlrpc_server.dbus_safe(None)
+    def exchange_messages(self, tx_object_path, rx_object_path, value):
+        """Performs a write operation on a gatt characteristic and wait for
+        the response on another characteristic.
+
+        @param tx_object_path: the object path of the characteristic to write.
+        @param rx_object_path: the object path of the characteristic ti read.
+        @param value: A byte array containing the data to write.
+
+        @returns: The value of the characteristic to read from.
+                  None if the uuid/address was not found in the object tree, or
+                      if a DBus exception was raised by the write operation.
+
+        """
+        tx_obj = self._get_gatt_characteristic_object(tx_object_path)
+
+        if tx_obj is None:
+            return None
+        self._chrc_property = None
+
+        signal_watch = self._system_bus.add_signal_receiver(
+            self._property_changed,
+            signal_name='PropertiesChanged',
+            path=rx_object_path)
+
+        gobject.timeout_add(
+            self.PROPERTY_UPDATE_TIMEOUT_MILLI_SECS,
+            self._property_wait_timeout)
+
+        write_value = _b64_string_to_dbus_byte_array(value)
+        tx_obj.WriteValue(write_value, dbus.Dictionary({}, signature='sv'))
+
+        self._dbus_mainloop.run()
+
+        signal_watch.remove()
+        return _dbus_byte_array_to_b64_string(self._chrc_property)
+
+
+    def _property_changed(self, *args, **kwargs):
+        """Handler for properties changed signal."""
+        changed_prop = args
+
+        prop_dict = changed_prop[1]
+        self._chrc_property = prop_dict['Value']
+        if self._dbus_mainloop.is_running():
+            self._dbus_mainloop.quit()
+
+
+    def _property_wait_timeout(self):
+        """Timeout handler when waiting for properties update signal."""
+        if self._dbus_mainloop.is_running():
+            logging.warn("quit main loop due to timeout")
+            self._dbus_mainloop.quit()
+        # Return false so that this method will not be called again.
+        return False
+
+
     @xmlrpc_server.dbus_safe(False)
-    def start_notify(self, address, uuid, cccd_value):
+    def _get_gatt_characteristic_object(self, object_path):
+        return dbus.Interface(
+            self._system_bus.get_object(self.BLUEZ_SERVICE_NAME, object_path),
+            self.BLUEZ_GATT_CHAR_IFACE)
+
+
+    @xmlrpc_server.dbus_safe(False)
+    def start_notify(self, object_path, cccd_value):
         """Starts the notification session on the gatt characteristic.
 
-        @param address: The MAC address of the remote device.
-        @param uuid: The uuid of the characteristic.
+        @param object_path: the object path of the characteristic.
         @param cccd_value: Possible CCCD values include
                0x00 - inferred from the remote characteristic's properties
                0x01 - notification
@@ -1988,8 +2070,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                       if a DBus exception was raised by the operation.
 
         """
-        char_obj = self._get_char_object(uuid, address)
+        char_obj = self._get_gatt_characteristic_object(object_path)
         if char_obj is None:
+            logging.error("characteristic not found: %s %s", object_path)
             return False
 
         try:
@@ -2003,19 +2086,19 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
 
     @xmlrpc_server.dbus_safe(False)
-    def stop_notify(self, address, uuid):
+    def stop_notify(self, object_path):
         """Stops the notification session on the gatt characteristic.
 
-        @param address: The MAC address of the remote device.
-        @param uuid: The uuid of the characteristic.
+        @param object_path: the object path of the characteristic.
 
         @returns: True if the operation succeeds.
                   False if the characteristic is not found, or
                       if a DBus exception was raised by the operation.
 
         """
-        char_obj = self._get_char_object(uuid, address)
+        char_obj = self._get_gatt_characteristic_object(object_path)
         if char_obj is None:
+            logging.error("characteristic not found: %s %s", object_path)
             return False
 
         try:
@@ -2029,20 +2112,16 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
 
     @xmlrpc_server.dbus_safe(False)
-    def is_notifying(self, address, uuid):
+    def is_notifying(self, object_path):
         """Is the GATT characteristic in a notifying session?
 
-        @param address: The MAC address of the remote device.
-        @param uuid: The uuid of the characteristic.
+        @param object_path: the object path of the characteristic.
 
         @return True if it is in a notification session. False otherwise.
 
         """
-        path = self.get_characteristic_map(address).get(uuid)
-        if not path:
-            return False
 
-        return self.get_gatt_characteristic_property(path, 'Notifying')
+        return self.get_gatt_characteristic_property(object_path, 'Notifying')
 
 
     @xmlrpc_server.dbus_safe(False)

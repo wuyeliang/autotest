@@ -524,6 +524,13 @@ class ChameleonBoard(object):
         """
         return self._chameleond_proxy.ble_keyboard
 
+    def get_ble_phone(self):
+        """Gets the emulated Bluetooth phone on Chameleon.
+
+        @return: A RaspiPhone object.
+        """
+        return self._chameleond_proxy.ble_phone
+
     def get_platform(self):
         """ Get the Hardware Platform of the chameleon host
 

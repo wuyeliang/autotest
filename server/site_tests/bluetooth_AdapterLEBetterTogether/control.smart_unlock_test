@@ -14,7 +14,7 @@ TIME = 'MEDIUM'
 TEST_CATEGORY = 'Functional'
 TEST_CLASS = 'bluetooth'
 TEST_TYPE = 'server'
-DEPENDENCIES = 'bluetooth, chameleon:bt_ble_hid'
+DEPENDENCIES = 'bluetooth, chameleon:bt_peer'
 
 DOC = """
 	The test is to verify the Bluetooth features used by Smat Unlock feature of
