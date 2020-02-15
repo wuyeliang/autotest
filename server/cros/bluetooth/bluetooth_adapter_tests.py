@@ -561,41 +561,42 @@ class BluetoothAdapterTests(test.test):
     # Board list for name/ID test check. These devices don't need to be tested
     REFERENCE_BOARDS = ['rambi', 'nyan', 'oak', 'reef', 'yorp', 'bip']
 
+
     # Path for btmon logs
     BTMON_DIR_LOG_PATH = '/var/log/btmon'
 
-    def group_chameleons_type(self):
-        """Group all chameleons by the type of their detected device."""
+    def group_btpeers_type(self):
+        """Group all Bluetooth peers by the type of their detected device."""
 
-        # Use previously created chameleon_group instead of creating new
-        if len(self.chameleon_group_copy) > 0:
-            logging.info('Using previously created chameleon group')
+        # Use previously created btpeer_group instead of creating new
+        if len(self.btpeer_group_copy) > 0:
+            logging.info('Using previously created btpeer group')
             for device_type in SUPPORTED_DEVICE_TYPES:
-                self.chameleon_group[device_type] = \
-                    self.chameleon_group_copy[device_type][:]
+                self.btpeer_group[device_type] = \
+                    self.btpeer_group_copy[device_type][:]
             return
 
-        # Create new chameleon_group
+        # Create new btpeer_group
         for device_type in SUPPORTED_DEVICE_TYPES:
-            self.chameleon_group[device_type] = list()
-            # Create copy of chameleon_group
-            self.chameleon_group_copy[device_type] = list()
+            self.btpeer_group[device_type] = list()
+            # Create copy of btpeer_group
+            self.btpeer_group_copy[device_type] = list()
 
-        for idx,chameleon in enumerate(self.host.chameleon_list):
+        for idx,btpeer in enumerate(self.host.btpeer_list):
             for device_type,gen_device_func in SUPPORTED_DEVICE_TYPES.items():
                 try:
-                    device = gen_device_func(chameleon)()
+                    device = gen_device_func(btpeer)()
                     if device.CheckSerialConnection():
-                        self.chameleon_group[device_type].append(chameleon)
-                        logging.info('%d-th chameleon find device %s', \
+                        self.btpeer_group[device_type].append(btpeer)
+                        logging.info('%d-th btpeer find device %s', \
                                      idx, device_type)
-                        # Create copy of chameleon_group
-                        self.chameleon_group_copy[device_type].append(chameleon)
+                        # Create copy of btpeer_group
+                        self.btpeer_group_copy[device_type].append(btpeer)
                 except:
                     logging.debug('Error with initializing %s on %d-th'
-                                  'chameleon', device_type, idx)
-            if len(self.chameleon_group[device_type]) == 0:
-                logging.error('No device is detected on %d-th chameleon', idx)
+                                  'btpeer', device_type, idx)
+            if len(self.btpeer_group[device_type]) == 0:
+                logging.error('No device is detected on %d-th btpeer', idx)
 
 
     def wait_for_device(self, device):
@@ -672,8 +673,8 @@ class BluetoothAdapterTests(test.test):
 
 
     def get_device_rasp(self, device_num, on_start=True):
-        """Get all bluetooth device objects from chameleons.
-        This method should be called only after group_chameleons_type
+        """Get all bluetooth device objects from Bluetooth peers.
+        This method should be called only after group_btpeers_type
         @param device_num : dict of {device_type:number}, to specify the number
                             of device needed for each device_type.
 
@@ -684,21 +685,21 @@ class BluetoothAdapterTests(test.test):
         """
 
         for device_type, number in device_num.items():
-            if len(self.chameleon_group[device_type]) < number:
-                logging.error('Number of chameleon with device type'
+            if len(self.btpeer_group[device_type]) < number:
+                logging.error('Number of Bluetooth peers with device type'
                       '%s is %d, which is less then needed %d', device_type,
-                      len(self.chameleon_group[device_type]), number)
+                      len(self.btpeer_group[device_type]), number)
                 return False
 
-            for chameleon in self.chameleon_group[device_type][:number]:
-                device = get_bluetooth_emulated_device(chameleon, device_type)
+            for btpeer in self.btpeer_group[device_type][:number]:
+                device = get_bluetooth_emulated_device(btpeer, device_type)
 
                 # Re-fresh device to clean state if test is starting
                 if on_start:
                     self.clear_raspi_device(device)
 
                 try:
-                    # Tell generic chameleon to bind to this device type
+                    # Tell generic btpeer to bind to this device type
                     device.SpecifyDeviceType(device_type)
 
                 # Catch generic Fault exception by rpc server, ignore method not
@@ -711,11 +712,11 @@ class BluetoothAdapterTests(test.test):
 
                 self.devices[device_type].append(device)
 
-                # Remove this chameleon from chameleon_group since it is already
+                # Remove this btpeer from btpeer_group since it is already
                 # configured as a specific device
                 for temp_device in SUPPORTED_DEVICE_TYPES:
-                    if chameleon in self.chameleon_group[temp_device]:
-                        self.chameleon_group[temp_device].remove(chameleon)
+                    if btpeer in self.btpeer_group[temp_device]:
+                        self.btpeer_group[temp_device].remove(btpeer)
 
         return True
 
@@ -732,7 +733,7 @@ class BluetoothAdapterTests(test.test):
 
         """
         self.devices[device_type].append(get_bluetooth_emulated_device(\
-                                    self.host.chameleon, device_type))
+                                    self.host.btpeer, device_type))
 
         # Re-fresh device to clean state if test is starting
         if on_start:
@@ -775,15 +776,15 @@ class BluetoothAdapterTests(test.test):
 
 
     def list_devices_available(self):
-        """Queries which devices are available on chameleon/s
+        """Queries which devices are available on btpeer(s)
 
         @returns: dict mapping HID device types to number of supporting peers
                   available, e.g. {'MOUSE':1, 'KEYBOARD':1}
         """
         devices_available = {}
         for device_type in SUPPORTED_DEVICE_TYPES:
-            for chameleon in self.host.chameleon_list:
-                if self.is_device_available(chameleon, device_type):
+            for btpeer in self.host.btpeer_list:
+                if self.is_device_available(btpeer, device_type):
                     devices_available[device_type] = \
                         devices_available.get(device_type, 0) + 1
 
@@ -3198,17 +3199,31 @@ class BluetoothAdapterTests(test.test):
         self.count_advertisements = 0
 
 
-    def check_chameleon(self):
-        """Check the existence of chameleon_host.
+    def check_btpeer(self):
+        """Check the existence of Bluetooth peer
+
+        The Bluetooth peer can be specified in --args as follows
+
+        (cr) $ test_that --args "btpeer_host=$BTPEER_IP" "$DUT_IP" <test>
+
+        OR
+
+        (cr) $ test_that --args "btpeer_host_list=$BTPEER1_IP,$BTPEER2_IP"
+               "$DUT_IP" <test>
+
+
+        Note: During a transition period Bluetooth peer can also be specified as
+        follows
 
         The chameleon_host is specified in --args as follows
 
         (cr) $ test_that --args "chameleon_host=$CHAMELEON_IP" "$DUT_IP" <test>
 
         """
+        # TODO(b:149637050). Remove chameleon part after the M83 is in stable.
         logging.debug('labels: %s', self.host.get_labels())
-        if self.host.chameleon is None:
-            raise error.TestError('Have to specify chameleon_host IP.')
+        if self.host.chameleon is None and self.host.btpeer_list == []:
+            raise error.TestError('Have to specify a working Bluetooth peer')
 
 
     def run_once(self, *args, **kwargs):

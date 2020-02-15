@@ -84,8 +84,8 @@ class BluetoothDevice(object):
                 self._proxy.log_message(msg)
 
             if peer:
-                for chameleon in self.host.chameleon_list:
-                    chameleon.log_message(msg)
+                for btpeer in self.host.btpeer_list:
+                    btpeer.log_message(msg)
         except Exception as e:
             logging.error("Exception '%s' in log_message '%s'", str(e), msg)
 

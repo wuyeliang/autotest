@@ -163,6 +163,45 @@ class BluetoothLabel(base_label.BaseLabel):
 
         return result.exit_status == 0
 
+class BluetoothPeerLabel(base_label.StringPrefixLabel):
+    """Return the Bluetooth peer labels.
+
+    working_bluetooth_btpeer label is applied if a Raspberry Pi Bluetooth peer
+    is detected.There can be up to 4 Bluetooth peers. Labels
+    working_bluetooth_btpeer:[1-4] will be assigned depending on the number of
+    peers present.
+
+    """
+
+    _NAME = 'working_bluetooth_btpeer'
+
+    def exists(self, host):
+        return  len(host._btpeer_host_list) > 0
+
+    def generate_labels(self, host):
+        labels_list = []
+        count = 1
+
+        for (btpeer, btpeer_host) in \
+                        zip(host.btpeer_list, host._btpeer_host_list):
+            try:
+                # Initialize one device type to make sure the peer is working
+                bt_hid_device = btpeer.get_bluetooth_hid_mouse()
+                if bt_hid_device.CheckSerialConnection():
+                    labels_list.append(str(count))
+                    count += 1
+            except Exception as e:
+                logging.error('Error with initializing bt_hid_mouse on '
+                              'btpeer %s %s', btpeer_host.hostname, e)
+
+        logging.info('Bluetooth Peer labels are %s', labels_list)
+        return labels_list
+
+    def update_for_task(self, task_name):
+        # This label is stored in the lab config, so only deploy tasks update it
+        # or when no task name is mentioned.
+        return task_name in (DEPLOY_TASK_NAME, '')
+
 
 class ECLabel(base_label.BaseLabel):
     """Label to determine the type of EC on this host."""
@@ -889,6 +928,7 @@ class ReferenceDesignLabel(base_label.StringPrefixLabel):
 
 CROS_LABELS = [
     AudioLoopbackDongleLabel(), #STATECONFIG
+    BluetoothPeerLabel(), #LABCONFIG
     ChameleonConnectionLabel(), #LABCONFIG
     ChameleonLabel(), #STATECONFIG
     ChameleonPeripheralsLabel(), #LABCONFIG

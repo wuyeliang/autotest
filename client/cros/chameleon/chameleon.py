@@ -1089,8 +1089,25 @@ def make_chameleon_hostname(dut_hostname):
     return '.'.join(host_parts)
 
 
+def make_btpeer_hostnames(dut_hostname):
+    """Given a DUT's hostname, returns the hostname of its bluetooth peers.
+
+    A DUT can have up to 4 Bluetooth peers named  hostname-btpeer[1-4]
+    @param dut_hostname: Hostname of a DUT.
+
+    @return List of hostname of the DUT's Bluetooth peer devices
+    """
+    hostnames = []
+    host_parts = dut_hostname.split('.')
+    for i in range(1,5):
+        hostname_prefix = host_parts[0] + '-btpeer' +str(i)
+        hostname = [hostname_prefix]
+        hostname.extend(host_parts[1:])
+        hostnames.append('.'.join(hostname))
+    return hostnames
+
 def create_chameleon_board(dut_hostname, args):
-    """Given either DUT's hostname or argments, creates a ChameleonBoard object.
+    """Creates a ChameleonBoard object with either DUT's hostname or arguments.
 
     If the DUT's hostname is in the lab zone, it connects to the Chameleon by
     append the hostname with '-chameleon' suffix. If not, checks if the args
