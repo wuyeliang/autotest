@@ -310,8 +310,7 @@ class autoupdate_P2P(update_engine_test.UpdateEngineTest):
         # P2P updates are very slow so we will only update with a delta payload.
         update_url = self.get_update_url_for_test(job_repo_url,
                                                   full_payload=False,
-                                                  critical_update=False,
-                                                  max_updates=2)
+                                                  critical_update=False)
 
         # The first device just updates normally.
         self._update_dut(self._hosts[0], update_url)

@@ -23,6 +23,6 @@ args_dict = utils.args_to_dict(args)
 def run(machine):
     host = hosts.create_host(machine)
     job.run_test('autoupdate_Interruptions', host=host, full_payload=True,
-                 interrupt='network', max_updates=1, **args_dict)
+                 interrupt='network', **args_dict)
 
 job.parallel_simple(run, machines)

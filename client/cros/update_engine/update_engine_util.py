@@ -352,7 +352,7 @@ class UpdateEngineUtil(object):
                                        files[1])).stdout
 
 
-    def _create_custom_lsb_release(self, update_url, build='0.0.0.0'):
+    def _create_custom_lsb_release(self, update_url, build='0.0.0.0', **kwargs):
         """
         Create a custom lsb-release file.
 
@@ -363,8 +363,15 @@ class UpdateEngineUtil(object):
         @param update_url: String of url to use for update check.
         @param build: String of the build number to use. Represents the
                       Chrome OS build this device thinks it is on.
+        @param kwargs: A dictionary of key/values to be made into a query string
+                       and appended to the update_url
 
         """
+        # TODO(ahassani): This is quite fragile as the given URL can already
+        # have a search query. We need to unpack the URL and update the search
+        # query portion of it with kwargs.
+        update_url = (update_url + '?' + '&'.join('%s=%s' % (k, v)
+                                                  for k, v in kwargs.items()))
         self._run('mkdir %s' % os.path.dirname(self._CUSTOM_LSB_RELEASE),
                   ignore_status=True)
         self._run('touch %s' % self._CUSTOM_LSB_RELEASE)

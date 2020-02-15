@@ -48,20 +48,17 @@ class OmahaDevserver(object):
     _DEVSERVER_TIMELIMIT_SECONDS = 12 * 60 * 60
 
 
-    def __init__(self, omaha_host, payload_location, max_updates=1,
-                 critical_update=True, moblab=False):
+    def __init__(self, omaha_host, payload_location, critical_update=True,
+                 moblab=False):
         """Starts a private devserver instance, operating at Omaha capacity.
 
         @param omaha_host: host address where the devserver is spawned.
         @param payload_location: partial path from static dir to payload.
-        @param max_updates: int number of updates this devserver will handle.
-                            This is passed to src/platform/dev/devserver.py.
         @param critical_update: Whether to set a deadline in responses.
         @param moblab: True if we are running on moblab.
 
         """
         self._critical_update = critical_update
-        self._max_updates = max_updates
         self._omaha_host = omaha_host
         self._devserver_pid = 0
         self._devserver_port = 0  # Determined later from devserver portfile.
@@ -224,7 +221,6 @@ class OmahaDevserver(object):
                 '--pidfile=%s' % self._devserver_pidfile,
                 '--portfile=%s' % self._devserver_portfile,
                 '--logfile=%s' % self._devserver_logfile,
-                '--max_updates=%s' % self._max_updates,
                 '--host_log',
                 '--static_dir=%s' % self._devserver_static_dir,
                 '--payload=%s' % os.path.join(self._devserver_static_dir,

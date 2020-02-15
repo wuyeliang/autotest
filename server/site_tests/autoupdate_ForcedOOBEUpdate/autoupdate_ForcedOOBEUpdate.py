@@ -59,8 +59,7 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
 
 
     def run_once(self, full_payload=True, cellular=False,
-                 interrupt=None, max_updates=1, job_repo_url=None,
-                 moblab=False):
+                 interrupt=None, job_repo_url=None, moblab=False):
         """
         Runs a forced autoupdate during ChromeOS OOBE.
 
@@ -68,8 +67,6 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         @param cellular: True to do the update over a cellualar connection.
                          Requires that the DUT have a sim card slot.
         @param interrupt: Type of interrupt to try: [reboot, network, suspend]
-        @param max_updates: Used to tell the test how many times it is
-                            expected to ping its omaha server.
         @param job_repo_url: Used for debugging locally. This is used to figure
                              out the current build and the devserver to use.
                              The test will read this from a host argument
@@ -87,7 +84,6 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
                                                   full_payload=full_payload,
                                                   critical_update=True,
                                                   public=cellular,
-                                                  max_updates=max_updates,
                                                   moblab=moblab)
         before = self._get_chromeos_version()
         payload_info = None
@@ -124,6 +120,10 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
             if not self._update_continued_where_it_left_off(completed):
                 raise error.TestFail('The update did not continue where it '
                                      'left off after interruption.')
+
+        # We create a new lsb-release file with no_update=True so there won't be
+        # any more actual updates happen.
+        self._create_custom_lsb_release(update_url, no_update=True)
 
         self._wait_for_oobe_update_to_complete()
 

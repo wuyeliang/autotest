@@ -651,8 +651,8 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
 
 
     def get_update_url_for_test(self, job_repo_url, full_payload=True,
-                                critical_update=False, max_updates=1,
-                                public=False, moblab=False):
+                                critical_update=False, public=False,
+                                moblab=False):
         """
         Get the correct update URL for autoupdate tests to use.
 
@@ -672,9 +672,6 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         @param job_repo_url: string url containing the current build.
         @param full_payload: bool whether we want a full payload.
         @param critical_update: bool whether we need a critical update.
-        @param max_updates: int number of updates the test will perform. This
-                            is passed to src/platform/dev/devserver.py if we
-                            create our own deverver.
         @param public: url needs to be publicly accessible.
         @param moblab: True if we are running on moblab.
 
@@ -726,7 +723,7 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         # We need to start our own devserver instance on the lab devserver
         # for the rest of the test scenarios.
         self._omaha_devserver = omaha_devserver.OmahaDevserver(
-            lab_devserver.hostname, payload_location, max_updates=max_updates,
+            lab_devserver.hostname, payload_location,
             critical_update=critical_update, moblab=moblab)
         self._omaha_devserver.start_devserver()
 

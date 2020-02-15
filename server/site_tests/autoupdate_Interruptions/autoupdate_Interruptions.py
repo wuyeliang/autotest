@@ -19,8 +19,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         super(autoupdate_Interruptions, self).cleanup()
 
 
-    def run_once(self, full_payload=True, interrupt=None, job_repo_url=None,
-                 max_updates=2):
+    def run_once(self, full_payload=True, interrupt=None, job_repo_url=None):
         """
         Runs an update with interruptions from the user.
 
@@ -30,15 +29,12 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
                              out the current build and the devserver to use.
                              The test will read this from a host argument
                              when run in the lab.
-        @param max_updates: The number of update attempts the devserver should
-                            accept.
 
         """
 
         update_url = self.get_update_url_for_test(job_repo_url,
                                                   full_payload=full_payload,
-                                                  critical_update=True,
-                                                  max_updates=max_updates)
+                                                  critical_update=True)
         chromeos_version = self._get_chromeos_version()
 
         # Choose a random downloaded progress to interrupt the update.
@@ -82,7 +78,10 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         self._host.reboot()
         utils.poll_for_condition(self._get_update_engine_status,
                                  desc='update engine to start')
-        self._check_for_update(server=server, port=parsed_url.port)
+        # We do check update with no_update=True so it doesn't start the update
+        # again.
+        self._check_for_update(server=server, port=parsed_url.port,
+                               no_update=True)
 
         # Verify that the update completed successfully by checking hostlog.
         rootfs_hostlog, reboot_hostlog = self._create_hostlog_files()
