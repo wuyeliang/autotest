@@ -54,6 +54,10 @@ AUTOTEST_BASE = _CONFIG.get_config_value(
         'SCHEDULER', 'drone_installation_directory',
         default='/usr/local/autotest')
 
+SERVO_STATE_LABEL_PREFIX = 'servo_state'
+SERVO_STATE_WORKING = 'WORKING'
+SERVO_STATE_BROKEN = 'BROKEN'
+
 
 class ServoHost(base_servohost.BaseServoHost):
     """Host class for a servo host(e.g. beaglebone, labstation)
@@ -69,6 +73,15 @@ class ServoHost(base_servohost.BaseServoHost):
 
     # Ready test function
     SERVO_READY_METHOD = 'get_version'
+
+    def _init_attributes(self):
+        self._servo_state = None
+        self.servo_port = None
+        self.servo_board = None
+        self.servo_model = None
+        self.servo_serial = None
+        self._servo = None
+        self._servod_server_proxy = None
 
 
     def _initialize(self, servo_host='localhost',
@@ -93,12 +106,11 @@ class ServoHost(base_servohost.BaseServoHost):
         """
         super(ServoHost, self)._initialize(hostname=servo_host,
                                            is_in_lab=is_in_lab, *args, **dargs)
+        self._init_attributes()
         self.servo_port = int(servo_port)
         self.servo_board = servo_board
         self.servo_model = servo_model
         self.servo_serial = servo_serial
-        self._servo = None
-        self._servod_server_proxy = None
 
         # Path of the servo host lock file.
         self._lock_file = (self.TEMP_FILE_DIR + str(self.servo_port)
@@ -194,7 +206,11 @@ class ServoHost(base_servohost.BaseServoHost):
         self.record('INFO', None, None, message)
         try:
             self._repair_strategy.verify(self, silent)
+            self._servo_state = SERVO_STATE_WORKING
+            self.record('INFO', None, None, 'ServoHost verify set servo_state as WORKING')
         except:
+            self._servo_state = SERVO_STATE_BROKEN
+            self.record('INFO', None, None, 'ServoHost verify set servo_state as BROKEN')
             self.disconnect_servo()
             self.stop_servod()
             raise
@@ -210,11 +226,15 @@ class ServoHost(base_servohost.BaseServoHost):
         self.record('INFO', None, None, message)
         try:
             self._repair_strategy.repair(self, silent)
+            self._servo_state = SERVO_STATE_WORKING
+            self.record('INFO', None, None, 'ServoHost repair set servo_state as WORKING')
             # If target is a labstation then try to withdraw any existing
             # reboot request created by this servo because it passed repair.
             if self.is_labstation():
                 self.withdraw_reboot_request()
         except:
+            self._servo_state = SERVO_STATE_BROKEN
+            self.record('INFO', None, None, 'ServoHost repair set servo_state as BROKEN')
             self.disconnect_servo()
             self.stop_servod()
             raise
@@ -354,6 +374,10 @@ class ServoHost(base_servohost.BaseServoHost):
                          "This error is forgived.", str(e))
 
         super(ServoHost, self).close()
+
+
+    def get_servo_state(self):
+        return SERVO_STATE_BROKEN if self._servo_state is None else self._servo_state
 
 
 def make_servo_hostname(dut_hostname):
