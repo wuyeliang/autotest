@@ -582,7 +582,7 @@ class BluetoothAdapterTests(test.test):
             # Create copy of btpeer_group
             self.btpeer_group_copy[device_type] = list()
 
-        for idx,btpeer in enumerate(self.host.btpeer_list):
+        for idx,btpeer in enumerate(self.host.peer_list):
             for device_type,gen_device_func in SUPPORTED_DEVICE_TYPES.items():
                 try:
                     device = gen_device_func(btpeer)()
@@ -597,6 +597,8 @@ class BluetoothAdapterTests(test.test):
                                   'btpeer', device_type, idx)
             if len(self.btpeer_group[device_type]) == 0:
                 logging.error('No device is detected on %d-th btpeer', idx)
+
+        logging.debug("self.bt_group is %s",self.btpeer_group)
 
 
     def wait_for_device(self, device):
@@ -684,7 +686,17 @@ class BluetoothAdapterTests(test.test):
         @returns: True if Success.
         """
 
+        logging.info("in get_device_rasp %s onstart %s", device_num, on_start)
+        total_num_devices = sum(device_num.values())
+        if total_num_devices > len(self.host.peer_list):
+                logging.error('Total number of devices %s is greater than the'
+                              ' number of Bluetooth peers %s',
+                              total_num_devices,
+                              len(self.host.peer_list))
+                return False
+
         for device_type, number in device_num.items():
+            total_num_devices += number
             if len(self.btpeer_group[device_type]) < number:
                 logging.error('Number of Bluetooth peers with device type'
                       '%s is %d, which is less then needed %d', device_type,
@@ -692,6 +704,7 @@ class BluetoothAdapterTests(test.test):
                 return False
 
             for btpeer in self.btpeer_group[device_type][:number]:
+                logging.info("getting emulated %s",device_type)
                 device = get_bluetooth_emulated_device(btpeer, device_type)
 
                 # Re-fresh device to clean state if test is starting
@@ -706,6 +719,7 @@ class BluetoothAdapterTests(test.test):
                 # available as it indicates platform didn't support method and
                 # that's ok
                 except Exception, e:
+                    logging.info("got exception %s",str(e))
                     if not (e.__class__.__name__ == 'Fault' and
                         'is not supported' in str(e)):
                         raise
@@ -783,11 +797,12 @@ class BluetoothAdapterTests(test.test):
         """
         devices_available = {}
         for device_type in SUPPORTED_DEVICE_TYPES:
-            for btpeer in self.host.btpeer_list:
+            for btpeer in self.host.peer_list:
                 if self.is_device_available(btpeer, device_type):
                     devices_available[device_type] = \
                         devices_available.get(device_type, 0) + 1
 
+        logging.debug("devices available are %s", devices_available)
         return devices_available
 
 
