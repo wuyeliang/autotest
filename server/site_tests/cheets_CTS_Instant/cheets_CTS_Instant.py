@@ -48,6 +48,9 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
     def _tradefed_run_command(self, template):
         """Build tradefed 'run' command from template."""
         cmd = template[:]
+        # See b/149681932. Pass empty url to force using local config, instead
+        # of doing a network access (which anyway returns an empty config.)
+        cmd.append('--dynamic-config-url=')
         # If we are running outside of the lab we can collect more data.
         if not utils.is_in_container():
             logging.info('Running outside of lab, adding extra debug options.')
