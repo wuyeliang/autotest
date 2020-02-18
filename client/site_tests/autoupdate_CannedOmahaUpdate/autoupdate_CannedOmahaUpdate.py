@@ -35,7 +35,8 @@ class autoupdate_CannedOmahaUpdate(update_engine_test.UpdateEngineTest):
         """
 
         try:
-            self._check_for_update(port=port, critical_update=True)
+            self._check_for_update(port=port, critical_update=True,
+                                   wait_for_completion=True)
         except error.CmdError as e:
             if not allow_failure:
                 raise error.TestFail('Update attempt failed: %s' %
