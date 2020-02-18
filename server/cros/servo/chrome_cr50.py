@@ -134,6 +134,10 @@ class ChromeCr50(chrome_ec.ChromeConsole):
            'BOARD_CLOSED_LOOP_RESET'     : 1 << 18,
            'BOARD_NO_INA_SUPPORT'        : 1 << 19,
            'BOARD_ALLOW_CHANGE_TPM_MODE' : 1 << 20,
+           'BOARD_EC_CR50_COMM_SUPPORT'  : 1 << 21,
+           'BOARD_CCD_REC_LID_PIN_DIOA1' : 0x01 << 22,
+           'BOARD_CCD_REC_LID_PIN_DIOA9' : 0x02 << 22,
+           'BOARD_CCD_REC_LID_PIN_DIOA12': 0x03 << 22,
     }
 
     # CR50 reset flags as defined in platform ec_commands.h. These are only the
@@ -469,7 +473,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         """
         brdprop = self.get_board_properties()
         prop = self.BOARD_PROP[prop_name]
-        return bool(brdprop & prop)
+        return (brdprop & prop) == prop
 
 
     def has_command(self, cmd):

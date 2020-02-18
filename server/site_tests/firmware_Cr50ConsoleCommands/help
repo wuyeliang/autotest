@@ -7,6 +7,7 @@ ccd
 ccdstate
 chan
 dump_nvmem
+(?P<tot>ec_comm)?
 ecrst
 (?P<guc>eraseflashinfo)?
 gettime

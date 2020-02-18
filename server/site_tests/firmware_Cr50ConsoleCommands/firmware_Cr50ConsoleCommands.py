@@ -47,6 +47,13 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
         ['BOARD_SLAVE_CONFIG_I2C', 'i2cs', 'sps,sps_ds_resume'],
         ['BOARD_USE_PLT_RESET', 'plt_rst', 'sys_rst'],
         ['BOARD_CLOSED_SOURCE_SET1', 'closed_source_set1', 'open_source_set'],
+        ['BOARD_EC_CR50_COMM_SUPPORT', 'ec_comm', 'no_ec_comm'],
+        ['BOARD_CCD_REC_LID_PIN_DIOA1', 'rec_lid_a1',
+         'rec_lid_a9,rec_lid_a12, i2cs,sps_ds_resume'],
+        ['BOARD_CCD_REC_LID_PIN_DIOA9', 'rec_lid_a9',
+         'rec_lid_a1,rec_lid_a12,i2cs'],
+        ['BOARD_CCD_REC_LID_PIN_DIOA12', 'rec_lid_a12',
+         'rec_lid_a1,rec_lid_a9,sps'],
     ]
 
     def initialize(self, host, cmdline_args, full_args):
@@ -64,6 +71,7 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
             self.cr50.set_cap('GscFullConsole', 'IfOpened')
             time.sleep(self.CCD_HOOK_WAIT)
             self.cr50.set_ccd_level('lock')
+        self.is_tot_run = (full_args.get('tot_test_run', '').lower() == 'true')
 
 
     def parse_output(self, output, split_str):
@@ -172,6 +180,11 @@ class firmware_Cr50ConsoleCommands(Cr50Test):
             self.include.append('guc')
         else:
             self.exclude.append('guc')
+
+        if self.is_tot_run:
+            self.include.append('tot')
+        else:
+            self.exclude.append('tot')
 
         # Use the major version to determine prePVT or MP. prePVT have even
         # major versions. prod have odd.
