@@ -534,7 +534,7 @@ class TradefedTest(test.test):
 
         The caller of this function is responsible for holding the cache lock.
 
-        @param uri: The Google Storage or dl.google.com uri.
+        @param uri: The Google Storage, dl.google.com or local uri.
         @return Path to the downloaded object, name.
         """
         # We are hashing the uri instead of the binary. This is acceptable, as
@@ -559,9 +559,9 @@ class TradefedTest(test.test):
         return self._download_to_dir(uri, output_dir)
 
     def _download_to_dir(self, uri, output_dir):
-        """Downloads the gs|http|https uri from the storage server.
+        """Downloads the gs|http|https|file uri from the storage server.
 
-        @param uri: The Google Storage or dl.google.com uri.
+        @param uri: The Google Storage, dl.google.com or local uri.
         @output_dir: The directory where the downloaded file should be placed.
         @return Path to the downloaded object, name.
         """
@@ -571,7 +571,7 @@ class TradefedTest(test.test):
         output = os.path.join(output_dir, filename)
 
         self._safe_makedirs(output_dir)
-        if parsed.scheme not in ['gs', 'http', 'https']:
+        if parsed.scheme not in ['gs', 'http', 'https', 'file']:
             raise error.TestFail(
                 'Error: Unknown download scheme %s' % parsed.scheme)
         if parsed.scheme in ['http', 'https']:
@@ -580,6 +580,15 @@ class TradefedTest(test.test):
             utils.run(
                 'wget',
                 args=('--report-speed=bits', '-O', output, uri),
+                verbose=True)
+            return output
+
+        if parsed.scheme in ['file']:
+            logging.info('Copy the local file from %s to %s.', parsed.path,
+                         output_dir)
+            utils.run(
+                'cp',
+                args=('-f', parsed.path, output),
                 verbose=True)
             return output
 
