@@ -245,6 +245,6 @@ class bluetooth_AdapterSASanity(BluetoothAdapterQuickTests,
         @param num_iterations: the number of rounds to execute the test
         """
         # Initialize and run the test batch or the requested specific test
-        self.quick_test_init(host, use_chameleon=False, flag=flag)
+        self.quick_test_init(host, use_btpeer=False, flag=flag)
         self.sa_sanity_batch_run(num_iterations, test_name)
         self.quick_test_cleanup()

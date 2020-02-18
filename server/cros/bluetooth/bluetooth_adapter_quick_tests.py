@@ -68,14 +68,16 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
     def start_peers(self, devices):
         """Start peer devices"""
         # Start the link to devices
-        logging.info('Starting peer devices...')
-        self.get_device_rasp(devices)
+        if self.use_btpeer:
+            logging.info('Starting peer devices...')
+            self.get_device_rasp(devices)
 
     def _print_delimiter(self):
         logging.info('=======================================================')
 
 
-    def quick_test_init(self, host, use_chameleon=True, flag='Quick Sanity'):
+    def quick_test_init(self, host, use_btpeer=True, use_chameleon=False,
+                        flag='Quick Sanity'):
         """Inits the test batch"""
         self.host = host
         #factory can not be declared as local variable, otherwise
@@ -100,8 +102,14 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             # Raise the original exception
             raise
 
-        self.use_chameleon = use_chameleon
-        if self.use_chameleon:
+        # Common list to track old/new Bluetooth peers
+        # Adding chameleon to btpeer_list causes issue in cros_labels
+        self.host.peer_list = []
+
+        # Keep use_chameleon for any unmodified tests
+        # TODO(b:149637050) Remove use_chameleon
+        self.use_btpeer = use_btpeer or use_chameleon
+        if self.use_btpeer:
             self.input_facade = self.factory.create_input_facade()
             self.check_btpeer()
 
@@ -115,7 +123,6 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
             logging.info('%s Bluetooth peers found',
                          len(self.host.btpeer_list))
 
-            # Adding hostname-chameleon to same list causes issue in cros_labels
             self.host.peer_list = self.host.btpeer_list[:]
 
             if (self.host._chameleon_host is not None and
@@ -207,7 +214,7 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                     self._print_delimiter()
                     return False
 
-                # Check that chameleon has all required devices before running
+                # Check that btpeer has all required devices before running
                 for device_type, number in devices.items():
                     if self.available_devices.get(device_type, 0) < number:
                         logging.info('SKIPPING TEST %s', test_name)
@@ -310,12 +317,13 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         # Repopulate btpeer_group for next tests
         # Clear previous tets's leftover entries. Don't delete the
         # btpeer_group dictionary though, it'll be used as it is.
-        for device_type in self.btpeer_group:
-            if len(self.btpeer_group[device_type]) > 0:
-                del self.btpeer_group[device_type][:]
+        if self.use_btpeer:
+            for device_type in self.btpeer_group:
+                if len(self.btpeer_group[device_type]) > 0:
+                    del self.btpeer_group[device_type][:]
 
-        # Repopulate
-        self.group_btpeers_type()
+            # Repopulate
+            self.group_btpeers_type()
 
         # Close the connection between peers
         self.cleanup(test_state='NEW')

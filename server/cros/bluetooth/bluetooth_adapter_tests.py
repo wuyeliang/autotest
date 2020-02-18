@@ -38,16 +38,16 @@ TRACE_LOCATION = os.path.join(BT_ADAPTER_TEST_PATH, 'input_traces/keyboard')
 
 # Delay binding the methods since host is only available at run time.
 SUPPORTED_DEVICE_TYPES = {
-    'MOUSE': lambda chameleon: chameleon.get_bluetooth_hid_mouse,
-    'KEYBOARD': lambda chameleon: chameleon.get_bluetooth_hid_keyboard,
-    'BLE_MOUSE': lambda chameleon: chameleon.get_ble_mouse,
-    'BLE_KEYBOARD': lambda chameleon: chameleon.get_ble_keyboard,
-    'A2DP_SINK': lambda chameleon: chameleon.get_bluetooth_a2dp_sink,
+    'MOUSE': lambda btpeer: btpeer.get_bluetooth_hid_mouse,
+    'KEYBOARD': lambda btpeer: btpeer.get_bluetooth_hid_keyboard,
+    'BLE_MOUSE': lambda btpeer: btpeer.get_ble_mouse,
+    'BLE_KEYBOARD': lambda btpeer: btpeer.get_ble_keyboard,
+    'A2DP_SINK': lambda btpeer: btpeer.get_bluetooth_a2dp_sink,
 
     # This is a base object that does not emulate any Bluetooth device.
     # This object is preferred when only a pure XMLRPC server is needed
-    # on the chameleon host, e.g., to perform servod methods.
-    'BLUETOOTH_BASE': lambda chameleon: chameleon.get_bluetooth_base,
+    # on the btpeer host, e.g., to perform servod methods.
+    'BLUETOOTH_BASE': lambda btpeer: btpeer.get_bluetooth_base,
 }
 
 
@@ -86,10 +86,10 @@ def _run_method(method, method_name, *args, **kwargs):
     return result
 
 
-def get_bluetooth_emulated_device(chameleon, device_type):
+def get_bluetooth_emulated_device(btpeer, device_type):
     """Get the bluetooth emulated device object.
 
-    @param chameleon: the chameleon host
+    @param btpeer: the Bluetooth peer device
     @param device_type : the bluetooth device type, e.g., 'MOUSE'
 
     @returns: the bluetooth device object
@@ -118,7 +118,7 @@ def get_bluetooth_emulated_device(chameleon, device_type):
         step and retry the device method. The remediation steps are
          1) re-creating the serial device.
          2) reset (powercycle) the bluetooth dongle.
-         3) reboot chameleond host.
+         3) reboot Bluetooth peer.
         If the device method still fails after these steps, we fail the test
 
         The default values exist for uses of this function before the options
@@ -148,7 +148,7 @@ def get_bluetooth_emulated_device(chameleon, device_type):
 
             logging.error('%s failed the %s time. Attempting to %s',
                           method_name,i,description)
-            if not fix_serial_device(chameleon, device, action):
+            if not fix_serial_device(btpeer, device, action):
                 logging.info('%s failed', description)
             else:
                 logging.info('%s successful', description)
@@ -167,10 +167,10 @@ def get_bluetooth_emulated_device(chameleon, device_type):
                               device_type)
 
     # Get the bluetooth device object and query some important properties.
-    device = SUPPORTED_DEVICE_TYPES[device_type](chameleon)()
+    device = SUPPORTED_DEVICE_TYPES[device_type](btpeer)()
 
     # Get some properties of the kit
-    # NOTE: Strings updated here must be kept in sync with Chameleon.
+    # NOTE: Strings updated here must be kept in sync with Btpeer.
     device._capabilities = _retry_device_method('GetCapabilities')
     device._transports = device._capabilities["CAP_TRANSPORTS"]
     device._is_le_only = ("TRANSPORT_LE" in device._transports and
@@ -264,8 +264,8 @@ def _check_device_init(device, operation):
     logging.info('The device is created successfully after %s.', operation)
     return True
 
-def _reboot_chameleon(chameleon, device):
-    """ Reboot chameleond host
+def _reboot_btpeer(btpeer, device):
+    """ Reboot Bluetooth peer device.
 
     Also power cycle the device since reboot may not do that.."""
 
@@ -279,11 +279,11 @@ def _reboot_chameleon(chameleon, device):
     logging.info("Powercycling the device")
     device.PowerCycle()
     time.sleep(RESET_SLEEP_SECS)
-    logging.info('rebooting chameleon...')
-    chameleon.reboot()
+    logging.info('rebooting Bluetooth peer...')
+    btpeer.reboot()
 
-    # Every chameleon reboot would take a bit more than REBOOT_SLEEP_SECS.
-    # Sleep REBOOT_SLEEP_SECS and then begin probing the chameleon board.
+    # Every btpeer reboot would take a bit more than REBOOT_SLEEP_SECS.
+    # Sleep REBOOT_SLEEP_SECS and then begin probing the btpeer board.
     time.sleep(REBOOT_SLEEP_SECS)
     return _check_device_init(device, 'reboot')
 
@@ -320,21 +320,21 @@ def _is_successful(result, legal_falsy_values=[]):
     return truthiness_of_result or result in legal_falsy_values
 
 
-def fix_serial_device(chameleon, device, operation='reset'):
+def fix_serial_device(btpeer, device, operation='reset'):
     """Fix the serial device.
 
     This function tries to fix the serial device by
     (1) re-creating a serial device, or
     (2) power cycling the usb port to which device is connected
-    (3) rebooting the chameleon board.
+    (3) rebooting the Bluetooth peeer
 
     Argument operation determine which of the steps above are perform
 
-    Note that rebooting the chameleon board or reseting the device will remove
+    Note that rebooting the btpeer board or resetting the device will remove
     the state on the peripheral which might cause test failures. Please use
     reset/reboot only before or after a test.
 
-    @param chameleon: the chameleon host
+    @param btpeer: the Bluetooth peer
     @param device: the bluetooth device.
     @param operation: Recovery operation to perform 'recreate/reset/reboot'
 
@@ -363,9 +363,9 @@ def fix_serial_device(chameleon, device, operation='reset'):
         return _reset_device_power(device)
 
     elif operation == 'reboot':
-        # Reboot the chameleon host.
-        # The device is power cycled before rebooting chameleon host
-        return _reboot_chameleon(chameleon, device)
+        # Reboot the Bluetooth peer device.
+        # The device is power cycled before rebooting Bluetooth peer device
+        return _reboot_btpeer(btpeer, device)
 
     else:
         logging.error('fix_serial_device Invalid operation %s', operation)
@@ -398,13 +398,13 @@ def retry(test_method, instance, *args, **kwargs):
     time.sleep(1)
 
 
-    if not hasattr(instance, 'use_chameleon'):
+    if not hasattr(instance, 'use_btpeer'):
         return _is_successful(_run_method(test_method, test_method.__name__,
                                           instance, *args, **kwargs))
     for device_type in SUPPORTED_DEVICE_TYPES:
         for device in getattr(instance, 'devices')[device_type]:
-            #fix_serial_device in 'recreate' mode doesn't require chameleon
-            #so just pass None for convinent.
+            #fix_serial_device in 'recreate' mode doesn't require btpeer
+            #so just pass None for convenient.
             if not fix_serial_device(None, device, "recreate"):
                 return False
 
@@ -638,7 +638,7 @@ class BluetoothAdapterTests(test.test):
 
 
     def clear_raspi_device(self, device):
-        """Clears a device on a raspi chameleon by resetting bluetooth stack
+        """Clears a device on a raspi peer by resetting bluetooth stack
 
         @param device: proxy object of peripheral device
         """
@@ -675,7 +675,7 @@ class BluetoothAdapterTests(test.test):
 
 
     def get_device_rasp(self, device_num, on_start=True):
-        """Get all bluetooth device objects from Bluetooth peers.
+        """Get all bluetooth device objects from Bluetooth peer devices
         This method should be called only after group_btpeers_type
         @param device_num : dict of {device_type:number}, to specify the number
                             of device needed for each device_type.
@@ -768,15 +768,15 @@ class BluetoothAdapterTests(test.test):
         return self.devices[device_type][-1]
 
 
-    def is_device_available(self, chameleon, device_type):
-        """Determines if the named device is available on the linked chameleon
+    def is_device_available(self, btpeer, device_type):
+        """Determines if the named device is available on the linked peer
 
         @param device_type: the bluetooth HID device type, e.g., 'MOUSE'
 
         @returns: True if it is able to resolve the device, false otherwise
         """
 
-        device = SUPPORTED_DEVICE_TYPES[device_type](chameleon)()
+        device = SUPPORTED_DEVICE_TYPES[device_type](btpeer)()
         try:
             # The proxy prevents us from checking if the object is None directly
             # so instead we call a fast method that any peripheral must support.
