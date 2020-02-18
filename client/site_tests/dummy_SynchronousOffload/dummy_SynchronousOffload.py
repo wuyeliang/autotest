@@ -7,7 +7,7 @@ import os
 
 from autotest_lib.client.bin import test
 
-class dummy_Pass(test.test):
+class dummy_SynchronousOffload(test.test):
   version = 1
 
   def initialize(self):

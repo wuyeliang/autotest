@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 AUTHOR = "jkop@google.com"
-NAME = "dummy_SynchronousOffload.client"
+NAME = "dummy_SynchronousOffload"
 PURPOSE = "Verify tests can offload output from DUTs."
 TIME = "SHORT"
 TEST_CATEGORY = "General"
@@ -12,7 +12,7 @@ TEST_TYPE = "client"
 
 DOC = """
 This test creates a file in $SYNCHRONOUS_OFFLOAD_DIR on the DUT and succeeds.
-The task will fail only if the offload of that file fails.
+The task will fail only if the creation or offload of that file fails.
 """
 
 job.run_test('dummy_SynchronousOffload')
