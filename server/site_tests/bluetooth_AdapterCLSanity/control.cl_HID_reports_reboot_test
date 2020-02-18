@@ -43,10 +43,17 @@ Specifically, the following subtests are executed in this autotest.
 """
 
 args_dict = utils.args_to_dict(args)
+#
+# Bluetooth peers can be named hostname-<chameleon> or hostname-<btpeer[1-4]
+# Check for both until we transition to new peer names
+# TODO(b:149637050) Cleanup this code
+#
 chameleon_args = hosts.CrosHost.get_chameleon_arguments(args_dict)
+btpeer_args = hosts.CrosHost.get_btpeer_arguments(args_dict)
 
 def run(machine):
     host = hosts.create_host(machine, chameleon_args=chameleon_args)
+    host.initialize_btpeer(btpeer_args)
     job.run_test('bluetooth_AdapterCLSanity', host=host,
                   num_iterations=1, test_name=NAME.split('.')[1])
 
