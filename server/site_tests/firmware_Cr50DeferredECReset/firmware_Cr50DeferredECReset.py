@@ -178,9 +178,11 @@ class firmware_Cr50DeferredECReset(Cr50Test):
                          '' if expect_response else 'not ')
             rv = self.ec.send_command_get_output('help', ['.*>'])[0].strip()
         except error.TestFail as e:
-            logging.info(str(e))
-            if 'Timeout waiting for response' in str(e):
-                if not expect_response:
+            msg = str(e)
+            logging.info(msg)
+            if not expect_response:
+                if ('Timeout waiting for response' in msg or
+                    'No data was sent from the pty' in msg):
                     return
             raise e
         else:

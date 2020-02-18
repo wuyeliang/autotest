@@ -49,9 +49,13 @@ class firmware_Cr50ECReset(Cr50Test):
         time.sleep(self.EC_SETTLE_TIME)
         try:
             self.ec.send_command_get_output('time', ['.*>'])
-        except error.TestFail, e:
-            logging.info(e)
-            if 'Timeout waiting for response' in str(e):
+        except error.TestFail as e:
+            # TODO(b/149760070): To detect if EC is responsive,
+            # send_command_get_output() should define and raise a Timeout error.
+            msg = str(e)
+            logging.info(msg)
+            if ('Timeout waiting for response' in msg or
+                'No data was sent from the pty' in msg):
                 return False
             raise
         else:

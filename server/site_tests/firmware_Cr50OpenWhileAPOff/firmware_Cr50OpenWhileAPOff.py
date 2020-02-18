@@ -114,8 +114,10 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         # Verify the cr50 console responds to commands.
         try:
             logging.info(self.cr50.get_ccdstate())
-        except error.TestFail, e:
-            if 'Timeout waiting for response' in e.message:
+        except error.TestFail as e:
+            msg = str(e)
+            if ('Timeout waiting for response' in msg or
+                'No data was sent from the pty' in msg):
                 raise error.TestFail('Could not restore Cr50 console')
             raise
 
