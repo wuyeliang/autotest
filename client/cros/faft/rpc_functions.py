@@ -754,13 +754,12 @@ class SystemServicer(object):
 
         @return: A string of the platform name.
         """
-        # 'mosys platform name' sometimes fails. Let's get the verbose output.
-        lines = self._os_if.run_shell_command_get_output(
-                '(mosys -vvv platform name 2>&1) || echo Failed')
-        if lines[-1].strip() == 'Failed':
-            raise Exception('Failed getting platform name: ' +
-                            '\n'.join(lines))
-        return lines[-1]
+        platform = cros_config.call_cros_config_get_output(
+                '/identity platform-name',
+                self._os_if.run_shell_command_get_result)
+        if not platform:
+            raise Exception('Failed getting platform name from cros_config')
+        return platform
 
     def get_model_name(self):
         """Get the model name of the current system.
