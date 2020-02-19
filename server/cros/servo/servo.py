@@ -28,13 +28,23 @@ _USB_PROBE_TIMEOUT = 40
 NO_CONTROL_RE = re.compile(r'No control named (\w*\.?\w*)')
 
 
+# Regex to match XMLRPC errors due to a console being unresponsive.
+NO_CONSOLE_OUTPUT_RE = re.compile(r'No data was sent from the pty\.')
+
+
 # The minimum voltage on the charger port on servo v4 that is expected. This is
 # to query whether a charger is plugged into servo v4 and thus pd control
 # capabilities can be used.
 V4_CHG_ATTACHED_MIN_VOLTAGE_MV = 4400
 
+
 class ControlUnavailableError(error.TestFail):
     """Custom error class to indicate a control is unavailable on servod."""
+    pass
+
+
+class UnresponsiveConsoleError(error.TestFail):
+    """Error for: A console control fails for lack of console output."""
     pass
 
 
@@ -750,6 +760,8 @@ class Servo(object):
         @param get: bool, whether this was a get() or a set() call
 
         @raises ControlUnavailableError: if error message matches NO_CONTROL_RE
+        @raises UnresponsiveConsoleError: if error message matches
+                                          NO_CONSOLE_OUTPUT_RE
         @raises error.TestFail: otherwise
         """
         err_str = self._get_xmlrpclib_exception(e)
@@ -765,8 +777,9 @@ class Servo(object):
         # The error message for unavailble controls is huge as it prints
         # all available controls. Do not log it explicitly.
         logging.error(err_msg)
+        if re.findall(NO_CONSOLE_OUTPUT_RE, err_str):
+            raise UnresponsiveConsoleError('Console not printing output.')
         raise error.TestFail(err_msg)
-
 
     def get(self, ctrl_name, prefix=''):
         """Get the value of a gpio from Servod.
