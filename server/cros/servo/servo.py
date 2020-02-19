@@ -742,6 +742,32 @@ class Servo(object):
             return '%s.%s' % (prefix, ctrl_name)
         return ctrl_name
 
+    def _inspect_control_failure(self, e, ctrl_name, get=True):
+        """Inspect the |e| for special failures.
+
+        @param e: exception object
+        @param ctrl_name: control name
+        @param get: bool, whether this was a get() or a set() call
+
+        @raises ControlUnavailableError: if error message matches NO_CONTROL_RE
+        @raises error.TestFail: otherwise
+        """
+        err_str = self._get_xmlrpclib_exception(e)
+        # Prefix for error parsing
+        prefix = 'Getting' if get else 'Setting'
+        err_msg = "%s '%s' :: %s" % (prefix, ctrl_name, err_str)
+        unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
+        if unknown_ctrl:
+            logging.error('%s %r :: No control named %r', prefix, ctrl_name,
+                          unknown_ctrl[0])
+            raise ControlUnavailableError('No control named %r' %
+                                          unknown_ctrl[0])
+        # The error message for unavailble controls is huge as it prints
+        # all available controls. Do not log it explicitly.
+        logging.error(err_msg)
+        raise error.TestFail(err_msg)
+
+
     def get(self, ctrl_name, prefix=''):
         """Get the value of a gpio from Servod.
 
@@ -757,16 +783,7 @@ class Servo(object):
         try:
             return self._server.get(ctrl_name)
         except  xmlrpclib.Fault as e:
-            err_str = self._get_xmlrpclib_exception(e)
-            err_msg = "Getting '%s' :: %s" % (ctrl_name, err_str)
-            unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
-            if unknown_ctrl:
-                raise ControlUnavailableError('No control named %r' %
-                                              unknown_ctrl[0])
-            else:
-                logging.error(err_msg)
-                raise error.TestFail(err_msg)
-
+            self._inspect_control_failure(e, ctrl_name, get=True)
 
     def set(self, ctrl_name, ctrl_value, prefix=''):
         """Set and check the value of a gpio using Servod.
@@ -792,7 +809,6 @@ class Servo(object):
                     'Servo failed to set %s to %s. Got %s.'
                     % (ctrl_name, ctrl_value, actual_value))
 
-
     def set_nocheck(self, ctrl_name, ctrl_value, prefix=''):
         """Set the value of a gpio using Servod.
 
@@ -810,16 +826,7 @@ class Servo(object):
         try:
             self._server.set(ctrl_name, ctrl_value)
         except  xmlrpclib.Fault as e:
-            err_str = self._get_xmlrpclib_exception(e)
-            err_msg = "Setting '%s' :: %s" % (ctrl_name, err_str)
-            unknown_ctrl = re.findall(NO_CONTROL_RE, err_str)
-            if unknown_ctrl:
-                raise ControlUnavailableError('No control named %r' %
-                                              unknown_ctrl[0])
-            else:
-                logging.error(err_msg)
-                raise error.TestFail(err_msg)
-
+            self._inspect_control_failure(e, ctrl_name, get=False)
 
     def set_get_all(self, controls):
         """Set &| get one or more control values.
