@@ -32,6 +32,12 @@ NO_CONTROL_RE = re.compile(r'No control named (\w*\.?\w*)')
 NO_CONSOLE_OUTPUT_RE = re.compile(r'No data was sent from the pty\.')
 
 
+# Regex to match XMLRPC errors due to a console control failing, but the
+# underlying Console being responsive.
+CONSOLE_MISMATCH_RE = re.compile(r'Timeout waiting for response. '
+                                 r'There was output')
+
+
 # The minimum voltage on the charger port on servo v4 that is expected. This is
 # to query whether a charger is plugged into servo v4 and thus pd control
 # capabilities can be used.
@@ -43,8 +49,18 @@ class ControlUnavailableError(error.TestFail):
     pass
 
 
-class UnresponsiveConsoleError(error.TestFail):
+class ConsoleError(error.TestFail):
+    """Common error class for servod console-back control failures."""
+    pass
+
+
+class UnresponsiveConsoleError(ConsoleError):
     """Error for: A console control fails for lack of console output."""
+    pass
+
+
+class ResponsiveConsoleError(ConsoleError):
+    """Error for: A console control fails but console is responsive."""
     pass
 
 
@@ -762,6 +778,8 @@ class Servo(object):
         @raises ControlUnavailableError: if error message matches NO_CONTROL_RE
         @raises UnresponsiveConsoleError: if error message matches
                                           NO_CONSOLE_OUTPUT_RE
+        @raises ResponsiveConsoleError: if error message matches
+                                        CONSOLE_MISMATCH_RE
         @raises error.TestFail: otherwise
         """
         err_str = self._get_xmlrpclib_exception(e)
@@ -779,6 +797,8 @@ class Servo(object):
         logging.error(err_msg)
         if re.findall(NO_CONSOLE_OUTPUT_RE, err_str):
             raise UnresponsiveConsoleError('Console not printing output.')
+        elif re.findall(CONSOLE_MISMATCH_RE, err_str):
+            raise ResponsiveConsoleError('Control failed but console alive.')
         raise error.TestFail(err_msg)
 
     def get(self, ctrl_name, prefix=''):
