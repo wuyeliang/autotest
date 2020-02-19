@@ -239,10 +239,11 @@ class LabelRetriever(object):
         """
         labels = []
         for label in self._labels:
-            logging.info('checking label update %s', label.__class__.__name__)
             try:
                 # get only the labels which need to be updated for this task.
                 if label.update_for_task(task_name):
+                    logging.info('checking label update %s',
+                                 label.__class__.__name__)
                     labels.extend(label.get(host))
             except Exception:
                 logging.exception('error getting label %s.',
