@@ -10,7 +10,7 @@ TIME = "MEDIUM"
 TEST_CATEGORY = "Install"
 TEST_CLASS = "platform"
 TEST_TYPE = "server"
-DEPENDENCIES = "servo, recovery_test"
+DEPENDENCIES = "servo"
 ATTRIBUTES = "suite:platform_test_nightly"
 
 DOC = """
