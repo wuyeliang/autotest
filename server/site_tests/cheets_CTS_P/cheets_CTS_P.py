@@ -46,6 +46,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
     def _tradefed_retry_command(self, template, session_id):
         """Build tradefed 'retry' command from template."""
         cmd = []
+        cmd += self.extra_command_flags
         for arg in template:
             cmd.append(arg.format(session_id=session_id))
         return cmd
@@ -53,6 +54,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
     def _tradefed_run_command(self, template):
         """Build tradefed 'run' command from template."""
         cmd = template[:]
+        cmd += self.extra_command_flags
         # If we are running outside of the lab we can collect more data.
         if not utils.is_in_container():
             logging.info('Running outside of lab, adding extra debug options.')
@@ -134,6 +136,7 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
             retry_manual_tests=retry_manual_tests,
             warn_on_test_retry=warn_on_test_retry,
             hard_reboot_on_failure=hard_reboot_on_failure)
+        self.extra_command_flags = []
         if camera_facing:
             self.initialize_camerabox(camera_facing, cmdline_args)
 
@@ -181,6 +184,10 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
         @param prerequisites: a list of prerequisites that identify rogue DUTs.
         @param timeout: time after which tradefed can be interrupted.
         """
+        # See b/149889853. Non-media test basically does not require dynamic
+        # config. To reduce the flakiness, let us suppress the config.
+        if not needs_push_media:
+            self.extra_command_flags.append('--dynamic-config-url=')
         self._run_tradefed_with_retries(
             test_name=test_name,
             run_template=run_template,
