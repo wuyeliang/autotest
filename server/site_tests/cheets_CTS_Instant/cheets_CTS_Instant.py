@@ -43,6 +43,9 @@ class cheets_CTS_Instant(tradefed_test.TradefedTest):
         cmd = []
         for arg in template:
             cmd.append(arg.format(session_id=session_id))
+        # See b/149681932. Pass empty url to force using local config, instead
+        # of doing a network access (which anyway returns an empty config.)
+        cmd.append('--dynamic-config-url=')
         return cmd
 
     def _tradefed_run_command(self, template):
