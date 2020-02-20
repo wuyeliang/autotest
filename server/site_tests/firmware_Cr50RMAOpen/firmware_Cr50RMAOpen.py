@@ -65,7 +65,7 @@ class firmware_Cr50RMAOpen(Cr50Test):
         if not self.cr50.has_command('rma_auth'):
             raise error.TestNAError('Cannot test on Cr50 without RMA support')
 
-        if not self.cr50.using_servo_v4():
+        if not self.cr50._servo.dts_mode_is_valid():
             raise error.TestNAError('This messes with ccd settings. Use flex '
                     'cable to run the test.')
 
