@@ -1,5 +1,4 @@
 cheets_CTS*
-cheets_ContainerMount
 cheets_GTS*
 cheets_KeyboardTest
 cheets_LoginScreen
