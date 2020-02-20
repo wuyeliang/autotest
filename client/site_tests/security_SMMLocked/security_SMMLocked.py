@@ -28,7 +28,7 @@ class security_SMMLocked(test.test):
             return
 
         cpu_arch = power_utils.get_x86_cpu_arch()
-        if cpu_arch == 'Stoney':
+        if cpu_arch in {"Stoney", "Ryzen"}:
             # The SMM registers (MSRC001_0112 and MSRC001_0113) can be
             # locked from being altered by setting MSRC001_0015[SmmLock].
             # Bit 0 : 1=SMM code in the ASeg and TSeg range and the SMM

@@ -44,6 +44,8 @@ def get_x86_cpu_arch():
 
     if re.search(r'AMD.*[AE][269]-9[0-9][0-9][0-9].*RADEON.*R[245]', cpuinfo):
         return 'Stoney'
+    if re.search(r'AMD.*Ryzen.*Radeon.*', cpuinfo):
+        return 'Ryzen'
     if re.search(r'Intel.*Atom.*[NZ][2-6]', cpuinfo):
         return 'Atom'
     if re.search(r'Intel.*Celeron.*N2[89][0-9][0-9]', cpuinfo):
