@@ -12,11 +12,11 @@ TIME = "SHORT"
 TEST_TYPE = "server"
 DEPENDENCIES = "servo"
 
-DOC = """Verify Rdd in G3.
+DOC = """Verify Rdd connect and disconnect in G3.
 
-Some boards always detect Rdd is connected when the EC is in hibernate. Add a
-test to detect this, so we know the behavior of current boards and we can
-prevent new boards from being released with this issue.
+Rdd may break when entering G3. This test verifies the behavior of the DUT.
+Add the information to the faft config so other tests can act appropriately or
+fix the hardware, so Rdd isn't broken.
 """
 
 if 'args_dict' not in locals():
