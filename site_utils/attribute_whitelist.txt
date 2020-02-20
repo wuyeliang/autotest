@@ -30,6 +30,7 @@ suite:arc-cts-instant-qual
 suite:arc-cts-perbuild
 suite:arc-cts-q
 suite:arc-cts-qual
+suite:arc-cts-r
 suite:arc-cts-stable
 suite:arc-cts-terra
 suite:arc-cts-test
