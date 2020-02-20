@@ -20,6 +20,7 @@ class Cr50Test(FirmwareTest):
     """Base class that sets up helper objects/functions for cr50 tests."""
     version = 1
 
+    RELEASE_POOLS = ['faft-cr50', 'faft-cr50-experimental']
     RESPONSE_TIMEOUT = 180
     GS_PRIVATE = 'gs://chromeos-localmirror-private/distfiles/'
     # Prod signed test images are stored in the private cr50 directory.
@@ -120,20 +121,22 @@ class Cr50Test(FirmwareTest):
 
         # TODO(b/143888583): remove qual update during init once new design to
         # to provision cr50 updates is in place.
-        is_qual = full_args.get('is_qual', '').lower() == 'true'
-        if is_qual or self.running_qual_suite():
+        # Make sure the release image is running before starting the test.
+        is_release_qual = full_args.get('is_release_qual', '').lower() == 'true'
+        if is_release_qual or self.running_cr50_release_suite():
             release_ver_arg = full_args.get('release_ver', '')
             release_path_arg = full_args.get('release_path', '')
             self.ensure_qual_image_is_running(release_ver_arg, release_path_arg)
 
 
-    def running_qual_suite(self):
-        """Return True if the qual image needs to be running."""
+    def running_cr50_release_suite(self):
+        """Return True if the DUT is in a release pool."""
         for pool in self.host.host_info_store.get().pools:
             # TODO(b/149109740): remove once the pool values are verified.
             # Change to run with faft-cr50 and faft-cr50-experimental suites.
             logging.info('Checking pool: %s', pool)
-            if 'faft-cr50-experimental' in pool:
+            if pool in self.RELEASE_POOLS:
+                logging.info('Running a release test.')
                 return True
         return False
 
@@ -208,8 +211,8 @@ class Cr50Test(FirmwareTest):
             logging.info('Running qual image. No update needed.')
             return
         logging.info('Cr50 qual update required.')
-        # TODO(b/149109740): remove once running_qual_suite logic has been
-        # verified.
+        # TODO(b/149109740): remove once running_cr50_release_suite logic has
+        # been verified.
         logging.info('Skipping until logic has been verified')
         return
         filesystem_util.make_rootfs_writable(self.host)
