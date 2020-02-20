@@ -73,6 +73,9 @@ class Cr50Test(FirmwareTest):
         if not hasattr(self, 'cr50'):
             raise error.TestNAError('Test can only be run on devices with '
                                     'access to the Cr50 console')
+        # TODO(b/149948314): remove when dual-v4 is sorted out.
+        if 'ccd_cr50' in self.servo.get_servo_version():
+            self.servo.set_nocheck('watchdog_remove', 'ccd')
 
         logging.info('Test Args: %r', full_args)
 
