@@ -208,10 +208,12 @@ def machine_install_and_update_labels(host, update_url,
         with remote_access.ChromiumOSDeviceHandler(host.ip) as device:
             updater = auto_updater.ChromiumOSUpdater(
                 device, build_name=None, payload_dir=image_name,
-                staging_server=staging_server.url())
+                staging_server=staging_server.url(), reboot=False)
             updater.CheckPayloads()
             updater.PreparePayloadPropsFile()
             updater.RunUpdate()
+            updater.SetClearTpmOwnerRequest()
+            updater.RebootAndVerify()
         repo_url = tools.get_package_url(staging_server.url(), image_name)
         host_attributes = {ds_constants.JOB_REPO_URL: repo_url}
     except Exception as e:
