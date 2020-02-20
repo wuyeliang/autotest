@@ -34,7 +34,6 @@ class Gpio(object):
 
     DEVELOPER_SWITCH_BOOT = 'devsw_boot'
     RECOVERY_BUTTON_BOOT = 'recoverysw_boot'
-    WRITE_PROTECT_BOOT = 'wpsw_boot'
 
     def __init__(self, exception_type=IOError):
         self._exception_type = exception_type
@@ -46,7 +45,6 @@ class Gpio(object):
                 self.RECOVERY_BUTTON_CURRENT: int,
                 self.RECOVERY_BUTTON_BOOT: int,
                 self.WRITE_PROTECT_CURRENT: int,
-                self.WRITE_PROTECT_BOOT: int,
         }
 
         # list of legacy (chromeos_acpi) property names.

@@ -34,25 +34,10 @@ class firmware_WriteProtect(FirmwareTest):
         logging.info('Force write-protect on and reboot for a clean slate.')
         self.set_hardware_write_protect(True)
         self.switcher.mode_aware_reboot()
-        self.check_state((self.checkers.crossystem_checker, {
-                              'wpsw_boot': '1',
-                              'wpsw_cur': '1',
-                          }))
+        self.check_state((self.checkers.crossystem_checker, {'wpsw_cur': '1'}))
         logging.info('Now disable write-protect and check again.')
         self.set_hardware_write_protect(False)
-        self.check_state((self.checkers.crossystem_checker, {
-                              'wpsw_boot': '1',
-                              'wpsw_cur': '0',
-                          }))
-        logging.info('Reboot so WP change takes effect for wpsw_boot.')
-        self.switcher.mode_aware_reboot()
-        self.check_state((self.checkers.crossystem_checker, {
-                              'wpsw_boot': '0',
-                              'wpsw_cur': '0',
-                          }))
+        self.check_state((self.checkers.crossystem_checker, {'wpsw_cur': '0'}))
         logging.info('Enable write-protect again to observe final transition.')
         self.set_hardware_write_protect(True)
-        self.check_state((self.checkers.crossystem_checker, {
-                              'wpsw_boot': '0',
-                              'wpsw_cur': '1',
-                          }))
+        self.check_state((self.checkers.crossystem_checker, {'wpsw_cur': '1'}))

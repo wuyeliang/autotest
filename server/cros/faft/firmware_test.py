@@ -826,13 +826,10 @@ class FirmwareTest(FAFTBase):
                       not write-protected; None to do nothing.
         """
         if ec_wp is None:
-            self._old_wpsw_boot = None
             return
         self._old_wpsw_cur = self.checkers.crossystem_checker(
                                     {'wpsw_cur': '1'}, suppress_logging=True)
-        self._old_wpsw_boot = self.checkers.crossystem_checker(
-                                   {'wpsw_boot': '1'}, suppress_logging=True)
-        if not (ec_wp == self._old_wpsw_cur == self._old_wpsw_boot):
+        if ec_wp != self._old_wpsw_cur:
             if not self.faft_config.ap_access_ec_flash:
                 raise error.TestNAError(
                         "Cannot change EC write-protect for this device")
@@ -842,24 +839,24 @@ class FirmwareTest(FAFTBase):
             self.switcher.mode_aware_reboot(
                     'custom',
                      lambda:self.set_ec_write_protect_and_reboot(ec_wp))
-        wpsw_boot = wpsw_cur = '1' if ec_wp == True else '0'
+        wpsw_cur = '1' if ec_wp else '0'
         self.check_state((self.checkers.crossystem_checker, {
-                               'wpsw_boot': wpsw_boot, 'wpsw_cur': wpsw_cur}))
+                               'wpsw_cur': wpsw_cur}))
 
     def _restore_ec_write_protect(self):
         """Restore the original EC write-protection."""
-        if (not hasattr(self, '_old_wpsw_boot')) or (self._old_wpsw_boot is
-                                                     None):
+        if (not hasattr(self, '_old_wpsw_cur')) or (self._old_wpsw_cur is
+                                                    None):
             return
-        if not self.checkers.crossystem_checker({'wpsw_boot': '1' if
-                       self._old_wpsw_boot else '0'}, suppress_logging=True):
+        if not self.checkers.crossystem_checker({'wpsw_cur': '1' if
+                       self._old_spsw_cur else '0'}, suppress_logging=True):
             logging.info('Restore original EC write protection and reboot.')
             self.switcher.mode_aware_reboot(
                     'custom',
                     lambda:self.set_ec_write_protect_and_reboot(
-                            self._old_wpsw_boot))
+                            self._old_spsw_cur))
         self.check_state((self.checkers.crossystem_checker, {
-                           'wpsw_boot': '1' if self._old_wpsw_boot else '0'}))
+                          'wpsw_cur': '1' if self._old_spsw_cur else '0'}))
 
     def _setup_uart_capture(self):
         """Set up the CPU/EC/PD UART capture."""
