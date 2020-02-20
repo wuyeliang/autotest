@@ -2,14 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import logging
-import os
 
 from autotest_lib.client.bin import test
-from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import chrome
-from autotest_lib.client.common_lib import utils as common_utils
-from autotest_lib.client.cros.power import power_status, power_utils
+from autotest_lib.client.common_lib import utils
+from autotest_lib.client.cros.power import power_status
+from autotest_lib.client.cros.power import power_utils
 
 class power_BatteryDrain(test.test):
     """Not a test, but a utility for server tests to drain the battery below
@@ -18,6 +17,8 @@ class power_BatteryDrain(test.test):
 
     backlight = None
     keyboard_backlight = None
+
+    url = 'https://crospower.page.link/power_BatteryDrain'
 
     def cleanup(self):
         '''Cleanup for a test run'''
@@ -67,25 +68,9 @@ class power_BatteryDrain(test.test):
             logging.info("Assuming no keyboard backlight due to %s", str(e))
             self.keyboard_backlight = None
 
-        with chrome.Chrome(logged_in=False,
-                           init_network_controller=True) as cr:
-
-            # Extract the static WebGL website and serve it locally.
-            # Unfortunately we can't re-use the static website used in the
-            # graphics_WebGLAquarium test because that website does not have
-            # enough fish displayed. This static website is a copy of that
-            # website, with more fish added, and some metrics and other cruft
-            # removed.
-            # TODO(crbug.com/1019455): unify this static website with the
-            # other versions of WebGLAquarium used throughout autotest.
-            tarball_path = os.path.join(self.bindir, 'webgl-aquarium.tar.bz2')
-            utils.extract_tarball_to_dir(tarball_path, self.srcdir)
-            cr.browser.platform.SetHTTPServerDirectories(self.srcdir)
-            html_path = os.path.join(self.srcdir, 'aquarium.html')
-            url = cr.browser.platform.http_server.UrlOf(html_path)
-
+        with chrome.Chrome(init_network_controller=True) as cr:
             tab = cr.browser.tabs.New()
-            tab.Navigate(url)
+            tab.Navigate(self.url)
 
             logging.info(
                 'Waiting {} seconds for battery to drain to {} percent'.format(
@@ -101,7 +86,7 @@ class power_BatteryDrain(test.test):
             err = error.TestFail(
                 "Battery did not drain to {} percent in {} seconds".format(
                     drain_to_percent, drain_timeout))
-            common_utils.poll_for_condition(is_battery_low_enough,
+            utils.poll_for_condition(is_battery_low_enough,
                                             exception=err,
                                             timeout=drain_timeout,
                                             sleep_interval=1)
