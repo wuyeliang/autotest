@@ -119,6 +119,8 @@ class firmware_Cr50CCDServoCap(Cr50Test):
             raise error.TestNAError('Cr50 testlab mode needs to be enabled')
         logging.info('Cr50 is %s', self.servo.get('cr50_ccd_level'))
         self.cr50.set_cap('UartGscTxECRx', 'Always')
+        self.ec_efs_support =
+                    self.cr50.uses_board_property('BOARD_EC_CR50_COMM_SUPPORT')
 
 
     def cleanup(self):
@@ -170,8 +172,13 @@ class firmware_Cr50CCDServoCap(Cr50Test):
         flags = ccdstate['State flags']
         ap_uart_enabled = 'UARTAP' in flags
         ec_uart_enabled = 'UARTEC' in flags
-        output_enabled = '+TX' in flags
-        ccd_enabled = ap_uart_enabled or ec_uart_enabled or output_enabled
+
+        ccd_enabled = ap_uart_enabled or 'USBEC' in flags
+        output_enabled = 'UARTAP+TX' in flags
+        if not self.ec_efs_support:
+            output_enabled |= 'UARTEC+TX' in flags
+            ccd_enabled |= ec_uart_enabled
+
         ccd_ext_is_enabled = ccdstate['CCD EXT'] == 'enabled'
         mismatch = []
         if ccd_enabled and not ccd_ext_is_enabled:
