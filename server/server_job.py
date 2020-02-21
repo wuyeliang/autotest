@@ -741,6 +741,8 @@ class server_job(base_job.base_job):
             if self.control is None:
                 control = ''
             elif self._use_client_trampoline:
+                # Some tests must be loaded and staged before they can be run,
+                # see crbug.com/883403#c42 and #c46 for details.
                 control = self._load_control_file(
                         CLIENT_TRAMPOLINE_CONTROL_FILE)
                 # repr of a string is safe for eval.
