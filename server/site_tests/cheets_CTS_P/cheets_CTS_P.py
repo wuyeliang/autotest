@@ -46,9 +46,9 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
     def _tradefed_retry_command(self, template, session_id):
         """Build tradefed 'retry' command from template."""
         cmd = []
-        cmd += self.extra_command_flags
         for arg in template:
             cmd.append(arg.format(session_id=session_id))
+        cmd += self.extra_command_flags
         return cmd
 
     def _tradefed_run_command(self, template):
