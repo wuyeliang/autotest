@@ -982,6 +982,12 @@ class Servo(object):
         if image_path:
             # Set up Servo's usb mux.
             self.switch_usbkey('host')
+            # TODO(crbug.com/1017308: remove this power-cycling once
+            # the bug has been fixed on the hdctools side of things.
+            logging.info('Power cycling the usb stick port before download '
+                         'one more time')
+            self.set('image_usbkey_pwr', 'off')
+            self.set('image_usbkey_pwr', 'on')
             logging.info('Searching for usb device and copying image to it. '
                          'Please wait a few minutes...')
             if not self._server.download_image_to_usb(image_path):
@@ -996,9 +1002,10 @@ class Servo(object):
 
     def boot_in_recovery_mode(self):
         """Boot host DUT in recovery mode."""
+        self.set('image_usbkey_pwr', 'off')
         self._power_state.power_on(rec_mode=self._power_state.REC_ON)
         self.switch_usbkey('dut')
-
+        self.set('image_usbkey_pwr', 'on')
 
     def install_recovery_image(self, image_path=None,
                                make_image_noninteractive=False):
