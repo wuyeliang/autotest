@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.update_engine import update_engine_test
 
 
@@ -30,9 +31,14 @@ class autoupdate_CatchBadSignatures(update_engine_test.UpdateEngineTest):
                                                allow_failure=True,
                                                public_key=public_key)
 
-        self._check_update_engine_log_for_entry(expected_log_messages,
-                                                raise_error=True,
-                                                err_str=failure_message)
+        try:
+            self._check_update_engine_log_for_entry(expected_log_messages,
+                                                    raise_error=True,
+                                                    err_str=failure_message)
+        except error.TestFail as e:
+            last_error = self._get_last_error_string()
+            raise error.TestFail(
+                '%s\nLast update_engine.log error: %s' % (e, last_error))
 
 
     def _check_bad_metadata_signature(self):
