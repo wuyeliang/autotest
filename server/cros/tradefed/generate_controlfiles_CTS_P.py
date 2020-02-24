@@ -59,6 +59,7 @@ CONFIG['CTS_MAX_RETRIES'] = {
     'CtsDeqpTestCases':         15,  # TODO(b/126787654)
     'CtsIncidentHostTestCases': 30,  # TODO(b/128695132)
     'CtsSensorTestCases':       30,  # TODO(b/124528412)
+    'CtsUiAutomationTestCases':  9,  # TODO(b/145270500)
 }
 
 # Timeout in hours.
@@ -144,7 +145,6 @@ CONFIG['BVT_PERBUILD'] = [
     'CtsThemeDeviceTestCases',
     'CtsTransitionTestCases',
     'CtsTvTestCases',
-    'CtsUiAutomationTestCases',
     'CtsUsbTests',
     'CtsVoiceSettingsTestCases',
 ]
