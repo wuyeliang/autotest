@@ -349,16 +349,21 @@ def get_dependencies(modules, abi, is_public, is_camerabox_test):
     return ', '.join(dependencies)
 
 
-def get_job_retries(modules, is_public):
+def get_job_retries(modules, is_public, suites):
     """Define the number of job retries associated with a module.
 
     @param module: CTS module which will be tested in the control file. If a
                    special module is specified, the control file will runs all
                    the tests without retry.
+    @param is_public: true if the control file is for moblab (public) use.
+    @param suites: the list of suites that the control file belongs to.
     """
     # TODO(haddowk): remove this when cts p has stabalized.
     if is_public:
         return CONFIG['CTS_JOB_RETRIES_IN_PUBLIC']
+    # Presubmit check forces to set 2 or more retries for CQ tests.
+    if 'suite:bvt-arc' in suites:
+        return 2
     retries = 1  # 0 is NO job retries, 1 is one retry etc.
     for module in modules:
         # We don't want job retries for module collection or special cases.
@@ -750,7 +755,7 @@ def get_controlfile_content(combined,
             is_camerabox_test=(camera_facing is not None)),
         extra_artifacts=get_extra_artifacts(modules),
         extra_artifacts_host=get_extra_artifacts_host(modules),
-        job_retries=get_job_retries(modules, is_public),
+        job_retries=get_job_retries(modules, is_public, suites),
         max_result_size_kb=get_max_result_size_kb(modules, is_public),
         revision=revision,
         build=build,

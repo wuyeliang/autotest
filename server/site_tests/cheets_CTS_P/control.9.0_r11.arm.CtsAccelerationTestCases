@@ -6,9 +6,9 @@
 
 AUTHOR = 'ARC++ Team'
 NAME = 'cheets_CTS_P.9.0_r11.arm.CtsAccelerationTestCases'
-ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-unibuild'
+ATTRIBUTES = 'suite:arc-cts, suite:arc-cts-unibuild, suite:bvt-arc'
 DEPENDENCIES = 'arc'
-JOB_RETRIES = 1
+JOB_RETRIES = 2
 TEST_TYPE = 'server'
 TIME = 'MEDIUM'
 MAX_RESULT_SIZE_KB = 512000
