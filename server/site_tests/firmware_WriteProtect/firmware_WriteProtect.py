@@ -31,13 +31,12 @@ class firmware_WriteProtect(FirmwareTest):
 
     def run_once(self):
         """Runs a single iteration of the test."""
-        logging.info('Force write-protect on and reboot for a clean slate.')
+        logging.info('Enable write-protect.')
         self.set_hardware_write_protect(True)
-        self.switcher.mode_aware_reboot()
         self.check_state((self.checkers.crossystem_checker, {'wpsw_cur': '1'}))
         logging.info('Now disable write-protect and check again.')
         self.set_hardware_write_protect(False)
         self.check_state((self.checkers.crossystem_checker, {'wpsw_cur': '0'}))
-        logging.info('Enable write-protect again to observe final transition.')
+        logging.info('Enable write-protect again to check final state.')
         self.set_hardware_write_protect(True)
         self.check_state((self.checkers.crossystem_checker, {'wpsw_cur': '1'}))
