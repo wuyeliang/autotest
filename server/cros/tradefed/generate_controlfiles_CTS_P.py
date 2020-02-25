@@ -180,6 +180,13 @@ CONFIG['MEDIA_MODULES'] = [
 
 CONFIG['NEEDS_PUSH_MEDIA'] = CONFIG['MEDIA_MODULES']
 
+# See b/149889853. Non-media test basically does not require dynamic
+# config. To reduce the flakiness, let us suppress the config.
+CONFIG['NEEDS_DYNAMIC_CONFIG_ON_COLLECTION'] = False
+CONFIG['NEEDS_DYNAMIC_CONFIG'] = CONFIG['MEDIA_MODULES'] + [
+    'CtsIntentSignatureTestCases'
+]
+
 # Modules that are known to need the default apps of Chrome (eg. Files.app).
 CONFIG['ENABLE_DEFAULT_APPS'] = [
     'CtsAppSecurityHostTestCases',

@@ -23,7 +23,7 @@ def run_TS(machine):
         max_retry=0,
         tag='9.0_r11.arm.tradefed-run-collect-tests-only-internal',
         test_name='cheets_CTS_P.9.0_r11.arm.tradefed-run-collect-tests-only-internal',
-        run_template=['run', 'commandAndExit', 'collect-tests-only', '--disable-reboot', '--module-arg', 'CtsMediaTestCases:skip-media-download:true', '--module-arg', 'CtsMediaStressTestCases:skip-media-download:true', '--module-arg', 'CtsMediaBitstreamsTestCases:skip-media-download:true'],
+        run_template=['run', 'commandAndExit', 'collect-tests-only', '--disable-reboot', '--module-arg', 'CtsMediaTestCases:skip-media-download:true', '--module-arg', 'CtsMediaStressTestCases:skip-media-download:true', '--module-arg', 'CtsMediaBitstreamsTestCases:skip-media-download:true', '--dynamic-config-url='],
         retry_template=None,
         target_module=None,
         target_plan=None,
