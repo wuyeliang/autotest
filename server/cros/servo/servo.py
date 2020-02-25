@@ -314,6 +314,7 @@ class Servo(object):
     USB_DETECTION_DELAY = 10
     # Time to keep USB power off before and after USB mux direction is changed
     USB_POWEROFF_DELAY = 2
+    USB_POWERON_DELAY = 5
 
     # Time to wait before timing out on servo initialization.
     INIT_TIMEOUT_SECS = 10
@@ -1002,10 +1003,16 @@ class Servo(object):
 
     def boot_in_recovery_mode(self):
         """Boot host DUT in recovery mode."""
-        self.set('image_usbkey_pwr', 'off')
-        self._power_state.power_on(rec_mode=self._power_state.REC_ON)
         self.switch_usbkey('dut')
+
+        # TODO(crbug.com/1017308: remove this power-cycling once
+        # the bug has been fixed on the hdctools side of things.
+        self.set('image_usbkey_pwr', 'off')
+        time.sleep(self.USB_POWEROFF_DELAY)
         self.set('image_usbkey_pwr', 'on')
+        time.sleep(self.USB_POWERON_DELAY)
+
+        self._power_state.power_on(rec_mode=self._power_state.REC_ON)
 
     def install_recovery_image(self, image_path=None,
                                make_image_noninteractive=False):
