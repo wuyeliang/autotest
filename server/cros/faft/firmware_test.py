@@ -458,7 +458,7 @@ class FirmwareTest(FAFTBase):
         # Servo v4 by default has dts_mode enabled. Enabling dts_mode affects
         # the behaviors of what PD FAFT tests. So we want it disabled.
         if 'servo_v4' in self.pdtester.servo_type:
-            self.pdtester.set('servo_v4_dts_mode', 'on' if dts_mode else 'off')
+            self.servo.set_dts_mode('on' if dts_mode else 'off')
         else:
             logging.warn('Configuring DTS mode only supported on Servo v4')
 
