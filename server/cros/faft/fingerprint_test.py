@@ -309,7 +309,10 @@ class FingerprintTest(test.test):
         cmd = ' '.join([gen_script,
                         self.get_fp_board(),
                         os.path.basename(build_fw_file)])
-        self.run_server_cmd(cmd)
+        result = self.run_server_cmd(cmd)
+        if result.exit_status != 0:
+            raise error.TestFail('Failed to run test image generation script')
+
         os.chdir(pushd)
 
         # Copy resulting files to DUT tmp dir
