@@ -23,7 +23,7 @@ from autotest_lib.server import test
 
 
 # The current chameleond version
-CUR_BT_PKG_VERSION='0.0.1'
+CUR_BT_PKG_VERSION='0.0.2'
 
 
 # The following needs to be kept in sync with values chameleond code
