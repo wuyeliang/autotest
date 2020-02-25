@@ -162,7 +162,7 @@ def _run_with_ssp(job, container_id, job_id, results, parser, ssp_url,
                     parser.options.results:
                     parser.options.results  can be set to None for results to be
                     stored in a temp folder.
-                    results can be None for autoserv run requires no logging.
+                    results can be None if the autoserv run requires no logging.
     @param parser: Command line parser that contains the options.
     @param ssp_url: url of the staged server-side package.
     @param machines: A list of machines to run the test.
@@ -242,6 +242,16 @@ def _run_with_ssp(job, container_id, job_id, results, parser, ssp_url,
             'chromeos/autotest/experimental/execute_job_in_ssp').increment(
                 fields={'success': success})
         test_container.destroy()
+
+def create_offload_dir(parser, resultdir):
+  """Ensure the offload dir exists in the current running environment.
+  @param parser: autoserv_parser instance with options for this run.
+  @param resultdir: absolute path to results directory for this run
+  """
+  try:
+      os.makedirs(os.path.join(resultdir, parser.options.sync_offload_dir))
+  except OSError: #dir already exists
+      pass
 
 
 def correct_results_folder_permission(results):
@@ -532,6 +542,7 @@ def run_autoserv(pid_file_manager, results, parser, ssp_url, use_ssp):
             'disable_sysinfo': parser.options.disable_sysinfo,
             'in_lab': in_lab,
             'use_client_trampoline': use_client_trampoline,
+            'sync_offload_dir': parser.options.sync_offload_dir,
     }
     if parser.options.parent_job_id:
         job_kwargs['parent_job_id'] = int(parser.options.parent_job_id)
@@ -568,6 +579,7 @@ def run_autoserv(pid_file_manager, results, parser, ssp_url, use_ssp):
             else:
                 if auto_start_servod and len(machines) == 1:
                     _start_servod(machines[0])
+                create_offload_dir(parser, results)
                 if use_ssp:
                     try:
                         _run_with_ssp(job, container_id, job_or_task_id,
