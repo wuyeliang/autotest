@@ -534,6 +534,8 @@ def _format_collect_cmd(retry):
     for m in CONFIG['MEDIA_MODULES']:
         cmd.append('--module-arg')
         cmd.append('%s:skip-media-download:true' % m)
+    if not CONFIG.get('NEEDS_DYNAMIC_CONFIG_ON_COLLECTION', True):
+        cmd.append('--dynamic-config-url=')
     return cmd
 
 
@@ -588,6 +590,11 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
         not (modules.intersection(CONFIG['BVT_ARC'] + CONFIG['SMOKE'] +
              CONFIG['NEEDS_DEVICE_INFO']))):
         cmd.append('--skip-device-info')
+    # If NEEDS_DYNAMIC_CONFIG is set, disable the feature except on the modules
+    # that explicitly set as needed.
+    if (CONFIG.get('NEEDS_DYNAMIC_CONFIG') and
+            not modules.intersection(CONFIG['NEEDS_DYNAMIC_CONFIG'])):
+        cmd.append('--dynamic-config-url=')
 
     return cmd
 
