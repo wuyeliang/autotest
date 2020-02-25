@@ -73,9 +73,7 @@ CONFIG['QUAL_BOOKMARKS'] = sorted([
 
 CONFIG['SMOKE'] = []
 
-CONFIG['BVT_ARC'] = [
-    'GtsContactsTest',
-]
+CONFIG['BVT_ARC'] = []
 
 CONFIG['BVT_PERBUILD'] = [
     'GtsAdminTestCases',
