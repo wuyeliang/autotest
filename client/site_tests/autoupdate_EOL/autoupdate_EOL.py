@@ -109,13 +109,12 @@ class autoupdate_EOL(update_engine_test.UpdateEngineTest):
         with nebraska_wrapper.NebraskaWrapper(
                 log_dir=self.resultsdir) as nebraska:
             # Try to update. It should fail with noupdate.
-            self._check_for_update(port=nebraska.get_port(), ignore_status=True,
-                                   wait_for_completion=True, eol_date=eol_date,
-                                   no_update=True)
+            self._check_for_update(nebraska.get_update_url(eol_date=eol_date,
+                                                           no_update=True),
+                                   ignore_status=True, wait_for_completion=True)
 
             self._check_eol_info()
             with chrome.Chrome(autotest_ext=True, logged_in=True) as cr:
                 self._cr = cr
                 self._check_eol_notification(eol_date)
                 self._check_eol_settings(eol_date)
-

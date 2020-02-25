@@ -36,14 +36,14 @@ class autoupdate_StartOOBEUpdate(update_engine_test.UpdateEngineTest):
         self._oobe.ExecuteJavaScript('Oobe.skipToUpdateForTesting()')
 
 
-    def _start_oobe_update(self, url):
+    def _start_oobe_update(self, update_url):
         """
         Jump to the update check screen at OOBE and wait for update to start.
 
-        @param url: The omaha update URL we expect to call.
+        @param update_url: The omaha update URL we expect to call.
 
         """
-        self._create_custom_lsb_release(url)
+        self._create_custom_lsb_release(update_url)
         # Start chrome instance to interact with OOBE.
         self._chrome = chrome.Chrome(auto_login=False)
         self._oobe = self._chrome.browser.oobe

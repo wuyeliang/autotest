@@ -123,8 +123,8 @@ class autoupdate_UserData(update_engine_test.UpdateEngineTest):
                     utils.run('echo hello > %s' % self._TEST_FILE)
                     self._modify_input_methods()
                     self._modify_time_zone()
-                    self._check_for_update(port=nebraska.get_port(),
-                                           critical_update=True)
+                    self._check_for_update(
+                        nebraska.get_update_url(critical_update=True))
                 # Sign out of Chrome and wait for the update to complete.
                 # If we waited for the update to complete and then logged out
                 # the DUT will auto-reboot and the client test cannot return.

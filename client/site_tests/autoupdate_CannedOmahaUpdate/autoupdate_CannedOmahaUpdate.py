@@ -25,17 +25,17 @@ class autoupdate_CannedOmahaUpdate(update_engine_test.UpdateEngineTest):
     version = 1
 
 
-    def run_canned_update(self, allow_failure, port):
+    def run_canned_update(self, allow_failure, update_url):
         """
         Performs the update.
 
         @param allow_failure: True if we dont raise an error on failure.
-        @param port: The port number we need to connect to on the server.
+        @param update_url: The URL to get an update.
 
         """
 
         try:
-            self._check_for_update(port=port, critical_update=True,
+            self._check_for_update(update_url, critical_update=True,
                                    wait_for_completion=True)
         except error.CmdError as e:
             if not allow_failure:
@@ -68,7 +68,7 @@ class autoupdate_CannedOmahaUpdate(update_engine_test.UpdateEngineTest):
                 update_payloads_address=base_url) as nebraska:
 
             if not use_cellular:
-                self.run_canned_update(allow_failure, nebraska.get_port())
+                self.run_canned_update(allow_failure, nebraska.get_update_url())
                 return
 
             # Setup DUT so that we have ssh over ethernet but DUT uses
@@ -82,7 +82,8 @@ class autoupdate_CannedOmahaUpdate(update_engine_test.UpdateEngineTest):
                     CONNECT_TIMEOUT = 120
                     test_env.shill.connect_service_synchronous(
                             service, CONNECT_TIMEOUT)
-                    self.run_canned_update(allow_failure, nebraska.get_port())
+                    self.run_canned_update(allow_failure,
+                                           nebraska.get_update_url())
             except error.TestError as e:
                 # Raise as test failure so it is propagated to server test
                 # failure message.

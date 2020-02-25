@@ -71,9 +71,8 @@ class autoupdate_Backoff(update_engine_test.UpdateEngineTest):
                               'critical_update': True}
 
             # Start the update.
-            self._check_for_update(port=nebraska.get_port(),
-                                   interactive=False,
-                                   **response_props)
+            self._check_for_update(nebraska.get_update_url(**response_props),
+                                   interactive=False)
             self._wait_for_progress(0.2)
 
             # Disable internet so the update fails.
@@ -86,10 +85,9 @@ class autoupdate_Backoff(update_engine_test.UpdateEngineTest):
                                                         raise_error=True)
                 utils.run('cat %s' % self._backoff_expiry_time)
                 try:
-                    self._check_for_update(port=nebraska.get_port(),
-                                           interactive=False,
-                                           wait_for_completion=True,
-                                           **response_props)
+                    self._check_for_update(
+                        nebraska.get_update_url(**response_props),
+                        interactive=False, wait_for_completion=True)
                 except error.CmdError as e:
                     logging.info('Update failed as expected.')
                     logging.error(e)
@@ -102,7 +100,7 @@ class autoupdate_Backoff(update_engine_test.UpdateEngineTest):
             else:
                 self._check_update_engine_log_for_entry(self._BACKOFF_DISABLED,
                                                         raise_error=True)
-                self._check_for_update(port=nebraska.get_port(),
-                                       interactive=False,
-                                       **response_props)
+                self._check_for_update(
+                    nebraska.get_update_url(**response_props),
+                    interactive=False)
                 self._wait_for_update_to_complete()

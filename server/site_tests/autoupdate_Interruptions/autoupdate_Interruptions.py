@@ -4,7 +4,6 @@
 
 import logging
 import random
-import urlparse
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
@@ -41,12 +40,10 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         progress = random.uniform(0.1, 0.6)
         logging.info('Progress when we will begin interruptions: %f', progress)
 
-        parsed_url = urlparse.urlparse(update_url)
-        server = 'http://%s' % parsed_url.hostname
         # Login, start the update, logout
         self._run_client_test_and_check_result(
-            'autoupdate_LoginStartUpdateLogout', server=server,
-            port=parsed_url.port, progress_to_complete=progress)
+            'autoupdate_LoginStartUpdateLogout', update_url=update_url,
+            progress_to_complete=progress)
 
         if interrupt is not None:
             if self._is_update_finished_downloading():
@@ -57,7 +54,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
                 self._host.reboot()
                 utils.poll_for_condition(self._get_update_engine_status,
                                          desc='update engine to start')
-                self._check_for_update(server=server, port=parsed_url.port)
+                self._check_for_update(update_url)
             elif interrupt is 'network':
                 self._disconnect_then_reconnect_network(update_url)
             elif interrupt is 'suspend':
@@ -80,8 +77,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
                                  desc='update engine to start')
         # We do check update with no_update=True so it doesn't start the update
         # again.
-        self._check_for_update(server=server, port=parsed_url.port,
-                               no_update=True)
+        self._check_for_update(update_url, no_update=True)
 
         # Verify that the update completed successfully by checking hostlog.
         rootfs_hostlog, reboot_hostlog = self._create_hostlog_files()

@@ -39,12 +39,12 @@ class policy_DeviceTargetVersionPrefix(
     _POLICY_TO_REQUEST = {'4444.': '4444', '4444.4.4': '4444.4.'}
 
 
-    def _test_version_prefix(self, prefix_value, port):
+    def _test_version_prefix(self, prefix_value, update_url):
         """
         Actual test.  Fail if update request doesn't match expected.
 
         @param prefix_value: the value of this policy.
-        @param port: The port we should connect to Nebraska server.
+        @param update_url: The URL to get update from.
 
         @raises error.TestFail if test does not pass.
 
@@ -52,7 +52,7 @@ class policy_DeviceTargetVersionPrefix(
         # E.g. <updatecheck targetversionprefix="10718.25.0.">
         MATCH_STR = r'targetversionprefix="(.*?).?"'
 
-        self._check_for_update(port=port)
+        self._check_for_update(update_url)
 
         utils.poll_for_condition(
                 self._is_update_started,
@@ -110,4 +110,4 @@ class policy_DeviceTargetVersionPrefix(
             update_url = nebraska.get_update_url()
             self._create_custom_lsb_release(update_url, build='1.1.1')
 
-            self._test_version_prefix(case_value, nebraska.get_port())
+            self._test_version_prefix(case_value, nebraska.get_update_url())

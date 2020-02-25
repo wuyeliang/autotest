@@ -6,6 +6,7 @@ import logging
 import os
 import requests
 import subprocess
+import urlparse
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
@@ -112,10 +113,6 @@ class NebraskaWrapper(object):
         finally:
             self._nebraska_server = None
 
-    def get_port(self):
-        """Returns the port which Nebraska is running."""
-        return self._port
-
     def get_update_url(self, **kwargs):
         """
         Returns a URL for getting updates from this Nebraska instance.
@@ -124,5 +121,11 @@ class NebraskaWrapper(object):
                 Nebraska to do a set of activities. See
                 nebraska.py::ResponseProperties for examples key/values.
         """
+
         query = '&'.join('%s=%s' % (k, v) for k, v in kwargs.items())
-        return 'http://127.0.0.1:%d/update?%s' % (self._port, query)
+        url = urlparse.SplitResult(scheme='http',
+                                   netloc='127.0.0.1:%d' % self._port,
+                                   path='/update',
+                                   query=query,
+                                   fragment='')
+        return urlparse.urlunsplit(url)

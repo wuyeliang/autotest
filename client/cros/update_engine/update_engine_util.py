@@ -10,6 +10,7 @@ import re
 import requests
 import shutil
 import time
+import urlparse
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
@@ -290,36 +291,42 @@ class UpdateEngineUtil(object):
                 (payload_props_url, err))
 
 
-    def _check_for_update(self, server='http://127.0.0.1', port=8082,
-                          update_path='update', interactive=True,
+    def _check_for_update(self, update_url, interactive=True,
                           ignore_status=False, wait_for_completion=False,
                           **kwargs):
         """
         Starts a background update check.
 
-        @param server: The omaha server to call in the update url.
-        @param port: The omaha port to call in the update url.
-        @param update_path: The /update part of the URL. When using a lab
-                            devserver, pass update/<board>-release/RXX-X.X.X.
+        @param update_url: The URL to get an update from.
         @param interactive: True if we are doing an interactive update.
         @param ignore_status: True if we should ignore exceptions thrown.
         @param wait_for_completion: True for --update, False for
                 --check_for_update.
-        @param kwargs: The dictionary to be converted to a query string
-                and appended to the end of the update URL. e.g:
+        @param kwargs: The dictionary to be converted to a query string and
+                appended to the end of the update URL. e.g:
                 {'critical_update': True, 'foo': 'bar'} ->
-                'http:/127.0.0.1:8080/update?critical_update=True&foo=bar'
-                Look at nebraska.py or devserver.py for the list of accepted
-                values.
+                'http:/127.0.0.1:8080/update?critical_update=True&foo=bar' Look
+                at nebraska.py or devserver.py for the list of accepted
+                values. If there was already query string in update_url, it will
+                append the new values and override the old ones.
+
         """
-        update = 'update' if wait_for_completion else 'check_for_update'
-        update_path = update_path.lstrip('/')
-        query = '&'.join('%s=%s' % (k, v) for k, v in kwargs.items())
-        cmd = 'update_engine_client --%s --omaha_url="%s:%d/%s?%s"' % (
-            update, server, port, update_path, query)
+        # TODO(ahassani): This doesn't work (or maybe should not) for queries
+        # with multiple values for a specific key.
+        parsed_url = list(urlparse.urlsplit(update_url))
+        parsed_query = urlparse.parse_qs(parsed_url[3])
+        for k, v in kwargs.items():
+            parsed_query[k] = [v]
+        parsed_url[3] = '&'.join(
+            '%s=%s' % (k, v[0]) for k, v in parsed_query.items())
+        update_url = urlparse.urlunsplit(parsed_url)
+
+        cmd = ['update_engine_client',
+               '--update' if wait_for_completion else '--check_for_update',
+               '--omaha_url=%s' % update_url]
 
         if not interactive:
-          cmd += ' --interactive=false'
+          cmd.append('--interactive=false')
         self._run(cmd, ignore_status=ignore_status)
 
 

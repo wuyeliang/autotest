@@ -50,9 +50,9 @@ class autoupdate_BadMetadata(update_engine_test.UpdateEngineTest):
                 update_payloads_address=base_url) as nebraska:
 
             try:
-                self._check_for_update(port=nebraska.get_port(),
-                                       wait_for_completion=True,
-                                       critical_update=True)
+                self._check_for_update(
+                    nebraska.get_update_url(critical_update=True),
+                    wait_for_completion=True)
                 raise error.TestFail('Update completed when it should have '
                                      'failed. Check the update_engine log.')
             except error.CmdError as e:
