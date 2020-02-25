@@ -90,7 +90,9 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         # server, which log out the user.
 
         try:
+            browser_args = ['--enable-features=BluetoothKernelSuspendNotifier']
             self.factory = remote_facade_factory.RemoteFacadeFactory(host,
+                           extra_browser_args = browser_args,
                            disable_arc=True)
             self.bluetooth_facade = self.factory.create_bluetooth_hid_facade()
 
