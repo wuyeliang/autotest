@@ -284,7 +284,7 @@ class FirmwareTest(FAFTBase):
         """
         recovery_reason = 0
         logging.info('Try to retrieve recovery reason...')
-        if self.servo.get_usbkey_direction() == 'dut':
+        if self.servo.get_usbkey_state() == 'dut':
             self.switcher.bypass_rec_mode()
         else:
             self.servo.switch_usbkey('dut')
@@ -415,7 +415,7 @@ class FirmwareTest(FAFTBase):
         if self.check_setup_done('usb_check'):
             return
         if usb_dev:
-            assert self.servo.get_usbkey_direction() == 'host'
+            assert self.servo.get_usbkey_state() == 'host'
         else:
             self.servo.switch_usbkey('host')
             usb_dev = self.servo.probe_host_usb_dev()
@@ -543,7 +543,7 @@ class FirmwareTest(FAFTBase):
           no USB disk is found.
         """
         cmd = 'ls -d /dev/s*[a-z]'
-        original_value = self.servo.get_usbkey_direction()
+        original_value = self.servo.get_usbkey_state()
 
         # Make the dut unable to see the USB disk.
         self.servo.switch_usbkey('off')
@@ -557,7 +557,7 @@ class FirmwareTest(FAFTBase):
             self.faft_client.system.run_shell_command_get_output(cmd))
 
         # Back to its original value.
-        if original_value != self.servo.get_usbkey_direction():
+        if original_value != self.servo.get_usbkey_state():
             self.servo.switch_usbkey(original_value)
 
         diff_set = has_usb_set - no_usb_set

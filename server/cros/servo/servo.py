@@ -19,10 +19,6 @@ from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros.servo import firmware_programmer
 from autotest_lib.server.cros.faft.utils.config import Config as FAFTConfig
 
-# Time to wait when probing for a usb device, it takes on avg 17 seconds
-# to do a full probe.
-_USB_PROBE_TIMEOUT = 40
-
 
 # Regex to match XMLRPC errors due to a servod control not existing.
 NO_CONTROL_RE = re.compile(r'No control named (\w*\.?\w*)')
@@ -337,10 +333,7 @@ class Servo(object):
     DEV_TOGGLE_DELAY = 0.1
 
     # Time between an usb disk plugged-in and detected in the system.
-    USB_DETECTION_DELAY = 10
-    # Time to keep USB power off before and after USB mux direction is changed
-    USB_POWEROFF_DELAY = 2
-    USB_POWERON_DELAY = 5
+    USB_DETECTION_DELAY = 5
 
     # Time to wait before timing out on servo initialization.
     INIT_TIMEOUT_SECS = 10
@@ -362,7 +355,6 @@ class Servo(object):
         self._servo_type = self.get_servo_version()
         self._power_state = _PowerStateController(self)
         self._uart = _Uart(self)
-        self._usb_state = None
         self._programmer = None
         self._prev_log_inode = None
         self._prev_log_size = 0
@@ -414,7 +406,6 @@ class Servo(object):
             e.filename = '%s:%s' % (self._servo_host.hostname,
                                     self._servo_host.servo_port)
             raise
-        self._usb_state = None
         if self.has_control('usb_mux_oe1'):
             self.set('usb_mux_oe1', 'on')
             self.switch_usbkey('off')
@@ -906,23 +897,15 @@ class Servo(object):
         return rv
 
 
-    # TODO(waihong) It may fail if multiple servo's are connected to the same
-    # host. Should look for a better way, like the USB serial name, to identify
-    # the USB device.
-    # TODO(sbasi) Remove this code from autoserv once firmware tests have been
-    # updated.
-    def probe_host_usb_dev(self, timeout=_USB_PROBE_TIMEOUT):
+    def probe_host_usb_dev(self):
         """Probe the USB disk device plugged-in the servo from the host side.
 
         It uses servod to discover if there is a usb device attached to it.
 
-        @param timeout The timeout period when probing for the usb host device.
-
         @return: String of USB disk path (e.g. '/dev/sdb') or None.
         """
         # Set up Servo's usb mux.
-        self.switch_usbkey('host')
-        return self._server.probe_host_usb_dev(timeout) or None
+        return self.get('image_usbkey_dev') or None
 
 
     def image_to_servo_usb(self, image_path=None,
@@ -944,49 +927,44 @@ class Servo(object):
         # don't know the state of the DUT, or what it might choose
         # to do to the device after hotplug.  To avoid surprises,
         # force the DUT to be off.
-        self._server.hwinit()
-        if self.has_control('init_keyboard'):
-            # This indicates the servod version does not
-            # have explicit keyboard initialization yet.
-            # Ignore this.
-            # TODO(coconutruben): change this back to set() about a month
-            # after crrev.com/c/1586239 has been merged (or whenever that
-            # logic is in the labstation images).
-            self.set_nocheck('init_keyboard','on')
         self._power_state.power_off()
 
         if image_path:
-            # Set up Servo's usb mux.
-            self.switch_usbkey('host')
-            # TODO(crbug.com/1017308: remove this power-cycling once
-            # the bug has been fixed on the hdctools side of things.
-            logging.info('Power cycling the usb stick port before download '
-                         'one more time')
-            self.set('image_usbkey_pwr', 'off')
-            self.set('image_usbkey_pwr', 'on')
             logging.info('Searching for usb device and copying image to it. '
                          'Please wait a few minutes...')
-            if not self._server.download_image_to_usb(image_path):
-                logging.error('Failed to transfer requested image to USB. '
-                              'Please take a look at Servo Logs.')
+            # The servod control automatically sets up the host in the host
+            # direction.
+            try:
+                self.set_nocheck('download_image_to_usb_dev', image_path)
+            except error.TestFail as e:
+                logging.error('Failed to transfer requested image to USB. %s.'
+                              'Please take a look at Servo Logs.', str(e))
                 raise error.AutotestError('Download image to usb failed.')
             if make_image_noninteractive:
                 logging.info('Making image noninteractive')
-                if not self._server.make_image_noninteractive():
-                    logging.error('Failed to make image noninteractive. '
-                                  'Please take a look at Servo Logs.')
+                try:
+                    dev = self.probe_host_usb_dev()
+                    if not dev:
+                        # This is fine but also should never happen: if we
+                        # successfully download an image but somehow cannot
+                        # find the stick again, it needs to be investigated.
+                        raise error.TestFail('No image usb key detected '
+                                             'after successful download. '
+                                             'Please investigate.')
+                    # The modification has to happen on partition 1.
+                    dev_partition = '%s1' % dev
+                    self.set_nocheck('make_usb_dev_image_noninteractive',
+                                     dev_partition)
+                except error.TestFail as e:
+                    logging.error('Failed to make image noninteractive. %s.'
+                                  'Please take a look at Servo Logs.',
+                                  str(e))
 
     def boot_in_recovery_mode(self):
         """Boot host DUT in recovery mode."""
+        # This call has a built-in delay to ensure that we wait a timeout
+        # for the stick to enumerate and settle on the DUT side.
         self.switch_usbkey('dut')
-
-        # TODO(crbug.com/1017308: remove this power-cycling once
-        # the bug has been fixed on the hdctools side of things.
-        self.set('image_usbkey_pwr', 'off')
-        time.sleep(self.USB_POWEROFF_DELAY)
-        self.set('image_usbkey_pwr', 'on')
-        time.sleep(self.USB_POWERON_DELAY)
-
         self._power_state.power_on(rec_mode=self._power_state.REC_ON)
 
     def install_recovery_image(self, image_path=None,
@@ -1261,43 +1239,12 @@ class Servo(object):
                                   tarball_path)
 
 
-    def _switch_usbkey_power(self, power_state, detection_delay=False):
-        """Switch usbkey power.
-
-        This function switches usbkey power by setting the value of
-        'prtctl4_pwren'. If the power is already in the
-        requested state, this function simply returns.
-
-        @param power_state: A string, 'on' or 'off'.
-        @param detection_delay: A boolean value, if True, sleep
-                                for |USB_DETECTION_DELAY| after switching
-                                the power on.
-        """
-        # TODO(kevcheng): Forgive me for this terrible hack. This is just to
-        # handle beaglebones that haven't yet updated and have the
-        # safe_switch_usbkey_power RPC.  I'll remove this once all beaglebones
-        # have been updated and also think about a better way to handle
-        # situations like this.
-        try:
-            self._server.safe_switch_usbkey_power(power_state)
-        except Exception:
-            self.set('prtctl4_pwren', power_state)
-        if power_state == 'off':
-            time.sleep(self.USB_POWEROFF_DELAY)
-        elif detection_delay:
-            time.sleep(self.USB_DETECTION_DELAY)
-
-
     def switch_usbkey(self, usb_state):
         """Connect USB flash stick to either host or DUT, or turn USB port off.
 
         This function switches the servo multiplexer to provide electrical
         connection between the USB port J3 and either host or DUT side. It
         can also be used to turn the USB port off.
-
-        Switching to 'dut' or 'host' is accompanied by powercycling
-        of the USB stick, because it sometimes gets wedged if the mux
-        is switched while the stick power is on.
 
         @param usb_state: A string, one of 'dut', 'host', or 'off'.
                           'dut' and 'host' indicate which side the
@@ -1307,12 +1254,11 @@ class Servo(object):
         @raise: error.TestError in case the parameter is not 'dut'
                 'host', or 'off'.
         """
-        if self.get_usbkey_direction() == usb_state:
+        if self.get_usbkey_state() == usb_state:
             return
 
         if usb_state == 'off':
-            self._switch_usbkey_power('off')
-            self._usb_state = usb_state
+            self.set_nocheck('image_usbkey_pwr', 'off')
             return
         elif usb_state == 'host':
             mux_direction = 'servo_sees_usbkey'
@@ -1320,36 +1266,26 @@ class Servo(object):
             mux_direction = 'dut_sees_usbkey'
         else:
             raise error.TestError('Unknown USB state request: %s' % usb_state)
+        # On the servod side, this control will ensure that
+        # - the port is power cycled if it is changing directions
+        # - the port ends up in a powered state after this call
+        # - if facing the host side, the call only returns once a usb block
+        #   device is detected, or after a generous timeout (10s)
+        self.set('image_usbkey_direction', mux_direction)
+        # As servod makes no guarantees when switching to the dut side,
+        # add a detection delay here when facing the dut.
+        if mux_direction == 'dut':
+            time.sleep(self.USB_DETECTION_DELAY)
 
-        self._switch_usbkey_power('off')
-        # TODO(kevcheng): Forgive me for this terrible hack. This is just to
-        # handle beaglebones that haven't yet updated and have the
-        # safe_switch_usbkey RPC.  I'll remove this once all beaglebones have
-        # been updated and also think about a better way to handle situations
-        # like this.
-        try:
-            self._server.safe_switch_usbkey(mux_direction)
-        except Exception:
-            self.set('usb_mux_sel1', mux_direction)
-        time.sleep(self.USB_POWEROFF_DELAY)
-        self._switch_usbkey_power('on', usb_state == 'host')
-        self._usb_state = usb_state
-
-
-    def get_usbkey_direction(self):
+    def get_usbkey_state(self):
         """Get which side USB is connected to or 'off' if usb power is off.
 
         @return: A string, one of 'dut', 'host', or 'off'.
         """
-        if not self._usb_state:
-            if self.get('prtctl4_pwren') == 'off':
-                self._usb_state = 'off'
-            elif self.get('usb_mux_sel1').startswith('dut'):
-                self._usb_state = 'dut'
-            else:
-                self._usb_state = 'host'
-        return self._usb_state
-
+        pwr = self.get('image_usbkey_pwr')
+        if pwr == 'off':
+            return pwr
+        return self.get('image_usbkey_direction')
 
     def set_servo_v4_role(self, role):
         """Set the power role of servo v4, either 'src' or 'snk'.
