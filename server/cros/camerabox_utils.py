@@ -10,6 +10,7 @@ import os
 import StringIO
 
 from autotest_lib.client.common_lib import utils
+from autotest_lib.server.cros.tradefed import tradefed_chromelogin as login
 
 
 class ChartFixture:
@@ -32,7 +33,7 @@ class ChartFixture:
 
         logging.info('Display scene file')
         self.display_pid = self.host.run_background(
-                'python %s %s' % (self.DISPLAY_SCRIPT, scene_path))
+                'python2 %s %s' % (self.DISPLAY_SCRIPT, scene_path))
         # TODO(inker): Suppose chart should be displayed very soon. Or require
         # of waiting until chart actually displayed.
 
@@ -55,10 +56,7 @@ def get_chart_address(host_address, args):
     if address is not None:
         return address.split(',')
     elif utils.is_in_container():
-        return [
-                utils.get_lab_chart_address(host)
-                for host in host_address
-        ]
+        return [utils.get_lab_chart_address(host) for host in host_address]
     else:
         return None
 
@@ -105,9 +103,10 @@ class DUTFixture:
                 else:
                     root.remove(p)
         else:
-            with self.test._login_chrome(
+            with login.login_chrome(
+                    hosts=[self.host],
                     board=self.test._get_board_name(),
-                    reboot=False), self._set_selinux_permissive():
+            ), self._set_selinux_permissive():
                 has_front_camera = (
                         'feature:android.hardware.camera.front' in self.host.
                         run_output('android-sh -c "pm list features"'))

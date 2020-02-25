@@ -53,10 +53,12 @@ def display(filepath):
 
     signal.signal(signal.SIGINT, handler)
 
-    with chrome.Chrome() as cr, set_display_brightness(DISPLAY_LEVEL):
+    with chrome.Chrome(init_network_controller=True
+                       ) as cr, set_display_brightness(DISPLAY_LEVEL):
         logging.info('Display chart file of path %r.', filepath)
+        cr.browser.platform.SetHTTPServerDirectories(os.path.dirname(filepath))
         tab = cr.browser.tabs[0]
-        tab.Navigate('file://' + filepath)
+        tab.Navigate(cr.browser.platform.http_server.UrlOf(filepath))
 
         logging.info('Set chart tab fullscreen.')
         kb = keyboard.Keyboard()
