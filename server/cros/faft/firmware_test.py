@@ -468,10 +468,13 @@ class FirmwareTest(FAFTBase):
 
         # Servo v4 requires an external charger to source power. Make sure
         # this setup is correct.
-        if ('servo_v4' in self.pdtester.servo_type and
-            self.pdtester.get('servo_v4_role') != 'src'):
-            raise error.TestError('Servo v4 failed sourcing power! Check '
-                    'the "DUT POWER" port connecting a valid charger.')
+        if 'servo_v4' in self.pdtester.servo_type:
+            role = self.pdtester.get('servo_v4_role')
+            if role != 'src':
+                raise error.TestError(
+                        'Servo v4 is not sourcing power! Make sure the servo '
+                        '"DUT POWER" port is connected to a working charger. '
+                        'servo_v4_role:%s' % role)
 
     def setup_usbkey(self, usbkey, host=None, used_for_recovery=None):
         """Setup the USB disk for the test.
