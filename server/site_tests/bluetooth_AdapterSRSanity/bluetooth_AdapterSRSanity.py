@@ -385,6 +385,33 @@ class bluetooth_AdapterSRSanity(
 
         self.test_nondiscoverable()
 
+    # ---------------------------------------------------------------
+    # Sanity checks
+    # ---------------------------------------------------------------
+
+    @test_wrapper('Suspend while powered off', devices={'MOUSE': 1})
+    def sr_while_powered_off(self):
+        """ Suspend while adapter is powered off. """
+        device = self.devices['MOUSE'][0]
+        boot_id = self.host.get_boot_id()
+        suspend = self._suspend_async(
+            suspend_time=SHORT_SUSPEND, allow_early_resume=False)
+
+        # Pair device so we have something to do in suspend
+        self.test_discover_and_pair(device)
+
+        # Trigger power down and quickly suspend
+        self.test_power_off_adapter()
+        self.suspend_and_wait_for_sleep(suspend)
+        # Suspend and resume should succeed
+        self.wait_for_resume(boot_id, suspend, resume_timeout=SHORT_SUSPEND)
+
+        # We should be able to power it back on
+        self.test_power_on_adapter()
+
+        # Test that we can reconnect to the device after powering back on
+        self.test_connection_by_device(device)
+
     @batch_wrapper('SR with Peer Sanity')
     def sr_sanity_batch_run(self, num_iterations=1, test_name=None):
         """ Batch of suspend/resume peer sanity tests. """
