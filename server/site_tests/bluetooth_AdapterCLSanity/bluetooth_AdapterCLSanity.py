@@ -80,28 +80,36 @@ class bluetooth_AdapterCLSanity(BluetoothAdapterQuickTests,
     def cl_HID_reports_test(self):
         """Performs HID report test with mouse peripheral"""
         device = self.devices['MOUSE'][0]
-        self.run_hid_reports_test(device)
+        self.run_hid_reports_test(device,
+                          check_connected_method=\
+                          self.test_mouse_right_click)
 
 
     @test_wrapper('HID keyboard Reports Test', devices={'KEYBOARD':1})
     def cl_HID_keyboard_reports_test(self):
         """Performs HID report test with keyboard peripheral"""
         device = self.devices['KEYBOARD'][0]
-        self.run_hid_reports_test(device)
+        self.run_hid_reports_test(device,
+                          check_connected_method=\
+                          self.run_keyboard_tests)
 
 
     @test_wrapper('HID Reports Suspend Resume Test', devices={"MOUSE":1})
     def cl_HID_reports_suspend_resume_test(self):
         """Performs HID report test over resume with mouse peripheral"""
         device = self.devices['MOUSE'][0]
-        self.run_hid_reports_test(device, suspend_resume=True)
+        self.run_hid_reports_test(device,
+                          check_connected_method=\
+                          self.test_mouse_right_click, suspend_resume=True)
 
 
     @test_wrapper('HID Reports Reboot Test', devices={"MOUSE":1})
     def cl_HID_reports_reboot_test(self):
         """Performs HID report test over reboot with mouse peripheral"""
         device = self.devices['MOUSE'][0]
-        self.run_hid_reports_test(device, reboot=True)
+        self.run_hid_reports_test(device,
+                          check_connected_method=\
+                          self.test_mouse_right_click, reboot=True)
 
 
     @test_wrapper('Connect Disconnect Loop Test', devices={"MOUSE":1})
