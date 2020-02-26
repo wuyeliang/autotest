@@ -11,7 +11,7 @@ import os
 import re
 
 from autotest_lib.client.common_lib.cros import cr50_utils, dev_server
-from autotest_lib.server.cros import gsutil_wrapper
+from autotest_lib.server.cros import filesystem_util, gsutil_wrapper
 from autotest_lib.server import test
 
 
@@ -81,6 +81,8 @@ class provision_Cr50TOT(test.test):
         self.host = host
         cr50_path = self.get_latest_cr50_build()
         logging.info('cr50 image is at %s', cr50_path)
+        local_path = os.path.join(self.resultsdir, 'cr50.bin.tot')
+        self.host.get_file(cr50_path, local_path)
         expected_version = self.get_bin_version(cr50_path)
 
         cr50_utils.GSCTool(self.host, ['-a', cr50_path])
@@ -93,3 +95,5 @@ class provision_Cr50TOT(test.test):
         # how often it fails and why.
         if cr50_version.split('/')[-1] != expected_version:
             logging.info('Unable to udpate Cr50.')
+        filesystem_util.make_rootfs_writable(self.host)
+        cr50_utils.InstallImage(self.host, local_path, cr50_utils.CR50_PREPVT)
