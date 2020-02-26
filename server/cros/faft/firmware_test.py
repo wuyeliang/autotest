@@ -840,14 +840,14 @@ class FirmwareTest(FAFTBase):
                                                     None):
             return
         if not self.checkers.crossystem_checker({'wpsw_cur': '1' if
-                       self._old_spsw_cur else '0'}, suppress_logging=True):
+                       self._old_wpsw_cur else '0'}, suppress_logging=True):
             logging.info('Restore original EC write protection and reboot.')
             self.switcher.mode_aware_reboot(
                     'custom',
                     lambda:self.set_ec_write_protect_and_reboot(
-                            self._old_spsw_cur))
+                            self._old_wpsw_cur))
         self.check_state((self.checkers.crossystem_checker, {
-                          'wpsw_cur': '1' if self._old_spsw_cur else '0'}))
+                          'wpsw_cur': '1' if self._old_wpsw_cur else '0'}))
 
     def _setup_uart_capture(self):
         """Set up the CPU/EC/PD UART capture."""
