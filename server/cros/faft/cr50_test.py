@@ -590,6 +590,8 @@ class Cr50Test(FirmwareTest):
     def cleanup(self):
         """Attempt to cleanup the cr50 state. Then run firmware cleanup"""
         try:
+            self.servo.enable_main_servo_device()
+
             self._try_to_bring_dut_up()
             self._restore_cr50_state()
         finally:
