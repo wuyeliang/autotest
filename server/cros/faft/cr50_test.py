@@ -692,6 +692,8 @@ class Cr50Test(FirmwareTest):
         if self._provision_update:
             return
         mismatch = self._check_original_image_state()
+        if not mismatch:
+            return
         self._update_device_images_and_running_cr50_firmware(
                 self._original_image_state, self.get_saved_cr50_original_path(),
                 self._device_prod_image, self._device_prepvt_image)
