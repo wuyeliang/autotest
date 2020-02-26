@@ -518,10 +518,15 @@ class FirmwareTest(FAFTBase):
             # low and sleep for a while for charging.
             self.set_servo_v4_role_to_snk()
 
-    def set_servo_v4_role_to_snk(self):
-        """Set the servo v4 role to SNK."""
+    def set_servo_v4_role_to_snk(self, pd_comm=False):
+        """Set the servo v4 role to SNK.
+
+        @param pd_comm: a bool. Enable PD communication if True, else otherwise
+        """
         self._needed_restore_servo_v4_role = True
         self.servo.set_servo_v4_role('snk')
+        if pd_comm:
+            self.servo.set_servo_v4_pd_comm('on')
 
     def _restore_servo_v4_role(self):
         """Restore the servo v4 role to default SRC."""

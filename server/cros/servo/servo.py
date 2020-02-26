@@ -1367,6 +1367,17 @@ class Servo(object):
         else:
             logging.debug('Not a servo v4, unable to set role to %s.', role)
 
+    def set_servo_v4_pd_comm(self, en):
+        """Set the PD communication of servo v4, either 'on' or 'off'.
+
+        It does nothing if not a servo v4.
+
+        @param en: a string of 'on' or 'off' for PD communication.
+        """
+        if self._servo_type.startswith('servo_v4'):
+            self.set_nocheck('servo_v4_pd_comm', en)
+        else:
+            logging.debug('Not a servo v4, unable to set PD comm to %s.', en)
 
     def supports_built_in_pd_control(self):
         """Return whether the servo type supports pd charging and control."""

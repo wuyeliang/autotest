@@ -9,6 +9,8 @@ from collections import defaultdict
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
+from autotest_lib.server.cros.servo import pd_console
+
 
 class firmware_PDProtocol(FirmwareTest):
     """
@@ -22,15 +24,14 @@ class firmware_PDProtocol(FirmwareTest):
 
     Example:
     PD Successfully negotiated
-    - ectool usbpdpower should output Charger PD
+    - ServoV4 in SRC_READY or SNK_READY state
 
     PD not negotiated
-    - ectool usbpdpower should not output Charger PD
+    - ServoV4 in SRC_DISCOVERY or SNK_DISCOVERY state
 
     """
     version = 1
 
-    NEGOTIATED_PATTERN = 'Charger PD'
     PD_NOT_SUPPORTED_PATTERN = 'INVALID_COMMAND'
 
     ECTOOL_CMD_DICT = defaultdict(lambda: 'ectool usbpdpower')
@@ -108,24 +109,32 @@ class firmware_PDProtocol(FirmwareTest):
 
         return False
 
-
     def run_once(self):
         """Main test logic"""
+        self.pdtester_pd_utils = pd_console.PDConsoleUtils(self.pdtester)
+        # TODO(b/35573842): Refactor to use PDPortPartner to probe the port
+        self.pdtester_port = 1 if 'servo_v4' in self.pdtester.servo_type else 0
+        self.SNK_PD_UNNEGOTIATED = self.pdtester_pd_utils.SNK_DISCOVERY
+        self.SNK_CONNECT = self.pdtester_pd_utils.SNK_CONNECT
+        self.SRC_CONNECT = self.pdtester_pd_utils.SRC_CONNECT
+
         self.ensure_dev_internal_boot(self.original_dev_boot_usb)
-        output = self.run_command(self.ECTOOL_CMD_DICT[self.current_board])
 
-        if not self.check_ec_output(output, self.NEGOTIATED_PATTERN):
-            raise error.TestFail(
-                'ectool usbpdpower output %s did not match %s',
-                (output, self.NEGOTIATED_PATTERN))
+        # Check servo_v4 is negotiated and in SRC_DISCOVERY
+        state = self.pdtester_pd_utils.get_pd_state(self.pdtester_port)
+        logging.info('Checking PD negotiation, servo_v4 in %s' % state)
+        if state != self.SRC_CONNECT:
+            raise error.TestFail('Expect PD state %s, got %s',
+                                 (self.SRC_CONNECT, state))
 
-
-        self.set_servo_v4_role_to_snk()
+        self.set_servo_v4_role_to_snk(pd_comm=True)
         self.boot_to_recovery()
-        output = self.run_command(self.ECTOOL_CMD_DICT[self.current_board])
 
-        if self.check_ec_output(output, self.NEGOTIATED_PATTERN):
+        # Check PD is not negotiated
+        state = self.pdtester_pd_utils.get_pd_state(self.pdtester_port)
+        logging.info('Checking PD no negotiation, servo_v4 in %s' % state)
+        if state != self.SNK_PD_UNNEGOTIATED:
             raise error.TestFail(
-                'ectool usbpdpower output %s matched %s',
-                (output, self.NEGOTIATED_PATTERN))
-
+                'Expect PD state %s, got %s, PD comm %sabled',
+                (self.SNK_PD_UNNEGOTIATED, state, 'en'
+                 if state in [self.SNK_CONNECT, self.SRC_CONNECT] else 'dis'))
