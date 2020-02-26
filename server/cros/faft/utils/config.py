@@ -52,13 +52,24 @@ class Config(object):
 
     def __init__(self, platform, model=None):
         """Initialize an object with FAFT settings.
+        Load JSON in order of importance (model, platform, parent/s, DEFAULTS).
 
         @param platform: The name of the platform being tested.
         """
-        # Load JSON in order of importance (model, platform, parent/s, DEFAULTS)
-        self.platform = platform.rsplit('_', 1)[-1].lower().replace("-", "_")
         self._precedence_list = []
         self._precedence_names = []
+        # Loadthe most specific JSON config possible by splitting
+        # `platform` at its '_' and reversing ([::-1]).
+        # For example, veyron_minnie should load minnie.json.
+        # octopus_fleex should look for fleex.json. It doesn't exist, so
+        # instead it loads octopus.json.
+        for p in platform.rsplit('_', 1)[::-1]:
+            p = p.lower().replace('-', '_')
+            if _has_config_file(p):
+                self.platform = p
+                break
+        else:
+            self.platform = platform.replace('-','_')
         if _has_config_file(self.platform):
             platform_config = _load_config(self.platform)
             self._add_cfg_to_precedence(self.platform, platform_config)
