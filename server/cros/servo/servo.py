@@ -710,6 +710,17 @@ class Servo(object):
                 return ''
             raise
 
+    def get_ec_board(self):
+        """Get the board name from EC."""
+        if self.has_control('active_v4_device'):
+            # If servo v4 is allowing dual_v4 devices, then choose the
+            # active device.
+            active_device = self.get('active_v4_device')
+            if active_device == self.get_main_servo_device():
+                active_device = ''
+        else:
+            active_device = ''
+        return self.get('ec_board', prefix=active_device)
 
     def get_ec_active_copy(self):
         """Get the active copy of the EC image."""
@@ -744,7 +755,7 @@ class Servo(object):
 
         @returns: true if |ctrl_name| is a known control, false otherwise.
         """
-        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
+        ctrl_name = self._build_ctrl_name(ctrl_name, prefix)
         try:
             # If the control exists, doc() will work.
             self._server.doc(ctrl_name)
@@ -812,7 +823,7 @@ class Servo(object):
         @raise ControlUnavailableError: if |ctrl_name| not a known control.
         @raise error.TestFail: for all other failures doing get().
         """
-        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
+        ctrl_name = self._build_ctrl_name(ctrl_name, prefix)
         try:
             return self._server.get(ctrl_name)
         except  xmlrpclib.Fault as e:
@@ -826,7 +837,7 @@ class Servo(object):
         @param prefix: prefix to route control to correct servo device.
         @raise error.TestFail: if the control value fails to change.
         """
-        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
+        ctrl_name = self._build_ctrl_name(ctrl_name, prefix)
         self.set_nocheck(ctrl_name, ctrl_value)
         retry_count = Servo.GET_RETRY_MAX
         actual_value = self.get(ctrl_name)
@@ -852,7 +863,7 @@ class Servo(object):
         @raise ControlUnavailableError: if |ctrl_name| not a known control.
         @raise error.TestFail: for all other failures doing set().
         """
-        cltr_name = self._build_ctrl_name(ctrl_name, prefix)
+        ctrl_name = self._build_ctrl_name(ctrl_name, prefix)
         # The real danger here is to pass a None value through the xmlrpc.
         assert ctrl_value is not None
         logging.debug('Setting %s to %r', ctrl_name, ctrl_value)
@@ -1080,13 +1091,6 @@ class Servo(object):
 
     def enable_main_servo_device(self):
         """Make sure the main device has control of the dut."""
-        # Cr50 detects servo using the EC uart. It doesn't work well if the
-        # board doesn't use EC uart. The lab active_v4_device doesn't handle
-        # this correctly. Check ec_uart_pty before trying to change the active
-        # device.
-        # TODO(crbug.com/1016842): reenable the setting the main device when
-        # active device works on labstations.
-        return
         if not self.has_control('active_v4_device'):
             return
         self.set('active_v4_device', self.get_main_servo_device())
@@ -1192,24 +1196,21 @@ class Servo(object):
         # Ignore extracting EC image and re-programming if not a Chrome EC
         chrome_ec = FAFTConfig(board).chrome_ec
         if not chrome_ec:
-            logging.info('Not a Chrome EC, ignore re-programming it')
+            logging.warn('Not a Chrome EC, ignore re-programming it')
             return None
-
-        # Best effort; try to retrieve the EC board from the version as
-        # reported by the EC.
-        ec_board = None
-        try:
-            ec_board = self.get('ec_board')
-        except Exception as err:
-            logging.info('Failed to get ec_board value; ignoring')
-            pass
 
         # Array of candidates for EC image
         ec_image_candidates = ['ec.bin',
                                '%s/ec.bin' % model,
                                '%s/ec.bin' % board]
-        if ec_board:
-            ec_image_candidates.append('%s/ec.bin' % ec_board)
+
+        # Best effort; try to retrieve the EC board from the version as
+        # reported by the EC.
+        try:
+            ec_image_candidates.append('%s/ec.bin' % self.get_ec_board())
+        except Exception as err:
+            logging.warn('Failed to get ec_board value; ignoring')
+            pass
 
         # Extract EC image from tarball
         dest_dir = os.path.join(os.path.dirname(tarball_path), 'EC')
@@ -1234,21 +1235,18 @@ class Servo(object):
         @return: Path to extracted BIOS image.
         """
 
-        # Best effort; try to retrieve the EC board from the version as
-        # reported by the EC.
-        ec_board = None
-        try:
-            ec_board = self.get('ec_board')
-        except Exception as err:
-            logging.info('Failed to get ec_board value; ignoring')
-            pass
-
         # Array of candidates for BIOS image
         bios_image_candidates = ['image.bin',
                                  'image-%s.bin' % model,
                                  'image-%s.bin' % board]
-        if ec_board:
-            bios_image_candidates.append('image-%s.bin' % ec_board)
+
+        # Best effort; try to retrieve the EC board from the version as
+        # reported by the EC.
+        try:
+            bios_image_candidates.append('image-%s.bin' % self.get_ec_board())
+        except Exception as err:
+            logging.warn('Failed to get ec_board value; ignoring')
+            pass
 
         # Extract BIOS image from tarball
         dest_dir = os.path.join(os.path.dirname(tarball_path), 'BIOS')
