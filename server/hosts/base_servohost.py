@@ -92,9 +92,19 @@ class BaseServoHost(ssh_host.SSHHost):
         return lsbrelease_utils.get_current_board(lsb_release_content=output)
 
 
-    def set_dut_host_info(self, hi):
-        logging.info('setting dut_host_info field to (%s)', hi)
-        self._dut_host_info = hi
+    def set_dut_host_info(self, dut_host_info):
+        """
+        @param dut_host_info: A HostInfo object.
+        """
+        logging.info('setting dut_host_info field to (%s)', dut_host_info)
+        self._dut_host_info = dut_host_info
+
+
+    def get_dut_host_info(self):
+        """
+        @return A HostInfo object.
+        """
+        return self._dut_host_info
 
 
     def is_labstation(self):
@@ -199,17 +209,17 @@ class BaseServoHost(ssh_host.SSHHost):
                          self.hostname)
             return
 
-
-        # NOTE: we can't just use getattr because servo_cros_stable_version is a property
-        servo_version_from_hi = None
-        logging.debug("BaseServoHost::update_image attempted to get servo cros stable version")
+        stable_version = None
+        logging.debug("BaseServoHost::update_image attempted to get"
+                      " servo cros stable version")
         try:
-            servo_version_from_hi = self._dut_host_info.servo_cros_stable_version
+            stable_version = self.get_dut_host_info().servo_cros_stable_version
         except Exception:
-            logging.error("BaseServoHost::update_image failed to get servo cros stable version (%s)", traceback.format_exc())
+            logging.error("BaseServoHost::update_image failed to get servo"
+                          " cros stable version (%s)", traceback.format_exc())
 
         target_build = afe_utils.get_stable_servo_cros_image_name_v2(
-            servo_version_from_hi=servo_version_from_hi,
+            servo_version_from_hi=stable_version,
             board=self.get_board(),
         )
         target_build_number = server_utils.ParseBuildName(

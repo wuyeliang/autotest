@@ -48,6 +48,15 @@ SERVOD_TEARDOWN_TIMEOUT = 3
 SERVOD_QUICK_STARTUP_TIMEOUT = 20
 SERVOD_STARTUP_TIMEOUT = 60
 
+# pools that support dual v4. (go/cros-fw-lab-strategy)
+POOLS_SUPPORT_DUAL_V4 = {'faft-cr50',
+                         'faft-cr50-experimental',
+                         'faft-cr50-tot',
+                         'faft-cr50-debug',
+                         'faft_cr50_debug'
+                         'faft-pd-debug',
+                         'faft_pd_debug'}
+
 _CONFIG = global_config.global_config
 ENABLE_SSH_TUNNEL_FOR_SERVO = _CONFIG.get_config_value(
         'CROS', 'enable_ssh_tunnel_for_servo', type=bool, default=False)
@@ -353,6 +362,16 @@ class ServoHost(base_servohost.BaseServoHost):
         cmd += ' PORT=%d' % self.servo_port
         if self.servo_serial:
             cmd += ' SERIAL=%s' % self.servo_serial
+
+        # Start servod with dual_v4 if the DUT/servo from designated pools.
+        dut_host_info = self.get_dut_host_info()
+        if dut_host_info:
+            if bool(dut_host_info.pools & POOLS_SUPPORT_DUAL_V4):
+                logging.debug('The DUT is detected in following designated'
+                              ' pools %s,starting servod with DUAL_V4 option.',
+                              POOLS_SUPPORT_DUAL_V4)
+                cmd += ' DUAL_V4=1'
+
         # Remove the symbolic links from the logs. This helps ensure that
         # a failed servod instantiation does not cause us to grab old logs
         # by mistake.
