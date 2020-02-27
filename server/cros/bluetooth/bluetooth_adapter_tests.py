@@ -812,9 +812,12 @@ class BluetoothAdapterTests(test.test):
         # We need to recreate the bluetooth_facade after a reboot.
         # Delete the proxy first so it won't delete the old one, which
         # invokes disconnection, after creating the new one.
-        del self.factory
-        del self.bluetooth_facade
-        del self.input_facade
+        if hasattr(self, 'factory'):
+            del self.factory
+        if hasattr(self, 'bluetooth_facade'):
+            del self.bluetooth_facade
+        if hasattr(self, 'input_facade'):
+            del self.input_facade
         self.factory = remote_facade_factory.RemoteFacadeFactory(self.host,
                        disable_arc=True)
         self.bluetooth_facade = self.factory.create_bluetooth_hid_facade()
