@@ -1956,14 +1956,12 @@ def get_ec_temperatures():
             matched = pattern.match(line)
             temperature = int(matched.group(1)) - 273
             temperatures.append(temperature)
-    except Exception:
-        logging.warning('Unable to read temperature sensors using ectool.')
-    for temperature in temperatures:
-        # Sanity check for real world values.
-        assert ((temperature > 10.0) and
-                (temperature < 150.0)), ('Unreasonable temperature %.1fC.' %
-                                         temperature)
-
+    except Exception as e:
+        logging.warning('Unable to read temperature sensors using ectool %s.',
+                        e)
+    # Sanity check for real world values.
+    if not all(10.0 <= temperature <= 150.0 for temperature in temperatures):
+        logging.warning('Unreasonable EC temperatures: %s.', temperatures)
     return temperatures
 
 
