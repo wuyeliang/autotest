@@ -930,6 +930,10 @@ class FirmwareTest(FAFTBase):
         """
         logging.info('Checking power state "%s" maximum %d times.',
                      power_state, retries)
+
+        # Reset the cache, in case previous calls silently changed it on servod
+        self.ec.set_uart_regexp('None')
+
         while retries > 0:
             logging.info("try count: %d", retries)
             try:
