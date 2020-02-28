@@ -58,6 +58,8 @@ class firmware_Cr50RddG3(Cr50Test):
         self.rdd_failures = []
         if not hasattr(self, 'ec'):
             raise error.TestNAError('Board does not have an EC.')
+        if not self.servo.dts_mode_is_valid():
+            raise error.TestNAError('Run with type-c servo v4.')
 
         self.servo.set_dts_mode('on')
         self.check_rdd_status('on', 'Cr50 did not detect Rdd with dts mode on')
