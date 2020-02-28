@@ -80,7 +80,7 @@ class Cr50Test(FirmwareTest):
 
         logging.info('Test Args: %r', full_args)
 
-        self._devid = self.servo.get('cr50_devid')
+        self._devid = self.cr50.get_devid()
         self.can_set_ccd_level = (not self.servo.main_device_is_ccd() or
             self.cr50.testlab_is_on())
         self.original_ccd_level = self.cr50.get_ccd_level()

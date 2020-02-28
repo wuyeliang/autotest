@@ -34,10 +34,7 @@ class firmware_Cr50WPG3(Cr50Test):
 
     def generate_flashrom_wp_cmd(self):
         """Use the cr50 serialname to generate the flashrom command."""
-        devid = self.servo.get('cr50_devid')
-        serial = devid.replace('0x', '').replace(' ', '-').upper()
-        logging.info('CCD serial: %s', serial)
-        self._flashrom_wp_cmd = self.FLASHROM_WP_CMD % serial
+        self._flashrom_wp_cmd = self.FLASHROM_WP_CMD % self.cr50.get_serial()
 
 
     def get_wp_state(self):
