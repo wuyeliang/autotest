@@ -82,7 +82,6 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         tpm_utils.ClearTPMOwnerRequest(self._host)
         update_url = self.get_update_url_for_test(job_repo_url,
                                                   full_payload=full_payload,
-                                                  critical_update=True,
                                                   public=cellular,
                                                   moblab=moblab)
         before = self._get_chromeos_version()
@@ -93,7 +92,8 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         # Call client test to start the forced OOBE update.
         self._run_client_test_and_check_result('autoupdate_StartOOBEUpdate',
                                                image_url=update_url,
-                                               cellular=cellular)
+                                               cellular=cellular,
+                                               critical_update=True)
 
         if interrupt is not None:
             # Choose a random downloaded progress to interrupt the update.

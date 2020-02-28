@@ -32,8 +32,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         """
 
         update_url = self.get_update_url_for_test(job_repo_url,
-                                                  full_payload=full_payload,
-                                                  critical_update=True)
+                                                  full_payload=full_payload)
         chromeos_version = self._get_chromeos_version()
 
         # Choose a random downloaded progress to interrupt the update.
@@ -54,7 +53,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
                 self._host.reboot()
                 utils.poll_for_condition(self._get_update_engine_status,
                                          desc='update engine to start')
-                self._check_for_update(update_url)
+                self._check_for_update(update_url, critical_update=True)
             elif interrupt is 'network':
                 self._disconnect_then_reconnect_network(update_url)
             elif interrupt is 'suspend':

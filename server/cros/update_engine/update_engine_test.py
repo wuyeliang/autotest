@@ -5,6 +5,8 @@
 import json
 import logging
 import os
+import requests
+import time
 import urlparse
 
 from autotest_lib.client.common_lib import error
@@ -16,7 +18,6 @@ from autotest_lib.client.cros.update_engine import update_engine_util
 from autotest_lib.server import autotest
 from autotest_lib.server import test
 from autotest_lib.server.cros.dynamic_suite import tools
-from autotest_lib.server.cros.update_engine import omaha_devserver
 from chromite.lib import retry_util
 from datetime import datetime, timedelta
 
@@ -76,7 +77,6 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         self._num_consumed_events = 0
         self._current_timestamp = None
         self._expected_events = []
-        self._omaha_devserver = None
         self._host = host
         # Some AU tests use multiple DUTs
         self._hosts = hosts
@@ -88,8 +88,6 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
 
     def cleanup(self):
         """Clean up update_engine autotests."""
-        if self._omaha_devserver is not None:
-            self._omaha_devserver.stop_devserver()
         if self._host:
             self._host.get_file(self._UPDATE_ENGINE_LOG, self.resultsdir)
 
@@ -557,15 +555,48 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         client_at._check_client_test_result(self._host, test_name)
 
 
-    def _create_hostlog_files(self):
+    def _get_hostlog(self, update_url, ip, wait_for_reboot_events=False):
+        """Get the update events json (aka hostlog).
+
+        @param update_url: The Devserver URL which we performed the update from.
+        @param ip: The IP address of the device under test.
+        @param wait_for_reboot_events: True if we expect the reboot events.
+
+        @return the json dump of the update events for the given IP.
+        """
+        devserver_hostlog_url = urlparse.urlunsplit(
+            list(urlparse.urlsplit(update_url)[0:2]) + \
+            ['/api/hostlog', 'ip=%s' % ip, ''])
+
+        # Wait for a few minutes for the post-reboot update check.
+        timeout = time.time() + 60 * 3
+        while True:
+            try:
+                hostlog = json.loads(requests.get(devserver_hostlog_url))
+            except requests.exceptions.RequestException as e:
+                logging.warning('Failed to read host log URL with error: %s', e)
+                return None
+
+            if not wait_for_reboot_events:
+                return hostlog
+
+            if 'event_type' in hostlog[-1] and hostlog[-1]['event_type'] == 54:
+                return hostlog
+
+            if time.time() > timeout:
+                return None
+            time.sleep(5)
+
+
+    def _create_hostlog_files(self, update_url):
         """Create the two hostlog files for the update.
 
         To ensure the update was successful we need to compare the update
         events against expected update events. There is a hostlog for the
         rootfs update and for the post reboot update check.
         """
-        hostlog = self._omaha_devserver.get_hostlog(self._host.ip,
-                                                    wait_for_reboot_events=True)
+        hostlog = self._get_hostlog(update_url, self._host.ip,
+                                    wait_for_reboot_events=True)
         if hostlog is None:
             err_str = 'Timed out getting the hostlog from the devserver.'
             err_code = self._get_last_error_string()
@@ -651,8 +682,7 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
 
 
     def get_update_url_for_test(self, job_repo_url, full_payload=True,
-                                critical_update=False, public=False,
-                                moblab=False):
+                                public=False, moblab=False):
         """
         Get the correct update URL for autoupdate tests to use.
 
@@ -662,16 +692,10 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         multiple DUTs etc. This function returns the correct update URL to the
         test based on the inputs parameters.
 
-        Ideally all updates would use an existing lab devserver to handle the
-        updates. However the lab devservers default setup does not work for
-        all test needs. So we also kick off our own omaha_devserver for the
-        test run some times.
-
         This tests expects the test to set self._host or self._hosts.
 
         @param job_repo_url: string url containing the current build.
         @param full_payload: bool whether we want a full payload.
-        @param critical_update: bool whether we need a critical update.
         @param public: url needs to be publicly accessible.
         @param moblab: True if we are running on moblab.
 
@@ -701,37 +725,19 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
             logging.info('Public update URL: %s', url)
             return url
 
-        if full_payload:
-            if not critical_update:
-                # Stage payloads on the lab devserver.
-                self._autotest_devserver = lab_devserver
-                self._autotest_devserver.stage_artifacts(build,
-                                                         ['full_payload'])
-                # Use the same lab devserver to also handle the update.
-                url = self._autotest_devserver.get_update_url(build)
-                logging.info('Full payload, non-critical update URL: %s', url)
-                return url
-            else:
-                url_to_stage = self._get_payload_url(build, full_payload=True)
-        else:
-            # We need to stage delta ourselves due to crbug.com/793434.
-            url_to_stage = self._get_payload_url(build, full_payload=False)
+        # Stage payloads on the lab devserver.
+        self._autotest_devserver = lab_devserver
+        artifact = 'full_payload' if full_payload else 'delta_payload'
+        self._autotest_devserver.stage_artifacts(build, [artifact])
 
-        # Get partial path to payload eg samus-release/R77-113.0,0/blah.bin
-        payload_location = self._get_partial_path_from_url(url_to_stage)
+        # Use the same lab devserver to also handle the update.
+        url = self._autotest_devserver.get_update_url(build)
 
-        # We need to start our own devserver instance on the lab devserver
-        # for the rest of the test scenarios.
-        self._omaha_devserver = omaha_devserver.OmahaDevserver(
-            lab_devserver.hostname, payload_location,
-            critical_update=critical_update, moblab=moblab)
-        self._omaha_devserver.start_devserver()
-
-        # Stage the payloads on our new devserver.
-        ds_url = 'http://%s' % self._omaha_devserver.get_netloc()
-        self._autotest_devserver = dev_server.ImageServer(ds_url)
-        self._stage_payload_by_uri(url_to_stage)
-        url = self._omaha_devserver.get_update_url()
+        # Delta payloads get staged into the 'au_nton' directory of the
+        # build itself. So we need to append this at the end of the update
+        # URL to get the delta payload.
+        if not full_payload:
+            url += '/au_nton'
         logging.info('Update URL: %s', url)
         return url
 

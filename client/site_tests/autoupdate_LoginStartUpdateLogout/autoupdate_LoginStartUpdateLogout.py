@@ -18,5 +18,5 @@ class autoupdate_LoginStartUpdateLogout(update_engine_test.UpdateEngineTest):
         """The entry point for this test."""
         # Login as regular user. Start an update. Then Logout
         with chrome.Chrome(logged_in=True):
-            self._check_for_update(update_url)
+            self._check_for_update(update_url, critical_update=True)
             self._wait_for_progress(progress_to_complete)

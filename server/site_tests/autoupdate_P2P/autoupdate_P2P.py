@@ -23,11 +23,6 @@ class autoupdate_P2P(update_engine_test.UpdateEngineTest):
     _P2P_NUM_ATTEMPTS_PREF = 'p2p-num-attempts'
 
 
-    def setup(self):
-        """Basic setup for the test."""
-        self._omaha_devserver = None
-
-
     def cleanup(self):
         logging.info('Disabling p2p_update on hosts.')
         for host in self._hosts:
@@ -300,8 +295,7 @@ class autoupdate_P2P(update_engine_test.UpdateEngineTest):
         # Get an N-to-N delta payload update url to use for the test.
         # P2P updates are very slow so we will only update with a delta payload.
         update_url = self.get_update_url_for_test(job_repo_url,
-                                                  full_payload=False,
-                                                  critical_update=False)
+                                                  full_payload=False)
 
         # The first device just updates normally.
         self._update_dut(self._hosts[0], update_url)
