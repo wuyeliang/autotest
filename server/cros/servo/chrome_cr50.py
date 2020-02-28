@@ -835,7 +835,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
         batt_is_disconnected = self.get_batt_pres_state()[1]
         req_pp = self._level_change_req_pp(level)
         has_pp = not self._servo.main_device_is_ccd()
-        dbg_en = 'DBG' in self._servo.get('cr50_version')
+        dbg_en = self.get_active_version_info()[2]
 
         if req_pp and not has_pp:
             raise error.TestError("Can't change privilege level to '%s' "
