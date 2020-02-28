@@ -3,8 +3,13 @@
 # found in the LICENSE file.
 
 import common
+import logging
 from autotest_lib.client.common_lib import hosts
 from autotest_lib.server.hosts import repair_utils
+
+# There are some labstations we don't want they receive auto-update,
+# e.g. labstations that used for image qualification purpose
+UPDATE_EXEMPTED_POOL = {'servo_verification'}
 
 
 class _LabstationUpdateVerifier(hosts.Verifier):
@@ -22,6 +27,11 @@ class _LabstationUpdateVerifier(hosts.Verifier):
         restrictions can cause the update to fail.
         """
         if host.is_in_lab() and host.job and host.job.in_lab:
+            info = host.host_info_store.get()
+            if bool(UPDATE_EXEMPTED_POOL & info.pools):
+                logging.info("Skip update because the labstation is in"
+                             " one of following exempted pool: %s", info.pools)
+                return
             host.update_image(wait_for_update=False)
 
     @property

@@ -47,6 +47,11 @@ class _UpdateVerifier(hosts.Verifier):
         # Secondly, skip if the test is being run by test_that, because subnet
         # restrictions can cause the update to fail.
         try:
+            if host.is_labstation():
+                logging.info("Skip update check because the host is a"
+                             " labstation and labstation update is handled"
+                             " by labstation AdminRepair task.")
+                return
             if host.is_in_lab() and host.job and host.job.in_lab:
                 host.update_image(wait_for_update=False)
         # We don't want failure from update block DUT repair action.
@@ -331,7 +336,7 @@ class _ServoRebootRepair(repair_utils.RebootRepair):
         if host.is_labstation():
             host.request_reboot()
             logging.warning('Reboot labstation requested, it will be '
-                            'handled by labstation administrative task.')
+                            'handled by labstation AdminRepair task.')
         else:
             try:
                 host.update_image(wait_for_update=True)
