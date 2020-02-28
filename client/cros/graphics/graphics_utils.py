@@ -704,6 +704,16 @@ def get_modetest_planes():
     return planes
 
 
+def is_nv12_supported_by_drm_planes():
+    """
+    Returns if the planes information mention NV12 format or not.
+
+    This is a crude way to figure out if the device will not be able to promote
+    video frames to overlays at all, which happens for example on Broadwell.
+    """
+    modetest_output = utils.system_output('modetest -p')
+    return "nv12" in modetest_output.lower()
+
 def get_modetest_output_state():
     """
     Reduce the output of get_modetest_connectors to a dictionary of connector/active states.
