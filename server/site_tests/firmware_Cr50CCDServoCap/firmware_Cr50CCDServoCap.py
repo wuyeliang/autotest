@@ -119,8 +119,8 @@ class firmware_Cr50CCDServoCap(Cr50Test):
             raise error.TestNAError('Cr50 testlab mode needs to be enabled')
         logging.info('Cr50 is %s', self.servo.get('cr50_ccd_level'))
         self.cr50.set_cap('UartGscTxECRx', 'Always')
-        self.ec_efs_support =
-                    self.cr50.uses_board_property('BOARD_EC_CR50_COMM_SUPPORT')
+        self.ec_efs_support = (
+                self.cr50.uses_board_property('BOARD_EC_CR50_COMM_SUPPORT'))
 
 
     def cleanup(self):
