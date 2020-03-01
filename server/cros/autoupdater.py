@@ -636,7 +636,8 @@ class ChromiumOSUpdater(object):
         remote_script = '/usr/local/bin/%s' % script_name
         if self.host.path_exists(remote_script):
             return remote_script
-        remote_tmp_script = '/tmp/%s' % script_name
+        self.host.run('mkdir -p -m 1777 /usr/local/tmp')
+        remote_tmp_script = '/usr/local/tmp/%s' % script_name
         server_name = urlparse.urlparse(self.update_url)[1]
         script_url = 'http://%s/static/%s' % (server_name, script_name)
         fetch_script = (
