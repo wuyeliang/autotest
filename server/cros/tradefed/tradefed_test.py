@@ -86,7 +86,8 @@ class TradefedTest(test.test):
                    load_waivers=True,
                    retry_manual_tests=False,
                    warn_on_test_retry=True,
-                   hard_reboot_on_failure=False):
+                   hard_reboot_on_failure=False,
+                   use_jdk9=False):
         """Sets up the tools and binary bundles for the test."""
         self._install_paths = []
         # TODO(pwang): Remove host if we enable multiple hosts everywhere.
@@ -135,6 +136,16 @@ class TradefedTest(test.test):
                             permission)
         self._install_files(constants.SDK_TOOLS_DIR,
                             constants.SDK_TOOLS_FILES, permission)
+
+        # If use_jdk9 is set true, use jdk9 than default jdk8.
+        if use_jdk9:
+            try:
+                os.environ['JAVA_HOME'] = '/usr/lib/jvm/jdk-9.0.4'
+                os.environ['PATH'] = os.environ['JAVA_HOME']\
+                                  + '/bin:' + os.environ['PATH']
+            except OSError:
+                logging.error('Can\'t change current PATH directory')
+
 
         # Install the tradefed bundle.
         bundle_install_path = self._install_bundle(
