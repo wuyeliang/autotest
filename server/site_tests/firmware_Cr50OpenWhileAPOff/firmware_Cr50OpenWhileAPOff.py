@@ -7,6 +7,7 @@ import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.cr50_test import Cr50Test
+from autotest_lib.server.cros.servo import servo
 
 
 class firmware_Cr50OpenWhileAPOff(Cr50Test):
@@ -114,12 +115,12 @@ class firmware_Cr50OpenWhileAPOff(Cr50Test):
         # Verify the cr50 console responds to commands.
         try:
             logging.info(self.cr50.get_ccdstate())
-        except error.TestFail as e:
-            msg = str(e)
-            if ('Timeout waiting for response' in msg or
-                'No data was sent from the pty' in msg):
-                raise error.TestFail('Could not restore Cr50 console')
-            raise
+        except servo.ResponsiveConsoleError as e:
+            logging.info('Console is responsive. Unable to match output: %s',
+                         str(e))
+        except servo.UnresponsiveConsoleError as e:
+            raise error.TestFail('Could not restore Cr50 console')
+        logging.info('Cr50 console ok.')
 
 
     def turn_device(self, state):

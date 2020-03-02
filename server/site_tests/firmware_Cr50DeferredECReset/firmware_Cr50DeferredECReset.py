@@ -7,6 +7,7 @@ import time
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.cr50_test import Cr50Test
+from autotest_lib.server.cros.servo import servo
 
 
 class firmware_Cr50DeferredECReset(Cr50Test):
@@ -177,14 +178,9 @@ class firmware_Cr50DeferredECReset(Cr50Test):
             logging.info('Checking if ec is %sresponsive',
                          '' if expect_response else 'not ')
             rv = self.ec.send_command_get_output('help', ['.*>'])[0].strip()
-        except error.TestFail as e:
-            msg = str(e)
-            logging.info(msg)
-            if not expect_response:
-                if ('Timeout waiting for response' in msg or
-                    'No data was sent from the pty' in msg):
-                    return
-            raise e
+        except servo.UnresponsiveConsoleError as e:
+            logging.info(str(e))
+            return
         else:
             if not expect_response:
                 logging.error('EC should not respond')
