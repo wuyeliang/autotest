@@ -183,15 +183,15 @@ class Cr50Test(FirmwareTest):
 
         # Replace only the prod or prepvt image based on the major version.
         if int(qual_ver[1].split('.')[1]) % 2:
-            prod_ver = self._original_image_state['prod_version']
-            prepvt_ver = qual_ver
-            prod_path = self._device_prod_image
-            prepvt_path = qual_path
-        else:
             prod_ver = qual_ver
             prepvt_ver = self._original_image_state['prepvt_version']
             prod_path = qual_path
             prepvt_path = self._device_prepvt_image
+        else:
+            prod_ver = self._original_image_state['prod_version']
+            prepvt_ver = qual_ver
+            prod_path = self._device_prod_image
+            prepvt_path = qual_path
 
         # Generate a dictionary with all of the expected state.
         qual_state = {}
