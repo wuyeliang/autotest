@@ -306,6 +306,11 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
         @raises AutoservRunError: if the command failed
         @raises AutoservSSHTimeout: ssh connection has timed out
         """
+        # For example if the command is a list, we need to convert it to a
+        # string first.
+        if not isinstance(command, basestring):
+            command = ' '.join(command)
+
         if timeout is None:
             timeout = 3600
         start_time = time.time()
