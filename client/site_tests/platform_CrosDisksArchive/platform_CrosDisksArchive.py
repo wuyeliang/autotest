@@ -111,7 +111,9 @@ class CrosDisksArchiveTester(CrosDisksTester):
             # Mount the archive file on the mounted filesystem via CrosDisks.
             archive_path = os.path.join(result['mount_path'], archive_name)
             expected_mount_path = os.path.join('/media/archive', archive_name)
-            self.cros_disks.mount(archive_path)
+            # TODO(crbug.com/996549) Remove '.rar2fs' once old avfsd-based
+            # system is removed.
+            self.cros_disks.mount(archive_path, '.rar2fs')
             result = self.cros_disks.expect_mount_completion({
                 'status': 0,
                 'source_path': archive_path,
@@ -122,8 +124,8 @@ class CrosDisksArchiveTester(CrosDisksTester):
             if not test_content.verify(expected_mount_path):
                 raise error.TestFail("Failed to verify filesystem test content")
 
-            self.cros_disks.unmount(expected_mount_path, ['lazy'])
-            self.cros_disks.unmount(device_file, ['lazy'])
+            self.cros_disks.unmount(expected_mount_path, [])
+            self.cros_disks.unmount(device_file, [])
 
     def test_archives(self):
         for archive_type in self._archive_types:
