@@ -917,6 +917,11 @@ CROS_LABELS = [
     DeviceSkuLabel(), #LABCONFIG
     HWIDLabel(),
     ServoLabel(), #STATECONFIG
+    # Temporarily add back as there's no way to reference cr50 configs.
+    # See crbug.com/1057145 for the root cause.
+    # See crbug.com/1057719 for future tracking.
+    Cr50Label(),
+    Cr50ROKeyidLabel(),
 ]
 
 LABSTATION_LABELS = [
