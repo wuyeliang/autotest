@@ -314,7 +314,10 @@ class telemetry_Crosperf(test.test):
                 run_turbostat(dut, TURBOSTAT_LOG) as _turbo_cm, \
                 run_top(dut, TOP_LOG, top_interval) as _top_cm:
 
-                arguments = []
+                arguments = [
+                    # Adding this option for http://crbug.com/1055528.
+                    '--legacy-json-trace-format',
+                ]
                 if test_args:
                     arguments.extend(shlex.split(test_args))
                 if profiler_args:
