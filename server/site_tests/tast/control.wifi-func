@@ -7,7 +7,7 @@ NAME = 'tast.wifi-func'
 TIME = 'MEDIUM'
 TEST_TYPE = 'Server'
 ATTRIBUTES = 'suite:wifi_func_tast'
-MAX_RESULT_SIZE_KB = 50 * 1024
+MAX_RESULT_SIZE_KB = 1024 * 1024
 
 DOC = '''
 Run the Tast tests which verifies basic WiFi functions using wificell fixture.
