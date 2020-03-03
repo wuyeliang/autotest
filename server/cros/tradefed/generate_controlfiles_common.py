@@ -529,7 +529,7 @@ def get_authkey(is_public):
     return CONFIG['AUTHKEY']
 
 
-def _format_collect_cmd(retry):
+def _format_collect_cmd(is_public, retry):
     """Returns a list specifying tokens for tradefed to list all tests."""
     if retry:
         return None
@@ -539,7 +539,8 @@ def _format_collect_cmd(retry):
     for m in CONFIG['MEDIA_MODULES']:
         cmd.append('--module-arg')
         cmd.append('%s:skip-media-download:true' % m)
-    if not CONFIG.get('NEEDS_DYNAMIC_CONFIG_ON_COLLECTION', True):
+    if (not is_public and
+            not CONFIG.get('NEEDS_DYNAMIC_CONFIG_ON_COLLECTION', True)):
         cmd.append('--dynamic-config-url=')
     return cmd
 
@@ -597,7 +598,7 @@ def _format_modules_cmd(is_public, modules=None, retry=False):
         cmd.append('--skip-device-info')
     # If NEEDS_DYNAMIC_CONFIG is set, disable the feature except on the modules
     # that explicitly set as needed.
-    if (CONFIG.get('NEEDS_DYNAMIC_CONFIG') and
+    if (not is_public and CONFIG.get('NEEDS_DYNAMIC_CONFIG') and
             not modules.intersection(CONFIG['NEEDS_DYNAMIC_CONFIG'])):
         cmd.append('--dynamic-config-url=')
 
@@ -609,7 +610,7 @@ def get_run_template(modules, is_public, retry=False):
     cmd = None
     if modules.intersection(get_collect_modules(is_public)):
         if _COLLECT in modules or _PUBLIC_COLLECT in modules:
-            cmd = _format_collect_cmd(retry=retry)
+            cmd = _format_collect_cmd(is_public, retry=retry)
         elif _ALL in modules:
             cmd = _format_modules_cmd(is_public, modules, retry=retry)
     else:
