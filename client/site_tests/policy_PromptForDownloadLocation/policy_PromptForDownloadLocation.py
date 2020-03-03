@@ -30,7 +30,6 @@ class policy_PromptForDownloadLocation(
         @param case: Name of the test case to run.
 
         """
-
         self.setup_case(user_policies={self.POLICY_NAME: case})
 
         try:
@@ -38,7 +37,8 @@ class policy_PromptForDownloadLocation(
 
         #  The url is a test URL and doesn't actually load anything, causing
         #  a Timeout. This is expected and OK.
-        except exceptions.TimeoutException:
+        #  TODO: crbug:1058141, invesitgate the telemetry crash caused here.
+        except (exceptions.TimeoutException, exceptions.InitializationError):
             pass
 
         #  Check the downloads directory for the file.
