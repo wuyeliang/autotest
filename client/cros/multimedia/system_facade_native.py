@@ -24,11 +24,14 @@ class SystemFacadeNative(object):
 
     """
     SCALING_GOVERNOR_MODES = [
-            'interactive',
             'performance',
-            'ondemand',
             'powersave',
-            'sched'
+            'userspace',
+            'ondemand',
+            'conservative',
+            'schedutil',
+            'interactive', # deprecated since kernel v4.14
+            'sched' # deprecated since kernel v4.14
             ]
 
     def __init__(self):
