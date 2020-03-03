@@ -85,6 +85,12 @@ class power_Test(test.test):
 
         self._meas_logs = [self._plog, self._tlog, self._clog]
 
+        if power_status.has_fan():
+            self._flog = power_status.FanRpmLogger(
+                seconds_period=seconds_period,
+                checkpoint_logger=self._checkpoint_logger)
+            self._meas_logs.append(self._flog)
+
         self._pdash_note = pdash_note
 
     def warmup(self, warmup_time=30):

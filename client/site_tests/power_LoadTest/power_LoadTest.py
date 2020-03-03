@@ -285,6 +285,11 @@ class power_LoadTest(arc.ArcTest):
                 seconds_period=20,
                 checkpoint_logger=self._checkpoint_logger)
         self._meas_logs = [self._plog, self._tlog, self._clog]
+        if power_status.has_fan():
+            self._flog = power_status.FanRpmLogger(
+                seconds_period=20,
+                checkpoint_logger=self._checkpoint_logger)
+            self._meas_logs.append(self._flog)
         for log in self._meas_logs:
             log.start()
         if self._log_mem_bandwidth:

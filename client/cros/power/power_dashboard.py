@@ -605,6 +605,16 @@ class VideoFpsLoggerDashboard(MeasurementLoggerDashboard):
         self._unit = 'fps'
         self._type = 'fps'
 
+
+class FanRpmLoggerDashboard(MeasurementLoggerDashboard):
+    """Dashboard class for power_status.FanRpmLogger."""
+
+    def __init__(self, logger, testname, resultsdir, uploadurl, note):
+        super(FanRpmLoggerDashboard, self).__init__(
+            logger, testname, resultsdir, uploadurl, note)
+        self._unit = 'rpm'
+        self._type = 'fan'
+
 dashboard_factory = None
 def get_dashboard_factory():
     global dashboard_factory
@@ -619,7 +629,8 @@ class LoggerDashboardFactory(object):
         power_status.CPUStatsLogger: CPUStatsLoggerDashboard,
         power_status.PowerLogger:    PowerLoggerDashboard,
         power_status.TempLogger:     TempLoggerDashboard,
-        power_status.VideoFpsLogger: VideoFpsLoggerDashboard
+        power_status.VideoFpsLogger: VideoFpsLoggerDashboard,
+        power_status.FanRpmLogger:   FanRpmLoggerDashboard,
     }
 
     def registerDataType(self, logger_type, dashboard_type):
