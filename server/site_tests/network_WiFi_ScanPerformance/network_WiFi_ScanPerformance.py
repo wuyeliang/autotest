@@ -11,6 +11,15 @@ class network_WiFi_ScanPerformance(wifi_cell_test_base.WiFiCellTestBase):
     """Performance test for scanning operation in various setup"""
     version = 1
 
+    def _write_scan_time(self, label, scan_time):
+        """Writes a scan time perf value.
+
+        @param label: A string describing the scan_time.
+        @param scan_time: Scan time in seconds.
+        """
+        self.output_perf_value(label, scan_time, units='seconds',
+                               higher_is_better=False)
+
     def run_once(self):
         """Sets up a router, scan for APs """
 
@@ -24,12 +33,13 @@ class network_WiFi_ScanPerformance(wifi_cell_test_base.WiFiCellTestBase):
         # Single channel scan
         scan_time = self.context.client.timed_scan(frequencies=[freq],
                 ssids=ssids, scan_timeout_seconds=10)
-        self.write_perf_keyval({'scan_time_single_channel_scan': scan_time})
+        self._write_scan_time('scan_time_single_channel_scan', scan_time)
 
         # Foreground full scan
         scan_time = self.context.client.timed_scan(frequencies=[], ssids=ssids,
                                                    scan_timeout_seconds=10)
-        self.write_perf_keyval({'scan_time_foreground_full_scan': scan_time})
+        self._write_scan_time('scan_time_foreground_full_scan', scan_time)
+
 
         # Background full scan
         client_conf = xmlrpc_datatypes.AssociationParameters(
@@ -37,7 +47,7 @@ class network_WiFi_ScanPerformance(wifi_cell_test_base.WiFiCellTestBase):
         self.context.assert_connect_wifi(client_conf)
         scan_time = self.context.client.timed_scan(frequencies=[], ssids=ssids,
                                                    scan_timeout_seconds=15)
-        self.write_perf_keyval({'scan_time_background_full_scan': scan_time})
+        self._write_scan_time('scan_time_background_full_scan', scan_time)
 
         # Deconfigure router
         self.context.router.deconfig()
