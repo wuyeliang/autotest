@@ -68,6 +68,7 @@ CONFIG['CTS_TIMEOUT'] = {
     'CtsActivityManagerDeviceTestCases': 2.0,
     'CtsAppSecurityHostTestCases':       2.0,
     'CtsAutoFillServiceTestCases':       2.5,  # TODO(b/134662826)
+    'CtsCameraTestCases':                2.0,  # TODO(b/150657700)
     'CtsDeqpTestCases':                 20.0,
     'CtsDeqpTestCases.dEQP-EGL'  :       2.0,
     'CtsDeqpTestCases.dEQP-GLES2':       2.0,
