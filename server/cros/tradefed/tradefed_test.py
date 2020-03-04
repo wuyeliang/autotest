@@ -146,7 +146,6 @@ class TradefedTest(test.test):
             except OSError:
                 logging.error('Can\'t change current PATH directory')
 
-
         # Install the tradefed bundle.
         bundle_install_path = self._install_bundle(
             uri or self._get_default_bundle_url(bundle))

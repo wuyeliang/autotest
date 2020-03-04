@@ -443,6 +443,9 @@ def get_extra_args(modules, is_public):
     login_preconditions = []
     prerequisites = []
     for module in modules:
+        # Remove this once JDK9 is the base JDK for lab.
+        if CONFIG.get('USE_JDK9', False):
+            extra_args.add('use_jdk9=True')
         if is_public:
             extra_args.add('warn_on_test_retry=False')
             extra_args.add('retry_manual_tests=True')
