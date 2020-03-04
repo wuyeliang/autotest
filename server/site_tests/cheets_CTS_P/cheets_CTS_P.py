@@ -134,7 +134,6 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
             retry_manual_tests=retry_manual_tests,
             warn_on_test_retry=warn_on_test_retry,
             hard_reboot_on_failure=hard_reboot_on_failure)
-        self.extra_command_flags = []
         if camera_facing:
             self.initialize_camerabox(camera_facing, cmdline_args)
 
@@ -144,8 +143,6 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
                  retry_template=None,
                  target_module=None,
                  target_plan=None,
-                 target_class=None,
-                 target_method=None,
                  needs_push_media=False,
                  enable_default_apps=False,
                  executable_test_count=None,
@@ -170,8 +167,6 @@ class cheets_CTS_P(tradefed_test.TradefedTest):
                                          '{session_id}']
         @param target_module: the name of test module to run.
         @param target_plan: the name of the test plan to run.
-        @param target_class: the name of the class to be tested.
-        @param target_method: the name of the method to be tested.
         @param needs_push_media: need to push test media streams.
         @param executable_test_count: the known number of tests in the run
         @param bundle: the type of the CTS bundle: 'arm' or 'x86'
