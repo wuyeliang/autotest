@@ -17,5 +17,8 @@
     "custom_usb_enable_names": [
         "EN_USB_A_5V"
     ],
-    "smm_store": false
+    "smm_store": false,
+    "cr50_capability": [
+        "ec_hibernate_breaks_rdd"
+    ]
 }

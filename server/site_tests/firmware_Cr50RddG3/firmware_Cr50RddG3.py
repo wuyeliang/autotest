@@ -22,15 +22,24 @@ class firmware_Cr50RddG3(Cr50Test):
         time.sleep(2)
         return self.cr50.get_ccdstate()['Rdd'] == 'connected'
 
+    def check_capabilities(self, capabilities):
+        """Returns the matching capability or None."""
+        if not capabilities:
+            return None
+        for capability in capabilities:
+            if self.check_cr50_capability([capability]):
+                return capability
+        return None
 
-    def check_rdd_status(self, dts_mode, err_desc, capability=''):
+
+    def check_rdd_status(self, dts_mode, err_desc, capabilities=None):
         """Check the rdd state.
 
         @param dts_mode: 'on' if Rdd should be connected. 'off' if it should be
                          disconnected.
         @param err_desc: Description of the rdd error.
-        @param capability: ignore err_desc if this capability string is found in
-                           the faft board config.
+        @param capabilities: ignore err_desc if any of the capabilities from
+                             this list are found in the faft board config.
         @param raises TestFail if rdd state doesn't match the expected rdd state
                       or if it does and the board has the capability set.
         """
@@ -39,15 +48,15 @@ class firmware_Cr50RddG3(Cr50Test):
         rdd_enabled = self.rdd_is_connected()
         logging.info('dts: %r rdd: %r', dts_mode,
                      'connected' if rdd_enabled else 'disconnected')
-        has_cap = capability and self.check_cr50_capability([capability])
+        found_cap = self.check_capabilities(capabilities)
         if rdd_enabled != (dts_mode == 'on'):
-            if has_cap:
-                logging.info('Found %r. %r still applies to board.', capability,
-                             err_desc)
+            if found_cap:
+                logging.info('Found %r. %r still applies to board.',
+                             found_cap, err_desc)
             else:
                 err_msg = err_desc
-        elif has_cap:
-            err_msg = 'Found %r, but %r did not occur.' % (capability, err_desc)
+        elif found_cap:
+            err_msg = 'Found %r, but %r did not occur.' % (found_cap, err_desc)
         if err_msg:
             logging.warning(err_msg)
             self.rdd_failures.append(err_msg)
@@ -74,7 +83,7 @@ class firmware_Cr50RddG3(Cr50Test):
         time.sleep(self.WAIT_FOR_STATE)
 
         self.check_rdd_status('off', 'Rdd connected after EC hibernate',
-                              'rdd_leakage')
+                              ['rdd_leakage', 'ec_hibernate_breaks_rdd'])
 
         logging.info('Checking Rdd can be connected in G3.')
         self.servo.set_dts_mode('on')
@@ -91,12 +100,13 @@ class firmware_Cr50RddG3(Cr50Test):
         self.ec.send_command('hibernate')
         time.sleep(self.WAIT_FOR_STATE)
 
-        self.check_rdd_status('on', 'Rdd disconnected after EC hibernate')
+        self.check_rdd_status('on', 'Rdd disconnected after EC hibernate',
+                              ['ec_hibernate_breaks_rdd'])
 
         logging.info('Checking Rdd can be disconnected in G3.')
         self.servo.set_dts_mode('off')
         self.check_rdd_status('off', 'Cr50 did not detect Rdd disconnect in G3',
-                              'rdd_leakage')
+                              ['rdd_leakage'])
         self._try_to_bring_dut_up()
         if self.rdd_failures:
             raise error.TestFail('Found Rdd issues: %s' % (self.rdd_failures))
