@@ -27,7 +27,9 @@ from chromite.lib import auto_updater
 from chromite.lib import remote_access
 
 
-AFE = frontend_wrappers.RetryingAFE(timeout_min=5, delay_sec=10)
+# TODO(crbug.com/1058095) -- the autotest frontend has been turned down
+# reduce the timeouts so that we spend less time failing to contact it.
+AFE = frontend_wrappers.RetryingAFE(timeout_min=(1.0/60), delay_sec=1)
 _CROS_VERSION_MAP = AFE.get_stable_version_map(AFE.CROS_IMAGE_TYPE)
 _FIRMWARE_VERSION_MAP = AFE.get_stable_version_map(AFE.FIRMWARE_IMAGE_TYPE)
 _FAFT_VERSION_MAP = AFE.get_stable_version_map(AFE.FAFT_IMAGE_TYPE)
