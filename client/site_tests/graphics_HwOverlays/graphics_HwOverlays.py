@@ -14,7 +14,8 @@ from autotest_lib.client.cros import constants
 from autotest_lib.client.cros.multimedia import display_facade_native
 from autotest_lib.client.cros.multimedia import facade_resource
 
-EXTRA_BROWSER_ARGS = ['--enable-experimental-web-platform-features']
+EXTRA_BROWSER_ARGS = ['--enable-experimental-web-platform-features',
+                      '--force-tablet-mode=clamshell']
 
 class graphics_HwOverlays(graphics_utils.GraphicsTest,
                           chrome_binary_test.ChromeBinaryTest):
