@@ -21,8 +21,8 @@ from autotest_lib.server.cros.tradefed import tradefed_test
 # Maximum default time allowed for each individual CTS module.
 _CTS_TIMEOUT_SECONDS = 3600
 
-# Internal download locations for android vtas bundles.
-_INTERNAL_VTS = 'gs://chromeos-arc-images/vts'
+# Internal download locations for android vts bundles.
+_INTERNAL_VTS = 'gs://chromeos-arc-images/vts/'
 _VTS_URI = {
     'arm': _INTERNAL_VTS + 'VTS-9_r11_arm.zip',
     'x86': _INTERNAL_VTS + 'VTS-9_r11_x86.zip',
