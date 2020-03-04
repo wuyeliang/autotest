@@ -525,7 +525,13 @@ class ServoHost(base_servohost.BaseServoHost):
             return
         fname = os.path.basename(res.stdout.strip())
         # From the fname, ought to extract the timestamp using the TS_EXTRACTOR
-        instance_ts = self.TS_EXTRACTOR.match(fname).group(self.TS_GROUP)
+        ts_match = self.TS_EXTRACTOR.match(fname)
+        if not ts_match:
+            logging.warning('Failed to extract timestamp from servod log file '
+                            '%r. Skipping. The servo host is using outdated '
+                            'servod logging and needs to be updated.', fname)
+            return
+        instance_ts = ts_match.group(self.TS_GROUP)
         # Create the local results log dir.
         log_dir = os.path.join(outdir, '%s_%s.%s' % (self.LOG_DIR,
                                                      str(self.servo_port),
