@@ -79,5 +79,65 @@ class ServoHostServoStateTestCase(unittest.TestCase):
         self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_WORKING)
 
 
+class ServoHostInformationValidator(unittest.TestCase):
+    """Tests to verify logic in servo host data"""
+    def test_true_when_host_and_port_is_correct(self):
+        hostname = 'chromeos1-rack1-row1-host1-servo'
+        port = 9999
+        self.assertTrue(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = 'CHROMEOS1-RACK1-ROW1-host1-SERVO'
+        port = 7001
+        self.assertTrue(servo_host.is_servo_host_information_valid(hostname, port))
+
+    def test_false_when_host_is_incorrect_and_port_is_correct(self):
+        port = '9991'
+        hostname = 'chromeos1%rack1$row1.host1.servo'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = '[undefined]'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = 'None'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = ''
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = None
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+    def test_false_when_port_is_incorrect_and_host_is_correct(self):
+        hostname = 'Some_host-my'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, None))
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, -1))
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, 0))
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, None))
+
+
+class ServoHostInformationExistor(unittest.TestCase):
+    """Tests to verify logic in servo host present"""
+    def test_true_when_host_and_port_is_correct(self):
+        hostname = 'chromeos1-rack1-row1-host1-servo'
+        port = 9999
+        self.assertTrue(servo_host._is_servo_host_information_exist(hostname, port))
+
+        hostname = 'CHROMEOS1'
+        port = 1
+        self.assertTrue(servo_host._is_servo_host_information_exist(hostname, port))
+
+    def test_false_when_port_was_not_set_up(self):
+        hostname = 'chromeos1%rack1$row1.host1.servo'
+        self.assertFalse(servo_host._is_servo_host_information_exist(hostname, '9999'))
+        self.assertFalse(servo_host._is_servo_host_information_exist(hostname, None))
+        self.assertFalse(servo_host._is_servo_host_information_exist(hostname, "9999"))
+
+    def test_false_when_host_was_not_set_up(self):
+        port = 1234
+        self.assertFalse(servo_host._is_servo_host_information_exist('', port))
+        self.assertFalse(servo_host._is_servo_host_information_exist(None, port))
+        self.assertFalse(servo_host._is_servo_host_information_exist('  ', port))
+
+
 if __name__ == '__main__':
     unittest.main()

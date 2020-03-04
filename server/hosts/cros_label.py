@@ -600,60 +600,63 @@ class StorageLabel(base_label.StringPrefixLabel):
 
 
 class ServoLabel(base_label.BaseLabel):
+    # class will be removed as part of decommission the old servo label
+    # "not_connected" and "wrong_config" will be part of ServoHost
     """
     Label servo is applying if a servo is present.
     Label servo_state present always.
     """
 
     _NAME_OLD = 'servo'
-    _NAME = 'servo_state'
-    _NAME_WORKING = 'servo_state:WORKING'
-    _NAME_BROKEN = 'servo_state:BROKEN'
+    _NAME = servo_host.SERVO_STATE_LABEL_PREFIX
 
     def get(self, host):
-        if self.exists(host):
-            return [self._NAME_OLD, self._NAME_WORKING]
-        return [self._NAME_BROKEN]
+        state = self._get_state(host)
+        servo_state = self._NAME + ':' + state
+        if state == servo_host.SERVO_STATE_NOT_CONNECTED:
+            return [servo_state]
+        return [self._NAME_OLD, servo_state]
 
     def get_all_labels(self):
         return set([self._NAME]), set([self._NAME_OLD])
 
     def exists(self, host):
-        # Based on crbug.com/995900, Servo sometimes flips.
-        # Ensure that ServoLabel.exists returns True
-        # forever, after it returns True *once*.
-        if self._cached_exists(host):
-            # If the current state is True, return it, don't run the command on
-            # the DUT and potentially flip the state.
-            return True
-        # If the current state is not True, run the command on
-        # the DUT. The new state will be set to whatever the command
-        # produces.
-        return self._host_run_exists(host)
+        pass
 
-    def _cached_exists(self, host):
+    def _get_state(self, host):
+        # Based on crbug.com/995900, Servo sometimes flips.
+        # Ensure that labels has servo or servo_state label
+        # forever, after it returns state *once*.
+        state = self._cached_servo_state_status(host)
+        if state:
+            # If status exist we do not need to run anything
+            return state
+
+        # by last changes this point should not reached now
+        # only till not all DUTs have servo_state label
+        servo_label = self._cached_servo_label(host)
+        if servo_label:
+            return servo_host.SERVO_STATE_WORKING
+        return servo_host.SERVO_STATE_NOT_CONNECTED
+
+    def _cached_servo_state_status(self, host):
         """Get the state of Servo in the data store"""
         info = host.host_info_store.get()
+        # First try to find targeted label
         for label in info.labels:
-            if label.startswith(self._NAME):
-                if label.startswith(self._NAME_WORKING):
-                    return True
-            elif label.startswith(self._NAME_OLD):
+            if  label.startswith(self._NAME):
+                suffix_length = len(self._NAME) + 1
+                return label[suffix_length:]
+        return ''
+
+    def _cached_servo_label(self, host):
+        """Get the state of Servo in the data store"""
+        info = host.host_info_store.get()
+        # First try to find targeted label
+        for label in info.labels:
+            if label is not None and label.strip() == self._NAME_OLD:
                 return True
         return False
-
-    def _host_run_exists(self, host):
-        """
-        Check if the servo label should apply to the host or not.
-
-        @returns True if a servo host is detected, False otherwise.
-        """
-        servo_host_hostname = None
-        servo_args = servo_host.get_servo_args_for_host(host)
-        if servo_args:
-            servo_host_hostname = servo_args.get(servo_host.SERVO_HOST_ATTR)
-        return (servo_host_hostname is not None
-                and servo_host.servo_host_is_up(servo_host_hostname))
 
     def update_for_task(self, task_name):
         # This label is stored in the state config, so only repair tasks update

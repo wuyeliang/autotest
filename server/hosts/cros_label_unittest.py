@@ -413,35 +413,36 @@ class ServoLabelTests(unittest.TestCase):
         host = MockHost(['servo_state:WORKING'])
         servo = ServoLabel()
         self.assertEqual(servo.get(host), ['servo', 'servo_state:WORKING'])
-        self.assertEqual(servo.exists(host), True)
 
     def test_servo_working_and_in_cache_but_not_connected(self):
         host = MockHost(['servo_state:NOT_CONNECTED'])
         servo = ServoLabel()
-        self.assertEqual(servo.get(host), ['servo_state:BROKEN'])
-        self.assertEqual(servo.exists(host), False)
+        self.assertEqual(servo.get(host), ['servo_state:NOT_CONNECTED'])
+
+    def test_servo_working_and_in_cache_but_broken(self):
+        host = MockHost(['servo_state:BROKEN'])
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo', 'servo_state:BROKEN'])
 
     def test_servo_not_in_cache_and_not_working(self):
         host = MockHostWithoutAFE(['not_servo_state:WORKING'])
         servo = ServoLabel()
-        self.assertEqual(servo.get(host), ['servo_state:BROKEN'])
-        self.assertEqual(servo.exists(host), False)
+        self.assertEqual(servo.get(host), ['servo_state:NOT_CONNECTED'])
 
-    @mock.patch('autotest_lib.server.hosts.servo_host.get_servo_args_for_host')
-    @mock.patch('autotest_lib.server.hosts.servo_host.servo_host_is_up')
-    def test_servo_not_in_cache_but_working(self,
-                                            servo_host_is_up,
-                                            get_servo_args_for_host):
-        get_servo_args_for_host.return_value = {"servo_host": "some_servo_host_name"}
-        servo_host_is_up.return_value = True
-        host = MockHostWithoutAFE(['not_servo_state:WORKING'])
-
+    def test_old_servo_in_cache_and_not_working(self):
+        host = MockHostWithoutAFE(['servo'])
         servo = ServoLabel()
         self.assertEqual(servo.get(host), ['servo', 'servo_state:WORKING'])
-        self.assertEqual(servo.exists(host), True)
-        get_servo_args_for_host.assert_called()
-        servo_host_is_up.assert_called()
-        servo_host_is_up.assert_called_with('some_servo_host_name')
+
+    def test_old_servo_not_in_cache_and_not_working(self):
+        host = MockHostWithoutAFE(['not_servo'])
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo_state:NOT_CONNECTED'])
+
+    def test_old_servo_not_in_cache_and_not_working_2(self):
+        host = MockHostWithoutAFE(['servo1'])
+        servo = ServoLabel()
+        self.assertEqual(servo.get(host), ['servo_state:NOT_CONNECTED'])
 
     def test_get_all_labels_lists_of_generating_labels(self):
           servo = ServoLabel()
