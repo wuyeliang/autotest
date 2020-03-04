@@ -55,12 +55,17 @@ class FingerprintTest(test.test):
     _KEY_TYPE_MP = 'mp'
 
     # EC board names for FPMCUs
+    _FP_BOARD_NAME_BLOONCHIPPER = 'bloonchipper'
     _FP_BOARD_NAME_DARTMONKEY = 'dartmonkey'
     _FP_BOARD_NAME_NOCTURNE = 'nocturne_fp'
     _FP_BOARD_NAME_NAMI = 'nami_fp'
 
     # Map from signing key ID to type of signing key
     _KEY_ID_MAP_ = {
+        # bloonchipper
+        '61382804da86b4156d666cc9a976088f8b647d44': _KEY_TYPE_DEV,
+        '07b1af57220c196e363e68d73a5966047c77011e': _KEY_TYPE_PRE_MP,
+
         # dartmonkey
         '257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799': _KEY_TYPE_MP,
 
@@ -77,6 +82,7 @@ class FingerprintTest(test.test):
     # RO versions that are flashed in the factory
     # (for eternity for a given board)
     _GOLDEN_RO_FIRMWARE_VERSION_MAP = {
+        _FP_BOARD_NAME_BLOONCHIPPER: 'bloonchipper_v2.0.3455-bc55b4ae',  # not yet finalized
         _FP_BOARD_NAME_DARTMONKEY: 'dartmonkey_v2.0.2887-311310808',
         _FP_BOARD_NAME_NOCTURNE: 'nocturne_fp_v2.2.64-58cf5974e',
         _FP_BOARD_NAME_NAMI: 'nami_fp_v2.2.144-7a08e07eb',
@@ -94,6 +100,14 @@ class FingerprintTest(test.test):
     #   2) Used to verify that files that end up in the build (and therefore
     #      what we release) is exactly what we expect.
     _FIRMWARE_VERSION_MAP = {
+        _FP_BOARD_NAME_BLOONCHIPPER: {
+            'bloonchipper_v2.0.3455-bc55b4ae.bin': {
+                _FIRMWARE_VERSION_SHA256SUM: '821bb12c74920396f5ef8829ec283cdb73ef47b00dc0fdd417c1dc7fd87b4f18',
+                _FIRMWARE_VERSION_RO_VERSION: 'bloonchipper_v2.0.3455-bc55b4ae',
+                _FIRMWARE_VERSION_RW_VERSION: 'bloonchipper_v2.0.3455-bc55b4ae',
+                _FIRMWARE_VERSION_KEY_ID: '07b1af57220c196e363e68d73a5966047c77011e',
+            },
+        },
         _FP_BOARD_NAME_NOCTURNE: {
             'nocturne_fp_v2.2.110-b936c0a3c.bin': {
                 _FIRMWARE_VERSION_SHA256SUM: '9da32787d68e2ac408be55a4d8c7de13e0f8c0a4a9912d69108b91794e90ee4b',
