@@ -95,7 +95,8 @@ class firmware_Cr50RddG3(Cr50Test):
 
         logging.info('Checking Rdd can be disconnected in G3.')
         self.servo.set_dts_mode('off')
-        self.check_rdd_status('off', 'Cr50 did not detect Rdd disconnect in G3')
+        self.check_rdd_status('off', 'Cr50 did not detect Rdd disconnect in G3',
+                              'rdd_leakage')
         self._try_to_bring_dut_up()
         if self.rdd_failures:
             raise error.TestFail('Found Rdd issues: %s' % (self.rdd_failures))
