@@ -53,6 +53,11 @@ class _UpdateVerifier(hosts.Verifier):
                              " by labstation AdminRepair task.")
                 return
             if host.is_in_lab() and host.job and host.job.in_lab:
+                # We have seen cases that invalid GPT headers/entries block
+                # v3s from been update, so always try to repair here.
+                # See crbug.com/994396, crbug.com/1057302.
+                host.run('cgpt repair /dev/mmcblk0', ignore_status=True)
+
                 host.update_image(wait_for_update=False)
         # We don't want failure from update block DUT repair action.
         # See crbug.com/1029950.
