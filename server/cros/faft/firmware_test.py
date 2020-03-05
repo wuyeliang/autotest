@@ -175,6 +175,7 @@ class FirmwareTest(FAFTBase):
 
         self._setup_uart_capture()
         self._record_system_info()
+        self.faft_client.system.set_dev_default_boot()
         self.fw_vboot2 = self.faft_client.system.get_fw_vboot2()
         logging.info('vboot version: %d', 2 if self.fw_vboot2 else 1)
         if self.fw_vboot2:
@@ -761,6 +762,7 @@ class FirmwareTest(FAFTBase):
         @param original_dev_boot_usb: Original dev_boot_usb value.
         """
         logging.info('Checking internal device boot.')
+        self.faft_client.system.set_dev_default_boot()
         if self.faft_client.system.is_removable_device_boot():
             logging.info('Reboot into internal disk...')
             self.faft_client.system.set_dev_boot_usb(original_dev_boot_usb)

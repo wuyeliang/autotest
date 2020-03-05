@@ -290,6 +290,24 @@ class DevModeVerifier(hosts.Verifier):
         return 'The host should not be in dev mode'
 
 
+class DevDefaultBootVerifier(hosts.Verifier):
+    """Verify that the host is set to boot the internal disk by default."""
+
+    def verify(self, host):
+        # pylint: disable=missing-docstring
+        result = host.run('crossystem dev_default_boot', ignore_status=True)
+        default_boot = result.stdout.strip()
+        if default_boot != 'disk':
+            raise hosts.AutoservVerifyError(
+                    'The host has incorrect dev_default_boot value: %r'
+                    % default_boot)
+
+    @property
+    def description(self):
+        # pylint: disable=missing-docstring
+        return 'The host should have dev_default_boot=disk'
+
+
 class HWIDVerifier(hosts.Verifier):
     """Verify that the host has HWID & serial number."""
 
@@ -549,6 +567,19 @@ class ServoResetRepair(_ResetRepairAction):
         return 'Reset the DUT via servo'
 
 
+class DevDefaultBootRepair(hosts.RepairAction):
+    """Repair a CrOS target by setting dev_default_boot to 'disk'"""
+
+    def repair(self, host):
+        # pylint: disable=missing-docstring
+        host.run('crossystem dev_default_boot=disk', ignore_status=True)
+
+    @property
+    def description(self):
+        # pylint: disable=missing-docstring
+        return "Set dev_default_boot to 'disk'"
+
+
 class CrosRebootRepair(repair_utils.RebootRepair):
     """Repair a CrOS target by clearing dev mode and rebooting it."""
 
@@ -696,6 +727,7 @@ def _cros_verify_base_dag():
     verify_dag = (
         (repair_utils.SshVerifier,        'ssh',        ()),
         (ServoTypeVerifier,               'servo_type', ()),
+        (DevDefaultBootVerifier,          'dev_default_boot', ('ssh',)),
         (DevModeVerifier,                 'devmode',  ('ssh',)),
         (HWIDVerifier,                    'hwid',     ('ssh',)),
         (ACPowerVerifier,                 'power',    ('ssh',)),
@@ -736,6 +768,9 @@ def _cros_basic_repair_actions():
         # and we want the repair steps below to be able to trust the
         # firmware.
         (FirmwareRepair, 'firmware', (), ('ssh', 'fwstatus', 'good_au',)),
+
+        (DevDefaultBootRepair,
+         'set_default_boot', ('ssh',), ('dev_default_boot',)),
 
         (CrosRebootRepair, 'reboot', ('ssh',), ('devmode', 'writable',)),
 

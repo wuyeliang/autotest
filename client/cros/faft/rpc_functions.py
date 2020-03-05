@@ -872,6 +872,20 @@ class SystemServicer(object):
         """
         self._os_if.cs.dev_boot_usb = 1 if value else 0
 
+    def get_dev_default_boot(self):
+        """Get dev_default_boot value, which selects the default boot device.
+
+        @return: 'disk' or 'usb' or 'legacy'
+        """
+        return self._os_if.cs.dev_default_boot
+
+    def set_dev_default_boot(self, device='disk'):
+        """Set dev_default_boot value, which selects the default boot device.
+
+        @param device: 'disk' or 'usb' or 'legacy' (default: 'disk')
+        """
+        self._os_if.cs.dev_default_boot = device
+
     def is_removable_device_boot(self):
         """Check the current boot device is removable.
 

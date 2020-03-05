@@ -19,6 +19,7 @@ from autotest_lib.server.hosts import repair_utils
 CROS_VERIFY_DAG = (
     (repair_utils.SshVerifier, 'ssh', ()),
     (cros_repair.ServoTypeVerifier, 'servo_type', ()),
+    (cros_repair.DevDefaultBootVerifier, 'dev_default_boot', ('ssh',)),
     (cros_repair.DevModeVerifier, 'devmode', ('ssh',)),
     (cros_repair.HWIDVerifier,    'hwid',    ('ssh',)),
     (cros_repair.ACPowerVerifier, 'power', ('ssh',)),
@@ -40,6 +41,8 @@ CROS_REPAIR_ACTIONS = (
     (cros_repair.ServoResetRepair, 'servoreset', (), ('ssh',)),
     (cros_firmware.FirmwareRepair,
      'firmware', (), ('ssh', 'fwstatus', 'good_au')),
+    (cros_repair.DevDefaultBootRepair,
+     'set_default_boot', ('ssh',), ('dev_default_boot',)),
     (cros_repair.CrosRebootRepair,
      'reboot', ('ssh',), ('devmode', 'writable',)),
     (cros_repair.ColdRebootRepair,
@@ -75,6 +78,7 @@ MOBLAB_REPAIR_ACTIONS = (
 JETSTREAM_VERIFY_DAG = (
     (repair_utils.SshVerifier, 'ssh', ()),
     (cros_repair.ServoTypeVerifier, 'servo_type', ()),
+    (cros_repair.DevDefaultBootVerifier, 'dev_default_boot', ('ssh',)),
     (cros_repair.DevModeVerifier, 'devmode', ('ssh',)),
     (cros_repair.HWIDVerifier,    'hwid',    ('ssh',)),
     (cros_repair.ACPowerVerifier, 'power', ('ssh',)),
@@ -99,6 +103,8 @@ JETSTREAM_REPAIR_ACTIONS = (
     (cros_repair.ServoResetRepair, 'servoreset', (), ('ssh',)),
     (cros_firmware.FirmwareRepair,
      'firmware', (), ('ssh', 'fwstatus', 'good_au')),
+    (cros_repair.DevDefaultBootRepair,
+     'set_default_boot', ('ssh',), ('dev_default_boot',)),
     (cros_repair.CrosRebootRepair,
      'reboot', ('ssh',), ('devmode', 'writable',)),
     (cros_repair.ColdRebootRepair,
