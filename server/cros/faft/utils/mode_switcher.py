@@ -199,8 +199,12 @@ class _TabletDetachableBypasser(_BaseFwBypasser):
                  Cancel
                  Power off
                  Language
+
         Vol up button selects previous item, vol down button selects
         next item and pwr button selects current activated item.
+
+        Note: if dev_default_boot=usb, the default selection will start on USB,
+        and this will move up one to legacy boot instead.
         """
         self.trigger_dev_screen()
         time.sleep(self.faft_config.firmware_screen)
@@ -208,6 +212,31 @@ class _TabletDetachableBypasser(_BaseFwBypasser):
                         ' enter key to select Boot USB Image'))
         self.servo.power_short_press()
 
+    def bypass_dev_default_boot(self):
+        """Open the Developer Options menu, and accept the default boot device
+
+           Menu options seen in DEVELOPER WARNING screen:
+                 Developer Options
+                 Show Debug Info
+                 Enable Root Verification
+                 Power Off*
+                 Language
+           Menu options seen in DEV screen:
+                 Boot legacy BIOS*      (default if dev_default_boot=legacy)
+                 Boot USB image*        (default if dev_default_boot=usb)
+                 Boot developer image*  (default if dev_default_boot=disk)
+                 Cancel
+                 Power off
+                 Language
+
+        Vol up button selects previous item, vol down button selects
+        next item and pwr button selects current activated item.
+        """
+        self.trigger_dev_screen()
+        time.sleep(self.faft_config.firmware_screen)
+        logging.info('Selecting power as enter key to accept the default'
+                     ' boot option.')
+        self.servo.power_short_press()
 
     def bypass_rec_mode(self):
         """Bypass the rec mode firmware logic to boot USB."""
@@ -382,7 +411,10 @@ class _BaseModeSwitcher(object):
         self._backup_mode = None
 
     def _create_fw_bypasser(self):
-        """Creates a proper firmware bypasser."""
+        """Creates a proper firmware bypasser.
+
+        @rtype: _TabletDetachableBypasser | _CtrlDBypasser | _JetstreamBypasser
+        """
         return self.FW_BYPASSER_CLASS(self.faft_framework)
 
     def setup_mode(self, mode):
@@ -790,6 +822,10 @@ class _TabletDetachableSwitcher(_BaseModeSwitcher):
         self._disable_rec_mode_and_reboot()
         self.wait_for_client_offline()
         self.bypasser.trigger_dev_to_normal()
+
+    def bypass_dev_default_boot(self):
+        """Accept the default boot device from the Developer Options screen."""
+        self.bypasser.bypass_dev_default_boot()
 
 
 _SWITCHER_CLASSES = {
