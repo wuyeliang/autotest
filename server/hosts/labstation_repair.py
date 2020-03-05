@@ -27,12 +27,24 @@ class _LabstationUpdateVerifier(hosts.Verifier):
         restrictions can cause the update to fail.
         """
         if host.is_in_lab() and host.job and host.job.in_lab:
+            host.update_cros_version_label()
             info = host.host_info_store.get()
             if bool(UPDATE_EXEMPTED_POOL & info.pools):
                 logging.info("Skip update because the labstation is in"
                              " one of following exempted pool: %s", info.pools)
                 return
-            host.update_image(wait_for_update=False)
+
+            stable_version = info.stable_versions.get('cros')
+            if stable_version:
+                host.update_image(
+                    wait_for_update=False,
+                    stable_version=stable_version
+                )
+            else:
+                raise hosts.AutoservVerifyError('Failed to check/update'
+                                                ' labstation due to no stable'
+                                                '_version found in host_info'
+                                                '_store.')
 
     @property
     def description(self):

@@ -79,33 +79,6 @@ def get_stable_cros_image_name_v2(info, _config_override=None):
     return get_stable_cros_image_name(info.board)
 
 
-def get_stable_servo_cros_image_name_v2(servo_version_from_hi, board, _config_override=None):
-    """
-    @param servo_version_from_hi (string or None) : the stable version image name taken from the host info store.
-                                                    A value of None means that that the host_info_store does not exist or
-                                                    ultimately not contain a servo_stable_version field.
-    @param board (string) : the board of the labstation or servo v3 that we're getting the stable version of
-    """
-    logging.debug("get_stable_servo_cros_image_name_v2: servo_version_from_hi (%s) board (%s)" % (servo_version_from_hi, board))
-    if sv.classify_board(board, _config_override=_config_override) != sv.FROM_HOST_CONFIG:
-        logging.debug("get_stable_servo_cros_image_name_v2: servo version for board (%s) from afe" % board)
-        return get_stable_cros_image_name(board)
-    if servo_version_from_hi is not None:
-        logging.debug("get_stable_servo_cros_image_name_v2: servo version (%s) from host_info_store" % servo_version_from_hi)
-        out = _format_image_name(board=board, version=servo_version_from_hi)
-        _log_image_name(out)
-        return out
-    logging.debug("get_stable_servo_cros_image_name_v2: no servo version provided. board is (%s)" % board)
-    logging.debug("get_stable_servo_cros_image_name_v2: falling back to afe if possible")
-    out = None
-    # get_stable_cros_image_name uses the AFE as the source of truth.
-    try:
-        out = get_stable_cros_image_name(board)
-    except Exception:
-        logging.error("get_stable_servo_cros_image_name_v2: error falling back to AFE (%s)" % traceback.format_exc())
-    return out
-
-
 def get_stable_cros_image_name(board):
     """Retrieve the Chrome OS stable image name for a given board.
 
