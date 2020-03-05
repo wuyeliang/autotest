@@ -12,7 +12,7 @@ import re
 
 from autotest_lib.client.common_lib.cros import cr50_utils, dev_server
 from autotest_lib.server.cros import filesystem_util, gsutil_wrapper
-from autotest_lib.server import test
+from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 
 
 # TOT cr50 images are built as part of the reef image builder.
@@ -23,8 +23,10 @@ GS_URL = 'gs://chromeos-releases/dev-channel/' + BUILDER
 FIRMWARE_NAME = 'ChromeOS-firmware-%s-%s.tar.bz2'
 REMOTE_TMPDIR = '/tmp/cr50_tot_update'
 CR50_IMAGE_PATH = 'cr50/ec.bin'
+# Wait 10 seconds for the update to take effect.
+WAIT_FOR_UPDATE = 10
 
-class provision_Cr50TOT(test.test):
+class provision_Cr50TOT(FirmwareTest):
     """Update cr50 to TOT.
 
     The reef builder builds cr50. Fetch the image from the latest reef build
@@ -78,7 +80,8 @@ class provision_Cr50TOT(test.test):
 
         cr50_utils.GSCTool(self.host, ['-a', cr50_path])
 
-        cr50_version = self.host.servo.get('cr50_version').strip()
+        self.cr50.wait_for_reboot(timeout=WAIT_FOR_UPDATE)
+        cr50_version = self.cr50.get_active_version_info()[3].split('/')[-1]
         logging.info('Cr50 running %s. Expected %s', cr50_version,
                      expected_version)
         # TODO(mruthven): Decide if failing to update should be a provisioning
