@@ -213,6 +213,10 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                     logging.info('flag %s not in %s', self.flag, flags)
                     self._print_delimiter()
                     return False
+                return True
+
+            def _is_enough_peers_present(self):
+                """Check if enough peer devices are available."""
 
                 # Check that btpeer has all required devices before running
                 for device_type, number in devices.items():
@@ -222,6 +226,16 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                         self._print_delimiter()
                         return False
 
+                # Check if there are enough peers
+                total_num_devices = sum(devices.values())
+                if total_num_devices > len(self.host.peer_list):
+                    logging.info('SKIPPING TEST %s', test_name)
+                    logging.info('Number of devices required %s is greater'
+                                 'than number of peers available %d',
+                                 total_num_devices,
+                                 len(self.host.peer_list))
+                    self._print_delimiter()
+                    return False
                 return True
 
             @functools.wraps(test_method)
@@ -229,6 +243,8 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
                 """A wrapper of the decorated method."""
                 if not _check_runnable(self):
                     return
+                if not _is_enough_peers_present(self):
+                    raise error.TestNAError('Not enough peer available')
                 self.quick_test_test_start(test_name, devices)
                 test_method(self)
                 self.quick_test_test_end()
