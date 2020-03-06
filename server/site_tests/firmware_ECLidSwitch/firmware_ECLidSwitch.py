@@ -50,6 +50,10 @@ class firmware_ECLidSwitch(FirmwareTest):
         """Close lid by servo."""
         self.servo.set('lid_open', 'no')
 
+    def run_shutdown_cmd(self):
+        """Shut down by command"""
+        self.faft_client.system.run_shell_command('shutdown -P now', False)
+
     @delayed(RPC_DELAY)
     def delayed_open_lid(self):
         """Delay by RPC_DELAY and then open lid by servo."""
@@ -80,13 +84,14 @@ class firmware_ECLidSwitch(FirmwareTest):
             self.check_shutdown_power_state("G3", pwr_retries=5)
         self._wake_by_lid_switch()
 
-    def shutdown_and_wake(self, wake_func):
-        """Software shutdown and delay. Then wake by lid switch.
+    def shutdown_and_wake(self, shutdown_func, wake_func):
+        """Software shutdown and wake.
 
         Args:
+          shutdown_func: Function to shut down DUT.
           wake_func: Delayed function to wake DUT.
         """
-        self.faft_client.system.run_shell_command('shutdown -P now')
+        shutdown_func()
         wake_func()
 
     def _get_keyboard_backlight(self):
@@ -189,12 +194,20 @@ class firmware_ECLidSwitch(FirmwareTest):
         logging.info("Shutdown and long delayed wake.")
         self.switcher.mode_aware_reboot(
                 'custom',
-                lambda:self.shutdown_and_wake(self.long_delayed_wake))
-
+                lambda:self.shutdown_and_wake(
+                        shutdown_func=self.run_shutdown_cmd,
+                        wake_func=self.long_delayed_wake))
         logging.info("Shutdown and short delayed wake.")
         self.switcher.mode_aware_reboot(
                 'custom',
-                lambda:self.shutdown_and_wake(self.short_delayed_wake))
-
+                lambda:self.shutdown_and_wake(
+                        shutdown_func=self.run_shutdown_cmd,
+                        wake_func=self.short_delayed_wake))
+        logging.info("Close and then open the lid when not logged in.")
+        self.switcher.mode_aware_reboot(
+                'custom',
+                lambda:self.shutdown_and_wake(
+                        shutdown_func=self._close_lid,
+                        wake_func=self.short_delayed_wake))
         logging.info("Check keycode and backlight.")
         self.check_state(self.check_keycode_and_backlight)
