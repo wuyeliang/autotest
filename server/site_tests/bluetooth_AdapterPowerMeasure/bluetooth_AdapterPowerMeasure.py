@@ -127,6 +127,21 @@ class bluetooth_AdapterPowerMeasure(
         logging.info('count_success: %d', self.count_success)
 
 
+    def check_legitimate_board(self):
+        """Check if this is a legitimate board to run the test.
+
+        Only a limited set of boards are supported for now, primarliy
+        the kukui family of barods.
+
+        @raises: TestNAError if the board is not legitimate.
+
+        """
+        board = self.host.get_board().split(':')[1]
+        if board not in ('kukui'):
+            raise error.TestNAError('%s not legitimate to run the test.' %
+                                    board)
+
+
     def run_once(self, host, max_power_mw=3, device_type='BLUETOOTH_BASE',
                  num_iterations=1, suspend_time_secs=30,
                  test_category='suspension'):
@@ -143,6 +158,8 @@ class bluetooth_AdapterPowerMeasure(
         """
 
         self.host = host
+        self.check_legitimate_board()
+
         factory = remote_facade_factory.RemoteFacadeFactory(host,
                                                             disable_arc=True)
         self.bluetooth_facade = factory.create_bluetooth_hid_facade()
