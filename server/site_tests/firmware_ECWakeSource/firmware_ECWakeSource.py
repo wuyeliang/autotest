@@ -36,8 +36,7 @@ class firmware_ECWakeSource(FirmwareTest):
 
     def run_once(self, host):
         """Runs a single iteration of the test."""
-        # TODO(victoryang): make this test run on both x86 and arm
-        if not self.check_ec_capability(['x86', 'lid']):
+        if not self.check_ec_capability(['lid']):
             raise error.TestNAError("Nothing needs to be tested on this device")
 
         # Login as a normal user and stay there, such that closing lid triggers
