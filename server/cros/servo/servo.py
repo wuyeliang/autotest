@@ -60,12 +60,13 @@ class ResponsiveConsoleError(ConsoleError):
     pass
 
 
-def _extract_image_from_tarball(tarball, dest_dir, image_candidates):
+def _extract_image_from_tarball(tarball, dest_dir, image_candidates, timeout):
     """Try extracting the image_candidates from the tarball.
 
     @param tarball: The path of the tarball.
     @param dest_path: The path of the destination.
     @param image_candidates: A tuple of the paths of image candidates.
+    @param timeout: Time to wait in seconds before timing out.
 
     @return: The first path from the image candidates, which succeeds, or None
              if all the image candidates fail.
@@ -76,16 +77,19 @@ def _extract_image_from_tarball(tarball, dest_dir, image_candidates):
         os.mkdir(dest_dir)
 
     # Generate a list of all tarball files
-    tarball_files = server_utils.system_output(
-        ('tar tf %s' % tarball), timeout=120, ignore_status=True).splitlines()
+    stdout = server_utils.system_output('tar tf %s' % tarball,
+                                        timeout=timeout,
+                                        ignore_status=True)
+    tarball_files = stdout.splitlines()
 
     # Check if image candidates are in the list of tarball files
     for image in image_candidates:
         if image in tarball_files:
             # Extract and return the first image candidate found
-            status = server_utils.system(
-                ('tar xf %s -C %s %s' % (tarball, dest_dir, image)),
-                timeout=120, ignore_status=True)
+            tar_cmd = 'tar xf %s -C %s %s' % (tarball, dest_dir, image)
+            status = server_utils.system(tar_cmd,
+                                         timeout=timeout,
+                                         ignore_status=True)
             if status == 0:
                 return image
     return None
@@ -337,6 +341,13 @@ class Servo(object):
 
     # Time to wait before timing out on servo initialization.
     INIT_TIMEOUT_SECS = 10
+
+    # Time to wait before timing out when extracting firmware images.
+    #
+    # This was increased from 60 seconds to support boards with very
+    # large (>500MB) firmware archives taking longer than expected to
+    # extract firmware on the lab host machines (b/149419503).
+    EXTRACT_TIMEOUT_SECS = 180
 
     def __init__(self, servo_host, servo_serial=None):
         """Sets up the servo communication infrastructure.
@@ -1192,8 +1203,10 @@ class Servo(object):
 
         # Extract EC image from tarball
         dest_dir = os.path.join(os.path.dirname(tarball_path), 'EC')
-        ec_image = _extract_image_from_tarball(tarball_path, dest_dir,
-                                               ec_image_candidates)
+        ec_image = _extract_image_from_tarball(tarball_path,
+                                               dest_dir,
+                                               ec_image_candidates,
+                                               self.EXTRACT_TIMEOUT_SECS)
 
         # Check if EC image was found and return path or raise error
         if ec_image:
@@ -1228,8 +1241,10 @@ class Servo(object):
 
         # Extract BIOS image from tarball
         dest_dir = os.path.join(os.path.dirname(tarball_path), 'BIOS')
-        bios_image = _extract_image_from_tarball(tarball_path, dest_dir,
-                                                 bios_image_candidates)
+        bios_image = _extract_image_from_tarball(tarball_path,
+                                                 dest_dir,
+                                                 bios_image_candidates,
+                                                 self.EXTRACT_TIMEOUT_SECS)
 
         # Check if BIOS image was found and return path or raise error
         if bios_image:
