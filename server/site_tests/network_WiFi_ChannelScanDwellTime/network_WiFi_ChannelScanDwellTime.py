@@ -190,7 +190,8 @@ class network_WiFi_ChannelScanDwellTime(wifi_cell_test_base.WiFiCellTestBase):
             dwell_time = self._channel_dwell_time_test(True)
             logging.info('Channel dwell time for single-channel scan: %d ms',
                          dwell_time)
-            self.write_perf_keyval(
-                    {'dwell_time_single_channel_scan': dwell_time})
+            self.output_perf_value(
+                    'dwell_time_single_channel_scan', dwell_time, units='ms',
+                    higher_is_better=False)
         finally:
             self.context.client.release_wifi_if()
