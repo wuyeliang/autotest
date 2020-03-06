@@ -21,8 +21,7 @@ class MockHost(servo_host.ServoHost):
     def __init__(self, *args):
         self._mock_cmds = {c.cmd: c for c in args}
         self._init_attributes()
-        self.hostname = "chromeos1-row1-rack1-host1"
-        self.servo_port = '9991'
+        self.hostname = "some_hostname"
 
     def run(self, command, **kwargs):
         """Finds the matching result by command value"""
@@ -40,8 +39,7 @@ class ServoHostServoStateTestCase(unittest.TestCase):
         self.assertIsNotNone(host)
         self.assertIsNone(host._servo_state)
         self.assertIsNotNone(host.get_servo_state())
-        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_UNKNOWN)
-        self.assertEqual(host._servo_state, None)
+        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_BROKEN)
 
     def test_verify_set_state_broken_if_raised_error(self):
         host = MockHost()
@@ -94,16 +92,20 @@ class ServoHostInformationValidator(unittest.TestCase):
 
     def test_false_when_host_is_incorrect_and_port_is_correct(self):
         port = '9991'
-        self.assertFalse(
-            servo_host.is_servo_host_information_valid('ch1%ra1$r1.h1.servo', port))
-        self.assertFalse(
-            servo_host.is_servo_host_information_valid('[undefined]', port))
-        self.assertFalse(
-            servo_host.is_servo_host_information_valid('None', port))
-        self.assertFalse(
-            servo_host.is_servo_host_information_valid('', port))
-        self.assertFalse(
-            servo_host.is_servo_host_information_valid(None, port))
+        hostname = 'chromeos1%rack1$row1.host1.servo'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = '[undefined]'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = 'None'
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = ''
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
+
+        hostname = None
+        self.assertFalse(servo_host.is_servo_host_information_valid(hostname, port))
 
     def test_false_when_port_is_incorrect_and_host_is_correct(self):
         hostname = 'Some_host-my'
