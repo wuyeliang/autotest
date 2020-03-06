@@ -260,6 +260,11 @@ class Cr50Label(base_label.StringPrefixLabel):
         # PVT images have a odd major version prePVT have even
         return ['pvt' if (major_version % 2) else 'prepvt']
 
+    def update_for_task(self, task_name):
+        # This label is stored in the state config, so only repair tasks update
+        # it or when no task name is mentioned.
+        return task_name in (REPAIR_TASK_NAME, '')
+
 
 class Cr50RWKeyidLabel(Cr50Label):
     """Label indicating the cr50 RW version."""
