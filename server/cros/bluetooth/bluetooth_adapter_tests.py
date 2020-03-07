@@ -555,7 +555,6 @@ class BluetoothAdapterTests(test.test):
 
     # Supported profiles by chrome os.
     SUPPORTED_UUIDS = {
-            'HSP_AG_UUID': '00001112-0000-1000-8000-00805f9b34fb',
             'GATT_UUID': '00001801-0000-1000-8000-00805f9b34fb',
             'A2DP_SOURCE_UUID': '0000110a-0000-1000-8000-00805f9b34fb',
             'HFP_AG_UUID': '0000111f-0000-1000-8000-00805f9b34fb',
