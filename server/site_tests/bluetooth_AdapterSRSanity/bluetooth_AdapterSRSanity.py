@@ -39,7 +39,7 @@ from autotest_lib.server.cros.bluetooth.bluetooth_adapter_quick_tests import \
 
 test_wrapper = BluetoothAdapterQuickTests.quick_test_test_decorator
 batch_wrapper = BluetoothAdapterQuickTests.quick_test_batch_decorator
-test_retry_and_log = bluetooth_adapter_tests._test_retry_and_log
+test_retry_and_log = bluetooth_adapter_tests.test_retry_and_log
 
 SHORT_SUSPEND = 10
 MED_SUSPEND = 20
