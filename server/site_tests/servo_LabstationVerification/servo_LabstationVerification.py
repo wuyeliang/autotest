@@ -282,7 +282,7 @@ class servo_LabstationVerification(test.test):
                       'is_in_lab': False}
         # Close out this host as the test will restart it as a servo host.
         self.labstation_host.close()
-        self.labstation_host = servo_host.create_servo_host(None, servo_args)
+        self.labstation_host, servo_state = servo_host.create_servo_host(None, servo_args)
         self.labstation_host.connect_servo()
         servo_proxy = self.labstation_host.get_servo()
         if not self.dut_ip:

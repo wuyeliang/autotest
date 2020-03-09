@@ -326,17 +326,19 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         self.env['LIBC_FATAL_STDERR_'] = '1'
         self._ssh_verbosity_flag = ssh_verbosity_flag
         self._ssh_options = ssh_options
-        self.set_servo_host(
-            servo_host.create_servo_host(
-                dut=self, servo_args=servo_args,
-                try_lab_servo=try_lab_servo,
-                try_servo_repair=try_servo_repair,
-                dut_host_info=self.host_info_store.get()))
+        _servo_host, servo_state = servo_host.create_servo_host(
+            dut=self,
+            servo_args=servo_args,
+            try_lab_servo=try_lab_servo,
+            try_servo_repair=try_servo_repair,
+            dut_host_info=self.host_info_store.get())
+        self.set_servo_host(_servo_host, servo_state)
         self._default_power_method = None
 
         # TODO(waihong): Do the simplication on Chameleon too.
         self._chameleon_host = chameleon_host.create_chameleon_host(
-            dut=self.hostname, chameleon_args=chameleon_args)
+            dut=self.hostname,
+            chameleon_args=chameleon_args)
         if self._chameleon_host:
             self.chameleon = self._chameleon_host.create_chameleon_board()
         else:
@@ -947,7 +949,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
                                       self.BOOT_TIMEOUT)
 
 
-    def set_servo_host(self, host):
+    def set_servo_host(self, host, servo_state = None):
         """Set our servo host member, and associated servo.
 
         @param host  Our new `ServoHost`.
@@ -955,9 +957,11 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         self._servo_host = host
         if self._servo_host is not None:
             self.servo = self._servo_host.get_servo()
-            self._update_servo_labels()
+            servo_state = self._servo_host.get_servo_state()
         else:
             self.servo = None
+
+        self.set_servo_state(servo_state)
 
 
     def repair_servo(self):
@@ -983,16 +987,25 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             self.set_servo_host(self._servo_host)
 
 
-    def _update_servo_labels(self):
+    def set_servo_state(self, servo_state):
         """Set servo info labels to dut host_info"""
-        if self._servo_host:
+        if servo_state is not None:
             host_info = self.host_info_store.get()
-
-            servo_state = self._servo_host.get_servo_state()
-            host_info.set_version_label(servo_host.SERVO_STATE_LABEL_PREFIX, servo_state)
-
+            servo_state_prefix = servo_host.SERVO_STATE_LABEL_PREFIX
+            old_state = host_info.get_label_value(servo_state_prefix)
+            if old_state == servo_state:
+                # do not need update
+                return
+            host_info.set_version_label(servo_state_prefix, servo_state)
             self.host_info_store.commit(host_info)
+            logging.info('ServoHost: servo_state updated to %s (previous: %s)',
+                         servo_state, old_state)
 
+
+    def get_servo_state(self):
+        host_info = self.host_info_store.get()
+        servo_state_prefix = servo_host.SERVO_STATE_LABEL_PREFIX
+        return host_info.get_label_value(servo_state_prefix)
 
     def repair(self):
         """Attempt to get the DUT to pass `self.verify()`.
