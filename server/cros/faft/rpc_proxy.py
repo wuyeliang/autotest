@@ -127,11 +127,15 @@ class RPCProxy(object):
             remote_quit = getattr(
                     self._faft_client, self._client_config.rpc_quit_call)
             remote_quit()
+            need_pkill = False
         except (StandardError, httplib.BadStatusLine, xmlrpclib.Error) as e:
             logging.warn("Error while telling FAFT RPC server to quit: %s", e)
+            # If we failed to tell the RPC server to quit for some reason,
+            # fall back to SIGTERM, because it may not have exited.
+            need_pkill = True
 
         self._client.rpc_server_tracker.disconnect(
-                self._client_config.rpc_port, pkill=False)
+                self._client_config.rpc_port, pkill=need_pkill)
         self._faft_client = None
 
     def __str__(self):
