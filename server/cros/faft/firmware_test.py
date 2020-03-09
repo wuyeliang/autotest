@@ -923,12 +923,15 @@ class FirmwareTest(FAFTBase):
             if uart_file:
                 self.servo.set('%s_uart_capture' % uart, 'off')
 
-    def _get_power_state(self):
+    def get_power_state(self):
         """
         Return the current power state of the AP (via EC 'powerinfo' command)
 
         @return the name of the power state, or None if a problem occurred
         """
+        if not self.faft_config.chrome_ec:
+            return None
+
         pattern = r'power state (\w+) = (\w+)'
 
         try:
@@ -1213,7 +1216,7 @@ class FirmwareTest(FAFTBase):
         @raise TestFail: If device failed to enter into requested power state.
         """
         if not self.wait_power_state(power_state, pwr_retries):
-            current_state = self._get_power_state()
+            current_state = self.get_power_state()
             if current_state == 'S0' and self._client.wait_up():
                 # DUT is unexpectedly up, so check whether it rebooted instead.
                 new_boot_id = self.get_bootid()

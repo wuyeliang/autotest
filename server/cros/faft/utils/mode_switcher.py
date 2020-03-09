@@ -659,7 +659,12 @@ class _BaseModeSwitcher(object):
             self.faft_framework.faft_client.updater.stop_daemon()
         else:
             logging.error('wait_for_client() timed out.')
-            raise ConnectionError('DUT is still down unexpectedly')
+            power_state = self.faft_framework.get_power_state()
+            if power_state:
+                raise ConnectionError('DUT is still down unexpectedly.'
+                                      ' Power state: %s' % power_state)
+            else:
+                raise ConnectionError('DUT is still down unexpectedly')
         logging.info("-[FAFT]-[ end wait_for_client ]-----")
 
 
