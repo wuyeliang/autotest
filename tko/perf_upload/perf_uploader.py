@@ -106,7 +106,7 @@ def _gather_presentation_info(config_data, test_name):
 
 
 def _format_for_upload(board_name, cros_version, chrome_version,
-                       hardware_id, hardware_hostname, perf_data,
+                       hardware_id, hardware_hostname, perf_values,
                        presentation_info, jobname):
     """Formats perf data suitable to upload to the perf dashboard.
 
@@ -124,7 +124,7 @@ def _format_for_upload(board_name, cros_version, chrome_version,
             executed on.
     @param hardware_hostname: String that identifies the name of the device the
             test was executed on.
-    @param perf_data: A dictionary of measured perf data as computed by
+    @param perf_values: A dictionary of measured perf data as computed by
             _compute_avg_stddev().
     @param presentation_info: A dictionary of dashboard presentation info for
             the given test, as identified by _gather_presentation_info().
@@ -135,13 +135,12 @@ def _format_for_upload(board_name, cros_version, chrome_version,
         to the performance dashboard.
 
     """
-    perf_values = perf_data
     # Client side case - server side comes with its own charts data section.
     if 'charts' not in perf_values:
         perf_values = {
           'format_version': '1.0',
           'benchmark_name': presentation_info['test_name'],
-          'charts': perf_data,
+          'charts': perf_values,
         }
 
     dash_entry = {
