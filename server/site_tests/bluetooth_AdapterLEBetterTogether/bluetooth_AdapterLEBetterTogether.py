@@ -30,6 +30,8 @@ class bluetooth_AdapterLEBetterTogether(BluetoothAdapterQuickTests,
     CLIENT_RX_CHARACTERISTIC_UUID = '00000100-0004-1000-8000-001a11000102'
     CLIENT_TX_CHARACTERISTIC_UUID = '00000100-0004-1000-8000-001a11000101'
     CCCD_VALUE_INDICATION = 0x02
+    TEST_ITERATION = 3
+
     # The following messages were captured during a smart unlock process. These
     # are the messages exchanged between the phone and the chromebook to
     # authorize each other in order to unlock the chromebook.
@@ -139,26 +141,36 @@ class bluetooth_AdapterLEBetterTogether(BluetoothAdapterQuickTests,
                       'MaximumConnectionInterval':6}
         address = self.devices['BLE_PHONE'][0].address
 
-        self.test_set_discovery_filter(filter)
-        self.test_discover_device(address)
-        self.test_stop_discovery()
+        # We don't use the control file for iteration since it will involve the
+        # device setup steps which don't reflect the real user scenario.
+        for i in range(self.TEST_ITERATION):
+            self.test_set_discovery_filter(filter)
+            self.test_discover_device(address)
+            self.test_stop_discovery()
 
-        self.test_set_le_connection_parameters(address, parameters)
-        self.test_pause_discovery()
-        self.test_connection_by_adapter(address)
-        self.test_unpause_discovery()
+            self.test_set_le_connection_parameters(address, parameters)
+            self.test_pause_discovery()
+            self.test_connection_by_adapter(address)
+            self.test_unpause_discovery()
 
-        self.test_set_trusted(address)
-        self.test_service_resolved(address)
-        self.test_find_object_path(address)
+            self.test_set_trusted(address)
+            self.test_service_resolved(address)
+            self.test_find_object_path(address)
 
-        self.test_start_notify(self.rx_object_path,
-                               self.CCCD_VALUE_INDICATION)
-        self.test_messages_exchange(
-            self.rx_object_path, self.tx_object_path, address)
-        self.test_stop_notify(self.rx_object_path)
+            self.test_start_notify(self.rx_object_path,
+                                   self.CCCD_VALUE_INDICATION)
+            self.test_messages_exchange(
+                self.rx_object_path, self.tx_object_path, address)
+            self.test_stop_notify(self.rx_object_path)
+            self.test_disconnection_by_adapter(address)
 
-        self.test_disconnection_by_adapter(address)
+            self.test_remove_device_object(address)
+
+
+    @test_retry_and_log(False)
+    def test_remove_device_object(self, address):
+        """Test the device object can be removed from the adapter"""
+        return self.bluetooth_facade.remove_device_object(address)
 
 
     @test_retry_and_log(False)
