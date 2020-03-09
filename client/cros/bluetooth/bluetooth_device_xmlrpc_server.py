@@ -218,6 +218,9 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
                 'btmon', stop_delay_secs=self.BTMON_STOP_DELAY_SECS)
 
         self.advertisements = []
+        self._chrc_property = None
+        self._timeout_id = 0
+        self._signal_watch = None
         self._dbus_mainloop = gobject.MainLoop()
 
 
@@ -2009,14 +2012,15 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         if tx_obj is None:
             return None
+
         self._chrc_property = None
 
-        signal_watch = self._system_bus.add_signal_receiver(
+        self._signal_watch = self._system_bus.add_signal_receiver(
             self._property_changed,
             signal_name='PropertiesChanged',
             path=rx_object_path)
 
-        gobject.timeout_add(
+        self._timeout_id = gobject.timeout_add(
             self.PROPERTY_UPDATE_TIMEOUT_MILLI_SECS,
             self._property_wait_timeout)
 
@@ -2025,14 +2029,16 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
         self._dbus_mainloop.run()
 
-        signal_watch.remove()
         return _dbus_byte_array_to_b64_string(self._chrc_property)
 
 
     def _property_changed(self, *args, **kwargs):
         """Handler for properties changed signal."""
+        gobject.source_remove(self._timeout_id)
+        self._signal_watch.remove();
         changed_prop = args
 
+        logging.info(changed_prop)
         prop_dict = changed_prop[1]
         self._chrc_property = prop_dict['Value']
         if self._dbus_mainloop.is_running():
@@ -2041,6 +2047,7 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
 
     def _property_wait_timeout(self):
         """Timeout handler when waiting for properties update signal."""
+        self._signal_watch.remove();
         if self._dbus_mainloop.is_running():
             logging.warn("quit main loop due to timeout")
             self._dbus_mainloop.quit()
