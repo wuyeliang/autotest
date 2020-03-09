@@ -16,7 +16,7 @@ class touch_MouseScroll(touch_playback_test_base.touch_playback_test_base):
 
     _MOUSE_DESCRIPTION = 'amazon_mouse.prop'
     _APPLE_MOUSE_DES = 'apple_mouse.prop'
-    _EXPECTED_VALUE_1 = 16 # Expected value of one scroll wheel turn.
+    _EXPECTED_VALUE_1 = 10 # Expected value of one scroll wheel turn.
     _EXPECTED_DIRECTION = {'down': 1, 'up': -1, 'right': 1, 'left': -1}
     _TOLLERANCE = 4 # Fast scroll should go at least X times slow scroll.
 
