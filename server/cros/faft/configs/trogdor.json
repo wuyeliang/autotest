@@ -1,0 +1,11 @@
+{
+    "platform": "trogdor",
+    "chrome_ec": true,
+    "ec_capability": [
+        "arm",
+        "battery",
+        "charging",
+        "keyboard",
+        "lid"
+    ]
+}
