@@ -571,6 +571,9 @@ class BluetoothAdapterTests(test.test):
     # Path for btmon logs
     BTMON_DIR_LOG_PATH = '/var/log/btmon'
 
+    #Path for usbmon logs
+    USBMON_DIR_LOG_PATH = '/var/log/usbmon'
+
     def group_btpeers_type(self):
         """Group all Bluetooth peers by the type of their detected device."""
 
@@ -852,6 +855,7 @@ class BluetoothAdapterTests(test.test):
         self.enable_disable_debug_log(enable=True)
 
         self.start_new_btmon()
+        self.start_new_usbmon()
 
 
     def _wait_till_condition_holds(self, func, method_name,
@@ -983,6 +987,21 @@ class BluetoothAdapterTests(test.test):
         file_name = 'btsnoop_%s' % now
         self.host.run_background('btmon -SAw %s/%s' % (self.BTMON_DIR_LOG_PATH,
                                                        file_name))
+
+    def start_new_usbmon(self):
+        """ Start a new USBMON process and save the log """
+
+        # Kill all usbmon process before creating a new one
+        self.host.run('pkill tcpdump || true')
+
+        # Make sure the directory exists
+        self.host.run('mkdir -p %s' % self.USBMON_DIR_LOG_PATH)
+
+        # Time format. Ex, 2020_02_20_17_52_45
+        now = time.strftime("%Y_%m_%d_%H_%M_%S")
+        file_name = 'usbmon_%s' % now
+        self.host.run_background('tcpdump -i usbmon0 -w %s/%s' %
+                                 (self.USBMON_DIR_LOG_PATH, file_name))
 
 
     def log_message(self, msg):
@@ -3341,6 +3360,10 @@ class BluetoothAdapterTests(test.test):
             if hasattr(self, 'host'):
                 # Stop btmon process
                 self.host.run('pkill btmon || true')
+
+                #Stop tcpdump usbmon process
+                self.host.run('pkill tcpdump || true')
+
 
         # Close the device properly if a device is instantiated.
         # Note: do not write something like the following statements
