@@ -6,6 +6,7 @@
     "rec_button_dev_switch": true,
     "spi_voltage": "pp3300",
     "chrome_ec": true,
+    "ec_forwards_short_pp_press": true,
     "ec_capability": [
         "x86"
     ],
