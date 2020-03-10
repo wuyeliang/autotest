@@ -1024,7 +1024,7 @@ class _Run(object):
 
 
     def execute_section(self, section, timeout, stderr_redirector,
-                        client_disconnect_timeout):
+                        client_disconnect_timeout, boot_id=None):
         # TODO(crbug.com/684311) The claim is that section is never more than 0
         # in pratice. After validating for a week or so, delete all support of
         # multiple sections.
@@ -1053,7 +1053,7 @@ class _Run(object):
 
         # log something if the client failed AND never finished logging
         if err and not self.is_client_job_finished(last_line):
-            self.log_unexpected_abort(stderr_redirector)
+            self.log_unexpected_abort(stderr_redirector, old_boot_id=boot_id)
 
         if err:
             raise err
@@ -1111,7 +1111,8 @@ class _Run(object):
                     section_timeout = None
                 boot_id = self.host.get_boot_id()
                 last = self.execute_section(section, section_timeout,
-                                            logger, client_disconnect_timeout)
+                                            logger, client_disconnect_timeout,
+                                            boot_id=boot_id)
                 if self.background:
                     return
                 section += 1
