@@ -88,6 +88,7 @@ gsctool = argparse.ArgumentParser()
 gsctool.add_argument('-a', '--any', dest='universal', action='store_true')
 # use /dev/tpm0 to send the command
 gsctool.add_argument('-s', '--systemdev', dest='systemdev', action='store_true')
+gsctool.add_argument('-o', '--ccd_open', dest='ccd_open', action='store_true')
 # Any command used for something other than updating. These commands should
 # never timeout because they forced cr50 to reboot. They should all just
 # return information about cr50 and should only have a nonzero exit status if

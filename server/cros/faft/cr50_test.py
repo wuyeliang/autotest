@@ -1021,8 +1021,8 @@ class Cr50Test(FirmwareTest):
         # middle of this reset process. Power button requests happen once a
         # minute, so waiting 10 seconds isn't a big deal.
         time.sleep(10)
-        return (self._ccd_open_job.sp.poll() is not None
-                or 'Open' in self.cr50.get_ccd_info()['State'])
+        return ('Open' in self.cr50.get_ccd_info()['State'] or
+                self._ccd_open_job.sp.poll() is not None)
 
     def _get_ccd_open_output(self):
         """Read the new output."""

@@ -3,8 +3,10 @@
 # found in the LICENSE file.
 
 import logging
+import time
 
 from autotest_lib.client.common_lib import error
+from autotest_lib.client.common_lib.cros import cr50_utils
 from autotest_lib.server.cros.faft.cr50_test import Cr50Test
 
 
@@ -63,14 +65,19 @@ class firmware_Cr50Open(Cr50Test):
                                      'console')
         self.cr50.set_ccd_level('lock')
 
+        if not batt_pres:
+            cr50_utils.GSCTool(self.host, ['-a', '-o'])
+            # Wait long enough for cr50 to open ccd and wipe the tpm.
+            time.sleep(10)
+            if 'Open' not in self.cr50.get_ccd_info()['State']:
+                raise error.TestFail('Unable to open cr50 from AP with batt '
+                                     'disconnected')
+            return
         #Make sure open only works from the AP when the device is in dev mode.
         try:
             self.ccd_open_from_ap()
         except error.TestFail, e:
             logging.info(e)
-            if not batt_pres:
-                raise error.TestFail('Unable to open cr50 from AP with batt '
-                                     'disconnected')
             # ccd open should work if the device is in dev mode or ccd open
             # isn't restricted. If open failed for some reason raise the error.
             if dev_mode or not self.ccd_open_restricted:
