@@ -30,9 +30,6 @@ except ImportError:
     metrics = client_utils.metrics_mock
 
 
-# This is assumed to be the value by tests, do not change it.
-OFFLOAD_ENVVAR = "SYNCHRONOUS_OFFLOAD_DIR"
-
 AUTOTEST_SVN = 'svn://test.kernel.org/autotest/trunk/client'
 AUTOTEST_HTTP = 'http://test.kernel.org/svn/autotest/trunk/client'
 
@@ -679,6 +676,7 @@ class _Run(object):
     def __init__(self, host, results_dir, tag, parallel_flag, background):
         self.host = host
         self.results_dir = results_dir
+        self.env = host.env
         self.tag = tag
         self.parallel_flag = parallel_flag
         self.background = background
@@ -1088,6 +1086,7 @@ class _Run(object):
                                           self.host.DEFAULT_REBOOT_TIMEOUT))
         self.host.reboot_followup()
 
+
     def execute_control(self, timeout=None, client_disconnect_timeout=None):
         if not self.background:
             collector = log_collector(self.host, self.tag, self.results_dir)
@@ -1177,12 +1176,6 @@ class _Run(object):
                 self.host.job.remove_client_log(hostname, remote_results,
                                                 local_results)
                 job_record_context.restore()
-
-            if self._offload_dir:
-              server_path = self._offload_dir["server_path"]
-              client_path = self._offload_dir["client_path"]
-              self.host.get_file(client_path, server_path)
-              self.host.delete_tmp_dir(client_path)
 
             logging.debug('Autotest job finishes.')
 
