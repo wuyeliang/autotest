@@ -5,7 +5,7 @@
 from autotest_lib.server import utils
 
 AUTHOR = "Chrome OS Team"
-NAME = "firmware_RecoveryCacheBootKeys"
+NAME = "firmware_RecoveryCacheBootKeys.dev"
 PURPOSE = "Servo based RECOVERY_MRC_CACHE boot tests"
 CRITERIA = "This test will fail if the DUT doesn't use the cache during recovery boot."
 ATTRIBUTES = "suite:faft_bios, suite:faft_lv2"
