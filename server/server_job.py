@@ -67,6 +67,7 @@ def _control_segment_path(name):
 CLIENT_CONTROL_FILENAME = 'control'
 SERVER_CONTROL_FILENAME = 'control.srv'
 MACHINES_FILENAME = '.machines'
+DUT_STATEFUL_PATH = "/usr/local"
 
 CLIENT_WRAPPER_CONTROL_FILE = _control_segment_path('client_wrapper')
 CLIENT_TRAMPOLINE_CONTROL_FILE = _control_segment_path('client_trampoline')
@@ -242,7 +243,8 @@ class server_job(base_job.base_job):
                  tag='', disable_sysinfo=False,
                  control_filename=SERVER_CONTROL_FILENAME,
                  parent_job_id=None, in_lab=False,
-                 use_client_trampoline=False):
+                 use_client_trampoline=False,
+                 sync_offload_dir=''):
         """
         Create a server side job object.
 
@@ -261,7 +263,7 @@ class server_job(base_job.base_job):
         @param ssh_verbosity_flag: The SSH verbosity flag, '-v', '-vv',
                 '-vvv', or an empty string if not needed.
         @param ssh_options: A string giving additional options that will be
-                            included in ssh commands.
+                included in ssh commands.
         @param group_name: If supplied, this will be written out as
                 host_group_name in the keyvals file for the parser.
         @param tag: The job execution tag from the scheduler.  [optional]
@@ -272,14 +274,16 @@ class server_job(base_job.base_job):
         @param parent_job_id: Job ID of the parent job. Default to None if the
                 job does not have a parent job.
         @param in_lab: Boolean that indicates if this is running in the lab
-                       environment.
+                environment.
         @param use_client_trampoline: Boolean that indicates whether to
-               use the client trampoline flow.  If this is True, control
-               is interpreted as the name of the client test to run.
-               The client control file will be client_trampoline.  The
-               test name will be passed to client_trampoline, which will
-               install the test package and re-exec the actual test
-               control file.
+                use the client trampoline flow.  If this is True, control
+                is interpreted as the name of the client test to run.
+                The client control file will be client_trampoline.  The
+                test name will be passed to client_trampoline, which will
+                install the test package and re-exec the actual test
+                control file.
+        @param sync_offload_dir: String; relative path to synchronous offload
+                dir, relative to the results directory. Ignored if empty.
         """
         super(server_job, self).__init__(resultdir=resultdir)
         self.control = control
@@ -319,6 +323,7 @@ class server_job(base_job.base_job):
 
         self.sysinfo = sysinfo.sysinfo(self.resultdir)
         self.profilers = profilers.profilers(self)
+        self._sync_offload_dir = sync_offload_dir
 
         job_data = {'label' : label, 'user' : user,
                     'hostname' : ','.join(machines),
@@ -814,6 +819,8 @@ class server_job(base_job.base_job):
                 else:
                     utils.open_write_close(server_control_file, control)
 
+                sync_dir = self._offload_dir_target_path()
+                namespace['synchronous_offload_dir'] = sync_dir
                 logging.info("Processing control file")
                 namespace['use_packaging'] = use_packaging
                 self._execute_code(server_control_file, namespace)
@@ -865,6 +872,14 @@ class server_job(base_job.base_job):
                     namespace['network_stats_label'] = 'at-end'
                     self._execute_code(GET_NETWORK_STATS_CONTROL_FILE,
                                        namespace)
+
+
+    def _offload_dir_target_path(self):
+        if not self._sync_offload_dir:
+            return ''
+        if self._client:
+            return os.path.join(DUT_STATEFUL_PATH, self._sync_offload_dir)
+        return os.path.join(self.resultdir, self._sync_offload_dir)
 
 
     def run_test(self, url, *args, **dargs):
