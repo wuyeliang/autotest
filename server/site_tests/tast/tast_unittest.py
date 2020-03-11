@@ -21,7 +21,7 @@ from autotest_lib.client.common_lib import base_job
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import utils
 from autotest_lib.server.hosts import host_info
-from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 
 
 # Arbitrary base time to use in tests.
@@ -499,8 +499,8 @@ class TastTest(unittest.TestCase):
 
         # Simulate servo info being passed on the command line via --args.
         args = [
-            '%s=%s' % (servo_host.SERVO_HOST_ATTR, SERVO_HOST),
-            '%s=%s' % (servo_host.SERVO_PORT_ATTR, SERVO_PORT),
+            '%s=%s' % (servo_constants.SERVO_HOST_ATTR, SERVO_HOST),
+            '%s=%s' % (servo_constants.SERVO_PORT_ATTR, SERVO_PORT),
         ]
         self._run_test(command_args=args)
 
@@ -515,8 +515,8 @@ class TastTest(unittest.TestCase):
 
         # Simulate the host's servo info being stored in the Autotest DB.
         attr = {
-            servo_host.SERVO_HOST_ATTR: SERVO_HOST,
-            servo_host.SERVO_PORT_ATTR: SERVO_PORT,
+            servo_constants.SERVO_HOST_ATTR: SERVO_HOST,
+            servo_constants.SERVO_PORT_ATTR: SERVO_PORT,
         }
         self._host.host_info_store.commit(host_info.HostInfo(attributes=attr))
         self._run_test()

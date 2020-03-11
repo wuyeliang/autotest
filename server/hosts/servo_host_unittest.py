@@ -4,6 +4,7 @@ import unittest
 import common
 
 from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 
 
 class MockCmd(object):
@@ -40,7 +41,8 @@ class ServoHostServoStateTestCase(unittest.TestCase):
         self.assertIsNotNone(host)
         self.assertIsNone(host._servo_state)
         self.assertIsNotNone(host.get_servo_state())
-        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_UNKNOWN)
+        self.assertEqual(host.get_servo_state(),
+                         servo_constants.SERVO_STATE_UNKNOWN)
         self.assertEqual(host._servo_state, None)
 
     def test_verify_set_state_broken_if_raised_error(self):
@@ -53,13 +55,15 @@ class ServoHostServoStateTestCase(unittest.TestCase):
             self.assertEqual("Should not be reached", 'expecting error')
         except:
             pass
-        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_BROKEN)
+        self.assertEqual(host.get_servo_state(),
+                         servo_constants.SERVO_STATE_BROKEN)
 
     def test_verify_set_state_working_if_no_raised_error(self):
         host = MockHost()
         host._repair_strategy = mock.Mock()
         host.verify(silent=True)
-        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_WORKING)
+        self.assertEqual(host.get_servo_state(),
+                         servo_constants.SERVO_STATE_WORKING)
 
     def test_repair_set_state_broken_if_raised_error(self):
         host = MockHost()
@@ -71,14 +75,16 @@ class ServoHostServoStateTestCase(unittest.TestCase):
             self.assertEqual("Should not be reached", 'expecting error')
         except:
             pass
-        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_BROKEN)
+        self.assertEqual(host.get_servo_state(),
+                         servo_constants.SERVO_STATE_BROKEN)
 
     def test_repair_set_state_working_if_no_raised_error(self):
         host = MockHost()
         host._is_labstation = False
         host._repair_strategy = mock.Mock()
         host.repair(silent=True)
-        self.assertEqual(host.get_servo_state(), servo_host.SERVO_STATE_WORKING)
+        self.assertEqual(host.get_servo_state(),
+                         servo_constants.SERVO_STATE_WORKING)
 
 
 class ServoHostInformationValidator(unittest.TestCase):

@@ -7,7 +7,7 @@ import unittest
 import common
 
 from autotest_lib.server.hosts import cros_host
-from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 from autotest_lib.server.hosts import host_info
 
 CROSSYSTEM_RESULT = '''
@@ -28,7 +28,7 @@ CHROMEOS_RELEASE_BOARD=coral
 CHROMEOS_RELEASE_UNIBUILD=1
 '''
 
-SERVO_STATE_PREFIX = servo_host.SERVO_STATE_LABEL_PREFIX
+SERVO_STATE_PREFIX = servo_constants.SERVO_STATE_LABEL_PREFIX
 
 
 class MockCmd(object):
@@ -103,10 +103,10 @@ class DictFilteringTestCase(unittest.TestCase):
 
     def test_get_servo_arguments(self):
         got = cros_host.CrosHost.get_servo_arguments({
-            servo_host.SERVO_HOST_ATTR: 'host',
+            servo_constants.SERVO_HOST_ATTR: 'host',
             'spam': 'eggs',
         })
-        self.assertEqual(got, {servo_host.SERVO_HOST_ATTR: 'host'})
+        self.assertEqual(got, {servo_constants.SERVO_HOST_ATTR: 'host'})
 
 
 class DictFilteringTestCase(unittest.TestCase):

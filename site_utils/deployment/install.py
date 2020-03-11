@@ -74,6 +74,7 @@ from autotest_lib.server import hosts
 from autotest_lib.server.cros.dynamic_suite.constants import VERSION_PREFIX
 from autotest_lib.server.hosts import afe_store
 from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 from autotest_lib.site_utils.deployment import cmdvalidate
 from autotest_lib.site_utils.deployment.prepare import dut as preparedut
 from autotest_lib.utils import labellib
@@ -240,14 +241,14 @@ def _update_host_attributes(afe, hostname, host_attrs):
     """
     s_hostname, s_port, s_serial = _extract_servo_attributes(hostname,
                                                              host_attrs)
-    afe.set_host_attribute(servo_host.SERVO_HOST_ATTR,
+    afe.set_host_attribute(servo_constants.SERVO_HOST_ATTR,
                            s_hostname,
                            hostname=hostname)
-    afe.set_host_attribute(servo_host.SERVO_PORT_ATTR,
+    afe.set_host_attribute(servo_constants.SERVO_PORT_ATTR,
                            s_port,
                            hostname=hostname)
     if s_serial:
-        afe.set_host_attribute(servo_host.SERVO_SERIAL_ATTR,
+        afe.set_host_attribute(servo_constants.SERVO_SERIAL_ATTR,
                                s_serial,
                                hostname=hostname)
 
@@ -262,11 +263,11 @@ def _extract_servo_attributes(hostname, host_attrs):
     # attributes (because there are no appropriate defaults).  So, if
     # none are supplied, we assume it can't be V4, and apply the
     # defaults for servo V3.
-    s_hostname = (host_attrs.get(servo_host.SERVO_HOST_ATTR) or
+    s_hostname = (host_attrs.get(servo_constants.SERVO_HOST_ATTR) or
                   servo_host.make_servo_hostname(hostname))
-    s_port = (host_attrs.get(servo_host.SERVO_PORT_ATTR) or
+    s_port = (host_attrs.get(servo_constants.SERVO_PORT_ATTR) or
               str(servo_host.ServoHost.DEFAULT_PORT))
-    s_serial = host_attrs.get(servo_host.SERVO_SERIAL_ATTR)
+    s_serial = host_attrs.get(servo_constants.SERVO_SERIAL_ATTR)
     return s_hostname, s_port, s_serial
 
 
@@ -668,11 +669,11 @@ def _get_used_servo_ports(servo_hostname, afe):
     """
     used_ports = []
     host_list = afe.get_hosts_by_attribute(
-            attribute=servo_host.SERVO_HOST_ATTR, value=servo_hostname)
+            attribute=servo_constants.SERVO_HOST_ATTR, value=servo_hostname)
     for host in host_list:
         afe_host = afe.get_hosts(hostname=host)
         if afe_host:
-            servo_port = afe_host[0].attributes.get(servo_host.SERVO_PORT_ATTR)
+            servo_port = afe_host[0].attributes.get(servo_constants.SERVO_PORT_ATTR)
             if servo_port:
                 used_ports.append(int(servo_port))
     return used_ports
@@ -736,10 +737,10 @@ def _get_afe_servo_port(host_info, afe):
     if not afe_hosts:
         raise _NoAFEServoPortError
 
-    servo_port = afe_hosts[0].attributes.get(servo_host.SERVO_PORT_ATTR)
-    afe_servo_host = afe_hosts[0].attributes.get(servo_host.SERVO_HOST_ATTR)
+    servo_port = afe_hosts[0].attributes.get(servo_constants.SERVO_PORT_ATTR)
+    afe_servo_host = afe_hosts[0].attributes.get(servo_constants.SERVO_HOST_ATTR)
     host_info_servo_host = host_info.host_attr_dict.get(
-        servo_host.SERVO_HOST_ATTR)
+        servo_constants.SERVO_HOST_ATTR)
 
     if afe_servo_host == host_info_servo_host and servo_port:
         return int(servo_port)
@@ -766,11 +767,11 @@ def _get_host_attributes(host_info_list, afe):
         # If the host already has an entry in the AFE that matches the same
         # servo host hostname and the servo port is set, use that port.
         try:
-            host_attr_dict[servo_host.SERVO_PORT_ATTR] = _get_afe_servo_port(
+            host_attr_dict[servo_constants.SERVO_PORT_ATTR] = _get_afe_servo_port(
                 host_info, afe)
         except _NoAFEServoPortError:
-            host_attr_dict[servo_host.SERVO_PORT_ATTR] = _get_free_servo_port(
-                host_attr_dict[servo_host.SERVO_HOST_ATTR], used_servo_ports,
+            host_attr_dict[servo_constants.SERVO_PORT_ATTR] = _get_free_servo_port(
+                host_attr_dict[servo_constants.SERVO_HOST_ATTR], used_servo_ports,
                 afe)
         host_attributes[host_info.hostname] = host_attr_dict
     return host_attributes

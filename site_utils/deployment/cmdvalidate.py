@@ -31,7 +31,7 @@ import sys
 import dateutil.tz
 
 import common
-from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 
 # _BUILD_URI_FORMAT
 # A format template for a Google storage URI that designates
@@ -470,8 +470,8 @@ def _parse_hostname_file_line(hostname_file_row):
     # 7: servo ip
     return HostInfo(
             hostname=hostname_file_row[1],
-            host_attr_dict={servo_host.SERVO_HOST_ATTR: hostname_file_row[4],
-                            servo_host.SERVO_SERIAL_ATTR: hostname_file_row[5]})
+            host_attr_dict={servo_constants.SERVO_HOST_ATTR: hostname_file_row[4],
+                            servo_constants.SERVO_SERIAL_ATTR: hostname_file_row[5]})
 
 
 def _get_upload_basename(arguments):

@@ -32,6 +32,7 @@ from autotest_lib.server.hosts import cros_label
 from autotest_lib.server.hosts import cros_repair
 from autotest_lib.server.hosts import pdtester_host
 from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 from autotest_lib.site_utils.rpm_control_system import rpm_client
 
 # In case cros_host is being ran via SSP on an older Moblab version with an
@@ -272,17 +273,17 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @param args_dict Dictionary from which to extract the servo
           arguments.
         """
-        servo_attrs = (servo_host.SERVO_HOST_ATTR,
-                       servo_host.SERVO_PORT_ATTR,
-                       servo_host.SERVO_BOARD_ATTR,
-                       servo_host.SERVO_MODEL_ATTR)
+        servo_attrs = (servo_constants.SERVO_HOST_ATTR,
+                       servo_constants.SERVO_PORT_ATTR,
+                       servo_constants.SERVO_BOARD_ATTR,
+                       servo_constants.SERVO_MODEL_ATTR)
         servo_args = {key: args_dict[key]
                       for key in servo_attrs
                       if key in args_dict}
         return (
             None
-            if servo_host.SERVO_HOST_ATTR in servo_args
-                and not servo_args[servo_host.SERVO_HOST_ATTR]
+            if servo_constants.SERVO_HOST_ATTR in servo_args
+                and not servo_args[servo_constants.SERVO_HOST_ATTR]
             else servo_args)
 
 
@@ -991,7 +992,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         """Set servo info labels to dut host_info"""
         if servo_state is not None:
             host_info = self.host_info_store.get()
-            servo_state_prefix = servo_host.SERVO_STATE_LABEL_PREFIX
+            servo_state_prefix = servo_constants.SERVO_STATE_LABEL_PREFIX
             old_state = host_info.get_label_value(servo_state_prefix)
             if old_state == servo_state:
                 # do not need update
@@ -1004,7 +1005,7 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
 
     def get_servo_state(self):
         host_info = self.host_info_store.get()
-        servo_state_prefix = servo_host.SERVO_STATE_LABEL_PREFIX
+        servo_state_prefix = servo_constants.SERVO_STATE_LABEL_PREFIX
         return host_info.get_label_value(servo_state_prefix)
 
     def repair(self):

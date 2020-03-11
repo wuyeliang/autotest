@@ -16,7 +16,7 @@ from autotest_lib.client.cros.audio import cras_utils
 from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
 from autotest_lib.server.hosts import base_label
 from autotest_lib.server.hosts import common_label
-from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 from autotest_lib.site_utils import hwid_lib
 
 # pylint: disable=missing-docstring
@@ -334,12 +334,12 @@ class ServoLabel(base_label.BaseLabel):
     """
 
     _NAME_OLD = 'servo'
-    _NAME = servo_host.SERVO_STATE_LABEL_PREFIX
+    _NAME = servo_constants.SERVO_STATE_LABEL_PREFIX
 
     def get(self, host):
         state = self._get_state(host)
         servo_state = self._NAME + ':' + state
-        if state == servo_host.SERVO_STATE_NOT_CONNECTED:
+        if state == servo_constants.SERVO_STATE_NOT_CONNECTED:
             return [servo_state]
         return [self._NAME_OLD, servo_state]
 
@@ -362,8 +362,8 @@ class ServoLabel(base_label.BaseLabel):
         # only till not all DUTs have servo_state label
         servo_label = self._cached_servo_label(host)
         if servo_label:
-            return servo_host.SERVO_STATE_WORKING
-        return servo_host.SERVO_STATE_NOT_CONNECTED
+            return servo_constants.SERVO_STATE_WORKING
+        return servo_constants.SERVO_STATE_NOT_CONNECTED
 
     def _cached_servo_state_status(self, host):
         """Get the state of Servo in the data store"""

@@ -19,58 +19,16 @@ import xmlrpclib
 
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib import error
-from autotest_lib.client.common_lib import global_config
 from autotest_lib.client.common_lib import hosts
 from autotest_lib.client.common_lib.cros import retry
 from autotest_lib.client.common_lib.cros.network import ping_runner
 from autotest_lib.server.cros.servo import servo
 from autotest_lib.server.hosts import servo_repair
 from autotest_lib.server.hosts import base_servohost
-
-
-# Names of the host attributes in the database that represent the values for
-# the servo_host and servo_port for a servo connected to the DUT.
-SERVO_HOST_ATTR = 'servo_host'
-SERVO_PORT_ATTR = 'servo_port'
-SERVO_BOARD_ATTR = 'servo_board'
-# Model is inferred from host labels.
-SERVO_MODEL_ATTR = 'servo_model'
-SERVO_SERIAL_ATTR = 'servo_serial'
-SERVO_ATTR_KEYS = (
-        SERVO_BOARD_ATTR,
-        SERVO_HOST_ATTR,
-        SERVO_PORT_ATTR,
-        SERVO_SERIAL_ATTR,
-)
-
-# Timeout value for stop/start servod process.
-SERVOD_TEARDOWN_TIMEOUT = 3
-SERVOD_QUICK_STARTUP_TIMEOUT = 20
-SERVOD_STARTUP_TIMEOUT = 60
-
-# pools that support dual v4. (go/cros-fw-lab-strategy)
-POOLS_SUPPORT_DUAL_V4 = {'faft-cr50',
-                         'faft-cr50-experimental',
-                         'faft-cr50-tot',
-                         'faft-cr50-debug',
-                         'faft_cr50_debug'
-                         'faft-pd-debug',
-                         'faft_pd_debug'}
+from autotest_lib.server.hosts import servo_constants
+from autotest_lib.client.common_lib import global_config
 
 _CONFIG = global_config.global_config
-ENABLE_SSH_TUNNEL_FOR_SERVO = _CONFIG.get_config_value(
-        'CROS', 'enable_ssh_tunnel_for_servo', type=bool, default=False)
-
-AUTOTEST_BASE = _CONFIG.get_config_value(
-        'SCHEDULER', 'drone_installation_directory',
-        default='/usr/local/autotest')
-
-SERVO_STATE_LABEL_PREFIX = 'servo_state'
-SERVO_STATE_WORKING = 'WORKING'
-SERVO_STATE_BROKEN = 'BROKEN'
-SERVO_STATE_NOT_CONNECTED = 'NOT_CONNECTED'
-SERVO_STATE_WRONG_CONFIG = 'WRONG_CONFIG'
-SERVO_STATE_UNKNOWN = 'UNKNOWN'
 
 
 class ServoHost(base_servohost.BaseServoHost):
@@ -251,7 +209,8 @@ class ServoHost(base_servohost.BaseServoHost):
         @returns: An xmlrpclib.ServerProxy that is connected to the servod
                   server on the host.
         """
-        if ENABLE_SSH_TUNNEL_FOR_SERVO and not self.is_localhost():
+        if (servo_constants.ENABLE_SSH_TUNNEL_FOR_SERVO
+                and not self.is_localhost()):
             return self.rpc_server_tracker.xmlrpc_connect(
                     None, self.servo_port,
                     ready_test_name=self.SERVO_READY_METHOD,
@@ -284,11 +243,13 @@ class ServoHost(base_servohost.BaseServoHost):
         self.record('INFO', None, None, message)
         try:
             self._repair_strategy.verify(self, silent)
-            self._servo_state = SERVO_STATE_WORKING
-            self.record('INFO', None, None, 'ServoHost verify set servo_state as WORKING')
+            self._servo_state = servo_constants.SERVO_STATE_WORKING
+            self.record('INFO', None, None,
+                        'ServoHost verify set servo_state as WORKING')
         except:
-            self._servo_state = SERVO_STATE_BROKEN
-            self.record('INFO', None, None, 'ServoHost verify set servo_state as BROKEN')
+            self._servo_state = servo_constants.SERVO_STATE_BROKEN
+            self.record('INFO', None, None,
+                        'ServoHost verify set servo_state as BROKEN')
             self.disconnect_servo()
             self.stop_servod()
             raise
@@ -304,15 +265,17 @@ class ServoHost(base_servohost.BaseServoHost):
         self.record('INFO', None, None, message)
         try:
             self._repair_strategy.repair(self, silent)
-            self._servo_state = SERVO_STATE_WORKING
-            self.record('INFO', None, None, 'ServoHost repair set servo_state as WORKING')
+            self._servo_state = servo_constants.SERVO_STATE_WORKING
+            self.record('INFO', None, None,
+                        'ServoHost repair set servo_state as WORKING')
             # If target is a labstation then try to withdraw any existing
             # reboot request created by this servo because it passed repair.
             if self.is_labstation():
                 self.withdraw_reboot_request()
         except:
-            self._servo_state = SERVO_STATE_BROKEN
-            self.record('INFO', None, None, 'ServoHost repair set servo_state as BROKEN')
+            self._servo_state = servo_constants.SERVO_STATE_BROKEN
+            self.record('INFO', None, None,
+                        'ServoHost repair set servo_state as BROKEN')
             self.disconnect_servo()
             self.stop_servod()
             raise
@@ -369,10 +332,11 @@ class ServoHost(base_servohost.BaseServoHost):
         # Start servod with dual_v4 if the DUT/servo from designated pools.
         dut_host_info = self.get_dut_host_info()
         if dut_host_info:
-            if bool(dut_host_info.pools & POOLS_SUPPORT_DUAL_V4):
+            if bool(dut_host_info.pools &
+                    servo_constants.POOLS_SUPPORT_DUAL_V4):
                 logging.debug('The DUT is detected in following designated'
                               ' pools %s,starting servod with DUAL_V4 option.',
-                              POOLS_SUPPORT_DUAL_V4)
+                              servo_constants.POOLS_SUPPORT_DUAL_V4)
                 cmd += ' DUAL_V4=1'
 
         # Remove the symbolic links from the logs. This helps ensure that
@@ -392,9 +356,9 @@ class ServoHost(base_servohost.BaseServoHost):
         # and we'll try quick start up when first time initialize servohost,
         # and use standard start up timeout in repair.
         if quick_startup:
-            timeout = SERVOD_QUICK_STARTUP_TIMEOUT
+            timeout = servo_constants.SERVOD_QUICK_STARTUP_TIMEOUT
         else:
-            timeout = SERVOD_STARTUP_TIMEOUT
+            timeout = servo_constants.SERVOD_STARTUP_TIMEOUT
         logging.debug('Wait %s seconds for servod process fully up.', timeout)
         time.sleep(timeout)
 
@@ -411,8 +375,8 @@ class ServoHost(base_servohost.BaseServoHost):
         self.run('stop servod PORT=%d' % self.servo_port,
                  timeout=60, ignore_status=True)
         logging.debug('Wait %s seconds for servod process fully teardown.',
-                      SERVOD_TEARDOWN_TIMEOUT)
-        time.sleep(SERVOD_TEARDOWN_TIMEOUT)
+                      servo_constants.SERVOD_TEARDOWN_TIMEOUT)
+        time.sleep(servo_constants.SERVOD_TEARDOWN_TIMEOUT)
 
 
     def restart_servod(self, quick_startup=False):
@@ -420,6 +384,7 @@ class ServoHost(base_servohost.BaseServoHost):
         """
         self.stop_servod()
         self.start_servod(quick_startup)
+
 
     def _extract_compressed_logs(self, logdir, relevant_files):
         """Decompress servod logs in |logdir|.
@@ -664,7 +629,7 @@ class ServoHost(base_servohost.BaseServoHost):
 
     def get_servo_state(self):
         if self._servo_state is None:
-            return SERVO_STATE_UNKNOWN
+            return servo_constants.SERVO_STATE_UNKNOWN
         return self._servo_state
 
 
@@ -734,27 +699,30 @@ def get_servo_args_for_host(dut_host):
     """
     info = dut_host.host_info_store.get()
     servo_args = {k: v for k, v in info.attributes.iteritems()
-                  if k in SERVO_ATTR_KEYS}
+                  if k in servo_constants.SERVO_ATTR_KEYS}
 
-    if SERVO_PORT_ATTR in servo_args:
+    if servo_constants.SERVO_PORT_ATTR in servo_args:
         try:
-            servo_args[SERVO_PORT_ATTR] = int(servo_args[SERVO_PORT_ATTR])
+            servo_args[servo_constants.SERVO_PORT_ATTR] = int(
+                servo_args[servo_constants.SERVO_PORT_ATTR])
         except ValueError:
             logging.error('servo port is not an int: %s',
-                          servo_args[SERVO_PORT_ATTR])
+                          servo_args[servo_constants.SERVO_PORT_ATTR])
             # Reset servo_args because we don't want to use an invalid port.
-            servo_args.pop(SERVO_HOST_ATTR, None)
+            servo_args.pop(servo_constants.SERVO_HOST_ATTR, None)
 
     if info.board:
-        servo_args[SERVO_BOARD_ATTR] = _map_afe_board_to_servo_board(info.board)
+        servo_board = _map_afe_board_to_servo_board(info.board)
+        servo_args[servo_constants.SERVO_BOARD_ATTR] = servo_board
     if info.model:
-        servo_args[SERVO_MODEL_ATTR] = info.model
-    return servo_args if SERVO_HOST_ATTR in servo_args else None
+        servo_args[servo_constants.SERVO_MODEL_ATTR] = info.model
+    return servo_args if servo_constants.SERVO_HOST_ATTR in servo_args else None
 
 
 def _tweak_args_for_ssp_moblab(servo_args):
-    if servo_args[SERVO_HOST_ATTR] in ['localhost', '127.0.0.1']:
-        servo_args[SERVO_HOST_ATTR] = _CONFIG.get_config_value(
+    if (servo_args[servo_constants.SERVO_HOST_ATTR]
+            in ['localhost', '127.0.0.1']):
+        servo_args[servo_constants.SERVO_HOST_ATTR] = _CONFIG.get_config_value(
                 'SSP', 'host_container_ip', type=str, default=None)
 
 
@@ -830,27 +798,27 @@ def create_servo_host(dut, servo_args, try_lab_servo=False,
     if servo_args is None:
         logging.debug('No servo_args provided, and failed to find overrides.')
         if try_lab_servo or servo_dependency:
-            return None, SERVO_STATE_NOT_CONNECTED
+            return None, servo_constants.SERVO_STATE_NOT_CONNECTED
         else:
             # For regular test case which not required the servo
             return None, None
 
-    servo_hostname = servo_args.get(SERVO_HOST_ATTR)
-    servo_port = servo_args.get(SERVO_PORT_ATTR)
+    servo_hostname = servo_args.get(servo_constants.SERVO_HOST_ATTR)
+    servo_port = servo_args.get(servo_constants.SERVO_PORT_ATTR)
     if not _is_servo_host_information_exist(servo_hostname, servo_port):
         logging.debug(
             'Servo connection info missed hostname: %s , port: %s',
             servo_hostname, servo_port)
-        return None, SERVO_STATE_NOT_CONNECTED
+        return None, servo_constants.SERVO_STATE_NOT_CONNECTED
     if not is_servo_host_information_valid(servo_hostname, servo_port):
         logging.debug(
             'Servo connection info is incorrect hostname: %s , port: %s',
             servo_hostname, servo_port)
-        return None, SERVO_STATE_WRONG_CONFIG
+        return None, servo_constants.SERVO_STATE_WRONG_CONFIG
     if (not servo_dependency and not try_servo_repair and
             not servo_host_is_up(servo_hostname)):
         logging.debug('ServoHost is not up.')
-        return None, SERVO_STATE_BROKEN
+        return None, servo_constants.SERVO_STATE_BROKEN
 
     newhost = ServoHost(**servo_args)
     try:

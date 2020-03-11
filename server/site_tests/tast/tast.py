@@ -15,6 +15,7 @@ from autotest_lib.server import test
 from autotest_lib.server import utils
 from autotest_lib.server.hosts import cros_host
 from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 
 
 # A datetime.DateTime representing the Unix epoch in UTC.
@@ -242,8 +243,8 @@ class tast(test.test):
         merged_args.update(cros_host.CrosHost.get_servo_arguments(args_dict))
 
         logging.info('Autotest servo-related args: %s', merged_args)
-        host_arg = merged_args.get(servo_host.SERVO_HOST_ATTR)
-        port_arg = merged_args.get(servo_host.SERVO_PORT_ATTR)
+        host_arg = merged_args.get(servo_constants.SERVO_HOST_ATTR)
+        port_arg = merged_args.get(servo_constants.SERVO_PORT_ATTR)
         if not host_arg or not port_arg:
             return []
         return ['-var=servo=%s:%s' % (host_arg, port_arg)]

@@ -13,6 +13,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.server import test
 from autotest_lib.server import utils as server_utils
 from autotest_lib.server.hosts import servo_host
+from autotest_lib.server.hosts import servo_constants
 from autotest_lib.server.hosts import factory
 
 class servo_LabstationVerification(test.test):
@@ -277,12 +278,15 @@ class servo_LabstationVerification(test.test):
                                    disable_sysinfo=True)
         # Servod came up successfully - build a servo host and use it to verify
         # basic functionality.
-        servo_args = {servo_host.SERVO_HOST_ATTR: self.labstation_host.hostname,
-                      servo_host.SERVO_PORT_ATTR: 9999,
-                      'is_in_lab': False}
+        servo_args = {
+            servo_constants.SERVO_HOST_ATTR: self.labstation_host.hostname,
+            servo_constants.SERVO_PORT_ATTR: 9999,
+            'is_in_lab': False,
+        }
         # Close out this host as the test will restart it as a servo host.
         self.labstation_host.close()
-        self.labstation_host, servo_state = servo_host.create_servo_host(None, servo_args)
+        self.labstation_host, servo_state = servo_host.create_servo_host(
+            None, servo_args)
         self.labstation_host.connect_servo()
         servo_proxy = self.labstation_host.get_servo()
         if not self.dut_ip:
