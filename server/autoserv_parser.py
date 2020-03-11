@@ -225,6 +225,10 @@ class autoserv_parser(object):
                      'This overrides the control file provided via the '
                      'positional args.',
         )
+        self.parser.add_argument(
+            '--sync-offload-dir', action='store', type=str, default='',
+            help='Absolute path to directory to offload synchronously',
+        )
 
         #
         # Warning! Please read before adding any new arguments!
@@ -233,9 +237,9 @@ class autoserv_parser(object):
         # packaging and if the test source build does not have the new
         # arguments.
         #
-        # New argument should NOT set action to `store_true`. A workaround is to
-        # use string value of `True` or `False`, then convert them to boolean in
-        # code.
+        # New arguments should NOT set action to `store_true`. A workaround is
+        # to use string value of `True` or `False`, then convert them to boolean
+        # in code.
         # The reason is that parse_args will always ignore the argument name and
         # value. An unknown argument without a value will lead to positional
         # argument being removed unexpectedly.
