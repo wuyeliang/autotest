@@ -30,6 +30,9 @@ except ImportError:
     metrics = client_utils.metrics_mock
 
 
+# This is assumed to be the value by tests, do not change it.
+OFFLOAD_ENVVAR = "SYNCHRONOUS_OFFLOAD_DIR"
+
 AUTOTEST_SVN = 'svn://test.kernel.org/autotest/trunk/client'
 AUTOTEST_HTTP = 'http://test.kernel.org/svn/autotest/trunk/client'
 
@@ -676,7 +679,6 @@ class _Run(object):
     def __init__(self, host, results_dir, tag, parallel_flag, background):
         self.host = host
         self.results_dir = results_dir
-        self.env = host.env
         self.tag = tag
         self.parallel_flag = parallel_flag
         self.background = background
