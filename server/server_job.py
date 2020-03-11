@@ -11,6 +11,7 @@ This is the core infrastructure. Derived from the client side job.py
 Copyright Martin J. Bligh, Andy Whitcroft 2007
 """
 
+import datetime
 import errno
 import fcntl
 import getpass
@@ -42,6 +43,7 @@ from autotest_lib.server import subcommand
 from autotest_lib.server import test
 from autotest_lib.server import utils as server_utils
 from autotest_lib.server.cros.dynamic_suite import frontend_wrappers
+from autotest_lib.server import hosts
 from autotest_lib.server.hosts import abstract_ssh
 from autotest_lib.server.hosts import afe_store
 from autotest_lib.server.hosts import file_store
@@ -821,6 +823,10 @@ class server_job(base_job.base_job):
 
                 sync_dir = self._offload_dir_target_path()
                 namespace['synchronous_offload_dir'] = sync_dir
+                if self._sync_offload_dir:
+                    logging.info("Preparing synchronous offload dir")
+                    self.create_marker_file()
+                    logging.info("Offload dir and marker file ready")
                 logging.info("Processing control file")
                 namespace['use_packaging'] = use_packaging
                 self._execute_code(server_control_file, namespace)
@@ -873,14 +879,75 @@ class server_job(base_job.base_job):
                     self._execute_code(GET_NETWORK_STATS_CONTROL_FILE,
                                        namespace)
 
-
-    def _offload_dir_target_path(self):
+    def _offload_dir_target_path(self, force_server=False):
         if not self._sync_offload_dir:
             return ''
-        if self._client:
-            return os.path.join(DUT_STATEFUL_PATH, self._sync_offload_dir)
+        if self._client and not force_server:
+          return os.path.join(DUT_STATEFUL_PATH, self._sync_offload_dir)
         return os.path.join(self.resultdir, self._sync_offload_dir)
 
+
+    def _client_offload_dir_lambda_generator(self, file_path, offload_path):
+        """Generate a parallel_simple-runnable function to mirror offload dir
+
+        @param file_path: File to copy as the marker file
+        @param offload_path: Absolute path to the offload dir on the appropriate
+          device (client or server)
+
+        @returns function which takes a machine and creates the dir and marker
+          file on that machine.
+        """
+        cmd = "mkdir -p %s" % offload_path
+        def serial(machine):
+            host = hosts.create_host(machine)
+            marker_path = os.path.join(os.path.dirname(offload_path),
+                         "marker-%s" % host.hostname)
+            host.run(cmd, ignore_status=False)
+            host.send_file(file_path, marker_path)
+        return serial
+
+    def create_marker_file(self):
+        """Create a marker file in the leaf task's synchronous offload dir.
+
+        This ensures that we will get some results offloaded if the test fails
+        to create output properly, distinguishing offload errs from test errs.
+        @obj_param _client: Boolean, whether the control file is client-side.
+        @obj_param resultdir: absolute path to results directory for this run
+        @obj_param _sync_offload_dir: relative path from results to offload dir.
+
+        @returns: path to offload dir on the relevant machine
+        """
+        # Note that we put all the spaces in the filler values rather than the
+        # format string, to avoid extra whitespace when SSP is not in use
+        marker_string = "%s%s%s" % (
+            "client " if self._client else "server ",
+            "in SSP " if utils.is_in_container() else "",
+            str(datetime.utcnow())
+        )
+        # Make the server-side directory regardless
+        os.makedirs(
+            self._offload_dir_target_path(force_server=True),
+            exist_ok=True
+        )
+        offload_path = self._offload_dir_target_path()
+        if self._client:
+            _, path = tempfile.mkstemp()
+            try:
+                utils.open_write_close(path, marker_string)
+                self.parallel_simple(
+                    self._client_offload_dir_lambda_generator(
+                        path, marker_string, offload_path
+                    ),
+                    self.machines
+                )
+            finally:
+                os.remove(path)
+        else:
+            utils.open_write_close(
+                os.path.join(os.path.dirname(offload_path),"marker"),
+                marker_string
+            )
+        return self._offload_dir_target_path()
 
     def run_test(self, url, *args, **dargs):
         """
