@@ -162,7 +162,7 @@ def _run_with_ssp(job, container_id, job_id, results, parser, ssp_url,
                     parser.options.results:
                     parser.options.results  can be set to None for results to be
                     stored in a temp folder.
-                    results can be None for autoserv run requires no logging.
+                    results can be None if the autoserv run requires no logging.
     @param parser: Command line parser that contains the options.
     @param ssp_url: url of the staged server-side package.
     @param machines: A list of machines to run the test.
@@ -532,6 +532,7 @@ def run_autoserv(pid_file_manager, results, parser, ssp_url, use_ssp):
             'disable_sysinfo': parser.options.disable_sysinfo,
             'in_lab': in_lab,
             'use_client_trampoline': use_client_trampoline,
+            'sync_offload_dir': parser.options.sync_offload_dir,
     }
     if parser.options.parent_job_id:
         job_kwargs['parent_job_id'] = int(parser.options.parent_job_id)
