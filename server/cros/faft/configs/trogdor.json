@@ -6,6 +6,10 @@
         "battery",
         "charging",
         "keyboard",
-        "lid"
+        "lid",
+        "usb"
+    ],
+    "custom_usb_enable_names": [
+        "EN_USB_A_5V"
     ]
 }
