@@ -4,6 +4,7 @@
 # found in the LICENSE file.
 
 import unittest
+import mock
 
 import common
 
@@ -19,6 +20,7 @@ from autotest_lib.server.hosts.cros_label import ChameleonConnectionLabel
 from autotest_lib.server.hosts.cros_label import ChameleonLabel
 from autotest_lib.server.hosts.cros_label import ChameleonPeripheralsLabel
 from autotest_lib.server.hosts.cros_label import ServoLabel
+from autotest_lib.server.hosts.cros_label import ServoTypeLabel
 from autotest_lib.server.hosts import host_info
 
 # pylint: disable=missing-docstring
@@ -345,6 +347,37 @@ class ChameleonPeripheralsLabelTests(unittest.TestCase):
         self.assertTrue(ChameleonPeripheralsLabel().update_for_task(''))
         self.assertFalse(ChameleonPeripheralsLabel().update_for_task('repair'))
         self.assertTrue(ChameleonPeripheralsLabel().update_for_task('deploy'))
+
+
+class ServoTypeLabelTests(unittest.TestCase):
+    """Unit tests for ServoTypeLabel"""
+    def test_update_for_task(self):
+        self.assertTrue(ServoTypeLabel().update_for_task(''))
+        # make false when all DUT has servo_type
+        self.assertTrue(ServoTypeLabel().update_for_task('repair'))
+        self.assertTrue(ServoTypeLabel().update_for_task('deploy'))
+
+    def test_generate_labels_return_value_from_labels(self):
+        host = MockHost(['servo_type:Some_interesting'])
+        servo = ServoTypeLabel()
+        self.assertEqual(servo.get(host), ['servo_type:Some_interesting'])
+        self.assertEqual(servo.generate_labels(host), ['Some_interesting'])
+
+    def test_generate_labels_from_cache_when_servo_is_none(self):
+        host = MockHost(['servo_state:Some_interesting'])
+        host.servo = None
+        servo = ServoTypeLabel()
+        self.assertEqual(servo.get(host), [])
+        self.assertEqual(servo.generate_labels(host), [])
+
+    def test_generate_labels_not_from_cache_when_servo_exist(self):
+        host = MockHost(['servo_type'])
+        host.servo = mock.Mock()
+        host.servo.get_servo_version.return_value = 'servo_v3'
+        servo = ServoTypeLabel()
+        self.assertEqual(servo.get(host), ['servo_type:servo_v3'])
+        self.assertEqual(servo.generate_labels(host), ['servo_v3'])
+        host.servo.get_servo_version.assert_called()
 
 
 if __name__ == '__main__':

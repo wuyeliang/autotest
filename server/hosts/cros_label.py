@@ -390,6 +390,43 @@ class ServoLabel(base_label.BaseLabel):
         return task_name in (REPAIR_TASK_NAME, '')
 
 
+class ServoTypeLabel(base_label.StringPrefixLabel):
+    _NAME = 'servo_type'
+
+    def generate_labels(self, host):
+        info = host.host_info_store.get()
+
+        servo_type = self._get_from_labels(info)
+        if servo_type != '':
+            return [servo_type]
+
+        if host.servo is not None:
+            try:
+                servo_type = host.servo.get_servo_version()
+                if servo_type != '':
+                    return [servo_type]
+            except Exception as e:
+                # We don't want fail the label and break DUTs here just
+                # because of servo issue.
+                logging.error("Failed to update servo_type, %s", str(e))
+        return []
+
+    def _get_from_labels(self, info):
+        prefix = self._NAME + ':'
+        for label in info.labels:
+            if  label.startswith(prefix):
+                suffix_length = len(prefix)
+                return label[suffix_length:]
+        return ''
+
+    def update_for_task(self, task_name):
+        # This label is stored in the lab config,
+        # only deploy and repair tasks update it
+        # or when no task name is mentioned.
+        # use REPAIR_TASK_NAME till restore value for all DUTs
+        return task_name in (REPAIR_TASK_NAME, DEPLOY_TASK_NAME, '')
+
+
 def _parse_hwid_labels(hwid_info_list):
     if len(hwid_info_list) == 0:
         return hwid_info_list
@@ -533,6 +570,7 @@ CROS_LABELS = [
     DeviceSkuLabel(), #LABCONFIG
     HWIDLabel(),
     ServoLabel(), #STATECONFIG
+    ServoTypeLabel(), #LABCONFIG
     # Temporarily add back as there's no way to reference cr50 configs.
     # See crbug.com/1057145 for the root cause.
     # See crbug.com/1057719 for future tracking.
