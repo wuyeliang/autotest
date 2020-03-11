@@ -1008,6 +1008,18 @@ class BluetoothAdapterTests(test.test):
         """ Write a string to log."""
         self.bluetooth_facade.log_message(msg)
 
+    def is_wrt_supported(self):
+        """ Check if Bluetooth adapter support WRT logs. """
+        return self.bluetooth_facade.is_wrt_supported()
+
+    def enable_wrt_logs(self):
+        """ Enable WRT logs from Intel Adapters."""
+        return self.bluetooth_facade.enable_wrt_logs()
+
+    def collect_wrt_logs(self):
+        """ Collect WRT logs from Intel Adapters."""
+        return self.bluetooth_facade.collect_wrt_logs()
+
 
     @test_retry_and_log
     def test_bluetoothd_running(self):

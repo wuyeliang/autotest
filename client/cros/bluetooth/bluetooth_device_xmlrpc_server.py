@@ -9,12 +9,14 @@ import collections
 import dbus
 import dbus.mainloop.glib
 import dbus.service
+import glob
 import gobject
 import json
 import logging
 import logging.handlers
 import subprocess
 import functools
+import time
 
 import common
 from autotest_lib.client.bin import utils
@@ -264,6 +266,230 @@ class BluetoothDeviceXmlRpcDelegate(xmlrpc_server.XmlRpcDelegate):
         except Exception as e:
             logging.error("log_message %s failed with %s", cmd, str(e))
 
+    def is_wrt_supported(self):
+        """Check if Bluetooth adapter support WRT logs
+
+        WRT is supported on Intel adapters other than (StP2 and WP2)
+
+        @returns : True if adapter is Intel made.
+        """
+        # Dict of Intel Adapters that support WRT and vid:pid
+        vid_pid_dict = {'HrP2' : '8086:02f0',
+                        'ThP2' : '8086:2526',
+                        'JfP2':  '8086:31dc',
+                        'JfP2-2' : '8086:9df0' }  # On Sarien/Arcada
+
+
+        def _get_lspci_vid_pid(output):
+            """ parse output of lspci -knn and get the vid:pid
+
+            output is of the form '01:00.0 Network controller [0280]:
+            \Intel Corporation Device [8086:2526] (rev 29)\n'
+
+            @returns : 'vid:pid' or None
+            """
+            try:
+                for i in output.split('\n'):
+                    if 'Network controller' in i:
+                        logging.debug('Got line %s', i)
+                        if 'Intel Corporation' in i:
+                            return i.split('[')[2].split(']')[0]
+                return None
+            except Exception as e:
+                logging.debug('Exception in _get_lspci_vidpid %s', str(e))
+                return None
+
+        try:
+            cmd = ['lspci', '-knn']
+            output = subprocess.check_output(cmd)
+            vid_pid = _get_lspci_vid_pid(output)
+            logging.debug("got vid_pid %s", vid_pid)
+            if vid_pid is not None:
+                if vid_pid in vid_pid_dict.values():
+                    return True
+        except Exception as e:
+            logging.error('is_intel_adapter  failed with %s', cmd, str(e))
+            return False
+
+    def enable_wrt_logs(self):
+        """ Enable WRT logs for Intel Bluetooth adapters.
+
+            This is applicable only to Intel adapters.
+            Execute a series of custom hciconfig commands to
+            setup WRT log collection
+
+            Precondition :
+                1) Check if the DUT has Intel controller other than StP2
+                2) Make sure the controller is powered on
+        """
+        fw_trace_cmd = ('hcitool cmd 3f 7c 01 10 00 00 00 FE 81 02 80 04 00 00'
+                       ' 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+                       ' 00 00 00 00 00 00 00')
+        ddc_read_cmd = 'hcitool cmd 3f 8c 28 01'
+        ddc_write_cmd_prefix = 'hcitool cmd 3f 8b 03 28 01'
+        hw_trace_cmd = ('hcitool cmd 3f 6f 01 08 00 00 00 00 00 00 00 00 01 00'
+                       ' 00 03 01 03 03 03 10 03 6A 0A 6A 0A 6A 0A 6A 0A 00 00'
+                       ' 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+                       ' 00 00 00 00 00 00')
+        multi_comm_trace_str = ('000000F600000000005002000000003F3F3F3'
+                                'F3F003F000000000000000001000000000000000000'
+                                '000000000000000000000000000000000000000000'
+                                '00000000000000000000000000000000000000000'
+                                '00000000000000000')
+        multi_comm_trace_file = ('/sys/kernel/debug/ieee80211'
+                                 '/phy0/iwlwifi/iwlmvm/send_hcmd')
+
+        def _execute_cmd(cmd_str, msg=''):
+            """Wrapper around subprocess.check_output.
+
+            @params cmd: Command to be executed as a string
+            @params msg: Optional description of the command
+
+            @returns: (True, output) if execution succeeded
+                  (False, None) if execution failed
+
+            """
+            try:
+                logging.info('Executing %s cmd', msg)
+                cmd = cmd_str.split(' ')
+                logging.debug('command is "%s"', cmd)
+                output = subprocess.check_output(cmd)
+                logging.info('%s cmd successfully executed', msg)
+                logging.debug('output is %s', output)
+                return (True, output)
+            except Exception as e:
+                logging.error('Exception %s while executing %s command', str(e),
+                              msg)
+                return (False, None)
+
+        def _get_ddc_write_cmd(ddc_read_result, ddc_write_cmd_prefix):
+           """ Create ddc_write_cmd from read command
+
+           This function performs the following
+           1) Take the output of ddc_read_cmd which is in following form
+              '< HCI Command: ogf 0x3f, ocf 0x008c, plen 1\n
+               01 \n>
+               HCI Event: 0x0e plen 6\n  01 8C FC 12 00 18 \n'
+           2) Take the last value of the output
+              01 8C FC 12 00 ===>> 18 <====
+           3) Bitwise or with 0x40
+              0x18 | 0x40 = 0x58
+           4) Add it to the end of the ddc_write_cmd
+              'hcitool 01 8C FC 00 28 01 ===> 58 <===='
+
+           """
+           last_line  = [i for i in ddc_read_result.split('\n') if i != ''][-1]
+           last_byte = [i for i in last_line.split(' ') if i != ''][-1]
+           processed_byte= hex(int(last_byte, 16) | 0x40).split('0x')[1]
+           cmd = ddc_write_cmd_prefix + ' ' + processed_byte
+           logging.debug('ddc_write_cmd is %s', cmd)
+           return cmd
+
+        try:
+           logging.info('Enabling WRT logs')
+           status, _ = _execute_cmd(fw_trace_cmd, 'FW trace cmd')
+           if not status:
+               logging.info('FW trace command execution failed')
+               return False
+
+           status, ddc_read_result = _execute_cmd(ddc_read_cmd, 'DDC Read')
+           if not status:
+               logging.info('DDC Read command  execution failed')
+               return False
+
+           ddc_write_cmd = _get_ddc_write_cmd(ddc_read_result,
+                                              ddc_write_cmd_prefix)
+           logging.debug('DDC Write command  is %s', ddc_write_cmd)
+           status, _ = _execute_cmd(ddc_write_cmd, 'DDC Write')
+           if not status:
+               logging.info('DDC Write commanad execution failed')
+               return False
+
+           status, hw_trace_result = _execute_cmd(hw_trace_cmd, 'HW trace')
+           if not status:
+               logging.info('HW Trace command  execution failed')
+               return False
+
+           logging.debug('Executing the multi_comm_trace cmd %s to file %s'
+                        ,multi_comm_trace_str, multi_comm_trace_file)
+           with open(multi_comm_trace_file, 'w') as f:
+               f.write(multi_comm_trace_str+'\n')
+               f.flush()
+
+           logging.info('WRT Logs enabled')
+           return True
+        except Exception as e:
+           logging.error('Exception %s while enabling WRT logs', str(e))
+           return False
+
+    def collect_wrt_logs(self):
+        """Collect the WRT logs for Intel Bluetooth adapters
+
+           This is applicable only to Intel adapters.
+           Execute following command to collect WRT log. The logs are
+           copied to /var/spool/crash/
+
+           'echo 1 > sudo tee /sys/kernel/debug/ieee80211/phy0'
+                           '/iwlwifi/iwlmvm/fw_dbg_collect'
+           This is to be called only after enable_wrt_logs is called
+
+
+           Precondition:
+                 1) enable_wrt_logs has been called
+        """
+        def _collect_logs():
+            """Execute command to collect wrt logs."""
+            try:
+                with open('/sys/kernel/debug/ieee80211/phy0/iwlwifi/'
+                          'iwlmvm/fw_dbg_collect', 'w') as f:
+                    f.write('1')
+                    f.flush()
+                # There is some flakiness in log collection. This sleep
+                # is due to the flakiness
+                time.sleep(10)
+                return True
+            except Exception as e:
+                logging.error('Exception %s in _collect logs ', str(e))
+                return False
+
+        def _get_num_log_files():
+            """Return number of WRT log files."""
+            try:
+                return len(glob.glob('/var/spool/crash/devcoredump_iwlwifi*'))
+            except Exception as e:
+                logging.debug('Exception %s raised in _get_num_log_files',
+                              str(e))
+                return 0
+
+        try:
+            logging.info('Collecting WRT logs')
+            #
+            # The command to trigger the logs does seems to work always.
+            # As a workaround for this flakiness, execute it multiple times
+            # until a new log is created
+            #
+            num_logs_present = _get_num_log_files()
+            logging.debug('%s logs present', num_logs_present)
+            for i in range(10):
+                time.sleep(1)
+                logging.debug('Executing command to collect WRT logs ')
+                if _collect_logs():
+                    logging.debug('Command to collect WRT logs executed')
+                else:
+                    logging.debug('Command to collect WRT logs failed')
+                    continue
+
+                if _get_num_log_files() > num_logs_present:
+                    logging.info('Successfully collected WRT logs ')
+                    return True
+                else:
+                    logging.debug('Log file not written. Trying again')
+
+            logging.info('Unable to collect WRT logs')
+            return False
+        except Exception as e:
+            logging.error('Exception %s while collecting WRT logs', str(e))
+            return False
 
     @xmlrpc_server.dbus_safe(False)
     def start_bluetoothd(self):

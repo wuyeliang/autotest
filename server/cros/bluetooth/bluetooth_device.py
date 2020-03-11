@@ -89,7 +89,22 @@ class BluetoothDevice(object):
         except Exception as e:
             logging.error("Exception '%s' in log_message '%s'", str(e), msg)
 
+    def is_wrt_supported(self):
+        """ Check if Bluetooth adapter support WRT logs.
 
+        Intel adapter support WRT (except of WP2 and StP2)
+
+        @returns: True if adapter support WRT logs
+        """
+        return self._proxy.is_wrt_supported()
+
+    def enable_wrt_logs(self):
+        """Enable wrt logs on Intel adapters."""
+        return self._proxy.enable_wrt_logs()
+
+    def collect_wrt_logs(self):
+        """Collect wrt logs on Intel adapters."""
+        return self._proxy.collect_wrt_logs()
 
     def start_bluetoothd(self):
         """start bluetoothd.
