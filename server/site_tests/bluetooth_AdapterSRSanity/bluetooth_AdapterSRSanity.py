@@ -421,6 +421,9 @@ class bluetooth_AdapterSRSanity(
         self.sr_peer_wake_le_hid()
         self.sr_while_discovering()
         self.sr_while_advertising()
+        self.sr_reconnect_multiple_classic_hid()
+        self.sr_reconnect_multiple_le_hid()
+        self.sr_reconnect_multiple_classic_le_hid()
 
     def run_once(self,
                  host,
