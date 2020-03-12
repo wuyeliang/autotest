@@ -210,6 +210,55 @@ class FirmwareTest(FAFTBase):
         self.blocking_sync()
         logging.info('FirmwareTest initialize done (id=%s)', self.run_id)
 
+    def run_once(self, *args, **dargs):
+        """Delegates testing to a test method.
+
+        test_name is either the 1st positional argument or a named argument.
+
+        test_name will be mapped to a test method as follows:
+        test_name                     method
+        --------------                -----------
+        <TestClass>                   test
+        <TestClass>.<Case>            test_<Case>
+        <TestClass>.<Case>.<SubCase>  test_<Case>_<SubCase>
+
+        Any arguments not consumed by FirmwareTest are passed to the test method.
+
+        @param test_name: Should be set to NAME in the control file.
+
+        @raise TestError: If test_name wasn't found in args, does not start
+                          with test class, or if the method is not found.
+        """
+        self_name = type(self).__name__
+
+        # Parse and remove test name from args.
+        if 'test_name' in dargs:
+            test_name = dargs.pop('test_name')
+        elif len(args) >= 1:
+            test_name = args[0]
+            args = args[1:]
+        else:
+            raise error.TestError('"%s" class must define run_once, or the'
+                                  ' control file must specify "test_name".' %
+                                  self_name)
+
+        # Check that test_name starts with the test class name.
+        name_parts = test_name.split('.')
+
+        test_class = name_parts.pop(0)
+        if test_class != self_name:
+            raise error.TestError('Class "%s" does not match that found in test'
+                                  ' name "%s"' % (self_name, test_class))
+
+        # Construct and call the test method.
+        method_name = '_'.join(['test'] + name_parts)
+        if not hasattr(self, method_name):
+            raise error.TestError('Method "%s" for testing "%s" not found in'
+                                  ' "%s"' % (method_name, test_name, self_name))
+
+        logging.info('Starting test: "%s"', test_name)
+        getattr(self, method_name)(*args, **dargs)
+
     def cleanup(self):
         """Autotest cleanup function."""
         # Unset state checker in case it's set by subclass
