@@ -10,7 +10,7 @@ PURPOSE = "Verify flashing firmware through ccd_cr50"
 ATTRIBUTES = "suite:faft_cr50_prepvt, suite:faft_cr50_pvt"
 TIME = "MEDIUM"
 TEST_TYPE = "server"
-DEPENDENCIES = "servo"
+DEPENDENCIES = "servo_state:WORKING"
 
 DOC = """
 This is a test to program both EC and AP firmware through ccd_cr50 device.

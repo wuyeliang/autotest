@@ -271,8 +271,10 @@ Below is a code snippet outlining the requirements; portions of the control file
 
 ```
 # ... Standard boilerplate variable assignments...
-DEPENDENCIES = "servo"
+DEPENDENCIES = "servo_state:WORKING"
 # ... more standard boilerplate...
+# servo_state:WORKING - servo is present and can provide required functionality
+# servo_state:BROKEN - servo is present but cannot provide required functionality
 
 args_dict = utils.args_to_dict(args)
 servo_args = hosts.SiteHost.get_servo_arguments(args_dict)

@@ -10,7 +10,7 @@ PURPOSE = "Verify that AP firmware handles a corrupt Wilco diagnostics binary an
 ATTRIBUTES = "suite:faft_wilco, suite:faft_bios"
 TIME = "MEDIUM"
 TEST_TYPE = "server"
-DEPENDENCIES = "servo, board:sarien"
+DEPENDENCIES = "servo_state:WORKING, board:sarien"
 JOB_RETRIES = 0
 
 DOC = """Corrupt the Wilco diagnostics image and then reinstall it.
