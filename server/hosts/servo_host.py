@@ -246,13 +246,12 @@ class ServoHost(base_servohost.BaseServoHost):
             self._servo_state = servo_constants.SERVO_STATE_WORKING
             self.record('INFO', None, None,
                         'ServoHost verify set servo_state as WORKING')
-        except:
+        except Exception as e:
             self._servo_state = servo_constants.SERVO_STATE_BROKEN
             self.record('INFO', None, None,
                         'ServoHost verify set servo_state as BROKEN')
-            self.disconnect_servo()
-            self.stop_servod()
-            raise
+            if self._is_critical_error(e):
+                raise
 
 
     def repair(self, silent=False):
@@ -272,13 +271,29 @@ class ServoHost(base_servohost.BaseServoHost):
             # reboot request created by this servo because it passed repair.
             if self.is_labstation():
                 self.withdraw_reboot_request()
-        except:
+        except Exception as e:
             self._servo_state = servo_constants.SERVO_STATE_BROKEN
             self.record('INFO', None, None,
                         'ServoHost repair set servo_state as BROKEN')
-            self.disconnect_servo()
-            self.stop_servod()
-            raise
+            if self._is_critical_error(e):
+                self.disconnect_servo()
+                self.stop_servod()
+                raise
+
+
+    def _is_critical_error(self, error):
+        if (isinstance(error, hosts.AutoservVerifyDependencyError)
+            and not error.is_critical()):
+            logging.warning('Non-critical verify failure(s) detected during'
+                            ' verify/repair servo, servo connection will'
+                            ' still up but may not fully functional.'
+                            ' Some repair actions and servo depended'
+                            ' tests may not run.')
+            return False
+        logging.info('Critical verify failure(s) detected during repair/verify'
+                     ' servo. Disconnecting servo and stop servod, all repair '
+                     'action and tests that depends on servo will not run.')
+        return True
 
 
     def get_servo(self):

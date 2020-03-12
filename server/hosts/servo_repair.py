@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import sys
 import functools
 import logging
 
@@ -62,7 +63,7 @@ class _UpdateVerifier(hosts.Verifier):
         # We don't want failure from update block DUT repair action.
         # See crbug.com/1029950.
         except Exception as e:
-            logging.error('Failed to update servohost image: %s', e)
+            raise hosts.AutoservNonCriticalVerifyError, e.message, sys.exc_info()[2]
 
     @property
     def description(self):
@@ -278,10 +279,14 @@ class _PowerButtonVerifier(hosts.Verifier):
     def verify(self, host):
         if host.servo_board in self._BOARDS_WO_PWR_BUTTON:
             return
-        button = host.get_servo().get('pwr_button')
+        try:
+            button = host.get_servo().get('pwr_button')
+        except Exception as e:
+            raise hosts.AutoservNonCriticalVerifyError, e.message, sys.exc_info()[2]
+
         if button != 'release':
-            raise hosts.AutoservVerifyError(
-                    'Check ribbon cable: \'pwr_button\' is stuck')
+            raise hosts.AutoservNonCriticalVerifyError(
+                'Check ribbon cable: \'pwr_button\' is stuck')
 
 
     @property
@@ -296,10 +301,14 @@ class _LidVerifier(hosts.Verifier):
 
     @ignore_exception_for_non_cros_host
     def verify(self, host):
-        lid_open = host.get_servo().get('lid_open')
+        try:
+            lid_open = host.get_servo().get('lid_open')
+        except Exception as e:
+            raise hosts.AutoservNonCriticalVerifyError, e.message, sys.exc_info()[2]
+
         if lid_open != 'yes' and lid_open != 'not_applicable':
-            raise hosts.AutoservVerifyError(
-                    'Check lid switch: lid_open is %s' % lid_open)
+            raise hosts.AutoservNonCriticalVerifyError(
+                'Check lid switch: lid_open is %s' % lid_open)
 
     @property
     def description(self):
