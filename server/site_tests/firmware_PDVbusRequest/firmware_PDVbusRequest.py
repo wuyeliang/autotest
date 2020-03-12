@@ -108,6 +108,12 @@ class firmware_PDVbusRequest(FirmwareTest):
         pdtester_failures = []
         logging.info('Start PDTester initiated tests')
         charging_voltages = self.pdtester.get_charging_voltages()
+
+        if dut_voltage_limit not in charging_voltages:
+            raise error.TestError('Plugged a wrong charger to servo v4? '
+                                  '%dV not in supported voltages %s.' %
+                                  dut_voltage_limit, str(charging_voltages))
+
         for voltage in charging_voltages:
             logging.info('********* %r *********', voltage)
             # Set charging voltage
