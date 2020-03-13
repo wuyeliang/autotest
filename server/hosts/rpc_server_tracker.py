@@ -200,24 +200,45 @@ class RpcServerTracker(object):
                 except socket.error as e:
                     e.filename = server_desc
                     raise
-            successful = False
+
             try:
                 logging.info('Waiting %d seconds for XMLRPC server '
                              'to start.', timeout_seconds)
                 ready_test()
-                successful = True
-            except socket.error as e:
-                e.filename = rpc_url.replace('http://', '')
-                raise
-            finally:
-                if not successful:
-                    logging.error('Failed to start XMLRPC server.')
-                    if logfile:
-                        with tempfile.NamedTemporaryFile() as temp:
-                            self._host.get_file(logfile, temp.name)
-                            logging.error('The log of XML RPC server:\n%s',
-                                          open(temp.name).read())
+            except Exception as exc:
+                log_lines = []
+                if logfile:
+                    logging.warn('Failed to start XMLRPC server; getting log.')
+                    with tempfile.NamedTemporaryFile() as temp:
+                        self._host.get_file(logfile, temp.name)
+                        with open(temp.name) as f:
+                            log_lines = f.read().rstrip().splitlines()
+                else:
+                    logging.warn('Failed to start XMLRPC server; no log.')
+
+                fail_msg = 'Failed to start XMLRPC server.  %s.%s: %s.' % (
+                        type(exc).__module__, type(exc).__name__,
+                        str(exc).rstrip('.'))
+                if log_lines:
+                    fail_msg += '  Log tail: %r' % log_lines[-1]
+                if len(log_lines) > 1:
+                    # The failure message includes only the last line,
+                    # so report the whole thing separately.
+                    logging.error('Full XMLRPC server log:\n%s',
+                                  '\n'.join(log_lines))
+
+                if isinstance(exc, (httplib.BadStatusLine, socket.error)):
+                    # Ordinary failure: raise TestError with the failure info,
+                    # and keep the verbose traceback at debug level.
+                    logging.debug('Original exception:', exc_info=True)
                     self.disconnect(port)
+                    raise error.TestError(fail_msg)
+                else:
+                    # Unusual failure: keep the original exception,
+                    # and report the failure info via logging.
+                    logging.error('%s', fail_msg)
+                    self.disconnect(port)
+                    raise
         logging.info('XMLRPC server started successfully.')
         return proxy
 
