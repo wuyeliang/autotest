@@ -81,6 +81,7 @@ DEVICE_NAME_LOOKUP = {
     # 0x02f0 is for Quasar on CML, 0x4070 and 0x0074 is for HrP2
     DeviceInfo('0x8086', '0x02f0', subsystem='0x4070'): NAME_INTEL_22560,
     DeviceInfo('0x8086', '0x02f0', subsystem='0x0074'): NAME_INTEL_22560,
+    DeviceInfo('0x8086', '0x4df0', subsystem='0x0074'): NAME_INTEL_22560,
     # With the same Quasar, subsystem_id 0x0034 is JfP2
     DeviceInfo('0x8086', '0x02f0', subsystem='0x0034'): NAME_INTEL_9000,
     DeviceInfo('0x02d0', '0x4354'): NAME_BROADCOM_BCM4354_SDIO,

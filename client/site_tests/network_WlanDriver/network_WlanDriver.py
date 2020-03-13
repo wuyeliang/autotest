@@ -60,6 +60,7 @@ class network_WlanDriver(test.test):
             },
             'Intel 22560': {
                     '4.19': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
+                    '5.4': 'wireless/iwl7000/iwlwifi/iwlwifi.ko',
             },
             'Atheros AR9462': {
                     '3.4': 'wireless/ath/ath9k_btcoex/ath9k_btcoex.ko',
