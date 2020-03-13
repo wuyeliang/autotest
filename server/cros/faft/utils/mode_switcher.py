@@ -436,6 +436,7 @@ class _BaseModeSwitcher(object):
         """
         logging.info('-[ModeSwitcher]-[ start reboot_to_mode(%r, %r, %r) ]-',
                      to_mode, from_mode, wait_for_dut_up)
+
         if sync_before_boot:
             self.faft_framework.blocking_sync()
         if to_mode == 'rec':
@@ -449,10 +450,23 @@ class _BaseModeSwitcher(object):
                 self.wait_for_client()
 
         elif to_mode == 'dev':
+            if sync_before_boot:
+                lines = self.faft_client.system.run_shell_command_get_output(
+                        'crossystem')
+                logging.debug('-[ModeSwitcher]- crossystem output:\n%s',
+                              '\n'.join(lines))
+                devsw_cur = self.faft_client.system.get_crossystem_value(
+                        'devsw_cur')
+            else:
+                devsw_cur = 'N/A'
             self._enable_dev_mode_and_reboot()
             if wait_for_dut_up:
                 self.bypass_dev_mode()
-                self.wait_for_client()
+                try:
+                    self.wait_for_client()
+                except ConnectionError as e:
+                    raise ConnectionError('{} devsw_cur: {}'.format(e,
+                                                                    devsw_cur))
 
         elif to_mode == 'normal':
             self._enable_normal_mode_and_reboot()
