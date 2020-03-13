@@ -291,6 +291,30 @@ class UpdateEngineUtil(object):
                 (payload_props_url, err))
 
 
+    def _append_query_to_url(self, url, query_dict):
+        """
+        Appends the dictionary kwargs to the URL url as query string.
+
+        This function will replace the already existing query strings in url
+        with the ones in the input dictionary.
+
+        @param url: The given input URL.
+        @param query_dicl: A dictionary of key/values to be converted to query
+                           string.
+        @return: The same input URL url but with new query string items added.
+
+        """
+        # TODO(ahassani): This doesn't work (or maybe should not) for queries
+        # with multiple values for a specific key.
+        parsed_url = list(urlparse.urlsplit(url))
+        parsed_query = urlparse.parse_qs(parsed_url[3])
+        for k, v in query_dict.items():
+            parsed_query[k] = [v]
+        parsed_url[3] = '&'.join(
+            '%s=%s' % (k, v[0]) for k, v in parsed_query.items())
+        return urlparse.urlunsplit(parsed_url)
+
+
     def _check_for_update(self, update_url, interactive=True,
                           ignore_status=False, wait_for_completion=False,
                           **kwargs):
@@ -311,16 +335,7 @@ class UpdateEngineUtil(object):
                 append the new values and override the old ones.
 
         """
-        # TODO(ahassani): This doesn't work (or maybe should not) for queries
-        # with multiple values for a specific key.
-        parsed_url = list(urlparse.urlsplit(update_url))
-        parsed_query = urlparse.parse_qs(parsed_url[3])
-        for k, v in kwargs.items():
-            parsed_query[k] = [v]
-        parsed_url[3] = '&'.join(
-            '%s=%s' % (k, v[0]) for k, v in parsed_query.items())
-        update_url = urlparse.urlunsplit(parsed_url)
-
+        update_url = self._append_query_to_url(update_url, kwargs)
         cmd = ['update_engine_client',
                '--update' if wait_for_completion else '--check_for_update',
                '--omaha_url=%s' % update_url]
@@ -374,11 +389,8 @@ class UpdateEngineUtil(object):
                        and appended to the update_url
 
         """
-        # TODO(ahassani): This is quite fragile as the given URL can already
-        # have a search query. We need to unpack the URL and update the search
-        # query portion of it with kwargs.
-        update_url = (update_url + '?' + '&'.join('%s=%s' % (k, v)
-                                                  for k, v in kwargs.items()))
+        update_url = self._append_query_to_url(update_url, kwargs)
+
         self._run('mkdir %s' % os.path.dirname(self._CUSTOM_LSB_RELEASE),
                   ignore_status=True)
         self._run('touch %s' % self._CUSTOM_LSB_RELEASE)

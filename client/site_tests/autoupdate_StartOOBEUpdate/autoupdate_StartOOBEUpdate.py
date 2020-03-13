@@ -44,7 +44,8 @@ class autoupdate_StartOOBEUpdate(update_engine_test.UpdateEngineTest):
         @param critical_update: True if the update is critical.
 
         """
-        self._create_custom_lsb_release(update_url)
+        self._create_custom_lsb_release(update_url,
+                                        critical_update=critical_update)
         # Start chrome instance to interact with OOBE.
         self._chrome = chrome.Chrome(auto_login=False)
         self._oobe = self._chrome.browser.oobe
