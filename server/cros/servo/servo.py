@@ -1300,7 +1300,13 @@ class Servo(object):
         pwr = self.get('image_usbkey_pwr')
         if pwr == 'off':
             return pwr
-        return self.get('image_usbkey_direction')
+        direction = self.get('image_usbkey_direction')
+        if direction == 'servo_sees_usbkey':
+            return 'host'
+        if direction == 'dut_sees_usbkey':
+            return 'dut'
+        raise error.TestFail('image_usbkey_direction set an unknown mux '
+                             'direction: %s' % direction)
 
     def set_servo_v4_role(self, role):
         """Set the power role of servo v4, either 'src' or 'snk'.
