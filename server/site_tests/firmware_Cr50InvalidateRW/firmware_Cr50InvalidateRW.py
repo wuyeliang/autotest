@@ -137,6 +137,7 @@ class firmware_Cr50InvalidateRW(test.test):
 
     def run_once(self, host):
         """Login to validate ChromeOS corrupts the inactive header"""
+        raise error.TestNAError('Skipping due to b/151473821')
         # After clearing the tpm owner the header will be corrupted on the
         # second login
         self.clear_tpm_owner()
