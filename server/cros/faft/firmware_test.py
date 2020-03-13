@@ -931,7 +931,8 @@ class FirmwareTest(FAFTBase):
 
         @return the name of the power state, or None if a problem occurred
         """
-        if not self.faft_config.chrome_ec:
+        if not hasattr(self, 'ec'):
+            # Don't fail when EC not present or not fully initialized
             return None
 
         pattern = r'power state (\w+) = (\w+)'
