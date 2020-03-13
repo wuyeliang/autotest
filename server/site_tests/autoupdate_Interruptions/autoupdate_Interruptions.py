@@ -79,7 +79,7 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         self._check_for_update(update_url, no_update=True)
 
         # Verify that the update completed successfully by checking hostlog.
-        rootfs_hostlog, reboot_hostlog = self._create_hostlog_files()
+        rootfs_hostlog, reboot_hostlog = self._create_hostlog_files(update_url)
         self.verify_update_events(chromeos_version, rootfs_hostlog)
         self.verify_update_events(chromeos_version, reboot_hostlog,
                                   chromeos_version)

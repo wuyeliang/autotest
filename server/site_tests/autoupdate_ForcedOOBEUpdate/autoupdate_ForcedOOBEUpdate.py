@@ -143,7 +143,7 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
             return
 
         # Verify that the update completed successfully by checking hostlog.
-        rootfs_hostlog, reboot_hostlog = self._create_hostlog_files()
+        rootfs_hostlog, reboot_hostlog = self._create_hostlog_files(update_url)
         self.verify_update_events(self._CUSTOM_LSB_VERSION, rootfs_hostlog)
         self.verify_update_events(self._CUSTOM_LSB_VERSION, reboot_hostlog,
                                   self._CUSTOM_LSB_VERSION)
