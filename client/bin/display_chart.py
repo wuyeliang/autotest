@@ -4,9 +4,6 @@
 
 '''Login with test account and display chart file using telemetry.'''
 
-# This sets up import paths for autotest.
-import common
-
 import argparse
 import contextlib
 import logging
@@ -14,6 +11,14 @@ import os
 import signal
 import time
 
+# Set chart process preferred logging format before overridden by importing
+# common package.
+logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(message)s')
+
+# This sets up import paths for autotest.
+import common
 from autotest_lib.client.bin import utils
 from autotest_lib.client.common_lib.cros import chrome
 from autotest_lib.client.cros.input_playback import keyboard
@@ -65,6 +70,7 @@ def display(filepath):
         kb.press_key('f4')
         kb.close()
 
+        logging.info('Chart is ready.')
         while displaying:
             time.sleep(1)
 
