@@ -114,9 +114,6 @@ suite:experimental
 suite:factory
 suite:faft
 suite:faft_bios
-suite:faft_bios_au_1
-suite:faft_bios_au_2
-suite:faft_bios_au_3
 suite:faft_bios_ec3po
 suite:faft_bios_tot
 suite:faft_cr50_experimental

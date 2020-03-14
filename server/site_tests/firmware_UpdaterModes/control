@@ -4,7 +4,7 @@
 
 AUTHOR = "Chrome OS Team"
 NAME = "firmware_UpdaterModes"
-ATTRIBUTES = "suite:faft, suite:faft_bios, suite:faft_bios_au_1, suite:faft_bios_au_2, suite:faft_bios_au_3, suite:faft_lv5, suite:faft_bios_tot"
+ATTRIBUTES = "suite:faft, suite:faft_bios, suite:faft_lv5, suite:faft_bios_tot"
 TIME = "SHORT"
 TEST_CATEGORY = "Functional"
 TEST_CLASS = "firmware"
