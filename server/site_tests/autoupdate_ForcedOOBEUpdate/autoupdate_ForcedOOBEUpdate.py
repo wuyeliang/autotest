@@ -92,6 +92,7 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
         # Call client test to start the forced OOBE update.
         self._run_client_test_and_check_result('autoupdate_StartOOBEUpdate',
                                                image_url=update_url,
+                                               full_payload=full_payload,
                                                cellular=cellular,
                                                critical_update=True)
 

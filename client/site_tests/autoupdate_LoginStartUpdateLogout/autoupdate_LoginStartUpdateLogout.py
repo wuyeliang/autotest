@@ -14,9 +14,10 @@ class autoupdate_LoginStartUpdateLogout(update_engine_test.UpdateEngineTest):
     """
     version = 1
 
-    def run_once(self, update_url, progress_to_complete):
+    def run_once(self, update_url, progress_to_complete, full_payload=True):
         """The entry point for this test."""
         # Login as regular user. Start an update. Then Logout
         with chrome.Chrome(logged_in=True):
-            self._check_for_update(update_url, critical_update=True)
+            self._check_for_update(update_url, critical_update=True,
+                                   full_payload=full_payload)
             self._wait_for_progress(progress_to_complete)

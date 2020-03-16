@@ -42,7 +42,8 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
         # Login, start the update, logout
         self._run_client_test_and_check_result(
             'autoupdate_LoginStartUpdateLogout', update_url=update_url,
-            progress_to_complete=progress)
+            progress_to_complete=progress,
+            full_payload=full_payload)
 
         if interrupt is not None:
             if self._is_update_finished_downloading():
@@ -53,7 +54,8 @@ class autoupdate_Interruptions(update_engine_test.UpdateEngineTest):
                 self._host.reboot()
                 utils.poll_for_condition(self._get_update_engine_status,
                                          desc='update engine to start')
-                self._check_for_update(update_url, critical_update=True)
+                self._check_for_update(update_url, critical_update=True,
+                                       full_payload=full_payload)
             elif interrupt is 'network':
                 self._disconnect_then_reconnect_network(update_url)
             elif interrupt is 'suspend':
