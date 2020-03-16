@@ -12,7 +12,7 @@ _ALL = 'all'
 
 CONFIG = {}
 
-CONFIG['TEST_NAME'] = 'cheets_VTS'
+CONFIG['TEST_NAME'] = 'cheets_VTS_R'
 CONFIG['DOC_TITLE'] = \
     'Vendor Test Suite (VTS)'
 CONFIG['MOBLAB_SUITE_NAME'] = 'suite:android-vts'
@@ -31,7 +31,7 @@ CONFIG['TRADEFED_EXECUTABLE_PATH'] = 'android-vts/tools/vts-tradefed'
 
 CONFIG['TRADEFED_IGNORE_BUSINESS_LOGIC_FAILURE'] = False
 
-CONFIG['INTERNAL_SUITE_NAMES'] = ['suite:arc-vts']
+CONFIG['INTERNAL_SUITE_NAMES'] = ['suite:arc-cts-r']
 
 CONFIG['CONTROLFILE_TEST_FUNCTION_NAME'] = 'run_TS'
 CONFIG['CONTROLFILE_WRITE_SIMPLE_QUAL_AND_REGRESS'] = False # True
@@ -120,7 +120,7 @@ CONFIG['EXTRA_SUBMODULE_OVERRIDE'] = {}
 CONFIG['EXTRA_COMMANDLINE'] = {}
 
 CONFIG['EXTRA_ATTRIBUTES'] = {
-    'tradefed-run-collect-tests-only-internal': ['suite:arc-vts'],
+    'tradefed-run-collect-tests-only-internal': ['suite:arc-cts-r'],
 }
 
 CONFIG['EXTRA_ARTIFACTS'] = {}

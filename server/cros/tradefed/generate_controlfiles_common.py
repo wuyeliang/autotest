@@ -180,6 +180,12 @@ def get_tradefed_revision(line):
     if m:
         return m.group(1)
 
+    m = re.search(
+        r'Android Vendor Test Suite (.*) \(', line)
+
+    if m:
+        return m.group(1)
+
     logging.warning('Could not identify revision in line "%s".', line)
     return None
 
@@ -810,7 +816,8 @@ def get_tradefed_data(path, is_public, abi):
         line = p.stdout.readline().strip()
         # Android Compatibility Test Suite 7.0 (3423912)
         if (line.startswith('Android Compatibility Test Suite ') or
-            line.startswith('Android Google ')):
+            line.startswith('Android Google ') or
+            line.startswith('Android Vendor Test Suite')):
             logging.info('Unpacking: %s.', line)
             build = get_tradefed_build(line)
             revision = get_tradefed_revision(line)
@@ -818,13 +825,14 @@ def get_tradefed_data(path, is_public, abi):
             is_in_intaractive_mode = False
         elif line.startswith('arm') or line.startswith('x86'):
             # Newer CTS shows ABI-module pairs like "arm64-v8a CtsNetTestCases"
-            modules.add(line.split()[1])
+            line = line.split()[1]
+            if (CONFIG['TEST_NAME'] != 'cheets_VTS_R' or
+                line.startswith('Vts') or line.startswith('tradefed')):
+                modules.add(line)
         elif line.startswith('Cts'):
             modules.add(line)
         elif line.startswith('Gts'):
             # Older GTS plainly lists the module names
-            modules.add(line)
-        elif line.startswith('Vts'):
             modules.add(line)
         elif line.startswith('cts-'):
             modules.add(line)
