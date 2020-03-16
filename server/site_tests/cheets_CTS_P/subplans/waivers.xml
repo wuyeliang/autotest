@@ -7,8 +7,4 @@
   <Entry include="CtsLibcoreTestCases com.android.org.conscrypt.javax.net.ssl.SSLContextTest#test_SSLContext_x509AndPskConfiguration_defaultProviderOnly"/>
   <Entry include="CtsLibcoreTestCases com.android.org.conscrypt.javax.net.ssl.SSLSocketTest#test_SSLSocket_ClientHello_cipherSuites"/>
   <Entry include="CtsLibcoreTestCases org.apache.harmony.tests.javax.net.ssl.SSLSessionTest#test_getCipherSuite"/>
-  <Entry include="CtsViewTestCases android.view.cts.PixelCopyTest#testDialogProducer" />
-  <Entry include="CtsViewTestCases android.view.cts.PixelCopyTest#testDialogProducerCopyToRGBA16F" />
-  <Entry include="CtsViewTestCases android.view.cts.PixelCopyTest#testWindowProducer" />
-  <Entry include="CtsViewTestCases android.view.cts.PixelCopyTest#testWindowProducerCopyToRGBA16F" />
 </SubPlan>
