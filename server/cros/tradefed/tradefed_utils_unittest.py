@@ -141,6 +141,11 @@ class TradefedTestTest(unittest.TestCase):
             'tradefed_utils_unittest_data', 'results', '2019.11.07_10.14.55',
             'test_result.xml'))
 
+        # assertNoRaises
+        tradefed_utils.get_test_result_xml_path(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'tradefed_utils_unittest_data', 'not_exist'))
+
     def test_get_perf_metrics_from_test_result_xml(self):
         perf_result = tradefed_utils.get_perf_metrics_from_test_result_xml(
             os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -356,6 +361,14 @@ class TradefedTestTest(unittest.TestCase):
                          'malformed_test_result.xml'),
             os.path.join('/', 'resultsdir'))
         self.assertListEqual(list(perf_result), [])
+
+        # assertNoRaises
+        tradefed_utils.get_perf_metrics_from_test_result_xml(
+            os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                         'tradefed_utils_unittest_data',
+                         'not_exist'),
+            os.path.join('/', 'resultsdir'))
+
 
 
 if __name__ == '__main__':

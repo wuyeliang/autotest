@@ -193,35 +193,48 @@ def select_32bit_java():
             os.environ['PATH'] = (
                 os.path.join(java, 'bin') + os.pathsep + os.environ['PATH'])
 
+
 # A similar implementation in Java can be found at
 # https://android.googlesource.com/platform/test/suite_harness/+/refs/heads/\
 # pie-cts-dev/common/util/src/com/android/compatibility/common/util/\
 # ResultHandler.java
 def get_test_result_xml_path(results_destination):
-    """Get the path of test_result.xml from the last session."""
-    last_result_path = None
-    for dir in os.listdir(results_destination):
-        result_dir = os.path.join(results_destination, dir)
-        result_path = os.path.join(result_dir, 'test_result.xml')
-        # We use the lexicographically largest path, because |dir| are
-        # of format YYYY.MM.DD_HH.MM.SS. The last session will always
-        # have the latest date which leads to the lexicographically
-        # largest path.
-        if last_result_path and last_result_path > result_path:
-            continue
-        # We need to check for `islink` as `isdir` returns true if |result_dir|
-        # is a symbolic link to a directory.
-        if not os.path.isdir(result_dir) or os.path.islink(result_dir):
-            continue
-        if not os.path.exists(result_path):
-            continue
-        last_result_path = result_path
-    return last_result_path
+    """Get the path of test_result.xml from the last session.
+    Raises:
+        Should never raise!
+    """
+    try:
+        last_result_path = None
+        for dir in os.listdir(results_destination):
+            result_dir = os.path.join(results_destination, dir)
+            result_path = os.path.join(result_dir, 'test_result.xml')
+            # We use the lexicographically largest path, because |dir| are
+            # of format YYYY.MM.DD_HH.MM.SS. The last session will always
+            # have the latest date which leads to the lexicographically
+            # largest path.
+            if last_result_path and last_result_path > result_path:
+                continue
+            # We need to check for `islink` as `isdir` returns true if
+            # |result_dir| is a symbolic link to a directory.
+            if not os.path.isdir(result_dir) or os.path.islink(result_dir):
+                continue
+            if not os.path.exists(result_path):
+                continue
+            last_result_path = result_path
+        return last_result_path
+    except Exception as e:
+        logging.warning(
+            'Exception raised in '
+            '|tradefed_utils.get_test_result_xml_path|: {'
+            '0}'.format(e))
 
 
 def get_perf_metrics_from_test_result_xml(result_path, resultsdir):
     """Parse test_result.xml and each <Metric /> is mapped to a dict that
-    can be used as kwargs of |TradefedTest.output_perf_value|."""
+    can be used as kwargs of |TradefedTest.output_perf_value|.
+    Raises:
+        Should never raise!
+    """
     try:
         root = ElementTree.parse(result_path)
         for module in root.iter('Module'):
