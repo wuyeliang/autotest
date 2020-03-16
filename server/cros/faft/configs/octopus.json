@@ -12,7 +12,7 @@
         "smart_usb_charge",
         "cbi"
     ],
-    "firmware_screen": 25,
+    "firmware_screen": 30,
     "usb_plug": 45,
     "spi_voltage": "pp1800",
     "custom_usb_enable_names": [
