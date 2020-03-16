@@ -167,6 +167,10 @@ class ServoHost(base_servohost.BaseServoHost):
         self._repair_strategy = (
                 servo_repair.create_servo_repair_strategy())
 
+    def __str__(self):
+        return "<%s '%s:%s'>" % (
+                type(self).__name__, self.hostname, self.servo_port)
+
     def connect_servo(self):
         """Establish a connection to the servod server on this host.
 
@@ -215,7 +219,8 @@ class ServoHost(base_servohost.BaseServoHost):
                     None, self.servo_port,
                     ready_test_name=self.SERVO_READY_METHOD,
                     timeout_seconds=60,
-                    request_timeout_seconds=3600)
+                    request_timeout_seconds=3600,
+                    server_desc=str(self))
         else:
             remote = 'http://%s:%s' % (self.hostname, self.servo_port)
             return xmlrpclib.ServerProxy(remote)

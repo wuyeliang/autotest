@@ -33,11 +33,11 @@ class _Method(object):
     def __call__(self, *args, **dargs):
         return self.__call_method(self.__name, *args, **dargs)
 
-    def __str__(self):
+    def __repr__(self):
         """Return a description of the method object"""
         return "%s('%s')" % (self.__class__.__name__, self.__name)
 
-    def __repr__(self):
+    def __str__(self):
         """Return a description of the method object"""
         return "<%s '%s'>" % (self.__class__.__name__, self.__name)
 
@@ -105,7 +105,8 @@ class RPCProxy(object):
                 ready_test_name=self._client_config.rpc_ready_call,
                 timeout_seconds=self._client_config.rpc_timeout,
                 logfile="%s.%s" % (self._client_config.rpc_logfile,
-                                   time.time())
+                                   time.time()),
+                server_desc=str(self)
                 )
 
     def disconnect(self):
@@ -138,10 +139,13 @@ class RPCProxy(object):
                 self._client_config.rpc_port, pkill=need_pkill)
         self._faft_client = None
 
-    def __str__(self):
+    def __repr__(self):
         """Return a description of the proxy object"""
         return '%s(%s)' % (self.__class__.__name__, self._client)
 
-    def __repr__(self):
+    def __str__(self):
         """Return a description of the proxy object"""
-        return "<%s '%s'>" % (self.__class__.__name__, self._client.hostname)
+        return "<%s '%s:%s'>" % (
+                self.__class__.__name__,
+                self._client.hostname,
+                self._client_config.rpc_port)

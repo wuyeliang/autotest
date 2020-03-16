@@ -370,6 +370,13 @@ class Servo(object):
         self._prev_log_inode = None
         self._prev_log_size = 0
 
+    def __str__(self):
+        """Description of this object and address, for use in errors"""
+        return "<%s '%s:%s'>" % (
+                type(self).__name__,
+                self._servo_host.hostname,
+                self._servo_host.servo_port)
+
     @property
     def servo_serial(self):
         """Returns the serial number of the servo board."""
@@ -414,8 +421,7 @@ class Servo(object):
         try:
             self._server.hwinit()
         except socket.error as e:
-            e.filename = '%s:%s' % (self._servo_host.hostname,
-                                    self._servo_host.servo_port)
+            e.filename = str(self)
             raise
         if self.has_control('usb_mux_oe1'):
             self.set('usb_mux_oe1', 'on')
@@ -696,13 +702,20 @@ class Servo(object):
 
     def get_board(self):
         """Get the board connected to servod."""
-        return self._server.get_board()
+        try:
+            return self._server.get_board()
+        except socket.error as e:
+            e.filename = str(self)
+            raise
 
 
     def get_base_board(self):
         """Get the board of the base connected to servod."""
         try:
             return self._server.get_base_board()
+        except socket.error as e:
+            e.filename = str(self)
+            raise
         except  xmlrpclib.Fault as e:
             # TODO(waihong): Remove the following compatibility check when
             # the new versions of hdctools are deployed.
@@ -828,7 +841,10 @@ class Servo(object):
         ctrl_name = self._build_ctrl_name(ctrl_name, prefix)
         try:
             return self._server.get(ctrl_name)
-        except  xmlrpclib.Fault as e:
+        except socket.error as e:
+            e.filename = str(self)
+            raise
+        except xmlrpclib.Fault as e:
             self._inspect_control_failure(e, ctrl_name, get=True)
 
     def set(self, ctrl_name, ctrl_value, prefix=''):
@@ -871,7 +887,10 @@ class Servo(object):
         logging.debug('Setting %s to %r', ctrl_name, ctrl_value)
         try:
             self._server.set(ctrl_name, ctrl_value)
-        except  xmlrpclib.Fault as e:
+        except socket.error as e:
+            e.filename = str(self)
+            raise
+        except xmlrpclib.Fault as e:
             self._inspect_control_failure(e, ctrl_name, get=False)
 
     def set_get_all(self, controls):
@@ -885,6 +904,9 @@ class Servo(object):
         try:
             logging.debug('Set/get all: %s', str(controls))
             rv = self._server.set_get_all(controls)
+        except socket.error as e:
+            e.filename = str(self)
+            raise
         except xmlrpclib.Fault as e:
             # TODO(waihong): Remove the following backward compatibility when
             # the new versions of hdctools are deployed.
@@ -1057,7 +1079,11 @@ class Servo(object):
         @return: The version of the servo.
 
         """
-        servo_type = self._server.get_version()
+        try:
+            servo_type = self._server.get_version()
+        except socket.error as e:
+            e.filename = str(self)
+            raise
         if '_and_' not in servo_type or not active:
             return servo_type
 
@@ -1087,7 +1113,11 @@ class Servo(object):
 
     def main_device_is_ccd(self):
         """Whether the main servo device (no prefixes) is a ccd device."""
-        servo = self._server.get_version()
+        try:
+            servo = self._server.get_version()
+        except socket.error as e:
+            e.filename = str(self)
+            raise
         return 'ccd_cr50' in servo and 'servo_micro' not in servo
 
 

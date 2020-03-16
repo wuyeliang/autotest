@@ -114,7 +114,8 @@ class RpcServerTracker(object):
 
     def xmlrpc_connect(self, command, port, command_name=None,
                        ready_test_name=None, timeout_seconds=10,
-                       logfile=None, request_timeout_seconds=None):
+                       logfile=None, request_timeout_seconds=None,
+                       server_desc=None):
         """Connect to an XMLRPC server on the host.
 
         The `command` argument should be a simple shell command that
@@ -155,6 +156,7 @@ class RpcServerTracker(object):
         @param logfile Logfile to send output when running
             'command' argument.
         @param request_timeout_seconds Timeout in seconds for an XMLRPC request.
+        @param server_desc: Extra text to report in socket.error descriptions.
 
         """
         # Clean up any existing state.  If the caller is willing
@@ -169,10 +171,14 @@ class RpcServerTracker(object):
                 remote_cmd = command
             remote_pid = self._host.run_background(remote_cmd)
             logging.debug('Started XMLRPC server on host %s, pid = %s',
-                        self._host.hostname, remote_pid)
+                          self._host.hostname, remote_pid)
 
         # Tunnel through SSH to be able to reach that remote port.
         rpc_url = self._setup_rpc(port, command_name, remote_pid=remote_pid)
+        if not server_desc:
+            server_desc = "<%s '%s:%s'>" % (command_name or 'XMLRPC',
+                                            self._host.hostname, port)
+        server_desc = '%s (%s)' % (server_desc, rpc_url.replace('http://', ''))
         if request_timeout_seconds is not None:
             proxy = TimeoutXMLRPCServerProxy(
                     rpc_url, timeout=request_timeout_seconds, allow_none=True)
@@ -192,7 +198,7 @@ class RpcServerTracker(object):
                 try:
                     getattr(proxy, ready_test_name)()
                 except socket.error as e:
-                    e.filename = rpc_url.replace('http://', '')
+                    e.filename = server_desc
                     raise
             successful = False
             try:
