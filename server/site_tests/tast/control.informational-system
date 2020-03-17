@@ -23,6 +23,11 @@ This test runs non-Chrome-dependent and non-Android-dependent Tast-based
 informational tests against a remote DUT. It only reports failure if the tast
 process itself (rather than individual Tast tests) fails.
 
+Tast tests that soft-clear the TPM require encstateful to be in a reasonable
+state beforehand. This test clears the TPM and reboots the remote DUT before
+running the Tast tests, in case the encstateful encryption key is messed up
+before this test.
+
 See http://go/tast-failures for information about investigating failures.
 '''
 
@@ -36,6 +41,7 @@ def run(machine):
                              '!"dep:chrome" && '
                              '!"dep:android*"'
                              ')'],
-                 ignore_test_failures=True, max_run_sec=3*60*60, command_args=args)
+                 ignore_test_failures=True, max_run_sec=3*60*60,
+                 command_args=args, clear_tpm=True)
 
 parallel_simple(run, machines)

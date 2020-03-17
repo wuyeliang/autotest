@@ -11,6 +11,7 @@ import dateutil.parser
 from autotest_lib.client.common_lib import base_job
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib.cros import dev_server
+from autotest_lib.client.common_lib.cros import tpm_utils
 from autotest_lib.server import test
 from autotest_lib.server import utils
 from autotest_lib.server.hosts import cros_host
@@ -115,7 +116,8 @@ class tast(test.test):
 
     def initialize(self, host, test_exprs, ignore_test_failures=False,
                    max_run_sec=3600, command_args=[], install_root='/',
-                   run_private_tests=True, varsfiles=None):
+                   run_private_tests=True, varsfiles=None,
+                   clear_tpm=False):
         """
         @param host: remote.RemoteHost instance representing DUT.
         @param test_exprs: Array of strings describing tests to run.
@@ -133,6 +135,7 @@ class tast(test.test):
         @param run_private_tests: Download and run private tests.
         @param varsfiles: list of names of yaml files containing variables set
             in |-varsfile| arguments.
+        @param clear_tpm: clear the TPM first before running the tast tests.
 
         @raises error.TestFail if the Tast installation couldn't be found.
         """
@@ -145,6 +148,7 @@ class tast(test.test):
         self._run_private_tests = run_private_tests
         self._fake_now = None
         self._varsfiles = varsfiles
+        self._clear_tpm = clear_tpm
 
         # List of JSON objects describing tests that will be run. See Test in
         # src/platform/tast/src/chromiumos/tast/testing/test.go for details.
@@ -180,6 +184,9 @@ class tast(test.test):
 
     def run_once(self):
         """Runs a single iteration of the test."""
+
+        if self._clear_tpm:
+            tpm_utils.ClearTPMOwnerRequest(self._host)
 
         self._log_version()
         self._find_devservers()
