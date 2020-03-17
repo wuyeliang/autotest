@@ -572,7 +572,7 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         timeout = time.time() + 60 * 3
         while True:
             try:
-                hostlog = json.loads(requests.get(devserver_hostlog_url))
+                hostlog = requests.get(devserver_hostlog_url).json()
             except requests.exceptions.RequestException as e:
                 logging.warning('Failed to read host log URL with error: %s', e)
                 return None
