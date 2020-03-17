@@ -71,6 +71,10 @@ suite:bvt-faft
 suite:bvt-inline
 suite:bvt-installer
 suite:bvt-perbuild
+suite:bvt-tast-android-pfq
+suite:bvt-tast-chrome-pfq
+suite:bvt-tast-cq
+suite:bvt-tast-informational
 suite:cell_emulator
 suite:cellular_au
 suite:cellular_au_nightly
