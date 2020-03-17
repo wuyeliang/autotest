@@ -1669,18 +1669,6 @@ class ImageServer(ImageServerBase):
         return '/'.join([self._get_image_url(image), filename])
 
 
-    def get_full_payload_url(self, image):
-        """Returns a URL to a staged full payload.
-
-        @param image: the image that was fetched.
-
-        @return A fully qualified URL that can be used for downloading the
-                payload.
-
-        """
-        return self._get_image_url(image) + '/update.gz'
-
-
     def get_test_image_url(self, image):
         """Returns a URL to a staged test image.
 
