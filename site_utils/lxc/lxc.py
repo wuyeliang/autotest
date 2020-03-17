@@ -68,8 +68,6 @@ def download_extract(url, target, extract_dir):
     with tempfile.NamedTemporaryFile(prefix=os.path.basename(target) + '_',
                                      delete=False) as tmp_file:
         if remote_url in dev_server.ImageServerBase.servers():
-            # TODO(xixuan): Better to only ssh to devservers in lab, and
-            # continue using curl for ganeti devservers.
             _download_via_devserver(url, tmp_file.name)
         else:
             _download_via_curl(url, tmp_file.name)
