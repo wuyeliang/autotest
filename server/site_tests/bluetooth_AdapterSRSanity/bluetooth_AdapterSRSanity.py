@@ -312,6 +312,9 @@ class bluetooth_AdapterSRSanity(
             # Finish peer wake process
             peer_wake.join()
 
+            # Make sure we're actually connected
+            self.test_device_is_connected(device.address)
+
             if device_test is not None:
                 device_test(device)
 
