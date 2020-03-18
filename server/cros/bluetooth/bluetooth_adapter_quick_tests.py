@@ -9,6 +9,7 @@ batches or packages
 
 import functools
 import logging
+import threading
 import time
 
 from autotest_lib.client.common_lib import error
@@ -182,6 +183,8 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.pkg_name = None
         self.pkg_iter = None
         self.pkg_is_running = False
+        self.mtbf_end = False
+        self.mtbf_end_lock = threading.Lock()
 
 
     @staticmethod
@@ -469,3 +472,59 @@ class BluetoothAdapterQuickTests(bluetooth_adapter_tests.BluetoothAdapterTests):
         self.test_reset_on_adapter()
         # Initialize bluetooth_adapter_tests class (also clears self.fails)
         self.initialize()
+
+
+    @staticmethod
+    def quick_test_mtbf_decorator(timeout_mins):
+        """A decorator enabling a test to be run as a MTBF test, it will run
+           the underlying test in a infinite loop until it fails or timeout is
+           reached, in both cases the time elapsed time will be reported.
+
+           @param timeout_mins: the max execution time of the test, once the
+                                time is up the test will report success and exit
+        """
+
+        def decorator(batch_method):
+            """A decorator wrapper of the decorated batch_method.
+               @param batch_method: the batch method being decorated.
+               @returns the wrapper of the batch method.
+            """
+
+            @functools.wraps(batch_method)
+            def wrapper(self, *args, **kwargs):
+                """A wrapper of the decorated method"""
+                self.mtbf_end = False
+                mtbf_timer = threading.Timer(
+                    timeout_mins * 60, self.mtbf_timeout)
+                mtbf_timer.start()
+                start_time = time.time()
+                while True:
+                    with self.mtbf_end_lock:
+                        # The test ran the full duration without failure
+                        if self.mtbf_end:
+                            self.report_mtbf_result(
+                                True, time.time() - start_time)
+                            break
+                    try:
+                        batch_method(self, *args, **kwargs)
+                    except Exception as e:
+                        logging.info("Caught a failure: %r", e)
+                        self.report_mtbf_result(False, time.time() - start_time)
+                        break
+
+                mtbf_timer.cancel()
+
+            return wrapper
+
+        return decorator
+
+
+    def mtbf_timeout(self):
+        """Handle time out event of a MTBF test"""
+        with self.mtbf_end_lock:
+            self.mtbf_end = True
+
+
+    def report_mtbf_result(self, success, duration_secs):
+        """Report MTBF report"""
+        logging.info("Logging MTBF result: %r %r", success, duration_secs)

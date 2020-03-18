@@ -54,6 +54,7 @@ suite:bluestreak-pre-cq
 suite:bluetooth
 suite:bluetooth_e2e
 suite:bluetooth_flaky
+suite:bluetooth_mtbf
 suite:bluetooth_qualification
 suite:bluetooth_sanity
 suite:bluetooth_standalone
