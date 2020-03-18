@@ -239,7 +239,8 @@ class OSInterface(object):
         """
         if self.is_removable_device(device):
             for p in ('/dev/mmcblk0', '/dev/mmcblk1', '/dev/nvme0n1'):
-                if self.path_exists(p):
+                if self.path_exists(p) and self.read_file('/sys/block/%s/device'
+                        '/type' % p.split('/')[2]).strip() != 'SD':
                     return p
             return '/dev/sda'
         else:
