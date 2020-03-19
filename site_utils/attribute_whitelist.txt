@@ -117,6 +117,8 @@ suite:factory
 suite:faft
 suite:faft_bios
 suite:faft_bios_ec3po
+suite:faft_bios_ro_qual
+suite:faft_bios_rw_qual
 suite:faft_bios_tot
 suite:faft_cr50_experimental
 suite:faft_cr50_prepvt
