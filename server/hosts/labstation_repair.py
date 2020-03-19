@@ -9,7 +9,7 @@ from autotest_lib.server.hosts import repair_utils
 
 # There are some labstations we don't want they receive auto-update,
 # e.g. labstations that used for image qualification purpose
-UPDATE_EXEMPTED_POOL = {'servo_verification'}
+UPDATE_EXEMPTED_POOL = {'servo_verification', 'labstation_tryjob'}
 
 
 class _LabstationUpdateVerifier(hosts.Verifier):
