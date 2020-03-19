@@ -296,7 +296,8 @@ class UpdateEngineUtil(object):
         Appends the dictionary kwargs to the URL url as query string.
 
         This function will replace the already existing query strings in url
-        with the ones in the input dictionary.
+        with the ones in the input dictionary. I also removes keys that have
+        a None value.
 
         @param url: The given input URL.
         @param query_dicl: A dictionary of key/values to be converted to query
@@ -311,7 +312,8 @@ class UpdateEngineUtil(object):
         for k, v in query_dict.items():
             parsed_query[k] = [v]
         parsed_url[3] = '&'.join(
-            '%s=%s' % (k, v[0]) for k, v in parsed_query.items())
+            '%s=%s' % (k, v[0]) for k, v in parsed_query.items()
+            if v[0] is not None)
         return urlparse.urlunsplit(parsed_url)
 
 
