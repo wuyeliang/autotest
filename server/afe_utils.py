@@ -24,6 +24,7 @@ from autotest_lib.server.cros.dynamic_suite import constants as ds_constants
 from autotest_lib.server.cros.dynamic_suite import tools
 
 from chromite.lib import auto_updater
+from chromite.lib import auto_updater_transfer
 from chromite.lib import remote_access
 
 
@@ -183,7 +184,8 @@ def machine_install_and_update_labels(host, update_url,
         with remote_access.ChromiumOSDeviceHandler(host.ip) as device:
             updater = auto_updater.ChromiumOSUpdater(
                 device, build_name=None, payload_dir=image_name,
-                staging_server=staging_server.url(), reboot=False)
+                staging_server=staging_server.url(), reboot=False,
+                transfer_class=auto_updater_transfer.LabTransfer)
             updater.CheckPayloads()
             updater.PreparePayloadPropsFile()
             updater.RunUpdate()
