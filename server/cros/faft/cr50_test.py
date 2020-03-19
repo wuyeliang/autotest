@@ -20,7 +20,7 @@ class Cr50Test(FirmwareTest):
     """Base class that sets up helper objects/functions for cr50 tests."""
     version = 1
 
-    RELEASE_POOLS = ['faft-cr50', 'faft-cr50-experimental']
+    RELEASE_POOLS = ['faft-cr50-experimental']
     RESPONSE_TIMEOUT = 180
     GS_PRIVATE = 'gs://chromeos-localmirror-private/distfiles/'
     # Prod signed test images are stored in the private cr50 directory.
@@ -216,10 +216,6 @@ class Cr50Test(FirmwareTest):
             logging.info('Running qual image. No update needed.')
             return
         logging.info('Cr50 qual update required.')
-        # TODO(b/149109740): remove once running_cr50_release_suite logic has
-        # been verified.
-        logging.info('Skipping until logic has been verified')
-        return
         filesystem_util.make_rootfs_writable(self.host)
         self._update_device_images_and_running_cr50_firmware(
                 qual_state, qual_path, prod_path, prepvt_path)
