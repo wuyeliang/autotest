@@ -384,8 +384,30 @@ def unmount_vault(user=None):
 def __get_mount_info(mount_point, allow_fail=False):
     """Get information about the active mount at a given mount point."""
     cryptohomed_path = '/proc/$(pgrep cryptohomed)/mounts'
+    # 'cryptohome-namespace-mounter' is currently only used for Guest sessions.
+    mounter_exe = 'cryptohome-namespace-mounter'
+    mounter_pid = 'pgrep -o -f %s' % mounter_exe
+    mounter_path = '/proc/$(%s)/mounts' % mounter_pid
+
+    status = utils.system(mounter_pid, ignore_status=True)
+    # Only check for these mounts if the mounter executable is running.
+    if status == 0:
+        try:
+            logging.debug('Active %s mounts:\n' % mounter_exe +
+                          utils.system_output('cat %s' % mounter_path))
+            ns_mount_line = utils.system_output(
+                'grep %s %s' % (mount_point, mounter_path),
+                ignore_status=allow_fail)
+        except Exception as e:
+            logging.error(e)
+            raise ChromiumOSError('Could not get info about cryptohome vault '
+                                  'through %s. See logs for complete '
+                                  'mount-point.'
+                                  % os.path.dirname(str(mount_point)))
+        return ns_mount_line.split()
+
     try:
-        logging.debug("Active cryptohome mounts:\n" +
+        logging.debug('Active cryptohome mounts:\n' +
                       utils.system_output('cat %s' % cryptohomed_path))
         mount_line = utils.system_output(
             'grep %s %s' % (mount_point, cryptohomed_path),
@@ -444,7 +466,7 @@ def is_vault_mounted(user, regexes=None, allow_fail=False):
                 break
 
         if not device_regex:
-            # The thrid argument in not the expectd mount point type.
+            # The third argument in not the expected mount point type.
             return False
 
         # Check if the mount source match the device regex: it can be loose,
