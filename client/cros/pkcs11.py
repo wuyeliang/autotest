@@ -225,7 +225,7 @@ def wait_for_pkcs11_token():
     """
     try:
         utils.poll_for_condition(
-            lambda: utils.system('cryptohome --action=pkcs11_token_status',
+            lambda: utils.system('cryptohome --action=pkcs11_is_user_token_ok',
                                  ignore_status=True) == 0,
             desc='PKCS #11 token.',
             timeout=300)
