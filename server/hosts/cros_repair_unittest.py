@@ -31,7 +31,6 @@ CROS_VERIFY_DAG = (
     (cros_firmware.FirmwareVersionVerifier, 'rwfw', ('ssh',)),
     (cros_repair.PythonVerifier, 'python', ('ssh',)),
     (repair_utils.LegacyHostVerifier, 'cros', ('ssh',)),
-    (cros_repair.KvmExistsVerifier, 'ec_reset', ('ssh',)),
     (cros_repair.StopStartUIVerifier, 'stop_start_ui', ('ssh',)),
 )
 
@@ -45,8 +44,6 @@ CROS_REPAIR_ACTIONS = (
      'set_default_boot', ('ssh',), ('dev_default_boot',)),
     (cros_repair.CrosRebootRepair,
      'reboot', ('ssh',), ('devmode', 'writable',)),
-    (cros_repair.ColdRebootRepair,
-     'coldboot', ('ssh',), ('ec_reset',)),
     (cros_repair.AutoUpdateRepair,
      'au',
      ('ssh', 'writable', 'stop_start_ui', 'tpm', 'good_au', 'ext4'),
@@ -90,7 +87,6 @@ JETSTREAM_VERIFY_DAG = (
     (cros_firmware.FirmwareVersionVerifier, 'rwfw', ('ssh',)),
     (cros_repair.PythonVerifier, 'python', ('ssh',)),
     (repair_utils.LegacyHostVerifier, 'cros', ('ssh',)),
-    (cros_repair.KvmExistsVerifier, 'ec_reset', ('ssh',)),
     (cros_repair.JetstreamTpmVerifier, 'jetstream_tpm', ('ssh',)),
     (cros_repair.JetstreamAttestationVerifier, 'jetstream_attestation',
      ('ssh',)),
@@ -107,8 +103,6 @@ JETSTREAM_REPAIR_ACTIONS = (
      'set_default_boot', ('ssh',), ('dev_default_boot',)),
     (cros_repair.CrosRebootRepair,
      'reboot', ('ssh',), ('devmode', 'writable',)),
-    (cros_repair.ColdRebootRepair,
-     'coldboot', ('ssh',), ('ec_reset',)),
     (cros_repair.JetstreamTpmRepair,
      'jetstream_tpm_repair',
      ('ssh', 'writable', 'tpm', 'good_au', 'ext4'),

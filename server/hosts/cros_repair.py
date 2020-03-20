@@ -422,27 +422,6 @@ class JetstreamServicesVerifier(hosts.Verifier):
         return 'Jetstream services must be running'
 
 
-class KvmExistsVerifier(hosts.Verifier):
-    """Verify that /dev/kvm exists if it should be there"""
-
-    def verify(self, host):
-        # pylint: disable=missing-docstring
-        result = host.run('[ ! -e /dev/kvm -a -f /usr/bin/vm_concierge ]',
-                          ignore_status=True)
-        if result.exit_status == 0:
-            # Silently check if the kvm_transition flag is being used by Chrome
-            # indicating /dev/kvm may not be present yet on this system.
-            result = host.run('grep -qsxF "kvm_transition" '
-                              '/etc/ui_use_flags.txt', ignore_status=True)
-            if result.exit_status != 0:
-                raise hosts.AutoservVerifyError('/dev/kvm is missing')
-
-    @property
-    def description(self):
-        # pylint: disable=missing-docstring
-        return '/dev/kvm should exist if device supports Linux VMs'
-
-
 class StopStartUIVerifier(hosts.Verifier):
     """Verify that command 'stop ui' won't crash the DUT.
 
@@ -672,24 +651,6 @@ class ServoInstallRepair(hosts.RepairAction):
         return 'Reinstall from USB using servo'
 
 
-class ColdRebootRepair(_ResetRepairAction):
-    """
-    Repair a Chrome device by performing a cold reboot that resets the EC.
-
-    Use ectool to perform a cold reboot which will reset the EC.
-    """
-
-    def repair(self, host):
-        # pylint: disable=missing-docstring
-        host.reboot(reboot_cmd='ectool reboot_ec cold')
-        self._check_reset_success(host)
-
-    @property
-    def description(self):
-        # pylint: disable=missing-docstring
-        return 'Reset the DUT via cold reboot with ectool'
-
-
 class JetstreamTpmRepair(hosts.RepairAction):
     """Repair by resetting TPM and rebooting."""
 
@@ -745,7 +706,6 @@ def _cros_verify_base_dag():
         (FirmwareVersionVerifier,         'rwfw',     ('ssh',)),
         (PythonVerifier,                  'python',   ('ssh',)),
         (repair_utils.LegacyHostVerifier, 'cros',     ('ssh',)),
-        (KvmExistsVerifier,               'ec_reset', ('ssh',)),
     )
     return verify_dag
 
@@ -779,8 +739,6 @@ def _cros_basic_repair_actions():
          'set_default_boot', ('ssh',), ('dev_default_boot',)),
 
         (CrosRebootRepair, 'reboot', ('ssh',), ('devmode', 'writable',)),
-
-        (ColdRebootRepair, 'coldboot', ('ssh',), ('ec_reset',)),
     )
     return repair_actions
 
