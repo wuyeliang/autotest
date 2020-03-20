@@ -57,7 +57,7 @@ class TradefedTest(test.test):
     _BRANCH_MAX_RETRY = [(0, 5), (1, 30),      # dev=5, beta=30, stable=99
         (constants.APPROXIMATE_STABLE_BRANCH_NUMBER, 99)]
     # TODO(kinaba): betty-arcnext
-    _BOARD_MAX_RETRY = {'betty': 0}
+    _BOARD_MAX_RETRY = {'betty': 0, 'zork': 0}
 
     _SHARD_CMD = None
     _board_arch = None
