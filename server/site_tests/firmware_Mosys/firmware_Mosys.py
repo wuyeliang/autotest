@@ -133,29 +133,6 @@ class firmware_Mosys(FirmwareTest):
             self._tag_failure(command)
             logging.error('Failed to locate version from ectool')
 
-    def check_lsb_info(self, command, fieldname, exp_value):
-        """
-        Compare output of fieldname in /etc/lsb-release to exp_value.
-
-        @param command: command string
-        @param fieldname: field name in lsd-release file.
-        @param exp_value: expected value for fieldname
-
-        """
-        lsb_info = 'cat /etc/lsb-release'
-        lines = self.run_cmd(lsb_info)
-        pattern = re.compile(fieldname + '=(.*)$')
-        for line in lines:
-            matched = pattern.match(line)
-            if matched:
-                actual = matched.group(1)
-                logging.info('Expected %s %s actual %s',
-                             fieldname, exp_value, actual)
-                # Some board will have prefix.  Example nyan_big for big.
-                if exp_value.lower() in actual.lower():
-                  return
-        self._tag_failure(command)
-
     def _tag_failure(self, cmd):
         self.failed_command.append(cmd)
         logging.error('Execute %s failed', cmd)
@@ -182,7 +159,6 @@ class firmware_Mosys(FirmwareTest):
         command = 'mosys platform name'
         output = self.run_cmd(command)
         self.check_for_errors(output, command)
-        self.check_lsb_info(command, 'CHROMEOS_RELEASE_BOARD', output[0])
 
         # mosys eeprom map
         command = 'mosys eeprom map|egrep "RW_SHARED|RW_SECTION_[AB]"'
