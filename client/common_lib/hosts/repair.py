@@ -176,6 +176,16 @@ class _DependencyNode(object):
         self._tag = tag
         self._record_tag = record_type + '.' + tag
 
+    def _is_applicable(self, host):
+        """
+        Check if the action is applicable to target host. Subclasses
+        can override this method per their need.
+
+        @param host     Target host to check.
+        @return         A bool value.
+        """
+        return True
+
     def _record(self, host, silent, status_code, *record_args):
         """
         Log a status record for `host`.
@@ -584,6 +594,11 @@ class RepairAction(_DependencyNode):
         # If we're blocked by a failed dependency, we exit with an
         # exception.  So set status to 'blocked' first.
         self.status = 'blocked'
+
+        if not self._is_applicable(host):
+            self.status = 'skipped'
+            return
+
         try:
             self._verify_dependencies(host, silent)
         except Exception as e:
