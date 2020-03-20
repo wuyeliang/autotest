@@ -673,6 +673,11 @@ class CrashTest(test.test):
         if self._automatic_consent_saving:
             self._pop_consent()
         self._set_crash_test_in_progress(False)
+
+        # Re-initialize crash reporter to clear any state left over
+        # (e.g. core_pattern)
+        self._initialize_crash_reporter(True)
+
         test.test.cleanup(self)
 
 
