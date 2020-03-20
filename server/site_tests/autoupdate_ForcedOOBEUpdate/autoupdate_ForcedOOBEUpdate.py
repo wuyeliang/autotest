@@ -109,7 +109,7 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
 
         if interrupt is not None:
             # Choose a random downloaded progress to interrupt the update.
-            progress = random.uniform(0.1, 0.6)
+            progress = random.uniform(0.1, 0.15)
             logging.info('Progress when we will interrupt: %f', progress)
             self._wait_for_progress(progress)
             logging.info('We will now start interrupting the update.')
