@@ -9,6 +9,7 @@ from autotest_lib.client.common_lib import error
 from autotest_lib.server.cros.faft.firmware_test import FirmwareTest
 from autotest_lib.server.cros.faft.firmware_test import ConnectionError
 
+
 class firmware_WriteProtectFunc(FirmwareTest):
     """
     This test checks whether the SPI flash write-protection functionally works
