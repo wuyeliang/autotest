@@ -66,6 +66,7 @@ class OmahaDevserver(object):
         self._devserver_pid = 0
         self._devserver_port = 0  # Determined later from devserver portfile.
         self._payload_location = payload_location
+        self._moblab = moblab
 
         # Temporary files for various devserver outputs.
         self._devserver_logfile = None
@@ -78,7 +79,6 @@ class OmahaDevserver(object):
             self._devserver_dir = global_config.global_config.get_config_value(
                 'CROS', 'devserver_dir')
             ssh_user = 'moblab'
-            os.environ['CROS_CACHEDIR'] = '/mnt/moblab/cros_cache'
         else:
             self._devserver_dir = \
                 '/home/chromeos-test/chromiumos/src/platform/dev'
@@ -216,7 +216,16 @@ class OmahaDevserver(object):
         # Invoke the Omaha/devserver on the remote server. Will attempt to kill
         # it with a SIGTERM after a predetermined timeout has elapsed, followed
         # by SIGKILL if not dead within 30 seconds from the former signal.
-        cmdlist = [
+        cmdlist = []
+
+        if self._moblab:
+            cmdlist.extend([
+                'export CROS_CACHEDIR=/usr/local/tmp/gsutil; ',
+                'mkdir -p "${CROS_CACHEDIR}/common"; ',
+                'sudo chmod uog+rwx -R "${CROS_CACHEDIR}"; ',
+            ])
+
+        cmdlist.extend([
                 'timeout', '-s', 'TERM', '-k', '30',
                 str(self._DEVSERVER_TIMELIMIT_SECONDS),
                 '%s/devserver.py' % self._devserver_dir,
@@ -229,7 +238,7 @@ class OmahaDevserver(object):
                 '--static_dir=%s' % self._devserver_static_dir,
                 '--payload=%s' % os.path.join(self._devserver_static_dir,
                                               self._payload_location),
-        ]
+        ])
 
         if self._critical_update:
             cmdlist.append('--critical_update')
