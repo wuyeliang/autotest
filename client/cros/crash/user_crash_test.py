@@ -404,8 +404,10 @@ class UserCrashTest(crash_test.CrashTest):
         crash_dir = self._canonicalize_crash_dir(crash_dir)
 
         if not consent:
-            if os.path.exists(crash_dir):
-                raise error.TestFail('Crash directory should not exist')
+            contents = os.listdir(crash_dir)
+            if contents:
+                raise error.TestFail(
+                    'Crash directory should be empty but had %s', contents)
             return result
 
         if not os.path.exists(crash_dir):

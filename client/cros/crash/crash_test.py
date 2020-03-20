@@ -120,7 +120,8 @@ class CrashTest(test.test):
         This clears the contents of the rate limiting directory which has
         the effect of reseting our count of crash reports sent.
         """
-        utils.system('rm -rf ' + self._CRASH_SENDER_RATE_DIR)
+        utils.system('shopt -s dotglob; rm -rf %s/*'
+                     % self._CRASH_SENDER_RATE_DIR)
 
 
     def _clear_spooled_crashes(self):
@@ -128,10 +129,10 @@ class CrashTest(test.test):
 
         This will remove all crash reports which are waiting to be sent.
         """
-        utils.system('rm -rf ' + self._SYSTEM_CRASH_DIR)
-        utils.system('rm -rf ' + self._EARLY_BOOT_CRASH_DIR)
-        utils.system('rm -rf %s %s' % (self._USER_CRASH_DIRS,
-                                       self._FALLBACK_USER_CRASH_DIR))
+        utils.system('rm -rf %s/*' % self._SYSTEM_CRASH_DIR)
+        utils.system('rm -rf %s/*' % self._EARLY_BOOT_CRASH_DIR)
+        utils.system('rm -rf %s/* %s/*' % (self._USER_CRASH_DIRS,
+                                           self._FALLBACK_USER_CRASH_DIR))
 
 
     def _kill_running_sender(self):
