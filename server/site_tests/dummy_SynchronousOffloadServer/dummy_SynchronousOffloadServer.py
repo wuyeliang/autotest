@@ -5,8 +5,8 @@
 import logging
 import os
 
-from autotest_lib.client.bin import test
 from autotest_lib.client.common_lib import error
+from autotest_lib.server import test
 
 class dummy_SynchronousOffloadServer(test.test):
   version = 1
