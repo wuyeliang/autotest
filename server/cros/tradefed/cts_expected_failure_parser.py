@@ -25,7 +25,7 @@ class ParseKnownCTSFailures(object):
         if bundle_abi and bundle_abi != arch:
             dut_config.append('nativebridge')
         # Map only the versions that ARC releases care.
-        sdk_ver_map = {'25': 'N', '28': 'P'}
+        sdk_ver_map = {25: 'N', 28: 'P'}
         if sdk_ver in sdk_ver_map:
            dut_config.append(sdk_ver_map[sdk_ver])
         return len(set(dut_config).intersection(config)) > 0

@@ -39,6 +39,8 @@ def main(args):
                         help='Prevent startup window from opening (no doodle).')
     parser.add_argument('--no-arc-syncs', action='store_true',
                         help='Prevent ARC sync behavior as much as possible.')
+    parser.add_argument('--arcvm', action='store_true',
+                        help='Boot with ARCVM instead of ARC++')
     parser.add_argument('--url', help='Navigate to URL.')
     args = parser.parse_args(args)
 
@@ -50,6 +52,8 @@ def main(args):
     browser_args = []
     if args.no_startup_window:
         browser_args.append('--no-startup-window')
+    if args.arcvm:
+        browser_args.append('--enable-arcvm')
 
     # Avoid calling close() on the Chrome object; this keeps the session active.
     cr = chrome.Chrome(

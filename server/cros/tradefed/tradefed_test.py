@@ -841,7 +841,7 @@ class TradefedTest(test.test):
             self._android_version = self._hosts[0].run(
                 'grep ANDROID_SDK /etc/lsb-release',
                 ignore_status=True).stdout.rstrip().split('=')[1]
-        return self._android_version
+        return int(self._android_version)
 
     def _get_max_retry(self, max_retry):
         """Return the maximum number of retries.
@@ -1169,12 +1169,14 @@ class TradefedTest(test.test):
         while steps < self._max_retry:
             steps += 1
             keep_media = media_asset and media_asset.uri and steps >= 1
+            enable_arcvm = self._get_android_version() >= 29
             self._run_commands(login_precondition_commands, ignore_status=True)
             with login.login_chrome(
                     hosts=self._hosts,
                     board=board,
                     dont_override_profile=keep_media,
-                    enable_default_apps=enable_default_apps) as current_logins:
+                    enable_default_apps=enable_default_apps,
+                    enable_arcvm=enable_arcvm) as current_logins:
                 if self._should_reboot(steps):
                     # TODO(rohitbm): Evaluate if power cycle really helps with
                     # Bluetooth test failures, and then make the implementation
