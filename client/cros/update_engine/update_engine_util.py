@@ -396,9 +396,9 @@ class UpdateEngineUtil(object):
         self._run('mkdir %s' % os.path.dirname(self._CUSTOM_LSB_RELEASE),
                   ignore_status=True)
         self._run('touch %s' % self._CUSTOM_LSB_RELEASE)
-        self._run('echo CHROMEOS_RELEASE_VERSION=%s > %s' %
+        self._run('echo "CHROMEOS_RELEASE_VERSION=%s" > %s' %
                   (build, self._CUSTOM_LSB_RELEASE))
-        self._run('echo CHROMEOS_AUSERVER=%s >> %s' %
+        self._run('echo "CHROMEOS_AUSERVER=%s" >> %s' %
                   (update_url, self._CUSTOM_LSB_RELEASE))
 
 
