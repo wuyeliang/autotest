@@ -216,29 +216,44 @@ class RpcServerTracker(object):
                 else:
                     logging.warn('Failed to start XMLRPC server; no log.')
 
-                fail_msg = 'Failed to start XMLRPC server.  %s.%s: %s.' % (
+                logging.error(
+                        'Failed to start XMLRPC server:  %s.%s: %s.',
                         type(exc).__module__, type(exc).__name__,
                         str(exc).rstrip('.'))
-                if log_lines:
-                    fail_msg += '  Log tail: %r' % log_lines[-1]
+
+                if isinstance(exc, httplib.BadStatusLine):
+                    # BadStatusLine: inject the last log line into the message,
+                    # using the 'line' and 'args' attributes.
+                    if log_lines:
+                        if exc.line:
+                            exc.line = '%s -- Log tail: %r' % (
+                                    exc.line, log_lines[-1])
+                        else:
+                            exc.line = 'Log tail: %r' % (
+                                    log_lines[-1])
+                        exc.args = (exc.line,)
+                elif isinstance(exc, socket.error):
+                    # socket.error: inject the last log line into the message,
+                    # using the 'filename' attribute.
+                    if log_lines:
+                        if exc.filename:
+                            exc.filename = '%s -- Log tail: %r' % (
+                                    exc.filename, log_lines[-1])
+                        else:
+                            exc.filename = 'Log tail: %r' % log_lines[-1]
+                else:
+                    # Unusual failure: can't inject the last log line,
+                    # so report it via logging.
+                    logging.error('Log tail: %r', log_lines[-1])
+
                 if len(log_lines) > 1:
-                    # The failure message includes only the last line,
-                    # so report the whole thing separately.
+                    # The failure messages include only the last line,
+                    # so report the whole thing if it had more lines.
                     logging.error('Full XMLRPC server log:\n%s',
                                   '\n'.join(log_lines))
 
-                if isinstance(exc, (httplib.BadStatusLine, socket.error)):
-                    # Ordinary failure: raise TestError with the failure info,
-                    # and keep the verbose traceback at debug level.
-                    logging.debug('Original exception:', exc_info=True)
-                    self.disconnect(port)
-                    raise error.TestError(fail_msg)
-                else:
-                    # Unusual failure: keep the original exception,
-                    # and report the failure info via logging.
-                    logging.error('%s', fail_msg)
-                    self.disconnect(port)
-                    raise
+                self.disconnect(port)
+                raise
         logging.info('XMLRPC server started successfully.')
         return proxy
 
