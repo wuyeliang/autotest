@@ -669,25 +669,31 @@ class CrasTestClient(object):
 
     def __init__(self):
         self._proc = None
+        self._capturing_proc = None
+        self._playing_proc = None
         self._capturing_msg = 'capturing audio file'
         self._playing_msg = 'playing audio file'
+        self._wbs_cmd = '%s --set_wbs_enabled ' % _CRAS_TEST_CLIENT
+        self._enable_wbs_cmd = ('%s 1' % self._wbs_cmd).split()
+        self._disable_wbs_cmd = ('%s 0' % self._wbs_cmd).split()
+        self._info_cmd = [_CRAS_TEST_CLIENT,]
+        self._select_input_cmd = '%s --select_input ' % _CRAS_TEST_CLIENT
 
 
-    def start_subprocess(self, proc_cmd, filename, proc_msg):
+    def start_subprocess(self, proc, proc_cmd, filename, proc_msg):
         """Start a capture or play subprocess
 
+        @param proc: the process
         @param proc_cmd: the process command and its arguments
         @param filename: the file name to capture or play
         @param proc_msg: the message to display in logging
 
         @returns: True if the process is started successfully
         """
-        logging.info('proc_cmd: %s', str(proc_cmd))
-
-        if self._proc is None:
+        if proc is None:
             try:
                 self._proc = subprocess.Popen(proc_cmd)
-                logging.info('Start %s %s on the DUT', proc_msg, filename)
+                logging.debug('Start %s %s on the DUT', proc_msg, filename)
             except Exception as e:
                 logging.error('Failed to popen: %s (%s)', proc_msg, e)
                 return False
@@ -722,7 +728,7 @@ class CrasTestClient(object):
             proc.kill()
             proc.wait()
 
-        logging.info('stop %s on the DUT', proc_msg)
+        logging.debug('stop %s on the DUT', proc_msg)
         return True
 
 
@@ -747,8 +753,8 @@ class CrasTestClient(object):
                                duration=duration, sample_format=sample_format,
                                pin_device=pin_device, channels=channels,
                                rate=rate)
-        result = self.start_subprocess(proc_cmd, capture_file,
-                                       self._capturing_msg)
+        result = self.start_subprocess(self._capturing_proc, proc_cmd,
+                                       capture_file, self._capturing_msg)
         if result:
             self._capturing_proc = self._proc
         return result
@@ -756,8 +762,7 @@ class CrasTestClient(object):
 
     def stop_capturing_subprocess(self):
         """Stop the capturing subprocess."""
-        result = self.stop_subprocess(self, self._capturing_proc,
-                                       self._capturing_msg)
+        result = self.stop_subprocess(self._capturing_proc, self._capturing_msg)
         if result:
             self._capturing_proc = None
         return result
@@ -780,7 +785,8 @@ class CrasTestClient(object):
         """
         proc_cmd = playback_cmd(audio_file, block_size, duration, pin_device,
                                 channels, rate)
-        result = self.start_subprocess(proc_cmd, audio_file, self._playing_msg)
+        result = self.start_subprocess(self._playing_proc, proc_cmd,
+                                       audio_file, self._playing_msg)
         if result:
             self._playing_proc = self._proc
         return result
@@ -817,8 +823,65 @@ class CrasTestClient(object):
                                 channels, rate)
         try:
             self._proc = subprocess.call(proc_cmd)
-            logging.info('call "%s" on the DUT', proc_cmd)
+            logging.debug('call "%s" on the DUT', proc_cmd)
         except Exception as e:
             logging.error('Failed to call: %s (%s)', proc_cmd, e)
             return False
+        return True
+
+
+    def enable_wbs(self, value):
+        """Enable or disable wideband speech (wbs) per the value.
+
+        @param value: True to enable wbs.
+
+        @returns: True if the operation succeeds.
+        """
+        cmd = self._enable_wbs_cmd if value else self._disable_wbs_cmd
+        logging.debug('call "%s" on the DUT', cmd)
+        if subprocess.call(cmd):
+            logging.error('Failed to call: %s (%s)', cmd)
+            return False
+        return True
+
+
+    def select_input_device(self, device_name):
+        """Select the audio input device.
+
+        @param device_name: the name of the Bluetooth peer device
+
+        @returns: True if the operation succeeds.
+        """
+        logging.debug('to select input device for device_name: %s', device_name)
+        try:
+            info = subprocess.check_output(self._info_cmd)
+            logging.debug('info: %s', info)
+        except Exception as e:
+            logging.error('Failed to call: %s (%s)', self._info_cmd, e)
+            return False
+
+        flag_input_nodes = False
+        audio_input_node = None
+        for line in info.decode().splitlines():
+            if 'Input Nodes' in line:
+                flag_input_nodes = True
+            elif 'Attached clients' in line:
+                flag_input_nodes = False
+
+            if flag_input_nodes:
+                if device_name in line:
+                    audio_input_node = line.split()[1]
+                    logging.debug('%s', audio_input_node)
+                    break
+
+        if audio_input_node is None:
+            logging.error('Failed to find audio input node: %s', device_name)
+            return False
+
+        select_input_cmd = (self._select_input_cmd + audio_input_node).split()
+        if subprocess.call(select_input_cmd):
+            logging.error('Failed to call: %s (%s)', select_input_cmd, e)
+            return False
+
+        logging.debug('call "%s" on the DUT', select_input_cmd)
         return True
