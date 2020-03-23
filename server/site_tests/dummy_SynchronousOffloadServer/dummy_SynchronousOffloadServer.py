@@ -12,7 +12,7 @@ class dummy_SynchronousOffloadServer(test.test):
   version = 1
 
   def run_once(self):
-    DIR = os.getenv('SYNCHRONOUS_OFFLOAD_DIR')
+    DIR = os.getenv('SYNCHRONOUS_OFFLOAD_DIR', "")
     if DIR == "":
       raise error.TestFail("Did not find value for SYNCHRONOUS_OFFLOAD_DIR")
     with open(os.path.join(DIR,"test_file"), "w") as f:
