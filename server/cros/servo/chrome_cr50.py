@@ -66,7 +66,7 @@ class ChromeCr50(chrome_ec.ChromeConsole):
     # Use the first group from ACTIVE_VERSION to match the active board id
     # partition.
     BID_ERROR = 'read_board_id: failed'
-    BID_FORMAT = ':\s+[a-f0-9:]+ '
+    BID_FORMAT = ':\s+[a-f0-9:]{26} '
     ACTIVE_BID = r'%s.*(\1%s|%s.*>)' % (ACTIVE_VERSION, BID_FORMAT,
             BID_ERROR)
     WAKE_CHAR = '\n\n'
