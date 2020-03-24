@@ -262,7 +262,7 @@ class tast(test.test):
         The result is saved as self._devserver_args.
         """
         devservers, _ = dev_server.ImageServer.get_available_devservers(
-            self._host.hostname)
+            self._host.hostname, prefer_local_devserver=True)
         logging.info('Using devservers: %s', ', '.join(devservers))
         self._devserver_args = ['-devservers=%s' % ','.join(devservers)]
 
