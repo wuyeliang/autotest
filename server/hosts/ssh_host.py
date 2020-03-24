@@ -108,8 +108,8 @@ class SSHHost(abstract_ssh.AbstractSSHHost):
         stack = self._get_server_stack_state(lowest_frames=3, highest_frames=6)
         # If logger executable exists on the DUT, use it to report the command.
         # Then regardless of logger, run the command as usual.
-        command = ('test -x /usr/bin/logger && /usr/bin/logger --id '
-                   '--tag=autotest "from [%s] ssh_run: %s"; %s'
+        command = ('test -x /usr/bin/logger && /usr/bin/logger'
+                   ' -t autotest "from [%s] ssh_run: %s"; %s'
                    % (stack, utils.sh_escape(command), command))
         return command
 
