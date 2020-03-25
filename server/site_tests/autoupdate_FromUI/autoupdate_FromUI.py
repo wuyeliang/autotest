@@ -48,7 +48,7 @@ class autoupdate_FromUI(update_engine_test.UpdateEngineTest):
         self._host.reboot()
 
         # Check that the update completed successfully
-        before_reboot_file = self._get_second_last_update_engine_log()
+        before_reboot_file = self._get_update_engine_log(1)
         success = 'Update successfully applied, waiting to reboot.'
         self._check_update_engine_log_for_entry(
             success, raise_error=True, update_engine_log=before_reboot_file)

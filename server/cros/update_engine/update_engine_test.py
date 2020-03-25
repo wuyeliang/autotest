@@ -5,9 +5,11 @@
 import json
 import logging
 import os
-import requests
-import time
+import re
 import urlparse
+
+from datetime import datetime, timedelta
+from xml.etree import ElementTree
 
 from autotest_lib.client.common_lib import error
 from autotest_lib.client.common_lib import lsbrelease_utils
@@ -19,7 +21,6 @@ from autotest_lib.server import autotest
 from autotest_lib.server import test
 from autotest_lib.server.cros.dynamic_suite import tools
 from chromite.lib import retry_util
-from datetime import datetime, timedelta
 
 
 class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
@@ -57,10 +58,9 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
     # Version we tell the DUT it is on before update.
     _CUSTOM_LSB_VERSION = '0.0.0.0'
 
-    # Expected hostlog events during update: 4 during rootfs
-    _ROOTFS_HOSTLOG_EVENTS = 4
-
     _CELLULAR_BUCKET = 'gs://chromeos-throw-away-bucket/CrOSPayloads/Cellular/'
+
+    _TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
     def initialize(self, host=None, hosts=None):
@@ -205,13 +205,13 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         if actual_event:
             # If this is the first event, set it as the current time
             if self._current_timestamp is None:
-                self._current_timestamp = datetime.strptime(actual_event[
-                                                                'timestamp'],
-                                                            '%Y-%m-%d %H:%M:%S')
+                self._current_timestamp = datetime.strptime(
+                    actual_event['timestamp'], self._TIMESTAMP_FORMAT)
 
             # Get the time stamp for the current event and convert to datetime
             timestamp = actual_event['timestamp']
-            event_timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            event_timestamp = datetime.strptime(timestamp,
+                                                self._TIMESTAMP_FORMAT)
 
             # Add the timeout onto the timestamp to get its expiry
             event_timeout = self._current_timestamp + timedelta(seconds=timeout)
@@ -555,70 +555,86 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         client_at._check_client_test_result(self._host, test_name)
 
 
-    def _get_hostlog(self, update_url, ip, wait_for_reboot_events=False):
-        """Get the update events json (aka hostlog).
-
-        @param update_url: The Devserver URL which we performed the update from.
-        @param ip: The IP address of the device under test.
-        @param wait_for_reboot_events: True if we expect the reboot events.
-
-        @return the json dump of the update events for the given IP.
+    # TODO(ahassani): Move this to chromite so it can be used by endtoend tests
+    # too so we don't have to rely on request_log API on nebraska.
+    def _extract_request_logs(self, update_engine_log):
         """
-        devserver_hostlog_url = urlparse.urlunsplit(
-            list(urlparse.urlsplit(update_url)[0:2]) + \
-            ['/api/hostlog', 'ip=%s' % ip, ''])
+        Extracts request logs from an update_engine log.
 
-        # Wait for a few minutes for the post-reboot update check.
-        timeout = time.time() + 60 * 3
-        while True:
-            try:
-                hostlog = requests.get(devserver_hostlog_url).json()
-            except requests.exceptions.RequestException as e:
-                logging.warning('Failed to read host log URL with error: %s', e)
-                return None
+        @param update_engine_log: The update_engine log as a string.
+        @returns a list object representing the request logs.
 
-            if not wait_for_reboot_events:
-                return hostlog
+        """
+        # Looking for all request XML strings in the log.
+        pattern = re.compile(r'<request.*?</request>', re.DOTALL)
+        requests = pattern.findall(update_engine_log)
 
-            if 'event_type' in hostlog[-1] and hostlog[-1]['event_type'] == 54:
-                return hostlog
+        # We are looking for patterns like this:
+        # [0324/151230.562305:INFO:omaha_request_action.cc(501)] Request:
+        timestamp_pattern = re.compile(r'\[([0-9]+)/([0-9]+).*?\] Request:')
+        timestamps = [
+            # Just use the current year since the logs don't have the year
+            # value. Let's all hope tests don't start to fail on new year's
+            # eve LOL.
+            datetime(datetime.now().year,
+                     int(ts[0][0:2]),  # Month
+                     int(ts[0][2:4]),  # Day
+                     int(ts[1][0:2]),  # Hours
+                     int(ts[1][2:4]),  # Minutes
+                     int(ts[1][4:6]))  # Seconds
+            for ts in timestamp_pattern.findall(update_engine_log)
+        ]
 
-            if time.time() > timeout:
-                return None
-            time.sleep(5)
+        if len(requests) != len(timestamps):
+            raise error.TestFail('Failed to properly parse the update_engine '
+                                 'log file.')
+
+        result = []
+        for timestamp, request in zip(timestamps, requests):
+
+            root = ElementTree.fromstring(request)
+            app = root.find('app')
+            event = app.find('event')
+
+            result.append({
+                'version': app.attrib['version'],
+                'track': app.attrib['track'],
+                'board': app.attrib['board'],
+                'event_type': event.attrib['eventtype'],
+                'event_result': event.attrib['eventresult'],
+                'timestamp': timestamp.strftime(self._TIMESTAMP_FORMAT),
+            })
+
+            previous_version = event.attrib.get('previousversion')
+            if previous_version:
+                result[-1]['previous_version'] = previous_version
+
+        logging.info('Extracted Request log: %s', result)
+        return result
 
 
-    def _create_hostlog_files(self, update_url):
+    def _create_hostlog_files(self):
         """Create the two hostlog files for the update.
 
         To ensure the update was successful we need to compare the update
         events against expected update events. There is a hostlog for the
         rootfs update and for the post reboot update check.
+
         """
-        hostlog = self._get_hostlog(update_url, self._host.ip,
-                                    wait_for_reboot_events=True)
-        if hostlog is None:
-            err_str = 'Timed out getting the hostlog from the devserver.'
-            err_code = self._get_last_error_string()
-            if err_code is not None:
-                err_str = ('%s Last error in update_engine.log: %s' %
-                          (err_str, err_code))
-            raise error.TestError(err_str)
-
-        logging.info('Hostlog: %s', hostlog)
-        # File names to save the hostlog events to.
-        rootfs_hostlog = os.path.join(self.resultsdir, 'hostlog_rootfs')
-        reboot_hostlog = os.path.join(self.resultsdir, 'hostlog_reboot')
-
         # Each time we reboot in the middle of an update we ping omaha again
         # for each update event. So parse the list backwards to get the final
         # events.
-        with open(reboot_hostlog, 'w') as outfile:
-            json.dump(hostlog[-1:], outfile)
-        with open(rootfs_hostlog, 'w') as outfile:
-            json.dump(
-                hostlog[len(hostlog) - 1 - self._ROOTFS_HOSTLOG_EVENTS:-1],
-                outfile)
+        rootfs_hostlog = os.path.join(self.resultsdir, 'hostlog_rootfs')
+        with open(rootfs_hostlog, 'w') as fp:
+            # There are four expected hostlog events during update.
+            json.dump(self._extract_request_logs(
+                self._get_update_engine_log(0))[-4:], fp)
+
+        reboot_hostlog = os.path.join(self.resultsdir, 'hostlog_reboot')
+        with open(reboot_hostlog, 'w') as fp:
+            # There is one expected hostlog events after reboot.
+            json.dump(self._extract_request_logs(
+                self._get_update_engine_log(1))[:1], fp)
 
         return rootfs_hostlog, reboot_hostlog
 

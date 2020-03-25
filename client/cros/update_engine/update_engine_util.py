@@ -363,17 +363,20 @@ class UpdateEngineUtil(object):
             self._get_file(file, self.resultsdir)
 
 
-    def _get_second_last_update_engine_log(self):
+    def _get_update_engine_log(self, r_index=0):
         """
-        Gets second last update engine log text.
+        Returns the last r_index'th update_engine log.
 
-        This is useful for getting the last update engine log before a reboot.
+        @param r_index: The index of the last r_index'th update_engine log
+                in order they were created. For example:
+                  0 -> last one.
+                  1 -> second to last one.
 
         """
         files = self._run('ls -t -1 %s' %
                           self._UPDATE_ENGINE_LOG_DIR).stdout.splitlines()
-        return self._run('cat %s%s' % (self._UPDATE_ENGINE_LOG_DIR,
-                                       files[1])).stdout
+        return self._run('cat %s' % os.path.join(self._UPDATE_ENGINE_LOG_DIR,
+                                                 files[r_index])).stdout
 
 
     def _create_custom_lsb_release(self, update_url, build='0.0.0.0', **kwargs):

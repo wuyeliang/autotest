@@ -128,23 +128,8 @@ class autoupdate_ForcedOOBEUpdate(update_engine_test.UpdateEngineTest):
 
         self._wait_for_oobe_update_to_complete()
 
-        if cellular:
-            # We didn't have a devserver so we cannot check the hostlog to
-            # ensure the update completed successfully. Instead we can check
-            # that the second-to-last update engine log has the successful
-            # update message. Second to last because its the one before OOBE
-            # rebooted.
-            before_reboot_file = self._get_second_last_update_engine_log()
-            self._check_for_cellular_entries_in_update_log(before_reboot_file)
-            success = 'Update successfully applied, waiting to reboot.'
-            self._check_update_engine_log_for_entry(success,
-                                                    raise_error=True,
-                                                    update_engine_log=
-                                                    before_reboot_file)
-            return
-
         # Verify that the update completed successfully by checking hostlog.
-        rootfs_hostlog, reboot_hostlog = self._create_hostlog_files(update_url)
+        rootfs_hostlog, reboot_hostlog = self._create_hostlog_files()
         self.verify_update_events(self._CUSTOM_LSB_VERSION, rootfs_hostlog)
         self.verify_update_events(self._CUSTOM_LSB_VERSION, reboot_hostlog,
                                   self._CUSTOM_LSB_VERSION)
