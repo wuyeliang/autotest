@@ -214,8 +214,18 @@ class TelemetryRunner(object):
                     '--browser=cros-chrome',
                     '--output-format=%s' % output_format,
                     '--output-dir=%s' % output_dir,
-                    '--remote=%s' % self._host.host_port,
+                    '--remote=%s' % self._host.hostname,
             ])
+            if self._host.host_port != self._host.hostname:
+                # If the user specify a different port for the DUT, we should
+                # use different telemetry argument to set it up.
+                #
+                # e.g. When user is running experiments with ssh port
+                # forwarding, they specify remote as 127.0.0.1:2222. Now
+                # host_port is 127.0.0.1:2222 and hostname is 127.0.0.1
+                # port is 2222
+                telemetry_cmd.append('--remote-ssh-port=%s' % self._host.port)
+
         if not no_verbose:
             telemetry_cmd.append('--verbose')
         telemetry_cmd.extend(args)
