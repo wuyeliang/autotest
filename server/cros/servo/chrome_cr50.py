@@ -437,12 +437,13 @@ class ChromeCr50(chrome_ec.ChromeConsole):
                     logging.debug('%d %s not in %s', i, rv, past_rv)
                 past_rv.append(rv)
             except Exception, e:
-                err = str(e)
-                logging.info('attempt %d %r: %s', i, command, str(e))
+                err = e
+                logging.info('attempt %d %r: %s %s', i, command, type(e),
+                             str(e))
         if compare_output:
             logging.info('No consistent output for %r %s', command,
                          pprint.pformat(past_rv))
-        raise error.TestError('Issue sending %r command: %s' % (command, err))
+        raise error.TestError('Issue sending %r command: %r' % (command, err))
 
 
     def get_deep_sleep_count(self):
