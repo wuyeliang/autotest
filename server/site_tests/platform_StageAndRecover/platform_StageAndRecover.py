@@ -19,6 +19,7 @@ class platform_StageAndRecover(test.test):
     _MOUNT_DELAY = 5
     _VERIFY_STR = 'ChromeosChrootPostinst complete'
     _RECOVERY_LOG = '/recovery_logs*/recovery.log'
+    _SET_DELAY = 2
 
     def cleanup(self):
         """ Clean up by switching servo usb towards servo host. """
@@ -31,13 +32,18 @@ class platform_StageAndRecover(test.test):
         """
         # Set prtctl4_pwren to power on servo USB
         self.host.servo.set('prtctl4_pwren','on')
+        time.sleep(self._SET_DELAY)
 
         self.host.servo.set('usb_mux_sel3', 'dut_sees_usbkey')
+        time.sleep(self._SET_DELAY)
         self.host.servo.set('dut_hub1_rst1','on')
+        time.sleep(self._SET_DELAY)
 
         # Switch usb_mux_sel1 to enumerate as /dev/sda
         self.host.servo.set('usb_mux_sel1', 'dut_sees_usbkey')
+        time.sleep(self._SET_DELAY)
         self.host.servo.set('usb_mux_sel1', 'servo_sees_usbkey')
+        time.sleep(self._SET_DELAY)
 
 
     def set_servo_usb_recover(self):
@@ -45,7 +51,9 @@ class platform_StageAndRecover(test.test):
         Avoiding peripherals plugged at this servo port.
         """
         self.host.servo.set('usb_mux_sel3', 'servo_sees_usbkey')
+        time.sleep(self._SET_DELAY)
         self.host.servo.set('dut_hub1_rst1','off')
+        time.sleep(self._SET_DELAY)
 
 
     def stage_copy_recover_with(self, artifact):
