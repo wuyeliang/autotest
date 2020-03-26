@@ -904,8 +904,18 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
         @raises AutoservError if the image fails to boot.
 
         """
-        logging.info('Downloading image to USB, then booting from it. Usb boot '
-                     'timeout = %s', usb_boot_timeout)
+        if image_url:
+            logging.info('Downloading image to USB, then booting from it.'
+                         ' Usb boot timeout = %s', usb_boot_timeout)
+        else:
+            logging.info('Booting from USB directly. Usb boot timeout = %s',
+                    usb_boot_timeout)
+
+        metrics_field = {'download': bool(image_url)}
+        metrics.Counter(
+            'chromeos/autotest/provision/servo_install/download_image'
+            ).increment(fields=metrics_field)
+
         with metrics.SecondsTimer(
                 'chromeos/autotest/provision/servo_install/boot_duration'):
             self.servo.install_recovery_image(image_url)

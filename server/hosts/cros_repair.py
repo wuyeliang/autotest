@@ -655,7 +655,14 @@ class ServoInstallRepair(hosts.RepairAction):
     def repair(self, host):
         # pylint: disable=missing-docstring
         repair_utils.require_servo(host)
-        image_name, update_url = host.stage_image_for_servo()
+        image_name = host.get_cros_repair_image_name()
+        update_url = None
+        if host._servo_host.validate_image_usbkey() != image_name:
+            logging.info('Downloading %s to usbkey.', image_name)
+            _, update_url = host.stage_image_for_servo()
+        else:
+            logging.info('Required image %s is already on usbkey,'
+                         ' skipping download.', image_name)
         afe_utils.clean_provision_labels(host)
         host.servo_install(update_url)
         afe_utils.add_provision_labels(host, host.VERSION_PREFIX, image_name)
