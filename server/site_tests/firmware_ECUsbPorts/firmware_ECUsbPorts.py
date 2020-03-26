@@ -74,7 +74,7 @@ class firmware_ECUsbPorts(FirmwareTest):
 
     def __get_usb_enable_name(self, idx):
       """Returns the USB enable signal name for a given index"""
-      if hasattr(self.faft_config, 'custom_usb_enable_names'):
+      if self.faft_config.custom_usb_enable_names:
         if idx >= len(self.faft_config.custom_usb_enable_names):
           raise error.TestFail('No USB enable for index %d' % idx)
         return self.faft_config.custom_usb_enable_names[idx]

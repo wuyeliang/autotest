@@ -41,6 +41,9 @@
     "cr50_capability": [],
     "cr50_capability.DOC": "List of capabilities of the CR50",
 
+    "custom_usb_enable_names": [],
+    "custom_usb_enable_names.DOC": "List of USB-A control GPIOs",
+
     "spi_voltage": "pp1800",
     "spi_voltage.DOC": "The voltage level to set on the servo's spi2_vref",
 
