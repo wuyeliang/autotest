@@ -296,6 +296,22 @@ class ChromeEC(ChromeConsole):
         self.send_command("chan 0xffffffff")
         return l
 
+    def check_ro_rw(self, img_exp):
+        """Tell if the current EC image matches the given input, 'RW' or 'RO.
+
+        Args:
+            img_exp: Expected image type. It should be either 'RW' or 'RO'.
+        Return:
+            True if the active EC image matches to 'img_exp'.
+            False otherwise.
+        Raise:
+            TestError if img_exp is neither 'RW' nor 'RO'.
+        """
+        if img_exp not in ['RW', 'RO']:
+            raise error.TestError('Arugment img_exp is neither RW nor RO')
+
+        result = self.send_command_get_output('sysinfo', [r'Copy:\s*(RO|RW)'])
+        return result[0][1] == img_exp
 
 class ChromeUSBPD(ChromeEC):
     """Manages control of a Chrome USBPD.
