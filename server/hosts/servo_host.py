@@ -105,6 +105,12 @@ class ServoHost(base_servohost.BaseServoHost):
     # Suffix to identify compressed logfiles.
     COMPRESSION_SUFFIX = '.tbz2'
 
+    # A suffix to mark servod log directories that came from instance that
+    # ran during this servo_host, but are not the last one running e.g. when
+    # an instance (on purpose, or due to a bug) restarted in the middle of the
+    # run.
+    OLD_LOG_SUFFIX = 'old'
+
     def _init_attributes(self):
         self._servo_state = None
         self.servo_port = None
@@ -113,6 +119,7 @@ class ServoHost(base_servohost.BaseServoHost):
         self.servo_serial = None
         self._servo = None
         self._servod_server_proxy = None
+        self._initial_instance_ts = None
         # Flag to make sure that multiple calls to close do not result in the
         # logic executing multiple times.
         self._closed = False
@@ -381,6 +388,8 @@ class ServoHost(base_servohost.BaseServoHost):
             timeout = servo_constants.SERVOD_STARTUP_TIMEOUT
         logging.debug('Wait %s seconds for servod process fully up.', timeout)
         time.sleep(timeout)
+        # Cache the initial instance timestamp to check against servod restarts
+        self._initial_instance_ts = self.get_instance_logs_ts()
 
 
     def stop_servod(self):
@@ -477,20 +486,107 @@ class ServoHost(base_servohost.BaseServoHost):
         cmd = 'rm ' + symlink_wildcard
         self.run(cmd, stderr_tee=None, ignore_status=True)
 
+    def probe_servod_restart(self, instance_ts, outdir):
+        """Grab servod logs from previous instances if part of this session.
+
+        If since the last time this host called start_servod() servod crashed
+        and restarted, this helper finds those logs as well, and stores them
+        with the |OLD_LOG_SUFFIX| to investigate if necessary.
+
+        It also issues a panicinfo command to servo devices after the restart
+        to try and collect reboot information for debugging.
+
+        @param instance_ts: the log timestamp that the current instance uses
+        @param outdir: directory to create a subdirectory into to place the
+                       servod logs into.
+        """
+        if self._initial_instance_ts is None:
+            logging.info('No log timestamp grabbed successfully on servod '
+                         'startup. Cannot check device restarts. Ignoring.')
+            return
+        if instance_ts == self._initial_instance_ts:
+            logging.debug('Servod appears to have run without restarting')
+            return
+        # Servod seems to have restarted (at least once). |_initial_instance_ts|
+        # is the first timestamp, and instance_ts is the current timestamp. Find
+        # all timestamps in between them, and grab the logs for each.
+        tss = self._find_instance_timestamps_between(self._initial_instance_ts,
+                                                     instance_ts)
+        logging.info('Servod has restarted %d times between the start and the '
+                     'end of this servo_host.', len(tss))
+        logging.info('This might be an issue. Will extract all logs from each '
+                     'instance.')
+        logging.info('Logs that are not the currently running (about to turn '
+                     'down) instance are maked with a .%s in their folder.',
+                     self.OLD_LOG_SUFFIX)
+        for ts in tss:
+            self.get_instance_logs(ts, outdir, old=True)
+        # Lastly, servod has restarted due to a potential issue. Try to get
+        # panic information from servo micro and servo v4 for the current logs.
+        for mcu in ['servo_micro', 'servo_v4']:
+            ctrl = '%s_uart_cmd' % mcu
+            if self._servo.has_control(ctrl):
+                logging.info('Trying to retrieve %r panicinfo into logs', mcu)
+                try:
+                    self._servo.set_nocheck(ctrl, 'panicinfo')
+                except error.TestFail as e:
+                    logging.error('Failed to generate panicinfo for %r logs. '
+                                  '%s', mcu, str(e))
+
     def grab_logs(self, outdir):
         """Retrieve logs from servo_host to |outdir|/servod_{port}.{ts}/.
 
-        This method first collects all logs on the servo_host side pertaining
-        to this servod instance (port, instatiation). It glues them together
-        into combined log.[level].txt files and extracts all available MCU
-        console I/O from the logs into individual files e.g. servo_v4.txt
-
-        All the output can be found in a directory inside |outdir| that
-        this generates based on |LOG_DIR|, the servod port, and the instance
-        timestamp on the servo_host side.
+        This method grabs all logs since servod was last restarted by this host
+        i.e. if servod restarts in the middle of the run (intentionally or not)
+        those logs will all be grabbed as well.
 
         @param outdir: directory to create a subdirectory into to place the
                        servod logs into.
+        """
+        instance_ts = self.get_instance_logs_ts()
+        if instance_ts is not None:
+            self.probe_servod_restart(instance_ts, outdir)
+            self.get_instance_logs(instance_ts, outdir)
+
+    def _find_instance_timestamps_between(self, start_ts, end_ts):
+        """Find all log timestamps between [start_ts, end_ts).
+
+        @param start_ts: str, earliest log timestamp of interest
+        @param end_ts: str, latest log timestamp of interest
+
+        @returns: list, all timestamps between start_ts and end_ts, end_ts
+                  exclusive, on the servo_host. An empty list on errors
+        """
+        # Simply get all timestamp, and then sort and remove
+        cmd = 'ls %s' % self.remote_log_dir
+        res = self.run(cmd, stderr_tee=None, ignore_status=True)
+        if res.exit_status != 0:
+            # Here we failed to find anything.
+            logging.info('Failed to find remote servod logs. Ignoring.')
+            return []
+        logfiles = res.stdout.strip().split()
+        timestamps = set()
+        for logfile in logfiles:
+            ts_match = self.TS_EXTRACTOR.match(logfile)
+            if not ts_match:
+                # Simply ignore files that fail the check. It might be the
+                # 'latest' symlinks or random files.
+                continue
+            timestamps.add(ts_match.group(self.TS_GROUP))
+        # At this point we have all unique timestamps.
+        timestamps = sorted(timestamps)
+        for ts in [start_ts, end_ts]:
+            if ts not in timestamps:
+                logging.error('Timestamp %r not in servod logs. Cannot query '
+                              'for timestamps in between %r and %r', ts,
+                              start_ts, end_ts)
+                return []
+        return timestamps[timestamps.index(start_ts):timestamps.index(end_ts)]
+
+    def get_instance_logs_ts(self):
+        """Retrieve the currently running servod instance's log timestamp
+
+        @returns: str, timestamp for current instance, or None on failure
         """
         # First, extract the timestamp. This cmd gives the real filename of
         # the latest aka current log file.
@@ -510,7 +606,7 @@ class ServoHost(base_servohost.BaseServoHost):
             else:
                 logging.warning('Failed to find servod logs on servo host.')
                 logging.warning(res.stderr.strip())
-            return
+            return None
         fname = os.path.basename(res.stdout.strip())
         # From the fname, ought to extract the timestamp using the TS_EXTRACTOR
         ts_match = self.TS_EXTRACTOR.match(fname)
@@ -518,12 +614,32 @@ class ServoHost(base_servohost.BaseServoHost):
             logging.warning('Failed to extract timestamp from servod log file '
                             '%r. Skipping. The servo host is using outdated '
                             'servod logging and needs to be updated.', fname)
-            return
-        instance_ts = ts_match.group(self.TS_GROUP)
+            return None
+        return ts_match.group(self.TS_GROUP)
+
+    def get_instance_logs(self, instance_ts, outdir, old=False):
+        """Collect all logs with |instance_ts| and dump into a dir in |outdir|
+
+        This method first collects all logs on the servo_host side pertaining
+        to this servod instance (port, instatiation). It glues them together
+        into combined log.[level].txt files and extracts all available MCU
+        console I/O from the logs into individual files e.g. servo_v4.txt
+
+        All the output can be found in a directory inside |outdir| that
+        this generates based on |LOG_DIR|, the servod port, and the instance
+        timestamp on the servo_host side.
+
+        @param instance_ts: log timestamp to grab logfiles for
+        @param outdir: directory to create a subdirectory into to place the
+                       servod logs into.
+        @param old: bool, whether to append |OLD_LOG_SUFFIX| to output dir
+        """
         # Create the local results log dir.
         log_dir = os.path.join(outdir, '%s_%s.%s' % (self.LOG_DIR,
                                                      str(self.servo_port),
                                                      instance_ts))
+        if old:
+          log_dir = '%s.%s' % (log_dir, self.OLD_LOG_SUFFIX)
         logging.info('Saving servod logs to %s.', log_dir)
         os.mkdir(log_dir)
         # Now, get all files with that timestamp.
