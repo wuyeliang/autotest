@@ -99,7 +99,7 @@ class servo_LogGrab(test.test):
                            port is missing
                   True: otherwise
         """
-        artifacts = [re.compile(r'get - name\(%s\)' % ctrl) for ctrl in ctrls]
+        artifacts = [re.compile(r'- \(get\) %s' % ctrl) for ctrl in ctrls]
         # We also need to ensure that the initial logs don't get lost.
         init_artifact = re.compile('Listening on (\d{1,3}\.){3}\d{1,3} '
                                    'port \d{1,5}')
