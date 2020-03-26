@@ -233,6 +233,45 @@ class servo_LogGrab(test.test):
             raise error.TestFail('Removing symlinks to latest logs still '
                                  'caused test to find logs.')
 
+    def test_restart(self):
+        """Subtest to verify that a servod restart in the middle is caught.
+
+        @raises error.TestFail: if the logs from the previous instances are
+                                missing on a restart
+        """
+        restarts = 2
+        # Need to cache the initial timestamp so that we can reuse it later
+        initial_ts = self.servo_host._initial_instance_ts
+        for _ in range(restarts):
+            self.servo_host.restart_servod()
+        self.servo_host._initial_instance_ts = initial_ts
+        self.servo_host.grab_logs(self.logtestdir)
+        # First, validate that in total 3 directories were created: one
+        # for the current instance, and two for the old ones
+        dirs_created = len(os.listdir(self.logtestdir))
+        expected_dirs = restarts + 1
+        if dirs_created != expected_dirs:
+            logging.error('Should have created %d dirs from grabbing logs '
+                          'but only created %d.', expected_dirs, dirs_created)
+            raise error.TestFail('Grabbing logs from restarted instance failed')
+        # Check that panicinfo was called on the MCUs
+        # TODO(coconutruben): refactor this into one source of truth on which
+        # servos support panicinfo
+        # There should only ever be one directory here that doesn't have the
+        # suffix but if that logic changes in servo_host, then this needs to be
+        # refactored, or an API call added to servo_host
+        final_instance_dir = [d for d in os.listdir(self.logtestdir) if
+                              self.servo_host.OLD_LOG_SUFFIX not in d][0]
+        final_instance_dir_path = os.path.join(self.logtestdir,
+                                               final_instance_dir)
+        for mcu in ['servo_v4', 'servo_micro']:
+            mcu_path = os.path.join(final_instance_dir_path, '%s.txt' % mcu)
+            if os.path.exists(mcu_path):
+                with open(mcu_path, 'r') as f:
+                    if 'panicinfo' not in f.read():
+                        raise error.TestFail('No panicinfo call found in %r.' %
+                                             mcu_path)
+
     def run_once(self, host):
         """Try 3 scenarios of log grabbing: single, multiple, compressed."""
         self.servo_host = host._servo_host
@@ -241,7 +280,8 @@ class servo_LogGrab(test.test):
         # removes logs on the servo_host side. Alternatively, restart
         # servod if another destructive test is added.
         for subtest in [self.test_singular, self.test_dual,
-                        self.test_compressed, self.test_missing]:
+                        self.test_compressed, self.test_missing,
+                        self.test_restart]:
             self.setup_dir()
             subtest()
             logging.info('Success')
