@@ -104,13 +104,6 @@ class TradefedTest(test.test):
         else:
             cache_root = constants.TRADEFED_CACHE_LOCAL
 
-        # TODO(ihf): reevaluate this again when we run out of memory. We could
-        # for example use 32 bit java on the first run but not during retries.
-        # b/62895114. If select_32bit_java gets deleted for good also remove it
-        # from the base image.
-        # Try to save server memory (crbug.com/717413).
-        # select_32bit_java()
-
         # The content of the cache survives across jobs.
         self._safe_makedirs(cache_root)
         self._tradefed_cache = os.path.join(cache_root, 'cache')

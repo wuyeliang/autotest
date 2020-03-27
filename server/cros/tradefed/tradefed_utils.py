@@ -9,10 +9,8 @@ import random
 import re
 from xml.etree import ElementTree
 
-from autotest_lib.client.bin import utils as client_utils
 from autotest_lib.client.common_lib import utils as common_utils
 from autotest_lib.client.common_lib import error
-from autotest_lib.server import utils
 from autotest_lib.server.cros import lockfile
 
 PERF_MODULE_NAME_PREFIX = 'CTS.'
@@ -98,19 +96,6 @@ def adb_keepalive(targets, extra_paths):
         common_utils.join_bg_jobs(jobs)
 
 
-@contextlib.contextmanager
-def pushd(d):
-    """Defines pushd.
-    @param d: the directory to change to.
-    """
-    current = os.getcwd()
-    os.chdir(d)
-    try:
-        yield
-    finally:
-        os.chdir(current)
-
-
 def parse_tradefed_result(result, waivers=None):
     """Check the result from the tradefed output.
 
@@ -180,18 +165,6 @@ def parse_tradefed_result(result, waivers=None):
         logging.info('Waived failure for %s %d time(s)', testname, fail_count)
     logging.info('Total waived = %s', waived)
     return waived, accurate
-
-
-def select_32bit_java():
-    """Switches to 32 bit java if installed (like in lab lxc images) to save
-    about 30-40% server/shard memory during the run."""
-    if utils.is_in_container() and not client_utils.is_moblab():
-        java = '/usr/lib/jvm/java-8-openjdk-i386'
-        if os.path.exists(java):
-            logging.info('Found 32 bit java, switching to use it.')
-            os.environ['JAVA_HOME'] = java
-            os.environ['PATH'] = (
-                os.path.join(java, 'bin') + os.pathsep + os.environ['PATH'])
 
 
 # A similar implementation in Java can be found at
