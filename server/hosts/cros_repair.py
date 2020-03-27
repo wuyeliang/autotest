@@ -66,7 +66,6 @@ _DEV_MODE_ALWAYS_ALLOWED = global_config.global_config.get_config_value(
 # simplification.  The ultimate fix is to split the 'cros' verifier
 # into smaller individual verifiers.
 _CROS_AU_TRIGGERS = ('power', 'rwfw', 'python', 'cros',)
-_CROS_EXTENDED_AU_TRIGGERS = _CROS_AU_TRIGGERS + ('ec_reset',)
 _CROS_POWERWASH_TRIGGERS = ('tpm', 'good_au', 'ext4',)
 _CROS_USB_TRIGGERS = ('ssh', 'writable', 'stop_start_ui',)
 _JETSTREAM_USB_TRIGGERS = ('ssh', 'writable',)
@@ -786,7 +785,7 @@ def _cros_basic_repair_actions():
     return repair_actions
 
 
-def _cros_extended_repair_actions(au_triggers=_CROS_EXTENDED_AU_TRIGGERS,
+def _cros_extended_repair_actions(au_triggers=_CROS_AU_TRIGGERS,
                                   powerwash_triggers=_CROS_POWERWASH_TRIGGERS,
                                   usb_triggers=_CROS_USB_TRIGGERS):
     """Return the extended repair actions for a `CrosHost`"""

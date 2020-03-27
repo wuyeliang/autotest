@@ -50,16 +50,16 @@ CROS_REPAIR_ACTIONS = (
     (cros_repair.AutoUpdateRepair,
      'au',
      ('ssh', 'writable', 'stop_start_ui', 'tpm', 'good_au', 'ext4'),
-     ('power', 'rwfw', 'python', 'cros', 'ec_reset')),
+     ('power', 'rwfw', 'python', 'cros')),
     (cros_repair.PowerWashRepair,
      'powerwash',
      ('ssh', 'writable', 'stop_start_ui'),
-     ('tpm', 'good_au', 'ext4', 'power', 'rwfw', 'python', 'cros', 'ec_reset')),
+     ('tpm', 'good_au', 'ext4', 'power', 'rwfw', 'python', 'cros')),
     (cros_repair.ServoInstallRepair,
      'usb',
      (),
      ('ssh', 'writable', 'stop_start_ui', 'tpm', 'good_au', 'ext4', 'power',
-      'rwfw', 'python', 'cros', 'ec_reset')),
+      'rwfw', 'python', 'cros')),
 )
 
 MOBLAB_VERIFY_DAG = (
