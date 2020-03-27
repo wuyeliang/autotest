@@ -1284,10 +1284,11 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             self.cleanup_services()
         except (error.AutotestRunError, error.AutoservRunError,
                 FactoryImageCheckerException):
-            logging.warning('Unable to restart ui, rebooting device.')
-            # Since restarting the UI fails fall back to normal Autotest
-            # cleanup routines, i.e. reboot the machine.
-            super(CrosHost, self).cleanup()
+            logging.warning('Unable to restart ui.')
+        
+        # cleanup routines, i.e. reboot the machine.
+        super(CrosHost, self).cleanup()
+
         # Check if the rpm outlet was manipulated.
         if self.has_power():
             self._cleanup_poweron()
