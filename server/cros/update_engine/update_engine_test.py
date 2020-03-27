@@ -628,13 +628,13 @@ class UpdateEngineTest(test.test, update_engine_util.UpdateEngineUtil):
         with open(rootfs_hostlog, 'w') as fp:
             # There are four expected hostlog events during update.
             json.dump(self._extract_request_logs(
-                self._get_update_engine_log(0))[-4:], fp)
+                self._get_update_engine_log(1))[-4:], fp)
 
         reboot_hostlog = os.path.join(self.resultsdir, 'hostlog_reboot')
         with open(reboot_hostlog, 'w') as fp:
             # There is one expected hostlog events after reboot.
             json.dump(self._extract_request_logs(
-                self._get_update_engine_log(1))[:1], fp)
+                self._get_update_engine_log(0))[:1], fp)
 
         return rootfs_hostlog, reboot_hostlog
 
