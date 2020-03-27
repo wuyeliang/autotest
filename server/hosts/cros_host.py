@@ -1104,6 +1104,20 @@ class CrosHost(abstract_ssh.AbstractSSHHost):
             return None
 
 
+    def get_battery_state(self):
+        """Get the battery charging state.
+
+        @return: A string representing the battery charging state. It can be
+                 'Charging', 'Fully charged', or 'Discharging'.
+        """
+        try:
+            info = self.get_power_supply_info()
+            logging.info(info)
+            return info['Battery']['state']
+        except (KeyError, ValueError, error.AutoservRunError):
+            return None
+
+
     def get_battery_display_percentage(self):
         """Get the battery display percentage.
 
