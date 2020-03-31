@@ -1,6 +1,6 @@
 contextlib2==0.5.4
 coverage==4.4.1
-Django==1.5.1
+Django==1.11.28
 enum34==1.1.6
 fabric==1.12.0
 funcsigs==1.0.2
