@@ -11,7 +11,7 @@ paramiko==1.17.2
 pbr==1.10.0
 pip==8.1.2
 psutil==4.3.1
-py==1.4.34
+py==1.10.0
 pyasn1==0.1.9
 pyasn1-modules==0.0.8
 pytest==3.1.3
