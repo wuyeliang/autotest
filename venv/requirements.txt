@@ -26,4 +26,4 @@ subprocess32==3.2.7
 #Extra requirements for chromiumos/infra/skylab_inventory
 #Do NOT need the mysql versions for autotest
 #MySQL-python==1.2.5
-protobuf==3.0.0
+protobuf==3.18.3
