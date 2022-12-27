@@ -19,7 +19,7 @@ pytest-catchlog==1.2.2
 pytest-cov==2.5.1
 rsa==3.4.2
 scandir==1.5
-setuptools==28.2.0
+setuptools==65.5.1
 six==1.10.0
 subprocess32==3.2.7
 
